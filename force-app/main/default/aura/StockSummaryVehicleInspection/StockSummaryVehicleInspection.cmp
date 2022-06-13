@@ -1,0 +1,60 @@
+<aura:component implements="force:lightningQuickAction,force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global" controller="StockSummaryVehicleInspectionController">
+    <aura:attribute name="checkBoxColumnAPINames" type="String[]" default="['Vehicle_Inspection__c.Adhered_to_tire_tread_depth_gauge_guide__c', 'Vehicle_Inspection__c.Brakes_Passed_Pump_Test__c', 'Vehicle_Inspection__c.Doors_Close_and_Lock__c', 'Vehicle_Inspection__c.First_Aid_Kit_OK__c', 'Vehicle_Inspection__c.Fluids_Levels_OK__c', 'Vehicle_Inspection__c.Horn_and_Back_up_Beeper_OK__c', 'Vehicle_Inspection__c.Light_and_Indicators_OK__c', 'Vehicle_Inspection__c.Mirrors_OK__c', 'Vehicle_Inspection__c.No_Fluid_Leaks__c', 'Vehicle_Inspection__c.Ownership_and_Insurance_Valid__c', 'Vehicle_Inspection__c.Ladder_in_Good_Working_Order__c']"/>
+    <aura:attribute name="checkBoxColumns" type="StockSummaryVehicleInspectionController.ColumnRecord[]"/>
+    <aura:attribute name="otherColumns" type="StockSummaryVehicleInspectionController.ColumnRecord[]"/>
+    <aura:attribute name="otherColumnAPINames" type="String[]" default="['Vehicle_Inspection__c.Service_Resource__c', 'Vehicle_Inspection__c.Location__c', 'Vehicle_Inspection__c.Spill_Kit_OK__c','Vehicle_Inspection__c.Vehicle_Inspection_Notes__c','Vehicle_Inspection__c.Vehicle_License_Plate_Number__c']"/>
+    <aura:attribute name="VIRecord" type="Vehicle_Inspection__c"/>
+    <aura:attribute name="spillKitVals" type="Map" />
+    <aura:attribute name="ladderHelpText" type="String" default="" />
+    <aura:attribute name="tireTreadHelpText" type="String" default="" />
+    <aura:attribute name="error" type="String" default=""/>
+    <aura:attribute name="searchString" type="String"/>
+    <aura:attribute name="searchResults" type="SObject[]"/>
+    <aura:attribute name="selectedVehicle" type="Schema.Location"/>
+    
+    <aura:registerEvent name="VIToggleEvent" type="c:stockSummaryToggleVi"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <aura:handler name="VehicleChosenEvent" event="c:VehicleSelected" action="{!c.handleVehicleChosenEvent}"/>
+    
+    <div aria-labelledby="NewVehicleInspection">
+        <fieldset class="slds-box slds-theme--default slds-container--small">
+        <legend id="NewVehicleInspection" class="slds-text-heading--small 
+          slds-p-vertical--medium">
+            <br/><br/>
+            {!$Label.c.New_Vehicle_Inspection}: {!v.VIRecord.Service_Resource__r.Name}
+        </legend>
+  
+        <form class="slds-form--stacked">
+            <aura:if isTrue="{! !empty(v.error)}">
+            	<div class="redText">
+                    {!v.error}
+                </div>
+                 <br/>
+            </aura:if>
+
+            <c:InputLookup aura:id="Vehicle" sObjectType="Location" label="{!v.otherColumns[1].label}" selectedResult="{!v.selectedVehicle}" searchString="{!v.searchString}" searchResults="{!v.searchResults}" icon="utility:travel_and_places"/>
+            <lightning:input label="{!v.otherColumns[4].label}" onblur="{!c.updateVIRecord}" value="{!v.VIRecord.Vehicle_License_Plate_Number__c}" maxlength="7"/>               
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[0].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.Adhered_to_tire_tread_depth_gauge_guide__c}" fieldLevelHelp="{!v.tireTreadHelpText}" style="size:50px;"/>
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[1].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.Brakes_Passed_Pump_Test__c}"/>
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[2].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.Doors_Close_and_Lock__c}"/>
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[3].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.First_Aid_Kit_OK__c}"/>
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[4].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.Fluids_Levels_OK__c}"/>
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[5].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.Horn_and_Back_up_Beeper_OK__c}"/>
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[6].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.Light_and_Indicators_OK__c}"/>
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[7].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.Mirrors_OK__c}"/>
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[8].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.No_Fluid_Leaks__c}"/>
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[9].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.Ownership_and_Insurance_Valid__c}"/>
+            <lightning:input type="checkbox"  label="{!v.checkBoxColumns[10].label}" onchange="{!c.updateVIRecord}" value="" checked="{!v.VIRecord.Ladder_in_Good_Working_Order__c}" fieldLevelHelp="{!v.ladderHelpText}"/>
+            <lightning:select aura:id="SpillKitOK" name="{!v.otherColumns[2].name}" label="{!v.otherColumns[2].label}" onchange="{!c.updateVIRecord}" value="{!v.VIRecord.Spill_Kit_OK__c}"> 
+            <aura:iteration items="{!v.spillKitVals}" var="spillKitVal">
+                <option value="{!spillKitVal.value}">{!spillKitVal.label}</option>
+            </aura:iteration>
+            </lightning:select>
+            <lightning:input aura:id="Notes" name="{!v.otherColumns[3].name}" label="{!v.otherColumns[3].label}" onblur="{!c.updateVIRecord}" value="{!v.VIRecord.Vehicle_Inspection_Notes__c}"/>
+            <br/>
+            <lightning:button class="slds-button" onclick="{!c.submitVIRecord}" label="{!$Label.c.Submit}"/>
+        </form>
+      </fieldset>
+    </div>
+</aura:component>

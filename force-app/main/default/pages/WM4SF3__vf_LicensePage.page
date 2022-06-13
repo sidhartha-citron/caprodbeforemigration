@@ -1,0 +1,187 @@
+<apex:page standardController="WM4SF3__WalkMeLicense__c" extensions="WM4SF3.vf_LicenseController" sidebar="false" id="wmPage">
+
+<!-- apex:includeScript value="{!$Resource.jquery_bpopup}"/ -->
+
+<!-- in IE-10 the page is loaded in ie7 document mode. This should fix it. -->
+<meta http-equiv="X-UA-Compatible" content="IE=10"/>
+<link id="custom-css" type="text/css" href="" rel="stylesheet"/>
+<script src="https://code.jquery.com/jquery-1.7.2.min.js"></script>
+<!--script type="text/javascript" src="https://walkme.com/wp-content/themes/walkme-v2/js/jquery.bpopup-0.7.0.min.js"/ -->
+<!-- script type="text/javascript" src="https://dinbror.dk/downloads/jquery.bpopup-0.7.0.min.js"/ -->
+<script type="text/javascript" src="/resource/jquery_bpopup"/>
+
+<script id="custom-js" type="text/javascript" src=""/>
+
+<script>
+
+    
+    function loadFiles(env){
+    
+        loadFile('custom-js', 'vf_LicensePage.js', env, 'src');
+        loadFile('custom-css', 'vf_LicensePage.css', env, 'href');            
+    }
+    
+    function loadFile(id, fileName, env, attrType, callback){
+    
+        var elem = document.getElementById(id);
+        var path;
+        
+        if (env == 'local'){
+        
+            path = 'https://localhost/Plugins/salesforce/WM4SF_v2/pages/';
+        }
+        else if (env == 'qa'){
+                
+            path = 'https://d3fqyenyxfs83e.cloudfront.net/wm4sf/v2/';
+        }
+        
+        else{
+        
+            path = 'https://d3b3ehuo35wzeh.cloudfront.net/wm4sf/v2/';
+        }
+        
+        fileName = path + fileName;
+                
+        if (callback){
+            elem.onload = callback;
+            elem.onreadystatechange = callback;
+        }
+
+        if (attrType=='src'){
+            
+            elem.src = fileName;
+        }
+        else if (attrType=='href'){
+        
+            elem.href = fileName;
+        }
+    }
+       
+    function loadIframe(env, callback){
+                      
+        var iframe = document.getElementById('the-popup-iframe');
+        if (window.removeEventListener)
+        {
+            iframe.removeEventListener("load", loadIframeFunc, false);
+        } 
+        else if (iframe.detachEvent)
+        {
+            iframe.detachEvent("onload", loadIframeFunc);
+        }
+                              
+        loadFile('the-popup-iframe', 'getTokenPopup.html', env, 'src', callback);
+    }
+         
+
+    function init(){
+
+        var iframe = document.getElementById('the-popup-iframe');
+        if (window.addEventListener)
+        {
+            iframe.addEventListener("load", loadIframeFunc, false);
+        } 
+        else if (iframe.attachEvent)
+        {
+            iframe.attachEvent("onload", loadIframeFunc, false);
+        }
+        iframe.src = "";
+    }   
+
+    var env = "{!JSENCODE(WalkMeLicense.mode__c)}";
+    if ("{!WalkMeLicense.QA_Mode__c}" == 'true'){
+        
+        env = 'qa';
+    }
+
+    loadFiles(env);
+    
+    var loadIframeFunc = function(){ loadIframe(env, function(){setTimeout(showPopup, 1000);})};
+</script>
+
+<apex:form id="wmForm">
+
+    <apex:pageMessages />
+    <apex:pageMessage severity="error" strength="2" summary="Package: Validation Error: Value is required." rendered="{!(UserPackageChoice==null)}"/>
+
+    <b><apex:outputText value="WalkMe For Salesforce" style="font-size:18px; background: #f8efdf; display:block; padding: 12px 20px"/></b><br/>
+ <div class="walkme-inner">
+    <apex:outputText value=" Welcome to the WalkMe for Salesforce setup page! " style="font-size:14px; line-height:150%"/> <br />
+    <apex:outputText value=" You can start by using the demo account, which has pre-made Walk-Thrus for you to experiment with. " style="font-size:14px; line-height:150%"/><br />
+    <apex:outputText value=" When you're ready, create your own account to build fully customized Walk-Thrus tailor made for your business. " style="font-size:14px; line-height:150%"/><br />
+
+    <br/>
+    <hr/>
+    <div style="font-size:14px; margin-top: 10px;"> Choose Account Type: </div>
+    <div>
+          
+ <div class="SnippetSelection">
+                <apex:selectRadio id="Package" value="{!UserPackageChoice}" layout="pageDirection" >
+                    <apex:selectoptions value="{!PackageChoices}"></apex:selectoptions>
+                </apex:selectRadio>
+                </div>
+                <div class="UserAccount" style="margin:3px 3px 5px 25px;display:none;">
+                    <span style="margin-right:10px;"><apex:outputLabel >Enter your WalkMe SnippetId:</apex:outputLabel></span>
+                    <span style="margin-right:10px;" class="spanTextbox"><apex:inputField value="{!WalkMeLicense.WM4SF3__LicenseID__c}" required="false"/></span>
+                    <b><span style="margin-left:10px;"><a href="javascript:void(0)" onclick="init();">Get your WalkMe SnippetId</a></span></b>
+                    <br/>
+                    <br/>
+                    
+                    <apex:pageBlock id="theBlock">
+                    
+                    <br/>
+                    <span style="margin-right:10px;"><apex:outputLabel >Choose which WalkMe Environment to load when running on WalkMe for Salesforce app:</apex:outputLabel></span>                
+                    
+                    <apex:selectList value="{!WalkMeLicense.WM4SF3__Env__c}" multiselect="false" size="1" id="EnvChoices">
+                        <apex:selectOption itemValue="production" itemLabel="Production"/>
+                        <apex:selectOption itemValue="test" itemLabel="Test"/>
+                        <apex:selectOption itemValue="Other" itemLabel="Other"/>
+                        <apex:actionSupport event="onchange" rerender="theBlock"/>
+                    </apex:selectList>
+                    
+                    
+                    <br/>
+                    <apex:outputLabel id="envLabel" for="envVal" rendered="{!WalkMeLicense.WM4SF3__Env__c=='Other'}" >Enter Environment Value:</apex:outputLabel>
+                    <apex:inputField id="envVal" rendered="{!(WalkMeLicense.WM4SF3__Env__c== 'Other')}" value="{!WalkMeLicense.WM4SF3__CusEnv__c}" required="false"/>
+                    </apex:pageBlock>
+                    
+                    <br/>
+                   
+                    
+                
+                <!-- 01/09/2016 RG: Removed from the layout - we don't sell it anymore-->
+                    <!-- apex:inputCheckbox value="{!WalkMeLicense.isMobileUiClassic__c}" />
+                    <span style="margin-right:10px;"><apex:outputLabel >Enforce Salesforce Classic UI in WalkMe Mobile App</apex:outputLabel></span -->                
+                </div>                
+                <div id="successStr" class="success-str hide">Success!</div>
+                </div>
+
+
+
+
+                <div>
+                 <apex:commandButton image="{!URLFOR($Resource.WM4SF3__Save_button)}" action="{!SaveMethod}"/>
+                
+           
+                <span style="margin:-15px 0px 10px 0px">
+                 <apex:outputText value="By clicking the button you agree to WalkMe" style="font-size:10px;"/>
+                    <a href="http://www.walkme.com/terms-and-conditions/" style="font-size:10px; margin-bottom:100px" target="_blank">terms of service</a>        
+                </span>
+                </div>
+                <hr/>
+                <div style="margin:14px 0px 0px 0px">
+                    <a href="http://www.walkme.com/download/" target="_blank" ><image src="{!URLFOR($Resource.download_icon)}"></image></a>
+                    <a href="http://www.walkme.com/download/" target="_blank" ><apex:outputText value=" Download WalkMe Editor   " style="font-size:11px; color:#1797c0"/></a> &nbsp;
+    
+                    <a href="http://cdn.walkme.com/verticals/salesforce/walkme_for_salesforce_v2_installation_instructions.pdf" target="_blank" ><image src="{!URLFOR($Resource.pdf_icon)}"></image></a>
+                    <a href="http://cdn.walkme.com/verticals/salesforce/walkme_for_salesforce_v2_installation_instructions.pdf" target="_blank" ><apex:outputText value=" Download Instructions PDF" style="font-size:11px; color:#1797c0"/></a>
+                </div>
+</div>
+
+</apex:form>
+
+<div id="thePopup" class="PopUp" style="height: 400px; padding: 0; display:none;">
+  <span class="close close4" style="position: absolute; right: 0px;"></span>
+  <iframe id="the-popup-iframe" style="display: inline; border: none; width: 100%; height: 100%;" frameBorder="0" allowTransparency="true" src=""></iframe>
+ </div>
+
+</apex:page>

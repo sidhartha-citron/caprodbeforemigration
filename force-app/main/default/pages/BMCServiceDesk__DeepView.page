@@ -1,0 +1,345 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0" controller="BMCServiceDesk.DeepViewController" extensions="BMCServiceDesk.ConsoleRemoteActions" expires="5">
+    <title>{!$Label.DeepView}</title>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/bootstrap.css')}"/>
+    <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/DPLFramework/css/bmc-all.css')}"/>
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/css/rfmodal.css"/>
+    <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/DeepView.css')}"/>
+    <link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" rel="stylesheet" />   
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+    <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/Sidebar.css')}"/> 
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/incidentconsole.css" type="text/css" />     
+    <link rel="stylesheet" href="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/styles/vendor/angular-plugins/angularjs-datetime-picker.css')}" type="text/css" /> 
+    <link rel="stylesheet" href="{!$Resource.DeepView}/ConsoleViewCustomization/style/jquery-ui.min.css"/>
+    <apex:outputPanel rendered="{!showSidebarOnly}">
+       <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/SidebarOnly.css')}"/>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!(showSidebarOnly && userLanguage == 'iw')}">
+    	<link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/Sidebar-rtl.css')}"/>
+    </apex:outputPanel> 
+     
+    <!--[if IE]>
+        <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.DeepView, '/styles/ie-only.css')}"/>
+    <![endif]-->
+    <!-- Setting override for Lightning Pages -->
+    <apex:outputPanel rendered="{!$User.UITheme == 'Theme4d'}">
+        <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/lightningOverride.css')}"/> <!-- style override -->
+    </apex:outputPanel>
+    
+    <script>
+        var pageLoadData = {!ISBLANK(pageLoadData)}?'':JSON.parse('{!pageLoadData}');
+        var imagePath = '{!URLFOR($Resource.DeepView)}/styles/images';
+        var isTemplateEnabled = {!IF(isTemplateEnabled,"true","false")};
+        var isEmbeddedMode = {!IF(isEmbeddedMode,"true","false")};
+        var showSidebarOnly= {!IF(showSidebarOnly,true,false)};
+        var isFilesEnabled= {!IF(isFilesEnabled,true,false)};
+        var moduleName= '{!JSENCODE(moduleName)}';
+        var actionHideDuration = {!IF(actionHideDuration ,true,false)};
+        var isActionEditable = {!IF(isActionEditable ,true,false)};
+    	var isSummarizationEnabled = {!IF(isSummarizationEnabled ,true,false)};
+        var userLocaleDateFormat='{!JSENCODE(userLocaleDateFormat)}';
+        var formLayoutId = "{!JSENCODE($CurrentPage.parameters.formLayoutId)}";
+        var subjectLabel = '{!JSENCODE($Label.EmailConvSubj)}';
+        var resourceUrl = "{!URLFOR($Resource.DeepView, '/')}";
+        var rtaImageURL = "force.com/servlet/rtaImage";
+    	var strUserId =  '{!JSENCODE($User.Id)}';
+        var salesforceBaseUrl = '{!JSENCODE(salesforcebaseURL)}';
+        var ShowActivityFeedActionsInBatches = {!ShowActivityFeedActionsInBatches};
+    	var actionNoteMaxLength='{!$ObjectType.Action__c.fields.note__c.Length}';
+        var cmdbTextFieldLimitExceededLabel = '{!JSENCODE($Label.CMDBTextFieldLimitExceeded)}';
+        var licenseLocation = "{!URLFOR($Resource.DeepView, 'js/diagram_lic.txt')}";
+       
+    </script>
+    
+    <body id="appPanel">
+        <div data-ng-controller="DeepViewController" data-ng-init="DeepViewController()" class="container">
+            <div ng-include="'{!$Resource.DeepView}/templates/Loader.html'"/>
+            
+            <div class="pagewrapper">
+                <div ng-include="'{!$Resource.DeepView}/templates/PageHeader.html'" class="header-panel" ng-if="showSidebarOnly == false"/>
+                <div style="z-index:4;" class="dialog-backgray" ng-if="showServiceTarget || saveImage || showApprovals || showNotification" ng-click="hidePanels()"/>
+                <div id="modalContent" class="white-background" style="position: relative;z-index: 6;"></div>
+                <div class="dialog-backgray" style="position:fixed:z-index:1;display:none;" id="maskHeader"/>               
+                <div class="canvaswrapper">
+					<div class="waitingHolder" id="waitingHolderId"></div>
+                    <aside class="white-background" style="canvas-graph-container" ng-if="showSidebarOnly == false">
+                        <div class="graph-zoomer" align="center">                           
+							<span ng-include="'{!$Resource.DeepView}/templates/Legends.html'"/>
+							<canvas id="zoomWidget" width="40" height="300"></canvas>
+                        </div>
+                        <div id="canvas-container" class="canvas-container centerAlign" style="overflow:hidden">
+                            <div id="graphicalView">
+                                <canvas id="diagram"/>
+                            </div>
+                        </div>
+                    </aside>
+                    <div class="quick-details-panel hide" id="quickDetailsPanel">                   
+                        <div id="smartViewsRecordDetailTemplate"  ng-include="'{!$Resource.DeepView}/templates/QuickDetailsRecordData.html'"/>                               
+                    
+                        <div >
+                                <div id="smartViewsSidebarTemplate" ng-controller="sidebarController"  ng-include="'{!$Resource.DeepView}/templates/QuickDetailsRelatedList.html'"/>                               
+                        </div>
+                    </div>
+                </div>
+            </div>  
+        </div>  
+        
+        <script type="text/javascript">MindFusionImpl = "JQuery";</script>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}"/>
+        <script type="text/javascript" src="{!$Resource.DeepView}/js/jquery.mark.js"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/jquery-ui.min.js')}"/>
+	    <script type="text/javascript" src="{!$Resource.DeepView}/js/forcetk.js"></script>
+        <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-sanitize.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery-plugins/jquery.cookie.js')}"/>
+        <apex:outputPanel rendered="{!Not(showSidebarOnly)}">
+            <script type="text/javascript" src="{!$Resource.DeepView}/js/MindFusion.Common.js"/>
+            <script type="text/javascript" src="{!$Resource.DeepView}/js/MindFusion.Diagramming.js"/>
+        </apex:outputPanel>    
+        <script type="text/javascript" src="{!$Resource.DeepView}/js/jquery.dplAccordion.js"/>
+        <script type="text/javascript" src="{!$Resource.DeepView}/js/rfmodal.js"/>
+        <script type="text/javascript" src="{!$Resource.DeepView}/js/bootstrap.js"/>
+        <script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/angular-plugins/ui-bootstrap-custom-tpls-0.6.0.js"/>
+        <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/jquery.mCustomScrollbar.min.js"/>  
+		<link rel="stylesheet" href="{!$Resource.SDEFCommonJS}/vendor/jquery.mCustomScrollbar.min.css" /> 
+		<script type="text/javascript">var __sfdcSessionId = '{!GETSESSIONID()}';</script>
+        <script src="/soap/ajax/40.0/connection.js" type="text/javascript"></script>
+
+        <script type="text/javascript">
+        var client = new forcetk.Client();
+
+      	client.setSessionToken('{!$Api.Session_ID}');
+        var ObjectLabels = {
+            "singular": {
+                "BMC_BaseElement__c": "CMDB",
+                "Incident__c": "{!$ObjectType['Incident__c'].label}",
+                "Change_Request__c": "{!$ObjectType['Change_Request__c'].label}",
+                "Release__c": "{!$ObjectType['Release__c'].label}",
+                "Problem__c": "{!$ObjectType['Problem__c'].label}",
+                "Task__c": "{!$ObjectType['Task__c'].label}",
+                "Service_Request__c": "{!JSENCODE($Label.SSHelpRequest)}"
+            },
+            "plural": {
+                "BMC_BaseElement__c": "CMDBs",
+                "Incident__c": "{!$ObjectType['Incident__c'].labelPlural}",
+                "Change_Request__c": "{!$ObjectType['Change_Request__c'].labelPlural}",
+                "Release__c": "{!$ObjectType['Release__c'].labelPlural}",
+                "Problem__c": "{!$ObjectType['Problem__c'].labelPlural}",
+                "Task__c": "{!$ObjectType['Task__c'].labelPlural}",
+                "Service_Request__c": "{!JSENCODE($Label.SSMyHelpRequests)}"
+            }
+        };
+        
+        var deepViewResourceURL = '{!$Resource.DeepView}';
+        var userTimeZone='{!userTimeZone}';
+        var userLocale='{!JSENCODE(userLocale)}';
+        var _RemotingActions = {
+            "getLookUpData"   : "{!$RemoteAction.DeepViewController.getLookupResult}",
+            "queryAllData"    : "{!$RemoteAction.DeepViewController.queryAllData}",
+            "getBroadcastMsgs": "{!$RemoteAction.DeepViewController.getBroadcastMsgs}",
+            "searchUser"      : "{!$RemoteAction.DeepViewController.searchUser}",
+            "getServiceTarget": "{!$RemoteAction.DeepViewController.getServiceTarget}",
+            "saveRecord"      : "{!$RemoteAction.DeepViewController.saveRecord}",
+            "performUserActions"       : "{!$RemoteAction.DeepViewController.performUserActions}",
+            "queryRecord"     : "{!$RemoteAction.DeepViewController.queryRecord}",
+            "getActivityFeedItems"     : "{!$RemoteAction.DeepViewController.getActivityFeedItems}",
+            "getApprovals"    : "{!$RemoteAction.DeepViewController.getApprovals}",
+            "addAction"       : "{!$RemoteAction.DeepViewController.addAction}",
+            "listActions"       : "{!$RemoteAction.DeepViewController.listActions}",
+            "addAttachment"   : "{!$RemoteAction.DeepViewController.addAttachment}",
+			"getActivityFeedsAttachments"   : "{!$RemoteAction.DeepViewController.getActivityFeedsAttachments}",
+            "callApproveRejectRecall"   : "{!$RemoteAction.DeepViewController.callApproveORRejectORRecall}",
+            "callReassign"   : "{!$RemoteAction.DeepViewController.callReassignRecord}",
+            "getReassignApprover" : "{!$RemoteAction.DeepViewController.getReassignApproverMap}",
+            "checkApprovalPermission": "{!$RemoteAction.DeepViewController.checkApprovalPermissions}",
+            "checkAdminPermission":"{!$RemoteAction.DeepViewController.isAdminOrModifyAll}",
+			"performAttachmentActions"   : "{!$RemoteAction.DeepViewController.performAttachmentActions}",
+			"getAllStatusesAndStages"   : "{!$RemoteAction.DeepViewController.getAllStatusesAndStages}",
+			"getReplyEmailBody" : "{!$RemoteAction.DeepViewController.getReplyEmailBody}",
+            "fetchTemplateDetails"   : "{!$RemoteAction.ConsoleRemoteActions.fetchTemplateDetails}",
+            "getFieldInfo"   : "{!$RemoteAction.DeepViewController.getFieldInfo}",
+            "getEmailSettings"   : "{!$RemoteAction.DeepViewController.getEmailSettings}",
+            "getSummary"    :   "{!$RemoteAction.DeepViewController.getSummary}",
+            "getsubjectLine"    :   "{!$RemoteAction.DeepViewController.getsubjectLine}"
+
+        }
+        
+        var _Labels={
+            "search":"{!JSENCODE($Label.SearchFor)}",
+            "ShowMore":"{!JSENCODE($Label.ShowMore)}",
+            "recordsNotFound":"{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}",
+            "pageHeader":{
+                "since":"{!JSENCODE($Label.Since)}",
+                "assignedTo":"{!JSENCODE($Label.AssignedTo)}",
+                "expandNode":"{!JSENCODE($Label.SetPrimaryNode)}",
+                "export":"{!JSENCODE($Label.Export)}",
+                "print":"{!JSENCODE($Label.Print)}",
+                "recordDetails":"{!JSENCODE($Label.RelatedLists)}",
+                "legend":"{!JSENCODE($Label.Legend)}",
+                "record":"{!JSENCODE($Label.Record)}",
+                "inProgress":"{!JSENCODE($Label.InProgress)}",
+                "completed":"{!JSENCODE($Label.CompletedScan)}",
+                "status":"{!JSENCODE($Label.Status)}",
+                "stage":"{!JSENCODE($Label.StageValue)}",
+                "opened":"{!JSENCODE($Label.Opened)}",
+                "acknowledged":"{!JSENCODE($Label.StageProgression_Acknowledged)}",
+                "inprocess":"{!JSENCODE($Label.StageProgression_InProcess)}",
+                "closed":"{!JSENCODE($Label.Closed)}",
+                "client":"{!JSENCODE($Label.ClientWindowHeaderSearchPage)}",
+                "of":"{!JSENCODE($Label.Of)}"
+            },
+            "quickDetails":{
+                "recordDetails":"{!JSENCODE($Label.Details)}",
+                "activityFeed":"{!JSENCODE($Label.ActivityFeed)}",
+				"actions":"{!JSENCODE($Label.Actions)}",
+				"moreAction":"{!JSENCODE($Label.moreAction)}",
+				"externalAction":"{!JSENCODE($Label.externalAction)}",
+                "attachments":"{!JSENCODE($Label.Attachments)}",
+                "fulfillment":"{!JSENCODE($Label.Fulfillment)}",
+                "serviceTarget":"{!JSENCODE($Label.ServiceTarget)}",
+                "showLess":"{!JSENCODE($Label.ShowLess)}",
+                "showMore":"{!JSENCODE($Label.ShowMore)}",
+                "addNotes":"{!JSENCODE($Label.Message1)}",
+                "sendEmail":"{!JSENCODE($lABEL.SendEmail)}",
+                "refresh":"{!JSENCODE($Label.Refresh)}",
+                "addAttachment":"{!JSENCODE($Label.SSAddAttachment)}",
+                "edit":"{!JSENCODE($Label.CMDBEdit)}",
+                "save":"{!JSENCODE($Label.Save)}",
+                "cancel":"{!JSENCODE($Label.Cancel)}",
+                "durationErrorLabel" : "{!JSENCODE($Label.DurationError)}",
+                "durationTooltip" : "{!JSENCODE($Label.TooltipDuration)}",
+                "duration":"{!JSENCODE($ObjectType.IncidentHistory__c.fields.duration__c.label)}",
+                "HHMM":"{!JSENCODE($Label.HHMM)}",
+				"ActivityFeedEmailAttachmentFlag":"{!JSENCODE($Label.ActivityFeedEmailAttachmentFlag)}",
+				"getMoreActivities":"{!JSENCODE($Label.GetMoreActivities)}",
+				"emailContent":"{!JSENCODE($Label.EmailContent)}",
+				"emailDetails":"{!JSENCODE($Label.EmailDetails)}",
+				"additionalInfo":"{!JSENCODE($Label.SSAdditionalInformation)}",
+                "plainTextLabel":"{!JSENCODE($Label.plainTextLabel)}",
+                "richTextLabel":"{!JSENCODE($Label.richTextLabel)}",
+                "showExternalContent":"{!JSENCODE($Label.ShowExternalContent)}",
+                "Reply":"{!JSENCODE($Label.Reply)}",
+                "ReplyAll":"{!JSENCODE($Label.ReplyAll)}",
+                "copyRecordFields" : "{!JSENCODE($Label.Copy_Record_Fields)}",
+                "NoFieldsToDisplay": "{!JSENCODE($Label.NoFieldsToDisplay)}",
+                "SearchFor"        : "{!JSENCODE($Label.SearchFor)}",
+				"AddANoteToTheAction" : "{!JSENCODE($Label.AddANoteToTheAction)}",
+                "getActivityFeedItems": "{!JSENCODE($Label.ShowMoreActivities)}"
+            },
+            "modal":{
+                "serviceTarget":"{!JSENCODE($Label.ServiceTarget)}",
+                "addNotes":"{!JSENCODE($Label.Message1)}",
+                "sendEmail":"{!JSENCODE($lABEL.SendEmail)}",
+                "attachment":"{!JSENCODE($Label.SSAddAttachment)}",
+                "approvalHistory":"{!JSENCODE($Label.ApprovalHistory)}",
+                "from":"{!JSENCODE($Label.From)}",
+                "add":"{!JSENCODE($Label.Add)}",
+                "to":"{!JSENCODE($Label.To)}",
+                "cc":"{!JSENCODE($Label.Cc)}",
+                "bcc":"{!JSENCODE($Label.Bcc)}",
+                "subject":"{!JSENCODE($Label.SSContactUsSubject)}",
+                "advancedMailHelpText":"{!JSENCODE($Label.AdvancedEmail)}",
+                "clickHere":"{!JSENCODE($Label.ClickHere)}",
+                "send":"{!JSENCODE($Label.Send)}",
+                "noServiceRequestFound":"{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}",
+                "approver":"{!JSENCODE($Label.Change_Approval_Approver)}",
+                "status":"{!JSENCODE($Label.Status)}",
+                "dateTime":"{!JSENCODE($Label.Change_Approval_Submitted_Date)}",
+                "saveImageAs":"{!JSENCODE($Label.SaveImageAs)}",
+                "approve":"{!JSENCODE($Label.Approve)}",
+                "reject":"{!JSENCODE($Label.Reject)}",
+                "reassign":"{!JSENCODE($Label.Reassign)}",
+                "recall":"{!JSENCODE($Label.RecallApprovalRequest)}",
+                "comment":"{!JSENCODE($Label.Comments)}",
+                "approver":"{!JSENCODE($Label.SSApprovalApprover)}",
+                "Approvals":"{!JSENCODE($Label.Approvals)}",
+                "approvaldetails":"{!JSENCODE($Label.ApprovalDetails)}",
+                "queue":"{!JSENCODE($Label.Queue)}",
+                "user":"{!JSENCODE($Label.User)}",
+                "save":"{!JSENCODE($Label.Save)}",
+                "Required":"{!JSENCODE($Label.Required)}",
+                "FileName":"{!JSENCODE($Label.SSFileName)}",
+                "Pending":"{!JSENCODE($Label.Pending)}",
+                "Approved":"{!JSENCODE($Label.Approved)}",
+                "Recalled":"{!JSENCODE($Label.Recalled)}",
+                "Rejected":"{!JSENCODE($Label.Rejected)}",
+				"Submitted":"{!JSENCODE($Label.SSHomeMyRequestsColumnHeaderSubmitted)}",
+                "EmailConversationTemplate":"{!JSENCODE($Label.EmailConversationTemplate)}",
+                "Preview":"{!JSENCODE($Label.Preview)}",
+                "Users":"{!JSENCODE($ObjectType.User.labelPlural)}",
+                "Contacts":"{!JSENCODE($ObjectType.Contact.labelPlural)}",
+                "labelAttachFile":"{!JSENCODE($Label.AttachFileAttachmentPage)}",
+                "yes":"{!JSENCODE($Label.ExtjsMessageYes)}",
+                "no": "{!JSENCODE($Label.ExtjsMessageNo)}",
+                "rmvOriginalContentLabel":"{!JSENCODE($Label.rmvOriginalContentLabel)}",
+                "OriginalMessage":"{!JSENCODE($Label.OriginalMessage)}",
+                "StaffLink":"{!JSENCODE($Label.StaffLink)}",
+                "ClientLink":"{!JSENCODE($Label.ClientLink)}",
+                "PlainTextMode":"{!JSENCODE($Label.PlainTextMode)}",
+                "InsertSignature":"{!JSENCODE($Label.InsertSignature)}",
+                "ConfigureSignature":"{!JSENCODE($Label.ConfigureSignature)}",
+                "Settings":"{!JSENCODE($Label.Settings)}",
+                "EmailRecordLinksForClassicUser":"{!JSENCODE($Label.EmailRecordLinksForClassicUser)}",
+                "EmailRecordLinksForLightningUser":"{!JSENCODE($Label.EmailRecordLinksForLightningUser)}",
+                "LinkRemedyforceUser":"{!JSENCODE($Label.LinkRemedyforceUser)}",
+                "LinkSelfServiceClient":"{!JSENCODE($Label.LinkSelfServiceClient)}",
+                "EmailSignature":"{!JSENCODE($Label.EmailSignature)}",
+                "EmailSignatureSave" : "{!JSENCODE($Label.EmailSignatureSave)}"
+            },
+            "message":{
+                "recordClosedAlready":"{!JSENCODE($Label.RecordClosedAlready)}",
+                "noActivityFound":"{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}",
+                "noAttachmentFound":"{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}",
+                "attachmentRequired":"{!JSENCODE($Label.AttachmentMandatory)}",
+                "attachmentLimit":"{!JSENCODE($Label.AttachmentLimit)}",
+                "fileLimit":"{!JSENCODE($Label.FileLimit)}",
+                "emptyFile":"{!JSENCODE($Label.FileLengthZeroKB)}",
+                "fldsRequired":"{!JSENCODE($Label.RequiredFieldsEntry)}",
+                "emailSent":"{!JSENCODE($Label.EmailSent)}",
+                "invalidEmailAddress":"{!JSENCODE($Label.milestoneValidEmailAddr)}",
+                "noteAdded":"{!JSENCODE($Label.NoteAdded)}",
+				"actionAdded":"{!JSENCODE($Label.actionAdded)}",
+                "noteCreationFailure":"{!JSENCODE($Label.NoteCreationFailed)}",
+                "RecordSavedSuccessfuly":"{!JSENCODE($Label.RecordSavedSuccessfuly)}",
+                "AttchmentAddedSuccessfuly":"{!JSENCODE($Label.AttchmentAddedSuccessfuly)}",
+                "AttachmentCreateFailed":"{!JSENCODE($Label.AttachmentCreateFailed)}",
+                "RecordUpdateFailed":"{!JSENCODE($Label.RecordUpdateFailed)}",
+                "UnVarifiedOrgWideEmailAddress":"{!JSENCODE($Label.UnVarifiedOrgWideEmailAddress)}",
+                "TextAreaOverflow":"{!JSENCODE($Label.TextAreaOverflow)}"  ,
+                "RecordDeletedOrAccessDenied":"{!JSENCODE($Label.RecordDeletedOrAccessDenied)}",
+                "EmailAdditionalInfoEmptyText":"{!JSENCODE($Label.EmailAdditionalInfoEmptyText)}",
+                "ProfileNonSysAdminPermission":"{!JSENCODE($label.ProfileNonSysAdminPermission)}",
+                "ProfileSysAdminPermission":"{!JSENCODE($Label.ProfileSysAdminPermission)}",
+                "here":"{!JSENCODE($Label.here)}",
+				"StdInsufficentOperationPrivilege":"{!JSENCODE($Label.StdInsufficentOperationPrivilege)}",
+                "textFormatSwitchWarningMsg":"{!JSENCODE($Label.textFormatSwitchWarningMsg)}",
+                "AccessibilityModeErrorMsg":"{!JSENCODE($Label.AccessibilityModeErrorMsg)}",
+                "LayoutInsufficientAccess":"{!JSENCODE($Label.LayoutInsufficientAccess)}"
+            },
+			"serviceTargetStatus":{
+                "OK":"{!JSENCODE($Label.ServiceTargetStatus_OK)}",
+                "Cancelled":"{!JSENCODE($Label.ServiceTargetStatus_Cancelled)}",
+                "Met":"{!JSENCODE($Label.ServiceTargetStatus_Met)}",
+                "Missed":"{!JSENCODE($Label.ServiceTargetStatus_Missed)}",
+                "Warning":"{!JSENCODE($Label.ServiceTargetStatus_Warning)}"
+            }
+        }
+        </script>
+		<apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/moment/moment.2.19.3.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/moment/moment-timezone-with-data.min.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/custom-cookie.js')}"/>  
+        <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+        <script type="text/javascript" src="{!$Resource.DeepView}/js/Configuration.js"/>
+        <script type="text/javascript" src="{!$Resource.DeepView}/js/ng-DeepViewController.js"/>
+        <apex:outputPanel rendered="{!Not(showSidebarOnly)}">
+            <script type="text/javascript" src="{!$Resource.DeepView}/js/GraphBuilder.js"/>
+        </apex:outputPanel>
+        
+        <script type="text/javascript" src="{!$Resource.DeepView}/js/sidebar.js"/>             
+         <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-plugins/angularjs-datetime-picker.js')}"/>  
+        <script>angular.bootstrap(document, ['DeepView','angularjs-datetime-picker']);</script>
+        <div id="stageProgressBar" ng-show="showStages" class="stagedivCollapse" style="position: absolute; z-index: 10; left: 0px; top: 0px;"></div>
+    </body>
+</apex:page>

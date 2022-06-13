@@ -1,0 +1,311 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.MilestoneController">
+
+    <c:CommonIncludes />
+    
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Spinner.css" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/Spinner.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/SpinnerField.js" />
+    
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/SLAMilestone.js" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomViews.css" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SLAMilestone.css" />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SearchPage.css" />
+    
+    <script>
+    // don't move to JS file 
+    
+    var   labelSelectEmailRecipients ='{!JSENCODE($Label.selectEmailRecipients)}';
+        var labelDelete = '{!JSENCODE($Label.Delete)}',
+            labelNew = '{!JSENCODE($Label.New)}',
+            labelSave = '{!JSENCODE($Label.Save)}',
+            labelOK = '{!JSENCODE($Label.Ok)}',
+            labelCopy = '{!JSENCODE($Label.Copy)}',
+            labelReset = '{!JSENCODE($Label.Refresh)}',
+            labelCancel = '{!JSENCODE($Label.Cancel)}',
+			appliesTo = '{!JSENCODE($CurrentPage.parameters.appliesToId)}',
+            DeleteMessage = '{!JSENCODE($Label.milestoneDeleteActionConfirm)}',
+            labelSavedSuccessfully = '{!JSENCODE($Label.SavedSuccessfully)}',
+            selectRowMsg = '{!JSENCODE($Label.milestoneValidAction)}',
+            labelRemoveAction = '{!JSENCODE($Label.removeAction)}';
+    
+    var extJsResource ='{!$Resource.SDEFExtJS}';
+    var beforeSave = false;
+    var beforeReset = false;
+    var duration = '{!milestoneBean.milestoneObj.Value__c}';
+    var mileId = '{!milestoneBean.milestoneObj.id}';
+    var maxDuration = '{!maxDuration}';
+    selectedRowIndex = null;
+    var DZHE = 'џ';// used for spliting to and cc
+    var showSelfHelp = parent.showSelfHelp;
+	var isLightningExperience = '{!isLightningExperience}';
+    
+    function getSDFStylesResPath(){
+        return '{!$Resource.SDEFStyles}';
+    }
+            
+    actionData = [{!milestoneBean.actionString}];
+
+    function getActionData(){
+    	return '{!JSENCODE(milestoneBean.actionString)}';
+    }
+                     
+    function getActionListId(){
+   		return document.getElementById('{!$Component.MilestoneForm.actionListId}');
+    }
+                       
+   function getTemplateId(){
+   		return document.getElementById('{!$Component.MilestoneForm.templateId}');
+                        }
+                          
+    function getActionTo(){
+   		return document.getElementById('{!$Component.MilestoneForm.actionTo}');
+                      }
+            
+    function getActionCC(){
+   		return document.getElementById('{!$Component.MilestoneForm.actionCC}');
+                }       
+        
+    function getSelectedId(){
+   		return document.getElementById('{!$Component.MilestoneForm.selectedId}');
+    }
+    
+    function getMilestoneId(){
+    	return mileId;
+    }
+    
+    function getIsMilestoneCreatable(){
+            isMilestoneCreatable = '{!milestoneBean.isMilestoneCreatable}';
+            return isMilestoneCreatable;
+    }
+   // End of don't move to JS file
+    
+    </script>
+    
+    <apex:outputPanel id="errorId">
+      <script>
+           errormsg = '{!milestoneBean.messageString}';
+        </script>
+    </apex:outputPanel>
+    
+    <apex:outputPanel id="commitId">
+	  <script>
+	        var listData;
+	    listData =[{!milestoneBean.actionString}];
+		if(beforeSave == true && (errormsg == null || errormsg == '' || errormsg == labelSavedSuccessfully)){
+	     	    store.removeAll();
+	     	    store.loadData(listData);
+	     	    Ext.getCmp('actionDataGrid').getStore().commitChanges();
+	     	    Ext.getCmp('actionDataGrid').render('actionGrid');
+		}
+	 	duration = '{!milestoneBean.milestoneObj.Value__c}';
+	    mileId = '{!milestoneBean.milestoneObj.id}';    
+	  </script>
+  </apex:outputPanel>
+    
+    <apex:form id="MilestoneForm" > 
+        <c:ValidationComponent errorMsgList="{!milestoneBean.messageString}" id="validationComponent"></c:ValidationComponent>
+        
+        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+                <td><div id="milestoneToolBar"></div></td>
+            </tr>
+            <tr>
+                <td>
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tr>
+                            <td colspan="5"><div class="div10pxVspacing" /></td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="clsInputBoldLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__milestone}"/></td>
+                        </tr>
+                        <tr style="line-height: 22px;">
+                            <td class="clsInputLabelTD" style="padding-top:5px;"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SLA_Milestones__c.fields.BMCServiceDesk__Condition__c.label}"/></td>
+                            <td style="width:210px;padding-top:4px;width/*\**/: 193px\9;">
+                            	<apex:outputpanel id="milestonePanel">
+                            	<apex:selectList value="{!milestoneBean.milestoneObj.BMCServiceDesk__Condition__c}" size="1" id="selectedId" styleClass="clsMilestoneSelectList" onChange="showSpinner();" title="{!JSENCODE($Label.bmcservicedesk__milestonewhen)}">
+                                    <apex:selectOptions value="{!milestoneItems}"/>
+                                </apex:selectList>
+                                </apex:outputpanel>
+                            </td>
+                            <td id="equalId" style="width:20px;*width:20px;padding-top:4px;line-height: 20px;">
+                                <apex:outputLabel value="="/>
+                            </td>
+                            <td id="percentageId" style="padding-top:4px;line-height: 20px;" class="defaultFont">
+                                <div id="percentSpinnerDiv" style="width:60px;float:left;"/>
+                                <apex:outputLabel value="%"/>
+                            </td>
+                            <td id="daysId" style="width:330px;padding-top:4px;display:;">
+                                <table  cellpadding="0" cellspacing="0" border="0" width="100%">
+                                    <tr>
+                                        <td style="line-height: 20px;" class="defaultFont">
+                                            <div id="daySpinnerDiv" style="width:60px;float:left;"/>
+                                            <apex:outputLabel value="{!$Label.bmcservicedesk__incidenthistorydays}" />
+                                        </td>
+                                        <td style="line-height: 20px;" class="defaultFont">
+                                            <div id="hourSpinnerDiv" style="width:60px;float:left;"/>
+                                            <apex:outputLabel value="{!$Label.bmcservicedesk__hourslabel}" />
+                                        </td>
+                                        <td style="line-height: 20px;" class="defaultFont">
+                                            <div id="minuteSpinnerDiv" style="width:60px;float:left;"/>
+                                            <apex:outputLabel value="{!$Label.bmcservicedesk__minuteslabel}" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="padding-top:3px;">
+                    <tr>
+                            <td  colspan="2"><div class="div10pxVspacing" /></td>
+                        </tr>
+                        <tr>
+                            
+                            <td class="clsInputBoldLabelTD"  colspan="2"><apex:outputLabel value="{!$Label.bmcservicedesk__actions}"/></td>
+                        </tr>
+                        <tr>
+                            <td  colspan="2"><div class="div5pxVspacing" /></td>
+                        </tr>
+                        <tr>
+                            <td width="41%" style="padding-left:10px;vertical-align:top;">
+                            <apex:outputpanel id="actionPanel">
+                                <table cellpadding="0" cellspacing="0" width="100%" class="tableCls" border="0">
+                                    <tr>
+                                        <td class="clsButtonBarTD" colspan="2">
+                                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                <tr>
+                                                    <td width="10%" id="addDivId">
+                                                        <input type="button" value="{!$Label.Add}" onClick="addActionHandler();"  id="addButtonId"  class="addBtnCls" style="display:inline" />
+                                                    </td>
+                                                    <td width="90%" id="clearDivId">
+                                                        <input type="button" value="{!$Label.Clear}" onClick="clearActionFields();"  id="clearButtonId"  class="clearBtnCls" style="display:inline" />
+                                                    </td>
+                                                    <td width="10%" id="updateDivId">
+                                                        <input type="button" value="{!$Label.update}" onClick="addActionHandler();"  id="updateButtonId"  class="clearBtnCls" style="display:inline" />
+                                                    </td>
+                                                    <td width="90%" id="cancelDivId">
+                                                        <input type="button" value="{!$Label.Cancel}" onClick="cancelAction();"  id="cancelButtonId"  class="clearBtnCls" style="display:inline" />
+                                                    </td>
+                                                </tr>
+                                            </table>    
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-top:2px;" colspan="2"><div class="div10pxVspacing" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__actions}"/></td>
+                                        <td>
+                                            <!-- <apex:inputField styleClass="clsMilestoneSelectList" value="{!milestoneActionsBean.milestoneAction.BMCServiceDesk__Type__c}" id="actionListId"/>  -->
+                                       		<apex:selectList value="{!milestoneActionsBean.milestoneAction.BMCServiceDesk__Type__c}" size="1" id="actionListId" styleClass="clsMilestoneSelectList">
+                                                <apex:selectOptions value="{!actionItems}"/>
+                                            </apex:selectList>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2"><div class="div10pxVspacing" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputBoldLabelTD" colspan="2" style="white-space:normal;"><apex:outputLabel value="{!$Label.bmcservicedesk__actiondetails}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding-top:1px;"><div class="div5pxVspacing" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD" style="white-space:normal;"><apex:outputLabel value="{!$Label.bmcservicedesk__email}"/></td>
+                                        <td>
+                                            <apex:selectList value="{!milestoneActionsBean.milestoneAction.BMCServiceDesk__Email_Template_ID__c}" size="1" id="templateId" styleClass="clsMilestoneSelectList" title="{!JSENCODE($Label.bmcservicedesk__milestoneemail)}">
+                                                <apex:selectOptions value="{!templateItems}"/>
+                                            </apex:selectList>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td  style="padding-top:7px;" valign="top">
+                                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                <tr >
+                                                    <td width="90%" class="clsInputLabelTD" style="padding-right:0px;">
+                                                        <apex:outputLabel value="{!$Label.bmcservicedesk__to}"/>
+                                                    </td>
+                                                    <td width="10%" class="clsTextboxPopupTD">
+                                                        <input type="button" class="TextboxPopupIcon" id="toButtonIdMilestonePage" onclick="openSelectEmailRecipient('toButtonIdMilestonePage');" title="{!JSENCODE($Label.milestoneTo)}"/>
+                                                    </td>
+                                                </tr>
+                                            </table>    
+                                        </td>
+                                        <td style="padding-top:7px;">
+                                                <apex:inputTextarea styleClass="clsInputTextArea1" id="actionTo" value="{!milestoneActionsBean.toValue}" title="{!$Label.bmcservicedesk__separateemailwithsemicolon}"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td  style="padding-top:7px;" valign="top">
+                                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                <tr >
+                                                    <td class="clsInputLabelTD" style="padding-right:0px;">
+                                                        <apex:outputLabel value="{!$Label.bmcservicedesk__cc}"/>
+                                                    </td>
+                                                    <td class="clsTextboxPopupTD">
+                                                        <input type="button" class="TextboxPopupIcon"  id="ccButtonIdMilestonePage" onclick="openSelectEmailRecipient('ccButtonIdMilestonePage');" title="{!JSENCODE($Label.milestoneTo)}"/>
+                                                    </td>
+                                                </tr>
+                                            </table>    
+                                        </td>
+                                        <td style="padding-top:7px;">
+                                                <apex:inputTextarea styleClass="clsInputTextArea1" id="actionCC" value="{!milestoneActionsBean.ccValue}" title="{!$Label.bmcservicedesk__separateemailwithsemicolon}"/>
+                                        </td>
+                                    </tr>
+                                  <tr>
+                                        <td colspan="2"><div class="div10pxVspacing" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2"><div class="div5pxVspacing" /></td>
+                                    </tr> 
+                                </table>
+                                </apex:outputpanel> 
+                            </td>
+                            <td width="59%" style="padding-left:10px;padding-right:10px;vertical-align:top;">
+                                <table cellpadding="0" cellspacing="0" border="0" width="100%" class="tableCls">
+                                    <tr>
+                                        <td class="clsButtonBarTD">
+                                            <input type="button" value="{!$Label.Remove}" onClick="removeActionHandler();"  id="clearButtonId"  class="clearBtnCls" style="display:inline" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsRowBlueBgPanel">
+                                            <apex:outputLabel styleClass="clsWhiteHeader" value="{!$Label.bmcservicedesk__actions}"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div id="actionGrid"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>        
+                </td>
+            </tr>
+        </table>
+        
+    <apex:actionFunction name="addAction" action="{!addAction}" rerender="errorId,validationComponent" oncomplete="hideWaitbox();showError();addActionToGrid();">
+        <apex:param assignTo="{!milestoneActionsBean.Index}" name="actionIndex" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction name="save" action="{!save}" rerender="commitId,errorId,validationComponent" oncomplete="showError();getBtnState();setReturnValue(); handleResetChange();">
+    	<apex:param assignTo="{!milestoneBean.milestoneObj.Value__c}" name="duration" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction name="deleteAction" action="{!deleteAction}" rerender="errorId,validationComponent" oncomplete="showError();clearActionFields();hideWaitbox();">
+    	<apex:param assignTo="{!actionId}" name="actionIdName" value=""/>
+    	<apex:param assignTo="{!milestoneActionsBean.Index}" name="actionIndex" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction name="removeActionfromList" action="{!removeAction}" rerender="errorId,validationComponent" oncomplete="showError();clearActionFields();hideWaitbox();">
+    	<apex:param assignTo="{!milestoneActionsBean.Index}" name="actionIdName" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction name="reset" action="{!reset}" rerender="commitId,errorId,validationComponent,actionPanel,selectedId" oncomplete="showError();getDuration();showAddbtn(); handleResetChange();"/>
+    
+    <apex:outputpanel id="dummyPanel">  
+    </apex:outputpanel>     
+    </apex:form>
+</apex:page>

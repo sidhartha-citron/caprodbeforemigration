@@ -1,0 +1,70 @@
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId" access="global" controller="SiteSurveySettingsController">
+    
+    <aura:attribute name="columnAPINames" type="String[]" default="['SiteSurvey_RequiredSkills__c.Name','SiteSurvey_RequiredSkills__c.Skill_Level__c','SiteSurvey_RequiredSkills__c.Line_of_Business__c']"/>
+    <aura:attribute name="columns" type="SiteSurveySettingsController.ColumnRecord[]"/>
+    
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="siteSurveyId" type="String" />
+    <aura:attribute name="spinner" type="Boolean"/>
+    <aura:attribute name="newSkill" type="SiteSurvey_RequiredSkills__c"/>
+    <aura:attribute name="existingSkills" type="SiteSurvey_RequiredSkills__c[]"/>
+    <aura:attribute name="pickList" type="SiteSurveySettingsController.PickList[]" />
+    <aura:attribute name="selectedSkill" type="Skill"/>
+    <aura:attribute name="openSection" type="Boolean" default="false"/>
+    <aura:attribute name="searchString" type="String"/>
+    <aura:attribute name="searchResults" type="SObject[]"/>
+    
+    <aura:handler event="aura:waiting" action="{!c.showSpinner}"/>
+    <aura:handler event="aura:doneWaiting" action="{!c.hideSpinner}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <aura:handler name="skillChosenEvent" event="c:SkillSelected" action="{!c.handleSkillEvent}"/>
+    <aura:handler name="skillSavedEvent" event="c:SkillSaved" action="{!c.handleSkillSaveEvent}"/>
+    
+    <c:CustomToast aura:id="customToast" />
+    <c:SkillRequirementSection newSkill="{!v.newSkill}" columns="{!v.columns}" aura:id="lobSelector" existingSkills="{!v.existingSkills}"/>
+    
+    <c:InputLookup label="{!v.columns[0].label}" selectedResult="{!v.selectedSkill}" searchString="{!v.searchString}" sObjectType="Skill" searchResults="{!v.searchResults}" icon="standard:skill_requirement"/> 
+    
+    <div class="slds-scrollable">
+        <table class="slds-table slds-table--bordered slds-table--cell-buffer slds-m-top_xx-large">
+            <thead>
+                <tr class="slds-text-title--caps">
+                    <th scope="col"/>
+                    <aura:iteration items="{!v.columns}" var="s" indexVar="i">
+                        <th scope="col">
+                            <div class="slds-truncate" title="{!s.label}">{!s.label}</div>
+                        </th>
+                    </aura:iteration>
+                    <th scope="col"/>
+                    <th scope="col"/>
+                </tr>
+            </thead>
+            <tbody>
+                <aura:iteration items="{!v.existingSkills}" var="s" indexVar="i">
+                    <tr class="slds-hint-parent">
+                        <td>{!i+1}</td>
+                        <th scope="row">
+                            <div class="slds-truncate_container_50">
+                                <div class="slds-truncate" title="{!s.Name}">{!s.Name}</div>
+                            </div>
+                        </th>
+                        <td class="slds-cell-wrap">
+                            <div class="slds-text-align_center">{!s.Skill_Level__c}</div>
+                        </td>
+                        <td class="slds-cell-wrap">
+                            <div class="">{!s.Line_of_Business__c}</div>
+                        </td>
+                        <td>
+                            <lightning:button variant="" label="{!$Label.c.Site_Survey_Edit}" value="{!s}" onclick="{!c.editSkill}" class="slds-align_absolute-center"/>
+                        </td>
+                        <td>
+                            <lightning:button variant="" label="{!$Label.c.Site_Survey_Delete}" value="{!s}" onclick="{!c.removeSkill}" class="slds-align_absolute-center"/>
+                        </td>
+                    </tr>
+                </aura:iteration>
+            </tbody>
+        </table>
+    </div>
+</aura:component>

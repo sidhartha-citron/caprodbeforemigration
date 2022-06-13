@@ -1,0 +1,114 @@
+<apex:page showheader="false" sidebar="false" standardStylesheets="false">
+
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/stdcalalog.css" />
+<c:CommonIncludes2 />
+<style>
+    #searchTable 
+    {margin:10px 3px 0px 10px;}
+    
+    html* #searchTable
+    {margin:20px 3px 0px 10px;}
+</style>
+<script>
+
+var passedid = '{!JSENCODE($CurrentPageReference.parameters.keywords)}';
+function ReplaceAll(Source,stringToFind,stringToReplace)
+{
+	var reptemp = Source;
+	var repindex = reptemp.indexOf(stringToFind);
+	while(repindex != -1)
+	{
+		reptemp = reptemp.replace(stringToFind,stringToReplace);
+		repindex = reptemp.indexOf(stringToFind);
+	}
+	return reptemp;
+}
+
+function RemoveReserveCharactersForSOSL(value)
+{
+	var chars = new Array('?', '&', '|', '!', '{', '}', '[', ']', '(', ')', '^', '~', '*', ':', '\\', '"', '+', '-', '\'');
+	for(var j = 0 ; j < chars.length; j++)
+	{
+		value = value.replace(chars[j],'');
+	}
+	return value
+}
+
+function htmlEncode(value){
+  // SFDC raises an exception if it finds a closing script tag - so prevent it gracefully in query
+  value = value.replace("/script>","");
+  var d = document.createElement("div")
+  d.innerText = value
+  d.textContent = value;
+  return d.innerText;
+}
+function isCJKChar(str) {
+		var CJKpattern = /[\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/;
+		var m = CJKpattern.test(str)
+		return(m);
+}
+function opensearchresult()
+{
+    
+    var stringtopass = document.getElementById('keywords').value;
+    var tempstringtopass = RemoveReserveCharactersForSOSL(stringtopass).trim();
+    stringtopass = htmlEncode(stringtopass.trim());
+    
+    if(tempstringtopass.length < 2 && !isCJKChar(tempstringtopass)){
+        window.parent.Ext.MessageBox.show({
+           title: '{!JSENCODE($Label.Warning)}',
+           msg: '{!JSENCODE($Label.GsErrorMsg)}',
+           width:300,
+           buttons: Ext.MessageBox.OK,    
+           icon: Ext.MessageBox.WARNING
+       });
+    }
+    else{
+   
+        var glbsrch = "knowledgesearch?str=" + encodeURIComponent(stringtopass);
+        
+        DisplayName = '{!JSENCODE($Label.GlobalSearch)}';
+        window.parent.addNewTab(DisplayName, DisplayName, "NavigatorPage?title=" + DisplayName + "&target=" + glbsrch);
+   }
+   return false;
+}
+
+function onEnter( evt, frm ) {
+var keyCode = null;
+
+if( evt.which ) {
+keyCode = evt.which;
+} else if( evt.keyCode ) {
+keyCode = evt.keyCode;
+}
+if( 13 == keyCode ) 
+{
+    opensearchresult();
+    return false;
+}
+return true;
+}
+</script>
+<form name="Searchform">
+<table id="searchTable" width="95%" border="0" cellspacing="0" cellpadding="0" class="tableContainer" >
+  <tr>
+    <td>
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" >
+      <tr>
+    <td align="center">
+    
+    <input maxlength="255" id= "keywords" name="keywords" class="inputSearch" onkeypress="return onEnter(event,this.form);" /></td> 
+    <td align="right" width="32" >
+    <input name="sideSearchImage" id="searchBTN" type="image" src="{!$Resource.SDEFStyles}/SDEFimages/icon_knowledge_search.gif" class="imageSearch" alt="search" onclick="return opensearchresult();"/>
+    </td>
+      </tr>
+</table></td>
+  </tr>
+</table>
+</form>
+<script>
+
+document.getElementById('keywords').value = passedid;
+</script>
+
+</apex:page>

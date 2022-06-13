@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EscalationRules xmlns="http://soap.sforce.com/2006/04/metadata">
+    <escalationRule>
+        <fullName>EmailToCase</fullName>
+        <active>false</active>
+        <ruleEntry>
+            <businessHoursSource>Case</businessHoursSource>
+            <criteriaItems>
+                <field>Case.RecordTypeId</field>
+                <operation>equals</operation>
+                <value>Customers Cancellation</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Case.Status</field>
+                <operation>notEqual</operation>
+                <value>Closed</value>
+            </criteriaItems>
+            <escalationAction>
+                <minutesToEscalation>2880</minutesToEscalation>
+                <notifyCaseOwner>true</notifyCaseOwner>
+                <notifyTo>slanthier@citronhygiene.com</notifyTo>
+                <notifyToTemplate>unfiled$public/Customer_Cancellation_Esclation</notifyToTemplate>
+            </escalationAction>
+            <escalationStartTime>CaseCreation</escalationStartTime>
+        </ruleEntry>
+        <ruleEntry>
+            <businessHoursSource>None</businessHoursSource>
+            <criteriaItems>
+                <field>Case.Origin</field>
+                <operation>equals</operation>
+                <value>Email - chemicalservices@citronhygiene.com,Email - info.chemical@citronhygiene.com</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Case.Owner_Type__c</field>
+                <operation>equals</operation>
+                <value>Queue</value>
+            </criteriaItems>
+            <escalationStartTime>CaseCreation</escalationStartTime>
+        </ruleEntry>
+    </escalationRule>
+</EscalationRules>

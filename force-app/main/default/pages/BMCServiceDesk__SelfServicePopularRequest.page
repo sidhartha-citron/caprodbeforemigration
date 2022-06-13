@@ -1,0 +1,39 @@
+<apex:page id="SelfServicePopularRequest" controller="BMCServiceDesk.SelfServiceHomePageController"  sidebar="false" showHeader="false" standardStylesheets="false" extensions="BMCServiceDesk.JSRemoteActions">
+<script>
+var ssIncidentURL = "{!JSENCODE($Page.BMCServiceDesk__SSIncident)}";
+var formAssignment = '{!JSENCODE(formAssignment)}';
+var ssRequestDetailForm = "{!$Page.BMCServiceDesk__SSIncidentCustom}";
+var defaultImage='{!URLFOR($Resource.Themes, 'SSDefaultTheme/images/en_US/service-32.png')}';
+var popularRequestsData={!prData};
+var submitLabel = '{!JSENCODE($Label.SubmitALabel)}';
+var serviceRequestLabel = '{!JSENCODE($Label.ServiceRequestLabel)}';
+var reportAnIssueLabel='{!JSENCODE($Label.SSReportIssue)}';
+var requestServiceLabel='{!JSENCODE($Label.SSRequestService)}';
+var allowRFPopUp ='{!allowRFPopUp}';
+
+</script>
+	<apex:form id="SSPopularRequestForm">
+		<div>
+			<div id="prToolbarDiv" class="popReqToolbarCls"></div>
+			<div id="prListDiv" class="{!IF(showRequestsTogether,'prCombinedListDivCls','prListDivCls')}">
+				<div id="prSpacerDiv" class="{!IF(showRequestsTogether,'x-hide-display','div3pxVspacing')}"></div>
+			</div>
+			<div id="prMoreLinkDiv" class="ssMoreItem">
+				<apex:outputLabel id="popularMoreLinkText" styleClass="moreLinkCls" value="{!$Label.bmcservicedesk__ssmore}" onclick="fetchPopularRecords(true,selectedType)"/>
+			</div>
+			<div id="prLessLinkDiv" class="ssMoreItem">
+				<apex:outputLabel id="popularLessLinkText" styleClass="moreLinkCls" value="{!$Label.bmcservicedesk__less}" onclick="fetchPopularRecords(false,selectedType);"/>
+			</div>
+		</div>
+	</apex:form>
+
+<script src="{!$Resource.SSjs}/SSPopularRequests.js"></script>
+<script>
+
+	Ext.onReady(function(){
+		if (!SDF.settings.isPREmpty)
+			renderPopularRequests();
+	});
+
+</script>
+</apex:page>

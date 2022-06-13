@@ -1,0 +1,254 @@
+<apex:page standardStylesheets="false" showheader="false" sidebar="false" title="{!JSENCODE($Label.bmcservicedesk__remedyforcemobile)}" docType="html-5.0" controller="BMCServiceDesk.SF1AnalystController" action="{!IsOpenedasStaff}">
+	
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/css/jquery.mobile-1.5.0.min.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/css/svg.css" type="text/css" />
+	<link rel="stylesheet" href="{!$Resource.Salesforce1}/css/WorkDashboard.css" type="text/css" />
+	<link rel="stylesheet" href="{!$Resource.Salesforce1}/css/DynamicListView.css" type="text/css" />
+	<link rel="stylesheet" href="{!$Resource.Salesforce1}/css/SF1AnalystCommon.css" type="text/css" />
+	<link rel="stylesheet" href="{!$Resource.Salesforce1}/css/RecordDetail.css" type="text/css" />
+	<link rel="stylesheet" href="{!$Resource.Salesforce1}/css/InstanceEditor.css" type="text/css" />
+	
+	<link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/icons.css" rel="stylesheet" /> 	 
+	<link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/dpl-iconfont.css" rel="stylesheet" />
+	<link href="{!$Resource.Salesforce1}/css/StaffModuleAttachment.css" rel="stylesheet" />
+
+	
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="height=device-height,width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" />
+
+	<div id="container">
+		<div data-role="page" id="WorkDashboard">
+			<div class="ui-loader-background"/>
+            <div data-role="header"  class="ui-toolbar-header-fixed"  id="WorkDashboardHeader" data-position="fixed" >
+				<div class="rf-top-banner-div">
+				<img id="bmc-rf-logo" src="{!$Resource.Salesforce1}/css/images/Remedyforce-SF1-Logo.png"/>
+				</div>
+			</div>
+            <div data-role="content" id="WorkDashboardcontent" role="main" class="ui-content scrollable">
+				<article class="formBox">
+					<div class="rf-section-div" style="padding-bottom:0px;">
+						<div class="rf-header-div" style="padding-bottom: 10px;">
+						<div class="formBox-top  " style="display: -webkit-inline-box;">
+							<div class="formBox-top-content">{!$Label.Work}</div>
+							
+						</div>
+						</div>
+						<div>
+							
+							<div>
+								<div  id="viewmenu">
+									<select   id="FilterPicklist">
+											<option value="All">{!$Label.All}</option>
+											<option value="AssignedToMe" selected="selected">{!$Label.LblAssignedToMe}</option>
+											<option value="AssignedToQueue">{!$Label.AssignedToMyQueue}</option>
+										</select>
+								</div>
+								<ul class="rf-list-view worklist">
+									<li id="Incident-Request" class="rf-cursor-pointer" style="border-bottom : 1px solid #CFD4D9;">
+										<div class="RFlistcard-rowdiv">	
+											<a onclick="WorkDashboard.navigateToCreateForm('incident__c');" class="rf-add" id="IncidentAdd"> <div class="db_add_icon"> </div> </a> 
+											<div onclick="if(Config.DashboardData.IncidentCount > 0) Listview.NavigatetoListviewPage('incident__c', $(Config.DashboardSelectors.FilterPicklist).val(),'','ListViewPage');" class="rf-list-div">
+											{!$Label.Navigator_Incidents}
+											<span id="IncidentMore" class="rf-right-float rf-more_arrow"></span>
+											<span class="rf-right-float" id="IncidentCount"></span>
+											</div>
+										</div>
+									</li>
+									<li id="Task" class="rf-cursor-pointer">
+										<div class="RFlistcard-rowdiv" >	
+											<a onclick="WorkDashboard.navigateToCreateForm('task__c');" id="TaskAdd" class="rf-add "> <div class="db_add_icon"> </div> </a> 
+											<div  onclick="if(Config.DashboardData.TaskCount > 0) Listview.NavigatetoListviewPage('task__c', $(Config.DashboardSelectors.FilterPicklist).val(),'','ListViewPage');" class="rf-list-div">
+											{!$Label.Navigator_Tasks}
+											<span id="TaskMore" class="rf-right-float rf-more_arrow"></span>
+											<span class="rf-right-float" id="TaskCount" ></span>
+											</div>
+										</div>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</article>
+				
+				<br/>
+				
+				<article class="formBox">
+					<div class="rf-section-div">
+						<div class="formBox-top rf-header-div">
+							<span class="formBox-top-content">{!$Label.SSRightSidebarBroadcastsTitle}</span> 
+							<a class="rf-cursor-pointer" id="BroadcastMore" onclick="Listview.NavigatetoListviewPage('broadcasts__c', 'All','','ListViewPage');"> {!$Label.SF1More} <span class=" rf-more_arrow" > </span> </a>
+						</div>
+						<div class="formBox-bottom">
+							<ul class="rf-list-view" id="BroadcastList" data-inset="true"> </ul>
+						</div>
+					</div>
+				</article>
+				<br/>
+				<article class="formBox">
+					<div class="rf-section-div" id="KBADiv">
+						<div class="formBox-top rf-header-div rf-cursor-pointer" style="border:0px" onclick="Listview.NavigatetoListviewPage('km_knowledgearticle__c','{!$Label.SSPopularKnowledgeArticles}','','ListViewPage');">
+							<span class="formBox-top-content">{!$ObjectType.KM_KnowledgeArticle__c.labelPlural}</span>
+							<span id="KnowledgeMore" class="rf-right-float rf-more_arrow moreicon"> </span>
+						</div>
+					</div>
+				</article>
+				<br/>
+				<hr color="#CFD4D9"/>
+				<div class="RFlistcard-rowdiv"  id="footer" style="padding-top:5px"> 
+					<a id="AnalystPage-helpIcon" class="rf-cursor-pointer helpicon pagebtnactive" style="width:22px; height:22px;padding: 12px;" onclick="WorkDashboard.showHelp();"/>
+					<a id="AnalystPage-refreshIcon" class="rf-cursor-pointer refreshicon_blue pagebtnactive" style="width:22px; height:22px; position: absolute; right:0%;padding: 12px;" onclick="WorkDashboard.refreshDashboard();"/>
+				</div>
+			</div>
+		</div>
+		<!-- Dynamic List View page-->
+		<div data-role="page"  id="ListViewPage" >
+			 <div class="ui-loader-background"> </div>
+                <div data-role="header" data-tap-toggle="false" class="commonPageHeader  ui-toolbar-header-fixed" id="ListViewPage-header" data-position="fixed"></div>
+                 
+			<!-- Body-->
+                <div  data-role="content" id="ListViewPage-content" class='listviewcontent ui-content scrollable'>
+				
+					<div id="ListViewPage-btnSection" class='listViewBtnSection'/>
+				<ul data-role="listview" data-inset="true" id="ListViewPage-listUL" style="margin:.5em 0;"></ul>
+				<p style="text-align:center;" id="ListViewPage-NoRecord"></p>
+				 <div><a href="#" id="ListViewPage-Loadmore" class="button HideDiv ">{!$Label.Load_more_records}</a></div>
+				</div>
+		</div>
+		
+		<!-- record detail page-->
+		<div data-role="page"  id="recordDetailPage" >
+			<div id="Recorddetailbody"> 
+				<div class="ui-loader-background"/>
+                <div data-role="header" id="recordPageHeader"  data-tap-toggle="false" class=" ui-toolbar-header-fixed commonPageHeader  " data-position="fixed"/> 
+                <div  data-role="content" id="recorddetail" class="ui-content scrollable"> 
+					<div id="actionMenuList"/>
+                    <div  data-role="recordDetails" id="recorddetailcontent"/>
+                    <div class="attachmentContainer" id="attachmentsView"></div>                    
+					</div>
+			</div>
+		</div>
+
+		<!--Lookup page-->
+		<div data-role="page" id="lookupPage">
+			<div class="ui-loader-background"> </div>
+            <div data-role="header" id="lookupPageHeader"  data-tap-toggle="false" class="commonPageHeader ui-toolbar-header-fixed" data-position="fixed"> </div> 
+            <div  data-role="content" id="lookupPageContent" class="ui-content scrollable"> </div>
+		</div>
+
+		<!-- View RelatedList page-->
+		<div data-role="page"  id="RelatedListPage" >
+                <div data-role="header" data-tap-toggle="false" class="commonPageHeader ui-toolbar-header-fixed" id="RelatedListPage-header" data-position="fixed"> </div>
+				<div  data-role="content" id="RelatedListPage-content" class="ui-content listviewcontent scrollable">            
+					<ul data-role="listview" data-inset="true" id="RelatedListPage-listUL" class="ListUl"> </ul> 
+				</div>
+		</div>
+
+		<div data-role="page"  id="RelatedRecordDetail"> 
+			<div class="ui-loader-background"> </div>
+            <div data-role="header" data-tap-toggle="false" class="commonPageHeader ui-toolbar-header-fixed" id="RelatedRecordHeader" data-position="fixed"> </div>
+			<div  data-role="content" id="RelatedRecordContent" class="ui-content scrollable"> </div>               
+		</div>
+		
+		<!--InstanceEditor Page-->
+		<div data-role="page"  id="InstanceEditor"> 
+			<div class="ui-loader-background"> </div>
+            <div data-role="header" data-tap-toggle="false" class="commonPageHeader ui-toolbar-header-fixed" id="InstanceEditor-header" data-position="fixed"> </div>
+			<div data-role="content" id="InstanceEditorTabs" class="ui-content scrollable"></div>
+		</div>
+		
+		<!-- view files page-->
+		<div data-role="page"  id="ViewFilesPage" >
+			<div class="ui-loader-background"/>
+            <div data-role="header" id="ViewFilesPageHeader"  data-tap-toggle="false" class=" ui-toolbar-header-fixed commonPageHeader  " data-position="fixed"/> 
+            <div  data-role="content" id="ViewFilesPageContent" class="sf1-viewFiles scrollable">
+				<div class="attachmentContainer" id="ViewFilesPageAttachmentController"></div>
+				<p style="text-align:center;" id="ViewFilesPage-NoRecord"></p>
+			</div>				 
+			
+		</div>
+		
+    </div>
+
+	<script src="/soap/ajax/48.0/connection.js"></script>
+	<script type="text/javascript" src="{!$Resource.DeepView}/js/forcetk.js"></script>
+	  
+	<script type="text/javascript">
+		var client = new forcetk.Client();
+		function setConnectionSession(){
+		  sforce.connection.sessionId='{!GETSESSIONID()}';
+		 }
+		
+		 client.setSessionToken('{!$Api.Session_ID}');
+		  
+		function setSessionToClient(){
+			client.setSessionToken('{!$Api.Session_ID}');
+		  }
+	</script>
+
+       
+      <script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/jquery/jquery.min.js" />
+      <script type="text/javascript" src="{!$Resource.Salesforce1}/SelfService/DPLLibraries/js/jquery.mobile-1.5.0.min.js" />
+      <script src="{!$Resource.Salesforce1}/js/SF1Common.js"  type="text/javascript" />      
+      <script src="{!$Resource.Salesforce1}/js/WorkDashboard.js"  type="text/javascript" />
+      <script src="{!$Resource.Salesforce1}/js/LoadScripts.js"  type="text/javascript" /> 
+     
+
+	<script type="text/javascript">
+		
+		Visualforce.remoting.timeout = 60000 ;
+		var timezoneOffset={!timezoneOffset};
+		var userLanguage = '{!userLanguage}';
+		var ResourceURL = '{!$Resource.Salesforce1}';
+		var helpURL = '{!$Resource.Salesforce1}/html/help.htm';
+		if(userLanguage == 'ja')
+			helpURL = '{!$Resource.Salesforce1}/html/help_ja.htm';
+		var hiddenFields = [];
+		var namespace = "BMCServiceDesk__".toLowerCase();
+		var attachments = [];
+
+		var _ObjectPermissions = {}
+		_ObjectPermissions.isBroadcastAccessible = {!$ObjectType.BMCServiceDesk__Broadcasts__c.accessible};
+		_ObjectPermissions.isIncidentCreateable = {!$ObjectType.BMCServiceDesk__Incident__c.createable};
+		_ObjectPermissions.isIncidentUpdateable = {!$ObjectType.BMCServiceDesk__Incident__c.updateable};
+		_ObjectPermissions.isTaskCreateable = {!$ObjectType.BMCServiceDesk__Task__c.createable};
+		_ObjectPermissions.isTaskUpdateable = {!$ObjectType.BMCServiceDesk__Task__c.updateable};
+		_ObjectPermissions.isIncidentHistoryCreateable = {!$ObjectType.BMCServiceDesk__IncidentHistory__c.createable};
+		_ObjectPermissions.isTaskHistoryCreatable={!$ObjectType.BMCServiceDesk__TaskHistory__c.createable}
+		
+		var _RemotingActions = {}
+		_RemotingActions.CalculateDueDate = "{!$RemoteAction.SF1AnalystController.calculateDueDate}";
+		_RemotingActions.GetPageRecords = "{!$RemoteAction.SF1AnalystController.getRecords}";
+		_RemotingActions.GetInitialData = "{!$RemoteAction.SF1AnalystController.getInitialdata}";
+		_RemotingActions.getCounts = '{!$RemoteAction.SF1AnalystController.getCounts}';
+       	_RemotingActions.fetchBroadcast = '{!$RemoteAction.SF1AnalystController.fetchBroadcast}';
+       	_RemotingActions.getRecordData = '{!$RemoteAction.SF1AnalystController.getRecord}';
+		_RemotingActions.setRecordData = '{!$RemoteAction.SF1AnalystController.saveRecord}';
+		_RemotingActions.addNote = '{!$RemoteAction.SF1AnalystController.addNote}';		
+        _RemotingActions.getLookUpData = '{!$RemoteAction.SF1AnalystController.getData}';
+		_RemotingActions.geAppsettings = '{!$RemoteAction.SF1AnalystController.geAppsettings}';
+        _RemotingActions.getTemplateData = '{!$RemoteAction.SF1AnalystController.getTemplateData}';
+        _RemotingActions.fetchRecords= '{!$RemoteAction.SF1AnalystController.fetchHistoryDetails}';
+		_RemotingActions.sendEmailFun= '{!$RemoteAction.SF1AnalystController.sendEmailFun}';  	
+		_RemotingActions.checkQueueMember= '{!$RemoteAction.SF1AnalystController.checkQueueMember}';
+        _RemotingActions.getKA = '{!$RemoteAction.SF1AnalystController.getKnowledgeArticle}';
+        _RemotingActions.closeRecord = '{!$RemoteAction.SF1AnalystController.closeRecord}';
+		_RemotingActions.LinkKA = '{!$RemoteAction.SF1AnalystController.createKALink}';
+        _RemotingActions.getKnowledgeArtilceUrls = '{!$RemoteAction.SF1AnalystController.getKnowledgeArtilceUrls}';
+		_RemotingActions.getEmailIds='{!$RemoteAction.SF1AnalystController.getEmailIds}';
+        _RemotingActions.CreateAndLink='{!$RemoteAction.SF1AnalystController.CreateAndLink}';
+        _RemotingActions.LinkCIWithIncident='{!$RemoteAction.SF1AnalystController.linkCItoIncident}';
+        _RemotingActions.UnlinkCIFromIncident='{!$RemoteAction.SF1AnalystController.unlinkCIFromIncident}';
+        _RemotingActions.getIncidentRecordDetails='{!$RemoteAction.SF1AnalystController.getInstanceRecord}';
+        var NSpace = "BMCServiceDesk__";
+		var _Labels = {}
+		WorkDashboard.initDashboard();
+		$(document).ready(function() { 
+			SF1Common.Loader('show');
+			try{
+				LoadScripts.loadJsFiles();
+			}catch(e){}
+			$(document).on("pagechange",function(event,data){PageControll(data)}); 
+		});
+	</script>
+
+</apex:page>

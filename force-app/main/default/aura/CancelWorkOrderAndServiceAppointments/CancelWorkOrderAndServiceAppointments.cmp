@@ -1,0 +1,25 @@
+<aura:component implements="force:lightningQuickAction,force:hasRecordId">
+    <aura:attribute name="record" type="Object" />
+    <aura:attribute name="simpleRecord" type="Object" />
+    <aura:attribute name="recordError" type="String" />
+    <aura:attribute name="originalStatus" type="String" />
+    
+    <force:recordData aura:id="recordEditor"
+                      layoutType="FULL"
+                      recordId="{!v.recordId}"
+                      targetError="{!v.recordError}"
+                      targetRecord="{!v.record}"
+                      targetFields ="{!v.simpleRecord}"
+                      mode="EDIT" />
+    
+    <aura:attribute name="isCancelled" type="Boolean" default="false" />
+    <aura:handler name="change" value="{!v.isCancelled}" action="{!c.cancellationConfirmed}"/>
+    
+    <div class="slds-box">
+        <div class="slds-m-bottom--large slds-text-heading--small">{!$Label.c.About_to_Cancel_Work_Order}&nbsp;{!v.simpleRecord.WorkOrderNumber}</div>
+    	
+        <lightning:button variant="brand" label="{!$Label.c.Cancel_Work_Order}" onclick="{!c.cancelWorkOrder}" disabled="{!v.simpleRecord.Status == $Label.c.Cancelled}" />
+    </div>
+    
+    <div aura:id="ModalDialogPlaceholder"></div>
+</aura:component>

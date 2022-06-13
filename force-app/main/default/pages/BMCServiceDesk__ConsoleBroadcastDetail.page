@@ -1,0 +1,576 @@
+<apex:page id="thpage" standardController="BMCServiceDesk__Broadcasts__c"
+    extensions="BMCServiceDesk.ConsoleBroadcastDetailController,BMCServiceDesk.ConsoleRemoteActions"
+    standardStylesheets="true" showHeader="false" sidebar="false">
+    <head>
+        <link rel="stylesheet" href="{!$Resource.SDEFStyles}/ConsoleDetail.css" type="text/css" />
+		<link rel="stylesheet" href="{!$Resource.SDEFStyles}/TypeAhead.css" type="text/css" />
+		<link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" rel="stylesheet" />
+        <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+		<link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" />
+		<style> #rfDPLReferenceDiv select[multiple]{max-width:{!IF(columnSize==1,'400','200')}px} </style>
+    </head>
+
+    <body onload="doOnLoadActivity()">
+	<div id="rfDPLReferenceDiv">
+        <apex:form id="theForm" onclick="parent.hideMenu();">
+            <apex:actionFunction action="{!saveRecord}" name="save" rerender="messagePanel" oncomplete="stopWaitMsgBar();displayMessage();headerSpaceHandler();alignTopbarWidth('formoutputpanel','topmenu');applyMarginToErrorMessage();">
+            	<apex:param assignTo="{!csvAccountID}" name="csvAccountListparam" value=""/>
+            	<apex:param assignTo="{!attRefGeneratorId}" name="attRefGeneratorId" value=""/>
+                <apex:param assignTo="{!lastModifiedByLocking}" name="lastModifiedByLocking" value=""/>
+		    </apex:actionFunction>
+             <apex:actionFunction action="{!saveRecordWR}" name="saveWithRerender" rerender="messagePanel, renderPanel,tableOutputpanel,genericPanel,frequentRereshPanel" oncomplete="stopWaitMsgBar();displayMessage();AddTextareaEditorButton();if (saveSuccessful != null) window.parent.lockRecordAfterSave();headerSpaceHandler();alignTopbarWidth('formoutputpanel','topmenu');
+             ">
+			 	<apex:param assignTo="{!csvAccountID}" name="csvAccountListparam" value=""/>
+         		<apex:param assignTo="{!attRefGeneratorId}" name="attRefGeneratorId" value=""/>
+                <apex:param assignTo="{!lastModifiedByLocking}" name="lastModifiedByLocking" value=""/>
+             </apex:actionFunction> 
+			<apex:actionFunction name="AssignAttRefGeneratorId" rerender="messagePanel" immediate="true">
+     		   <apex:param assignTo="{!attRefGeneratorId}" name="attRefGeneratorId" value=""/> 
+     	    </apex:actionFunction>
+
+
+            <script>
+			 window.parent.initialRecordState = '{!initialRecordState}';
+             var saveSuccessful = '';
+             var lastModifiedByLocking = '{!JSENCODE(lastModifiedByLocking)}';
+            	var errorComponentID = '{!$Component.thpage:theForm:pageMessage}';
+                var ownerType ='';
+                var orgNamespace = 'BMCServiceDesk__';
+				var userLanguage = '{!JSENCODE(userLanguage)}';
+				var broadcastId = '{!JSENCODE(broadcast.Id)}';
+                var BroadcastIsClosed = '{!JSENCODE($Label.BroadcastClosed)}';
+                var userTypeReference = '';
+                var lookupFilterIDMap = {};
+                var filterFieldsMap= {};
+                var pageSectionIdMap = {};
+                var fieldApiName;
+                var refType = 'reference';
+                var noRefType = '';
+                var typeAheadDivId = 'autocompleteDiv';
+                var mandatoryFields = {};
+                var NONPRINT = '¬';
+                var Error = '{!JSENCODE($Label.Error)}';
+                var customStaffApi = 'FKStaff__c';
+                var currentConsole = 'Broadcast';
+                var AssignmentDetailSection = '{!JSINHTMLENCODE($Label.Console_Assignment)}';
+                var DisplayBroadcastSection = '{!JSINHTMLENCODE($Label.DisplayBroadcast)}';
+                var impactHelpText = '{!JSENCODE(impactTooltip)}';
+                var urgencyHelpText = '{!JSENCODE(urgencyTooltip)}';
+                var statusHelpText = '{!JSENCODE(statusTooltip)}'; 
+                var toEveryOneElId = 'selectProfile:0';
+                var profileNameElId = '{!JSENCODE($Component.theForm:thePAgeBlock:sec6:Proflie__c_id_name)}';
+                var displayInSSElId = '{!JSENCODE($Component.thpage:theForm:thePAgeBlock:sec6:displayInSS)}';
+                var broadcastState = {!broadcast.state__c};      
+                var isCategoryMandatory = false;
+                var isBroadcastMessageMandatory = false;    
+                var isBroadcastIDMandatory = false;             
+                var firstElement = '';
+                var isFirstElementRichTextArea = false;
+				var hiddenToEveryoneId = '{!$Component.hiddenToEveryone}';
+            
+			    var tagname = '';
+                var membersOf= '{!JSENCODE($Label.Members_of)}';           
+                var isLightningExperience = '{!isLightningExperience}';
+                function setFSFieldDetail(fieldAPIName, fieldLabel, fsRequired, fsDBRequired, fsName, fieldId, fieldHelpText,fieldUserLookup, ftype, isRichTextArea) {
+                    var objtitleval = document.getElementById(fieldId);
+                    if (objtitleval) {
+                        var fieldValue = objtitleval.value;
+                        if(objtitleval != null && objtitleval != 'undefined') objtitleval.title = fieldHelpText;
+                        
+                        if(ftype.indexOf('picklist') > -1) {
+			            	objtitleval.parentElement.title = fieldHelpText;
+			            }
+                        
+                        if(lookupFilterIDMap[fieldAPIName]==null){
+                            lookupFilterIDMap[fieldAPIName] = fieldId;
+                        }
+                        
+                        if (fsRequired || fsDBRequired){
+                            if (fieldAPIName.indexOf('FKImpact__c') > 0) 
+                                mandatoryFields['impactSelectId'] = fieldLabel + NONPRINT + fieldValue;
+                            else if (fieldAPIName.indexOf('FKUrgency__c') > 0) 
+                                mandatoryFields['urgencySelectId'] = fieldLabel + NONPRINT + fieldValue;
+                            else if (fieldAPIName.indexOf('FKStatus__c') > 0) 
+                                mandatoryFields['statusSelectId'] = fieldLabel + NONPRINT + fieldValue;
+                            else
+                                mandatoryFields[fieldId] = fieldLabel + NONPRINT + fieldValue;
+							if (fsName.toUpperCase()==('BMCServiceDesk__Console_BroadcastDetails').toUpperCase() && fieldAPIName.indexOf('FKCategory__c') > 0) {
+								isCategoryMandatory = true;
+								if(parent.Ext.isIE8 || parent.Ext.isIE7){
+									objtitleval.style.marginRight="-4px"; 
+								}
+								mandatoryFields[fieldId] = fieldLabel + NONPRINT + fieldValue;
+							}
+						}
+
+                        if (fsName.toUpperCase()==('BMCServiceDesk__Console_BroadcastDetails').toUpperCase() && fieldAPIName.indexOf('broadcastMessage__c') > 0) {
+                            isBroadcastMessageMandatory = true;
+                            if(parent.Ext.isIE8 || parent.Ext.isIE7){
+                                objtitleval.style.marginRight="-4px"; 
+                            }
+							mandatoryFields[fieldId] = fieldLabel + NONPRINT + fieldValue;
+                        }   
+
+                        if (fieldAPIName=='Name') {
+                            isBroadcastIDMandatory = true;
+                            if(parent.Ext.isIE8 || parent.Ext.isIE7){
+                                objtitleval.style.marginRight="-4px"; 
+                            }
+							mandatoryFields[fieldId] = fieldLabel + NONPRINT + fieldValue;
+                        }   
+                        
+                        objtitleval.setAttribute('rf-FieldApiName', fieldAPIName);
+                        
+                        tagname = objtitleval.tagName;
+                        if (firstElement == '' && tagname.toUpperCase() != 'SPAN') {
+                            if(fieldAPIName.toUpperCase() == (orgNamespace+'FKImpact__c').toUpperCase()){
+                                firstElement = 'impactSelectId';
+                            }else if( fieldAPIName.toUpperCase() == (orgNamespace+'FKUrgency__c').toUpperCase()){
+                                firstElement = 'urgencySelectId';
+                            }else if(fieldAPIName.toUpperCase() == (orgNamespace+'FKStatus__c').toUpperCase()){
+                                firstElement = 'statusSelectId';
+                            }
+                            else{
+                                firstElement = fieldId;
+                            }
+                        } 
+                        if (!(ftype === 'textarea' || ftype === 'multipicklist' || ftype === 'boolean')) {
+                            objtitleval.className += ' rf-single-line-field';
+                        }
+                        if (ftype === 'reference') {
+                            objtitleval.setAttribute('autocomplete', 'off');
+                            if (fieldUserLookup) {
+                                objtitleval.setAttribute('rf-ReferenceTo', fieldUserLookup);
+                            }
+                        }
+                        else if(ftype === 'multipicklist') {
+                            objtitleval.setAttribute('onchange', 'resetTitleForMultiPicklist(this);');
+                        }                    
+                    } else if(firstElement == '' && ftype == 'textarea' && isRichTextArea){
+				    	isFirstElementRichTextArea = true;
+				    	firstElement = fieldAPIName;
+				    }                       
+                }
+            </script>
+        <div id="formoutputpanel" style="overflow:none;height:100%;position: fixed;width:100%;overflow-x: auto;z-index:1;"> 
+            <apex:outputPanel id="tableOutputpanel" layout="block">
+                <apex:outputPanel id="messagePanel" styleClass="messageContainer">            
+                    <apex:pageMessages id="pageMessage" />   
+                    <div id="jsscripterrorId" style="display:none">
+                        <div class="d-notification d-notification_error d-notification_content">
+                            <div class="d-notification__icon d-icon-left-exclamation_triangle"></div>
+                            <div class="d-notification__supporting-text">
+                                <h3 class="d-notification__title">{!JSENCODE($Label.Error)}</h3>
+                                <p class="d-notification__item" id="errorDescId" ></p>
+                            </div>
+                        </div>
+                    </div>   
+          <!-- Success Message -->
+          <div id="jsscriptsucessmsg"  style="display:none" class="d-notification d-notification_success d-notification_content">
+                        <div class="d-notification__icon d-icon-left-check"></div>
+                        <div class="d-notification__supporting-text">
+                            <h3 class="d-notification__item"><apex:outputText value="{!$Label.bmcservicedesk__approvalsuccessmsg}" /></h3>
+                        </div>
+                     </div>  
+           <div id="SaveMessageDiv" class="d-notification d-notification_success d-notification_content rfDPL-show" style="display: none;">
+                        <div class="d-notification__icon d-icon-left-check"></div>
+                        <div class="d-notification__supporting-text">
+                            <h3 class="d-notification__item"><apex:outputText value="{!$Label.bmcservicedesk__savedsuccessfully}" /></h3>
+                        </div>
+                     </div>               
+                    <script> 
+                      window.scroll(0,0);
+                      document.getElementById('formoutputpanel').scrollTop=0;
+                        if (typeof replaceErrorMessages === 'function') {
+                            replaceErrorMessages('{!$Component.pageMessage}');
+                        }
+                    </script>          
+                </apex:outputPanel> 
+                <apex:pageBlock id="thePAgeBlock" title="">
+                    <table style="overflow: none; height: 100%; width: 100%" cellspacing="0" cellpadding="0">
+                        <tr>
+                        	<td><div id="messageSpace" class="message_space_on"></div></td>
+                            <apex:facet name="header">
+                                <div id="topmenu" align="center"
+                                    style="height: auto; width: 100%; padding-bottom: 5px;"></div>
+                            </apex:facet>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="width: 100%; overflow: auto;">
+                                    <apex:repeat value="{!lstOfFSWrapper}" var="fsWrapper">
+                                        <div id="div{!$Component.pageSectionId}"
+                                            style="height: 0px; position: relative; top: -30px">
+                                                <script>
+                                                    pageSectionIdMap['{!JSINHTMLENCODE(fsWrapper.fsLabel)}'] = '{!$Component.pageSectionId}';
+                                                </script>  
+                                        </div>
+                                        <apex:pageBlockSection id="pageSectionId" title="{!fsWrapper.fsLabel}" columns="{!columnSize}">
+                                            <apex:repeat value="{!fsWrapper.lstOfFSMember}" var="f">
+                                                <apex:pageblockSectionItem rendered="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields[f.fieldPath].Accessible}">
+                                                    <apex:outputPanel rendered="{!NOT(CONTAINS(f.Label,'<BLANK>'))}">
+                                                        <table id="tableId{!f.type}" cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+                                                            <tr>
+                                                                <td>
+                                                                    <apex:outputPanel layout="none" rendered="{!f.type != 'boolean'}">
+                                                                        <apex:outputLabel value="{!f.label}" />
+                                                                        <apex:outputLabel styleClass="requiredField" value="({!JSENCODE($Label.bmcservicedesk__required)})" rendered="{!AND(OR($ObjectType.Broadcasts__c.fields[f.fieldPath].createable, $ObjectType.Broadcasts__c.fields[f.fieldPath].updateable),OR(OR(f.required, f.DBRequired),AND(LOWER(fsWrapper.fsName)==LOWER('BMCServiceDesk__Console_BroadcastDetails'), CONTAINS(f.fieldPath, 'broadcastMessage__c')),f.fieldPath == 'Name'),If(setAuditFields,true,OR(AND(broadcast['id']=='',f.fieldPath!='CreatedDate',
+f.fieldPath!='CreatedById',f.fieldPath!='LastModifiedDate',f.fieldPath!='LastModifiedById'),broadcast['id']!='')))}"/>
+																		<apex:outputPanel rendered="{!If($ObjectType.BMCServiceDesk__Broadcasts__c.fields[f.fieldPath].inlineHelpText != null && f.type == 'textarea' && $ObjectType.BMCServiceDesk__Broadcasts__c.fields[f.fieldPath].htmlFormatted == true, true, false)}" styleClass="infoIconParent">
+                                                                            <span class="d-icon-info_circle rfdplIconFontSize fontSize12px" title="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields[f.fieldPath].inlineHelpText}"/>
+                                                                        </apex:outputPanel>
+                                                                    </apex:outputPanel>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                <apex:outputPanel layout="block" styleClass="{!IF($ObjectType.BMCServiceDesk__Broadcasts__c.fields[f.fieldPath].updateable, IF(f.type == 'picklist', 'rfDPL-picklist-container', ''), 'rfDPL-read-only')}" >
+																<!-- Please note, setFieldAPIName method is getting called from both focus and click event -->
+                                                                        <apex:inputField id="inputField" 						rendered="{!If(setAuditFields,true,OR(AND(broadcast['id']=='',f.fieldPath!='CreatedDate',
+f.fieldPath!='CreatedById',f.fieldPath!='LastModifiedDate',f.fieldPath!='LastModifiedById'),broadcast['id']!=''))}"
+                                                                            value="{!broadcast[f.fieldPath]}"
+                                                                            styleClass="{!If(f.type == 'reference', 'RFlookupClass', '')}"
+                                                                            required="{!OR(f.required, f.DBRequired)}"
+                                                                            onfocus="setFieldAPIName('{!f.fieldPath}');"
+                                                                            onclick="setFieldAPIName('{!f.fieldPath}')"
+                                                                            onblur="{!IF(OR(f.required, f.DBRequired, f.type=='reference', CONTAINS(f.fieldPath,'broadcastMessage__c'),CONTAINS(f.fieldPath,'Name')), IF(f.type=='reference', 'disableDiv(typeAheadDivId, refType, this)', 'disableDiv(typeAheadDivId, noRefType, this)'), '')}"/>
+                                                                        <apex:outputPanel layout="none" rendered="{!f.type == 'boolean'}">
+                                                                            <apex:outputLabel value="{!f.label}" for="'{!$Component.inputField}'" />
+                                                                            <apex:outputLabel styleClass="requiredField" value="({!JSENCODE($Label.bmcservicedesk__required)})" rendered="{!AND($ObjectType.BMCServiceDesk__Broadcasts__c.fields[f.fieldPath].updateable,OR(f.required, f.DBRequired))}"/>
+                                                                        </apex:outputPanel>
+                                                                        <script>
+                                                                            setFSFieldDetail('{!f.fieldPath}', '{!JSENCODE(f.Label)}', {!f.required}, {!f.DBRequired}, '{!JSENCODE(fsWrapper.fsName)}', '{!$Component.inputField}', '{!JSENCODE($ObjectType.Broadcasts__c.fields[f.fieldPath].inlineHelpText)}', '{!$ObjectType.Broadcasts__c.fields[f.fieldPath].ReferenceTo}', '{!JSENCODE(f.type)}', {!$ObjectType.Broadcasts__c.fields[f.fieldPath].htmlFormatted});
+                                                                        </script>
+                                                                    </apex:outputPanel></td>
+                                                            </tr>
+                                                        </table>
+                                                    </apex:outputPanel>
+                                                </apex:pageblockSectionItem>
+                                            </apex:repeat>
+                                        </apex:pageBlockSection>
+                                    </apex:repeat>
+                                    <div id="section2" style="display: none">
+                                    <apex:pageBlockSection id="sec5" title="{!$Label.bmcservicedesk__console_assignment}" columns="{!columnSize}" > 
+                                              <apex:pageBlockSectionItem id="pageblock5Item1" >
+                                                          <apex:outputPanel >
+                                                                <table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+                                                                    <tr>
+                                                                        <td>
+                                                                            <apex:outputLabel value="{!if((enableQueueAndUserAssignment),$Label.bmcservicedesk__queue,$Label.bmcservicedesk__consoleowner)}" />
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>
+																			<apex:outputPanel rendered="{!NOT(enableQueueAndUserAssignment)}">
+																				<input type="text" value="{!ownerName}" title = "{!$ObjectType.Broadcasts__c.fields.ownerid.inlineHelpText}" id="owner_Name"  readonly="readonly" disabled="disabled" class="rf-single-line-field"/>
+																			</apex:outputPanel>		
+                                                                            <apex:outputPanel rendered="{!enableQueueAndUserAssignment}">
+                                                                                <input type="text" value="{!queueName}" title = "{!$ObjectType.Broadcasts__c.fields.ownerid.inlineHelpText}" id="owner_Name" class="RFlookupClass rf-single-line-field" onclick="setFieldAPIName('Owner');" onfocus="setFieldAPIName('Owner')" onchange="(this.value.trim() == '' ? resetQueueText() : '')" autocomplete="off"/>
+																			</apex:outputPanel>
+                                                                            <apex:outputPanel rendered="{!NOT(enableQueueAndUserAssignment)}">  
+                                                                                <a href="#" style="text-decoration: none;" onclick="resetQueueText();return false;">
+                                                                                    <span class="d-icon-cross_circle rfdplIconFontSize" title="{!JSENCODE($Label.Clear)}" style="cursor: pointer;"></span>
+                                                                                </a>
+                                                                            </apex:outputPanel>   
+                                                                            <a href="#" style="text-decoration: none;" onclick="setFieldAPIName('ownerid');openOwnerLookupPopUP(enableQueueAndUserAssignment?'QUEUE':'OWNER','','', 'Broadcasts__c', broadcastId);return false;">
+                                                                                <span class="d-icon-search lookupIcon rfdplIconFontSize" title="{!if((enableQueueAndUserAssignment),JSENCODE($Label.Queue),$ObjectType.Broadcasts__c.fields.ownerid.label)} {!JSENCODE($Label.tooltipForLookup)}" style="cursor: pointer;"></span>
+                                                                            </a>
+                                                                          </td>
+                                                                    </tr>
+                                                                </table> 
+                                                            </apex:outputPanel>
+                                                    </apex:pageBlockSectionItem>    
+                                                    <apex:pageBlockSectionItem id="pageblock5Item2" rendered="{!enableQueueAndUserAssignment}">
+                                                          <apex:outputPanel >
+                                                                <table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+                                                                    <tr>
+                                                                        <td>
+                                                                            <apex:outputLabel rendered="{!staffNameAccessibility}" value="{!$Label.bmcservicedesk__incidentsstaff}" />
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td> 
+                                                                            <apex:outputText value="CRUDFLSCheck# staffNameAccessibility checks if you have READ permission. staffNameCRUD checks if you have CREATE/EDIT access to the field" rendered="false"/>
+																			<apex:inputText rendered="{!staffNameCRUD}" id="staffId" value="{!staffName}" title="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__FKStaff__c.inlineHelpText}" styleClass="RFlookupClass rf-single-line-field" onfocus="setFieldAPIName('BMCServiceDesk__FKStaff__c')" onclick="setFieldAPIName('BMCServiceDesk__FKStaff__c')"  onchange="(this.value.trim() == '' ? resetStaffText(): '')" html-autocomplete="off" />
+																			<apex:outputText value="{!staffName}" rendered="{!AND(staffNameAccessibility,NOT(staffNameCRUD))}"/>
+                                                                            <apex:outputPanel rendered="{!staffNameCRUD}">
+																			<a href="#" style="text-decoration: none;" onclick="setFieldAPIName('FKStaff__c');openOwnerLookupPopUP('STAFF',queueId,'', 'Broadcasts__c', broadcastId);return false;" >
+                                                                                <span class="d-icon-search lookupIcon rfdplIconFontSize" title="{!$ObjectType.Broadcasts__c.fields.FKStaff__c.label} {!JSENCODE($Label.tooltipForLookup)}" style="cursor: pointer;"></span>
+                                                                             </a>
+																			 </apex:outputpanel>
+                                                                         </td>
+                                                                    </tr>
+                                                                </table> 
+                                                            </apex:outputPanel>
+                                                    </apex:pageBlockSectionItem>                                
+                                         </apex:pageBlockSection>
+                                          </div>
+											<div id="section3" style="display: none">
+											<apex:pageBlockSection id="sec6" title="{!JSENCODE($Label.bmcservicedesk__displaybroadcast)}" columns="1">
+											<apex:outputPanel id="sec6Panel">
+													<table  class="displayBroadcastTable">
+													<tr>	
+														<td class="tableTopPadding"> 
+															<input type="radio" class="clsBrCheckBoxNLabel" title="{!$ObjectType.Broadcasts__c.fields.toEveryone__c.InlineHelpText}" name="selectProfile" id="selectProfile:0" onClick="clearToProfileName(this)"/>                
+															<apex:outputLabel for="selectProfile:0" value="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__toEveryone__c.label}" styleClass="radioBtnLbl"/>
+														</td>
+													</tr>
+													
+													<tr class="customRowHt"> 
+														<td>
+															<input type="radio" class="clsBrCheckBoxNLabel" title="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.InlineHelpText}" name="selectProfile" id="selectProfile:1" onClick="clearEveryoneName(this)" /> 
+															<apex:outputLabel for="selectProfile:1" value="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.label}" styleClass="radioBtnLbl"/>
+														</td>
+													</tr>
+													<tr>
+														<td class="toProfileTxtArea">    
+															<table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+																<tr>
+																	<td class="rf-single-line-field"  style="display:{!if($ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Accessible,"","none")};">
+																		<apex:outputText value="CRUDFLSCheck# CRUD and FLS added. Checks added based on access to Profiles__c field on Broadcasts__c object" rendered="false"/>
+																		<apex:inputText onfocus="this.blur()" title="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.InlineHelpText}" id="Proflie__c_id_name" rendered="{!AND($ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Accessible,OR(AND(NOT(ISNULL(broadcastId)),$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Updateable),AND(ISNULL(broadcastId),$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Createable)))}" value="{!profileName}" />
+																		<apex:outputText value="{!profileName}" rendered="{!AND($ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Accessible,OR(AND(NOT(ISNULL(broadcastId)),!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Updateable),AND(ISNULL(broadcastId),!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Createable)))}"/>
+																	</td>
+																	<td style="vertical-align: middle;">
+																		<apex:outputPanel rendered="{!AND($ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Accessible,OR(AND(NOT(ISNULL(broadcastId)),$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Updateable),AND(ISNULL(broadcastId),$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Createable)))}">
+																		<a href="#" class="rf-single-line-field" style="text-decoration: none;" onclick="openToProfileWindow();return false;" >
+																			<span class="d-icon-search lookupIcon rfdplIconFontSize lookUpIconPadding" id="selectProfileLookup" title="{!$Label.SelectVaildProfile}" style="cursor: pointer;"></span>	   
+																		</a>
+																		</apex:outputPanel>
+																	</td>
+																</tr>
+															</table>            
+														</td>
+														
+													</tr>
+													<tr>
+														<td class="dispInSlfServiceChkBox">  
+															<apex:inputCheckbox styleClass="clsBrCheckBoxNLabel" id="displayInSS" title="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Display_In_SelfService__c.InlineHelpText}" value="{!broadcast.BMCServiceDesk__Display_In_SelfService__c}"  tabindex="514" onClick="enableRadio();" />
+															<apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Display_In_SelfService__c.label}" style="padding-left: 2px" rendered="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Display_In_SelfService__c.Accessible}"/>                
+														</td>
+													</tr> 
+													<tr>
+														<td class="radioBtnPadding">
+															<input type="radio" class="clsBrCheckBoxNLabel" name="selectRadio" value="AllAccounts" id="selectRadio:0" onClick="radioAllAccounts();"/>                
+															<apex:outputLabel for="selectRadio:0" value="{!$Label.bmcservicedesk__broadcaststoallusers}" styleClass="radioBtnLbl" />
+														</td>
+													</tr>
+													<tr class="customRowHt">
+														<td class="radioBtnPadding">
+															<input type="radio"  class="clsBrCheckBoxNLabel" name="selectRadio" value="SelectedAccounts" id="selectRadio:1" onClick="radioSelectedAccounts();" />                
+															<apex:outputLabel for="selectRadio:1" value="{!$Label.bmcservicedesk__broadcaststousersofselectedaccountsonly}" styleClass="radioBtnLbl" />
+														</td>
+													</tr>
+													<tr> 
+														<td class="allAcTxtArea">    
+															<table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+																<tr>
+																	<td id="multiSelectBox" class="rf-single-line-field">
+																		<select  id="accountSelectId" size="8" class="clsAccountTextareaDisable" >
+																		 </select>
+																	</td>
+																	<td id="multiSelectBoxBtn"  dir="ltr" vertical-align="top" >
+																			<a href="#" style="text-decoration: none;" onclick="openAccountSelectWindow();return false;">
+																				<span class="d-icon-search lookupIcon rfdplIconFontSize lookUpIconPadding" id ="selectAccountLookupId" title="{!$Label.BroadcastAccountsSelect}" style="cursor: pointer;"></span>   
+																			</a>
+																	</td>   
+																</tr>
+															</table>            
+														</td>
+														
+													</tr>          
+													</table>
+											</apex:outputPanel>
+											</apex:pageBlockSection>
+											</div>  
+                                </div>
+                                </td>
+                        </tr>
+                    </table>
+					   <apex:facet name="footer">
+						<div class="bottomLinkDiv">
+							<span class="bottomLink"><a href="#{!$Component.tableOutputpanel}">{!$Label.Console_BackToTop}</a> </span> 
+							<span id="links" style="display: {!IF(broadcast.Id == '', 'none', 'inline')}">
+								<span> | </span> 
+								<span class="bottomLink"><a id="RelatedListlink" onClick="window.parent.BroadcastRelatedListBtnhandler();">{!$Label.Details}</a></span>
+							</span> 
+						</div>
+					</apex:facet>
+                </apex:pageBlock>
+                <apex:inputHidden value="{!broadcast.BMCServiceDesk__FKUrgency__c}" id="urgency__id"/>
+                <apex:inputHidden value="{!broadcast.BMCServiceDesk__FKImpact__c}" id="impact__id"/>
+                <apex:inputHidden value="{!broadcast.BMCServiceDesk__FKStatus__c}" id="status__id"/>                
+                 <apex:inputHidden value="{!broadcast.BMCServiceDesk__FKStaff__c}" id="ownerOpenby_Id"/>
+                 <apex:inputHidden value="{!broadcast.ownerid}" id="owner_Id"/>
+                 <apex:inputHidden value="{!queueId}" id="queueId"/>
+				<apex:inputHidden value="{!broadcast.BMCServiceDesk__toEveryone__c}" id="hiddenToEveryone" />
+        		<script>
+        			var ownerOpenById = '{!$Component.ownerOpenby_Id}';
+        			var ownerId = '{!$Component.owner_Id}';
+        			var strQueueId = '{!$Component.queueId}';
+                    urgencyLookupId = '{!$Component.urgency__id}';
+                    impactLookupId = '{!$Component.impact__id}';
+                    statusLookupId = '{!$Component.status__id}';
+                    var urgancyvalue='{!broadcast.BMCServiceDesk__FKUrgency__c}';
+                    var impactvalue='{!broadcast.BMCServiceDesk__FKImpact__c}';
+                    var statusvalue='{!broadcast.BMCServiceDesk__FKStatus__c}';
+				</script>
+        </apex:outputPanel>
+        </div>
+		<c:RTFCopyPaste />
+        </apex:form>
+		</div>
+    <script>
+    	var enableQueueAndUserAssignment = {!enableQueueAndUserAssignment};
+        var prefixMap;
+        if(window.parent.isRFConsoleDetailForm =='true'){
+            prefixMap = window.parent.parent.ObjectPrefixMap;
+        }else{
+            prefixMap = window.parent.ObjectPrefixMap;
+        }
+        prefixMap.push(new Array('005','User'));
+        prefixMap.push(new Array('00G','Group'));
+        
+        var searchErrorMsg = '{!JSENCODE($Label.GsErrorMsg)}';
+    	var queueId = '{!JSENCODE(queueId)}';
+    	var staffId = '{!$Component.thpage:theForm:thePAgeBlock:sec5.pageblock5Item2.staffId}';
+    	var mandatoryFieldValueValidationMsg = '{!JSENCODE($Label.mandatoryFieldValueValidationMsg)}';
+		var saveSuccess = '{!JSENCODE($Label.SavedSuccessfully)}';
+        var isRTFEnabled = true;
+        var status = '{!broadcast.state__c}';
+        var lblClear = '{!JSENCODE($Label.Clear)}';
+        _RemotingActions={}
+         _RemotingActions.getLookupFieldData = '{!$RemoteAction.ConsoleRemoteActions.getLookupFieldData}';
+     
+		var setBroadcastData ;
+        var saveBroadcast = function doSave(){
+            var errorMsges = validateData();
+            if (errorMsges!='') {
+            	document.getElementById('messageSpace').className='message_space_off';
+                return showPageMsg(errorMsges);
+            }    
+            document.getElementById('messageSpace').className='message_space_on';    
+            startWaitMsgBar();
+            isRTFEnabled =window.parent.RTFEnabledPage();
+            if (isRTFEnabled){
+                saveSuccessful = save(csvAccountListparam,window.parent.AttRefGeneratorID,window.parent.lastModifiedByLocking);
+            }else{
+                saveSuccessful = saveWithRerender(csvAccountListparam,window.parent.AttRefGeneratorID, window.parent.lastModifiedByLocking);
+            } 
+        }
+     
+      if(window.parent.saveBroadcast!=undefined){
+            window.parent.saveBroadcast(saveBroadcast);
+      }
+    </script>
+            <apex:outputPanel id="renderPanel">             
+            <script>         
+                status = '{!broadcast.state__c}';
+                broadcastId = '{!JSENCODE(broadcast.Id)}';
+                var queueId = '{!JSENCODE(queueId)}';
+                var listData = {!accountJSON};
+    	    	var flag='{!JSENCODE(broadcast.Limit_To_Account_Users__c)}';
+    	    	var toEveryone={!broadcast.BMCServiceDesk__toEveryone__c};
+    	    	var dispInSS = {!broadcast.BMCServiceDesk__Display_In_SelfService__c};
+    	    	var broadcastState = {!broadcast.state__c};
+    	    
+                setBroadcastData = function setBroadcastData(){           
+                    var arr = new Array();
+                    arr['Id'] = '{!JSENCODE(broadcast.Id)}';
+                    arr['Name'] = '{!JSENCODE(broadcast.Name)}';
+                    arr[ 'Stage__c' ] = getTranslatedStage();
+                    arr[ 'state__c' ] =  '{!broadcast.state__c}';
+                    arr[ 'id' ] =  '{!broadcast.id}';
+					arr[ 'broadcastDescription__c' ]='{!JSENCODE(broadcast.broadcastDescription__c)}';
+                    arr[ 'isRecordLock' ] = '{!JSENCODE(isRecordLock)}'; 
+                    return arr;            
+                };
+                if(window.parent.setBroadcastData!=undefined){
+                    window.parent.setBroadcastData(setBroadcastData);
+                } 
+        
+                function getTranslatedStage(){ 
+                    if('{!JSENCODE(broadcast.FKStatus__r.Stage__c)}' =='Opened'){
+                        return '{!JSENCODE($Label.Opened)}';
+                    }else if('{!JSENCODE(broadcast.FKStatus__r.Stage__c)}' =='Acknowledged'){
+                        return '{!JSENCODE($Label.StageProgression_Acknowledged)}';
+                    }else if('{!JSENCODE(broadcast.FKStatus__r.Stage__c)}' =='In Process'){
+                        return '{!JSENCODE($Label.StageProgression_InProcess)}';
+                    }else if('{!JSENCODE(broadcast.FKStatus__r.Stage__c)}' =='Closed'){
+                        return '{!JSENCODE($Label.Closed)}';
+                    }else{
+                        return '{!JSENCODE(broadcast.FKStatus__r.Stage__c)}';
+                    }
+                }
+            </script>   
+        </apex:outputPanel> 
+        
+        <apex:outputPanel id="genericPanel">             
+        <script>         
+           var messageStr  = '{!JSENCODE(messageString)}';
+         
+           function displayMessage(){
+                if(messageStr!=null && messageStr !=''){
+                    if(messageStr == saveSuccess){
+                        window.parent.afterSaveSucceed();
+                        handleElemEvent();
+                        ShowInlineSaveMessage();
+                    }else{
+                        alert(messageStr);}
+                }else if(messageStr ==null || messageStr == '') {
+            		var clickedOnceTemp = window.parent.clickedOnce ;
+            		handleElemEvent();
+            		window.parent.clickedOnce = clickedOnceTemp ;
+            	}
+            } 
+           </script>   
+    </apex:outputPanel>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js"/>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+    <script src="{!$Resource.SDEFCommonJS}/ConsoleBroadcastDetail.js"  type="text/javascript" />
+    <script src="{!$Resource.SDEFCommonJS}/OpenPopupRecordUtility.js" type="text/javascript" />
+    <script src="{!$Resource.SDEFCommonJS}/ConsoleDetail.js"  type="text/javascript" />
+    <script src="{!$Resource.SDEFCommonJS}/TypeAhead.js"  type="text/javascript" />
+    <apex:outputPanel id="frequentRereshPanel">
+        <script>
+			var parentContainerId = '{!$Component.thpage.theForm.tableOutputpanel}';
+            showFieldAsRequired(orgNamespace+'FKCategory__c',isCategoryMandatory);
+            showFieldAsRequired(orgNamespace+'broadcastMessage__c',isBroadcastMessageMandatory);
+            showFieldAsRequired(orgNamespace+'Name',isBroadcastIDMandatory);
+            createUrgencyPickList('{!$ObjectType.Broadcasts__c.fields.FKUrgency__c.Updateable}');
+            createImpactPickList('{!$ObjectType.Broadcasts__c.fields.FKImpact__c.Updateable}');
+            createStatusPickList('Broadcast', '{!$ObjectType.Broadcasts__c.fields.FKStatus__c.Updateable}');
+            userTypeReference ='{!JSENCODE(userTypeReference)}';
+            if(userTypeReference !=null && userTypeReference != 'undefined' && userTypeReference!='')
+            	hideUserTypeSelector(userTypeReference);       
+            createSectionLinks();  
+			adjustFSLinkDiv();
+            initiateTypeAhead(typeAheadDivId, '{!$Component.thpage.theForm.tableOutputpanel}');
+            initDisplayBroadcast();
+			applyCustomDPLIconForDPL();
+            createStandardOwnerField('Broadcasts__c', broadcastId );
+            createStandardStaffField('Broadcasts__c', broadcastId );
+            changePageSectionIcons();
+			setFieldEnabled();
+			applyIconandHelpTextToMultiSelectPicklist();
+            Ext.onReady(setTitleForMultiPicklist);
+			if(firstElement != null && firstElement != '' && !isFirstElementRichTextArea)
+				document.getElementById(firstElement).focus();
+			
+			toRefreshToEveroneRadioBtn();
+        </script>
+    </apex:outputPanel>
+    <script>
+    	handleElemEvent();
+        alignTopbarWidth('formoutputpanel','topmenu');
+		window.parent.isDeleted = false;
+        if ({!isDeleted}) {
+            window.parent.isDeleted = true;
+			replaceErrorMessages(errorComponentID);
+        }   
+	</script>
+	 <apex:pageBlock rendered="{!If(userLanguage=='iw','true','false')}">
+        <link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFConsole-RTL.css" type="text/css" />
+    </apex:pageBlock> 
+    </body>
+</apex:page>

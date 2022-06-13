@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <description>Email a user receives when they try to reset their password, but have been locked out because of too many failed login attempts.</description>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <name>Communities: User Lockout Email Custom</name>
+    <style>none</style>
+    <subject>You&apos;ve been locked out of Citron Hygiene portal</subject>
+    <textOnly>Hello {!Receiving_User.FirstName},
+
+We received your request to reset your Citron Hygiene portal password. We can&apos;t reset your password right now. Your account is locked after too many login attempts.
+
+{!CASE(1,
+IF(VALUE(PASSWORD_LOCK_TIME) &gt; 0, 1, 0), &quot;Try again in &quot; + PASSWORD_LOCK_TIME + &quot; minutes.&quot;,
+IF(VALUE(PASSWORD_LOCK_TIME) &lt; 0, 1, 0), &quot;Contact your &quot; + Citron Hygiene portal + &quot; administrator to unlock your account.&quot;,
+&quot;&quot;)}
+
+If you didn&apos;t request a password reset or haven&apos;t tried to log in to your account recently, contact your Citron Hygiene portal administrator or reply to this email.
+
+Thank you.
+
+Citron Hygiene
+800.643.6922</textOnly>
+    <type>custom</type>
+    <uiType>Aloha</uiType>
+</EmailTemplate>

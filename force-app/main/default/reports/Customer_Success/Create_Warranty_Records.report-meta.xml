@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <columns>
+        <field>WorkOrder$Name</field>
+    </columns>
+    <columns>
+        <field>WorkOrder.WorkOrderLineItems$Product_Name__c</field>
+    </columns>
+    <description>Run and e-mail everyday to show completed work orders for products that have a warranty.
+
+Intent is to use this information to create manual warranty records on the customers account.</description>
+    <filter>
+        <criteriaItems>
+            <column>WorkOrder.WorkOrderLineItems$Product2.ProductCode</column>
+            <columnToColumn>false</columnToColumn>
+            <isUnlocked>true</isUnlocked>
+            <operator>equals</operator>
+            <value>1-55-20-23-09</value>
+        </criteriaItems>
+        <language>en_US</language>
+    </filter>
+    <format>Summary</format>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>WorkOrder$Account</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>WorkOrder$Address</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <name>Create Warranty Records</name>
+    <params>
+        <name>co</name>
+        <value>1</value>
+    </params>
+    <reportType>Work_Order_with_Work_Order_Line_Items__c</reportType>
+    <scope>organization</scope>
+    <showDetails>true</showDetails>
+    <showGrandTotal>true</showGrandTotal>
+    <showSubTotals>true</showSubTotals>
+    <timeFrameFilter>
+        <dateColumn>WorkOrder$Completed_Date__c</dateColumn>
+        <interval>INTERVAL_YESTERDAY</interval>
+    </timeFrameFilter>
+</Report>

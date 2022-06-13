@@ -1,0 +1,177 @@
+<apex:page controller="BMCServiceDesk.AdminLocationPageController" extensions="BMCServiceDesk.ConsoleRemoteActions" showHeader="false" standardStylesheets="true">
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminLocationPage.css" /> 
+    <apex:form id="locationForm">
+    	<div id='autocompleteDiv' class="clsAutocompleteDiv" style="position:absolute; z-index:2;visibility:hidden;'">
+	        <select id="selectAutoOptions" style="width: auto !important;" class="clsAutocompleteSelectOption" onmousedown="isAutocomplete = true;"  onclick="SelectAutoValue(this,'autocompleteDiv');" multiple="multiple"  >
+	        </select>
+	    </div>
+    	 <div id="northcontent"> 
+            <div id="mainDiv" >
+                <div id="btnToolbar" ></div>
+				<apex:pageMessages id="errorMsg"/>
+                <apex:actionFunction action="{!save}" name="save" reRender="afterSavePanel,pageBlockId,titlePanel,errorId,errorMsg,PanelId" oncomplete="afterSave();handleSave();hideUserPicklist();setTypeAheadForLookups();"/>
+                <apex:actionFunction name="DeleteRecord" action="{!DeleteRecord}" oncomplete="refreshListView();"/>
+                <apex:actionFunction action="{!reset}" name="resetPhysicalLocation" rerender="pageBlockId,afterSavePanel,titlePanel,errorId,PanelId" oncomplete="hideUserPicklist();setTypeAheadForLookups();buttonValidator();updateSupportingInformation();"/>
+                <apex:actionFunction action="{!nextBtnHandler}" name="nextBtnWACHandler" 
+				   rerender="pageBlockId,panelId,titlePanel,afterSavePanel" onComplete="updateTitle();updateSupportingInformation();handleSave();">
+				   <apex:param assignTo="{!locationIdList}" name="idSetString" value=""/>  
+				</apex:actionFunction>
+				
+				<apex:actionFunction action="{!previousBtnHandler}" name="previousBtnWACHandler" 
+				    rerender="pageBlockId,panelId,titlePanel,afterSavePanel" onComplete="updateTitle();updateSupportingInformation();handleSave();">
+				    <apex:param assignTo="{!locationIdList}" name="idSetString" value=""/> 
+				</apex:actionFunction>
+				<div id="SaveMessageDiv" class="msgCls" style="display:none">
+					<table class="messageTable" cellspacing="0" cellpadding="0" border="0" style="padding: 0px; margin: 4px 2px 4px 2px;">
+						<tr valign="top">
+							<td>
+								<apex:image styleClass="SaveSuccessIcon" title="{!$Label.bmcservicedesk__savedsuccessfully}" value="/s.gif" alt="{!$Label.bmcservicedesk__savedsuccessfully}" />
+							</td>
+							<td>
+								<div id="SaveMessage"  style="margin-left: 6px;" ><apex:outputText value="{!$Label.bmcservicedesk__savedsuccessfully}" /></div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div class="rf-spacer-cls" />
+                <apex:pageBlock mode="edit" id="pageBlockId">
+                    <apex:pageBlockSection columns="2">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputPanel >
+                                <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__location)} {!JSENCODE($Label.bmcservicedesk__name)}"/>&nbsp;<span Class="clsRequiredRed">*</span>
+                            </apex:outputPanel>
+                            <apex:outputPanel >
+                            	<apex:inputField id="l_inputField" value="{!PhysicalLocation.Name}"/>
+                            	<script>
+                               		document.getElementById('{!$Component.l_inputField}').title='{!JSENCODE($Label.bmcservicedesk__location)} {!JSENCODE($Label.bmcservicedesk__name)}';                                                   
+                            	</script>
+                           	</apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:repeat id="leftRepeatId" value="{!leftPanelFields}" var="lFS">
+                        	<apex:pageblockSectionItem >
+                           		<apex:outputLabel value="{!lFS.label}"/>
+	                            <apex:outputPanel >
+	                            	<table id="tableId{!lFS.type}"  cellspacing="0" cellpadding="0">
+	                            		<tr>
+	                            			<td class = "{!IF((!($ObjectType.BMC_BaseElement__c.fields[lFS.fieldPath].Updateable)),'InputVirtualReadOnly','')}">
+	                            				<apex:outputPanel >
+	                            					<apex:inputField id="l_inputField1" value="{!PhysicalLocation[lFS.fieldPath]}" onclick="fieldApiName = '{!lFS.fieldPath}';" onblur="{!IF(lFS.type=='reference','disableDiv(typeAheadDivId, refType, this);','')}"/>
+	                            					<script>
+						                                document.getElementById('{!$Component.l_inputField1}').title='{!JSENCODE($ObjectType.BMC_BaseElement__c.fields[lFS.fieldPath].inlineHelpText)}';
+						                            
+						                               if ('{!lFS.type}' == 'reference') {
+						                               	document.getElementById('{!$Component.l_inputField1}').className = 'RFlookupClass';
+														document.getElementById('{!$Component.l_inputField1}').autocomplete = 'off';
+						                               }
+						                                                                                  
+						                            </script>
+					                            </apex:outputPanel>
+				                            </td>
+			                            </tr>
+		                            </table>
+                            	</apex:outputPanel>
+                           	</apex:pageblockSectionItem>
+                        </apex:repeat>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+    			<script>
+			        tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+			        var tooltipNew='{!JSENCODE($Label.New)}';
+			        var tooltipSave='{!JSENCODE($Label.Save)}';
+			        var tooltipCopy='{!JSENCODE($Label.Copy)}';
+			        var tooltipDelete='{!JSENCODE($Label.Delete)}';
+			        var tooltipRefresh='{!JSENCODE($Label.Refresh)}';
+			        var tooltipPreviousRecord='{!JSENCODE($Label.PreviousRecord)}';
+			        var tooltipNextRecord='{!JSENCODE($Label.NextRecord)}';
+			        var b_previous='{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif';
+			        var b_next='{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif';
+			        var PhysicalLocationId='{!JSENCODE(PhysicalLocation.ID)}'; 
+					var PhysicalLocationInstId='{!JSENCODE(PhysicalLocation.InstanceID__c)}';
+			        var deleteConfirm='{!JSENCODE($Label.DeleteConfirmMessage)}';
+			        var PhysicalLocationHeader = '{!JSENCODE($Label.Location)}';
+			        var recordId = '{!JSENCODE(LocationId)}';
+			        var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+			        var orgNamespace='{!orgNamespace}';
+			        var SavedSuccessfully='{!JSENCODE($Label.SavedSuccessfully)}';
+			        var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+			        var saveMaskMsg = '{!JSENCODE($Label.MobSaving)}';
+			        var WACset;
+			        if(WACset == null || WACset == '')
+			        {
+			            if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == '')
+			            {
+			                if(typeof(window.parent.returnListOfId)=='function')
+			                WACset=window.parent.returnListOfId();
+			            }
+			            else
+			            {
+			                if(typeof(window.parent.parent.getIdArray)=='function')
+			                    WACset=window.parent.parent.getIdArray();
+			                window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+			            }
+			        }
+			        var labelLocationSupportingInformation = '{!JSENCODE($Label.LocationSupportingInformation)}';
+        			var isChildPanelCollapsed = true;
+         			var isReadOnly = '{!JSENCODE($CurrentPage.parameters.isReadOnly)}';         			
+					var refType = 'reference';
+                    var typeAheadDivId = 'autocompleteDiv';                                                        
+					_RemotingActions={}
+    				_RemotingActions.getLookupFieldData = '{!$RemoteAction.ConsoleRemoteActions.getLookupFieldData}';
+					var isLocationDeletable = {!$ObjectType.BMC_BaseElement__c.Deletable};
+                    var isLocationCreatable = {!$ObjectType.BMC_BaseElement__c.Createable};
+                    var isLocationUpdatable = {!$ObjectType.BMC_BaseElement__c.Updateable};
+			    </script>
+			    <apex:outputPanel id="errorId">
+			        <script>
+			        var errormsg='{!messageString}';
+			        function completeDelete()
+			        {
+			                
+			                if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}')
+			                {
+			                    showError();
+			                }else
+			                {
+			                    closeWindow();
+			                }
+			        }
+			        </script>
+			    </apex:outputPanel>
+			    <apex:outputPanel id="panelId">
+			        <script>
+			          PhysicalLocationName = "{!JSENCODE(PhysicalLocation.Name)}";               
+			          PhysicalLocationId = "{!JSENCODE(PhysicalLocation.Id)}";
+			          PhysicalLocationInstId='{!JSENCODE(PhysicalLocation.InstanceID__c)}';
+			        </script>
+			    </apex:outputPanel>
+                <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+                <script type="text/javascript" src="{!$Resource.SDEFCommonJs}/AdminLocationPage.js"></script>
+                <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/TypeAhead.js"/>
+                <script>
+					var ObjectPrefixMap = new Array(); 
+					var prefixMap;
+					var fieldApiName;
+					var currentConsole = 'location';
+					var result='{!ObjectPrefixMap}';
+					result= JSON.parse(result);
+					generateObjPreFixMap(result);	
+				</script>
+                <apex:outputPanel id="afterSavePanel">
+                    <script>
+                    	var PhysicalLocationId='{!JSENCODE(PhysicalLocation.ID)}';  
+                    	PhysicalLocationInstId='{!JSENCODE(PhysicalLocation.InstanceID__c)}';  
+                    </script>
+                </apex:outputPanel>
+                <apex:outputPanel id="titlePanel">
+                    <script>
+                        var msgFromServer='{!messageString}';
+                        var newTitle= "{!JSENCODE(PhysicalLocation.Name)}";
+                    </script>
+                </apex:outputPanel>
+            </div>
+	    </div>
+		<div id='content-div'></div>
+    </apex:form>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminJSCommon.js"></script>   
+</apex:page>

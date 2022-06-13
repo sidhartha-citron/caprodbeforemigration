@@ -1,0 +1,111 @@
+<apex:page controller="BMCServiceDesk.AdminKPIsAndBenchmarksController" showHeader="false" sidebar="false" standardStylesheets="false">
+<head>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/vendor/highslide/highslide.css" /> 
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />  
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminKPIsAndBenchmarks.css" /> 
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />
+</head>
+<body style="margin:0px">
+<apex:form id="theForm">
+    <apex:actionFunction name="generateData" action="{!generateData}" rerender="dataPanel" oncomplete="loadGraphs();showLoadingMask(false);">
+        <apex:param assignTo="{!benchmarkType}" name="benchmarkType" value=""/>
+    </apex:actionFunction>
+    <div class="rf_benchmarking_container">
+        <div class="title_container_div">
+             
+            <span class="overall_title">{!$Label.KPI_IncidentManagementKPIs}</span>
+            <span class="help_btn_wrapper">
+                <span title="{!$Label.TooltipHelp}" class="helptbn d-icon-question_circle" onclick="openHelp()"></span>
+            </span>
+        </div>
+		<div class="kpi_introduction">             
+            {!$Label.KPI_Introduction}
+        </div>
+        <div class="toolBar" style="display: flex;">
+            <div>
+                <input type="checkbox" id="drillDownCheckbox" title="{!$Label.SimilarBenchmarkTooltip}" onclick="checkBoxClick(false);"/>
+            </div>
+            <div class="checkBoxLabel" style="font-weight:bold" onclick="checkBoxClick(true);">{!$Label.SimilarBenchmarks}:</div>
+            <div class="radioBtn" onclick="radioClick(this.id)" id="IndustryBenchmark" serieslabel="{!$Label.IndustryBenchmark}">
+                <div class="emptyCheckbox emptyCheckbox-svg"></div>
+                <div>{!$Label.MyIndustry}</div>
+            </div>
+            <div class="radioBtn" onclick="radioClick(this.id)" id="CompanySizeBenchmark" serieslabel="{!$Label.StaffSeatsBenchmark}">
+                <div class="emptyCheckbox emptyCheckbox-svg"></div>
+                <div>{!$Label.MyStaffSeats}</div>
+            </div>
+        </div>
+        <div class="d-notification d-notification_error d-notification_content" id="msgDiv">
+            <div class="d-notification__icon d-icon-left-exclamation_triangle"></div>
+            <div class="d-notification__supporting-text maxWidthNone">
+                <h3 class="d-notification__title">{!JSENCODE($Label.Error)}</h3>
+                <div class="d-notification__item" id="errorMessages">
+                </div>
+            </div>
+        </div>
+        <div id="maskDiv" class="mask_errors_div"> </div>
+        <div id="loaderDiv" class="loader_errors_div"></div>
+        
+        <div id='MTTR' class="graph_container_div first_graph"></div>
+        <div id='spacerdiv1' class="spacer_div"></div>
+        <div id='FCR' class="graph_container_div"></div>
+        <div id='spacerdiv2' class="spacer_div"></div>
+        <div id='SLAPercent' class="graph_container_div"></div>
+        <div id='spacerdiv3' class="spacer_div"></div>
+        
+    </div>  
+    <apex:outputPanel id="dataPanel">
+        <script type="text/javascript">
+        var _Labels ={
+            "KPI_MTTRTitle":"{!JSENCODE($Label.KPI_IncidentAvgMTTR)}",
+            "KPI_FCRTitle":"{!JSENCODE($Label.KPI_IncidentAvgFCR)}",
+            "KPI_SLAAchievementTitle":"{!JSENCODE($Label.KPI_IncidentResolutionTargetAchievement)}",
+            "Insights":"{!JSENCODE($Label.KPI_Insights)}",          
+            "YourConfiguration":"{!JSENCODE($Label.KPI_YourConfiguration)}",
+            "Benchmarks":"{!JSENCODE($Label.KPI_Benchmarks)}",
+            "CustomerDataNotAvailable":"{!JSENCODE($Label.KPI_CustomerDataNotAvailable)}",
+            "DashDownError":"{!JSENCODE($Label.KPI_DashDownError)}",
+            "start":"{!JSENCODE($Label.ACStartservice)}",
+            "fallBackNotification":"{!JSENCODE($Label.KPI_FallBackNotification)}",
+            "KPICalculationInProgress":"{!JSENCODE($Label.KPI_KPICalculationInProgress)}",
+            "BusinessDaysUnit":"{!JSENCODE($Label.KPI_BusinessDaysUnit)}",
+            "ClosedRecords":"{!JSENCODE($Label.KPI_ClosedRecords)}",
+            "ValueAdoptionLinkLabel":"{!JSENCODE($Label.GoToValueAdoptionDashboard)}",
+            "ContactSupport":"{!JSENCODE($Label.BenchmarksContactSupport)}"
+        };
+        var MTTRSeriesJsonString = '{!JSENCODE(MTTRSeriesJson)}';       
+        var MTTRBenchmarkSeriesJsonString= '{!JSENCODE(MTTRBenchmarkSeriesJson)}';
+        
+        var FCRSeriesJsonString = '{!JSENCODE(FCRSeriesJson)}';
+        var FCRRBenchmarkSeriesJsonString= '{!JSENCODE(FCRBenchmarkSeriesJson)}';
+        
+        var SLAPercentSeriesJsonString = '{!JSENCODE(SLAPercentSeriesJson)}';
+        var SLAPercentBenchmarkSeriesJsonString= '{!JSENCODE(SLAPercentBenchmarkSeriesJson)}';
+        
+        var XAxisJsonString= '{!JSENCODE(XAxisJson)}';   
+         
+        var isDashDown= {!IF(isDashDown,true,false)};
+        var isKPIDataAvailable= {!IF(isKPIDataAvailable,true,false)};        
+        var contactSupport= {!IF(contactSupport,true,false)};     
+        var KPIS_MISSING_MONTHS = {!KPIS_MISSING_MONTHS};    
+        var KPI_CALCULATION_INPROGRESS = {!IF(isKPIsCalculationInProgress,true,false)};     
+        var highslideGraphicsPath ='{!$Resource.SDEFStyles}/vendor/highslide/graphics/'; 
+		var helpUrl ='{!helpUrl}';		
+        var KPIBenchmarksDisabledDuration= {!KPIBenchmarksDisabledDuration};
+        </script>  
+    </apex:outputPanel> 
+    <script>
+    var _Remoting ={
+        "calculateMissingKPIs":"{!$RemoteAction.AdminKPIsAndBenchmarksController.calculateMissingKPIs}"
+    };
+    var selectedId = '';
+    </script>
+</apex:form>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/highcharts.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/no-data-to-display.js"></script>
+
+    <script src="{!$Resource.SDEFCommonJS}/vendor/highslide/highslide-full.min.js"></script>
+       
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminKPIsAndBenchmarks.js"></script> 
+</body>    
+</apex:page>

@@ -1,0 +1,110 @@
+<apex:page controller="BMCServiceDesk.AcDeviceEventsController" sidebar="false" showHeader="false" standardStylesheets="false">
+   <c:AcRestCommon isGridRequired="true"/>
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/ACCMDBActions.css" type="text/css" /> 
+	<style>
+    	#treeid .x-panel-header, #DescPanel .x-panel-header, #DescPanel-placeholder{
+            background-image:none !important;
+            background-color:#414042 !important;
+            border:none !important;
+        }
+        #treeid .x-panel-header .x-panel-header-text-default, #DescPanel .x-panel-header .x-panel-header-text-default, #DescPanel-placeholder .x-panel-header-text-default{
+            font-size: 12px !important;
+            font-family: Salesforce sans !important;
+            color: white !important;
+        } 
+        #treeid .x-grid-header-ct {
+        	border-top:3px solid #f86e00 !important;
+        }
+        #DescPanel .x-panel-header, #DescPanel-placeholder {
+        	border-bottom:3px solid #f86e00 !important;
+        }
+        #descid {
+        	font-size: 12px !important;
+        	font-family: Salesforce sans !important;
+        }
+        .x-toolbar .x-toolbar-text, .x-toolbar .x-toolbar-item {
+            font-size: 12px;
+            vertical-align: middle;
+        }
+        #gridId .x-column-header-trigger {
+            background-image: none !important;
+            background-color: #e0e3e6 !important;
+            display: none !important;
+        }
+        .x-tool img {
+        	background: none !important;
+        	background-image: url('{!URLFOR($Resource.SDEFStyles, 'SDEFimages/collapse-down-white.svg')}') !important;
+        }
+        #DescPanel-placeholder .x-tool img {
+        	background: none !important;
+        	background-image: url('{!URLFOR($Resource.SDEFStyles, 'SDEFimages/expand-up-white.svg')}') !important;
+        }
+        .x-tip {
+            box-shadow: 0 9px 12px 0 rgba(0, 0, 0, 0.2), 0 27px 30px 0 rgba(0, 0, 0, 0.12) !important;
+            border: solid 1px #d9d9d9 !important;
+            background-color: #ffffff !important;
+        }
+        #SubPanel {
+        	border-right: 1px solid #C5C5C5 !important;
+        }
+    </style>
+ <script>
+    var test = JSON.parse('{!JSENCODE(test)}');
+    var isempty;
+    var strItemClickField = '{!strItemClickField}';
+    strFields={!strFields};
+    strColumns={!strColumns};
+    var checkForFirstTime = false;  
+    var Categories = "{!JSENCODE($Label.Categories)}",EventDescription = "{!JSENCODE($Label.ACEventDescription)}";
+    var tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+    var TotalRecords = '{!JSENCODE(TotalRecords)}';
+ </script>
+  <apex:outputPanel id="msgPanel">
+            <apex:pageMessages />
+            <script>
+            msgStr = '{!JSENCODE(msgStr)}';
+            isAuthRequired={!isAuthRequired};
+            </script>
+        </apex:outputPanel>
+ 
+
+<apex:form id="myform"><apex:actionFunction name="loadevent" action="{!loadeventvalues}" rerender="mainform,msgPanel,updateSession" oncomplete="stopWaitMask();ShowMessageBox();checkUserAuth();">
+    <apex:param name="id" value="" assignTo="{!categoryindex}"/>
+ </apex:actionFunction>
+ <apex:actionFunction name="updateACSetting" action="{!updateSessionSetting}" oncomplete="return false;"/>
+ <apex:actionFunction action="{!paginatedEvents}" name="getPageRecords" reRender="mainform,msgPanel,updateSession" onComplete="stopWaitMask();ShowMessageBox();checkUserAuth();">
+     <apex:param name="offset" value="" />
+      <apex:param name="count" value="" />
+ </apex:actionFunction>
+ <apex:outputPanel id="mainform">
+ <script>
+
+ TotalRecords = '{!JSENCODE(TotalRecords)}';
+ calculateOffset();
+ proxyData='{!JSENCODE(proxyData)}';
+ proxyData = JSON.parse(proxyData);
+ isempty={!isempty};
+ 
+ if (checkForFirstTime)
+ {
+    populateGridData();
+    updateTotalRecordCount();
+ }
+ 
+ </script>   
+</apex:outputPanel>  
+</apex:form>
+<apex:outputPanel id="updateSession">
+            <script>
+                updateSessionInCS={!updateSessionInCS};
+                if(updateSessionInCS)
+                {
+                    updateACSetting();
+                }
+            </script>
+</apex:outputPanel>    
+  <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AcDeviceEvents.js" /> 
+<script>
+    window.parent.stopWaitMsgBar();
+</script> 
+</apex:page>

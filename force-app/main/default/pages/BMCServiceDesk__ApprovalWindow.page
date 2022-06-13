@@ -1,0 +1,31 @@
+<apex:page showHeader="false" sidebar="false" >
+    <script>
+    var srcurl = decodeURIComponent('{!URLENCODE($CurrentPage.parameters.srcurl)}');
+	var closeonload =  '{!JSENCODE($CurrentPage.parameters.closeonload)}';
+    var closeTab =  '{!JSENCODE($CurrentPage.parameters.closetab)}';   
+	var ApprovalPageURL = '{!URLENCODE($Page.ApprovalWindow)}';
+	var isApprovlWin = '{!JSENCODE($CurrentPage.parameters.isApprovlWin)}';
+	
+    function Redirecttospecifiedpage()
+    {
+        if(closeonload == 'true'){
+	    	window.opener.refreshRelatedLists();
+            window.close();
+	    }else if(closeTab == 'true'){
+            var ww=window.open(window.location, '_self');
+            ww.close();
+         }
+
+        if(srcurl!=null && srcurl!='' ){
+               
+               if(isApprovlWin) { //this will exceute only for console module's approval page
+               		window.location.href=srcurl;
+               }else{
+               		window.location.href=srcurl+'&isdtp=nv&retURL='+ApprovalPageURL+'%3Fcloseonload=true&saveURL='+ApprovalPageURL+'%3Fcloseonload=true';
+               }
+       }
+   }
+   window.onload=Redirecttospecifiedpage;
+  </script>
+
+</apex:page>

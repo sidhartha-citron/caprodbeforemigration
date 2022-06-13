@@ -1,0 +1,310 @@
+﻿<apex:page showHeader="false" controller="BMCServiceDesk.ReleaseManifestController" standardStylesheets="false">
+    
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFExtJS31}/resources/css/ext-all.css" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS31}/adapter/ext/ext-base.js" id="ext-base-js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS31}/ext-all.js" id="ext-all-js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS31}/examples/ux/ColumnHeaderGroup.js" id="ColumnHeaderGroup"/>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ReleaseManifest.css"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ReleaseManifest.js"/>
+    <head>
+        <title>{!PageTitle}</title>
+    </head>
+    <style type="text/css" media="print">
+        .x-grid3-cell{
+            box-sizing: border-box;
+        }
+        .x-grid3-gcell{
+            box-sizing: border-box;
+        }
+    </style>
+    <style>
+        .sort-desc .x-grid3-sort-icon {
+            background-image: url({!$Resource.SDEFStyles}/SDEFimages/arrow_sort_descending.gif) !important;
+            height:10px;
+            width:10px;
+        }
+        .sort-asc .x-grid3-sort-icon {
+            background-image: url({!$Resource.SDEFStyles}/SDEFimages/arrow_sort_ascending.gif) !important;
+            height:10px;
+            width:10px;
+        }
+    </style>
+    <script>
+	    var parentWindow = '';
+        if ((window.opener != null) && (window.opener.parent!= null) && (window.opener.location!= null))
+            parentWindow = window.opener.parent;
+        var store = '{!JSENCODE(store)}';
+        var orderNumStore = '{!JSENCODE(orderNum)}';
+        var emptyText = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+        var savedSuccessfullyLabel = '{!JSENCODE($Label.SavedSuccessfully)}';
+        var releaseItemLabel = '{!JSENCODE(ItemHeader)}';
+        var itemIdLabel = '{!JSENCODE($Label.ItemId)}';
+        var descriptionLabel = '{!JSENCODE($Label.Description)}'; 
+        var statusLabel = '{!JSENCODE($Label.Status)}';
+        var dueDateLabel = '{!JSENCODE($Label.DueDateHeader)}';
+        var priorityLabel = '{!JSENCODE($Label.PriorityHeader)}';
+        var assignedToLabel = '{!JSENCODE($Label.AssignedTo)}';
+        var releaseStatusLabel = '{!JSENCODE(StatusHeader)}';
+        var orderLabel = '{!JSENCODE($Label.Order)}';
+        var itemDetailsLabel = '{!JSENCODE($Label.ItemDetails)}';
+        var JSONStatusStore = '{!JSENCODE(JSONStatus)}';
+        var pendingCreationLabel = '{!JSENCODE($Label.Pending_Creation)}';
+        var tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+        var labelInvalidManifestEntry = '{!JSENCODE($Label.InvalidManifestEntry)}';
+        var isRFConsoleEnabled = '{!isRFConsoleEnabled}';
+		var isLightningExperience = {!IF(isLightningExperience,true,false)};
+		var namespacePrefix = 'BMCServiceDesk__';
+		var ManifestNonLayoutStatuses = JSON.parse('{!JSENCODE(strManifestNonLayoutStatuses)}');
+        function setData(){
+            if(document.getElementById("{!$Component.manifestForm.inputHiddenStore}") != null && Ext.getCmp('manifestEditorGrid') != null ){
+                var hiddenStore = document.getElementById("{!$Component.manifestForm.inputHiddenStore}").value;
+                eval(hiddenStore);
+                gridDataStore.loadData(wrappedmanifestList);
+                Ext.getCmp('manifestEditorGrid').getView().refresh();
+                highlightErrorRecord();    
+            }
+        } 
+        function convertToWrappedmanifestList(){
+            var i = 0;
+            var finalgriddata = '';
+            for (var i=0; i<gridDataStore.data.length; i++)
+            { 
+                finalgriddata += String.format('[{0}П{1}П{2}П{3}П];',
+                                                gridDataStore.getAt(i).get('releaseElementId'),                                     
+                                                gridDataStore.getAt(i).get('releaseStatus'),
+                                                gridDataStore.getAt(i).get('Order'),
+                                                gridDataStore.getAt(i).get('manifestId'));
+            }    
+            save(finalgriddata);
+            
+        }
+        function highlightErrorRecord(){
+            if(document.getElementById("{!$Component.manifestForm.errorRecId}") != null && gridDataStore != null){
+            var errorId = document.getElementById("{!$Component.manifestForm.errorRecId}").value;
+            if(errorId != '' || errorId != null){
+                var i = 0;
+                for (var i=0; i<gridDataStore.data.length; i++) 
+                {
+                    if( gridDataStore.getAt(i).get('manifestId') == errorId){
+                        Ext.getCmp('manifestEditorGrid').getSelectionModel().selectRow(i);
+                    } 
+                }
+                document.getElementById("{!$Component.manifestForm.errorRecId}").value = '';
+                }
+            }
+        }
+        function getSDFStylesResPath(){
+            var resPath = '{!$Resource.SDEFStyles}';
+            return resPath;
+        }
+        function getSDEFExtJSPath(){
+            var resPath = '{!$Resource.SDEFExtJS}';
+            return resPath;
+        }
+        if('{!AND(isUpdateable, parentObjState)}' != 'false'){      
+            var css = '.x-grid3-col-Status{ background-image: url({!$Resource.SDEFStyles}/SDEFimages/dropdowntrigger.gif); padding-right: 13px;background-position: right;  background-repeat: no-repeat;   cursor: pointer; }  .x-grid3-col-OrderNo { background-image: url({!$Resource.SDEFStyles}/SDEFimages/dropdowntrigger.gif); padding-right: 13px; background-position: right;   background-repeat: no-repeat; cursor: pointer; }',
+                head = document.getElementsByTagName('head')[0],
+                style = document.createElement('style');
+        
+            style.type = 'text/css';
+            if(style.styleSheet){
+                style.styleSheet.cssText = css;
+            }else{
+                style.appendChild(document.createTextNode(css));
+            }
+            head.appendChild(style);
+        }
+        
+        function refreshGrid(){
+            setData();
+        }
+        function validateManifestRecords(){
+            var listOrderNumbers= new Array();
+            index=0;
+            var validseq=true;
+            for (var i=0; i<gridDataStore.data.length; i++)
+            { 
+                var isValid=true, isValidFTask=true;
+                validseq=true;              
+                var status = gridDataStore.getAt(i).get('releaseStatus');
+                var orderNum = parseInt(gridDataStore.getAt(i).get('Order'));                           
+                if(!isNaN(orderNum)){
+                    listOrderNumbers[index]= orderNum;
+                    index = index+1;
+                }               
+                //For release module, order status and order should be selected OR both should be blank
+                if ('release__c' == '{!JSENCODE(objectName)}') {
+                      if(status == '-' || status.length == 0){ //if it is null
+                          if(!isNaN(orderNum)){                   
+                              isValid=false;
+                              errorRecId = i;
+                              break;
+                          }
+                      }
+                      else{ 
+                          if(isNaN(orderNum)){ //orderNum == null                 
+                              isValid=false;
+                              errorRecId = i;
+                              break;
+                          }
+                      }
+                }
+                else { //For all modules other than release, order should be selected if the order status is selected
+                  if(status != '-' && status.length > 0){ 
+                          if(isNaN(orderNum)){ //orderNum == null                 
+                              isValid=false;
+                              errorRecId = i;
+                              break;
+                          }
+                      }
+                }
+            }           
+            if(isValid == false){
+                Ext.getCmp('manifestEditorGrid').getSelectionModel().selectRow(errorRecId);
+                showMessage(labelInvalidManifestEntry);
+                grid.store.getAt(errorRecId).set('releaseStatus', '');
+                grid.store.getAt(errorRecId).set('Order', '');
+            }
+            else{
+                if ('release__c' == '{!JSENCODE(objectName)}') {
+                    if(listOrderNumbers.length>0){
+                        listOrderNumbers.sort(function(a, b){return a-b});                        
+                        var difference,breakpoint;
+                        if(listOrderNumbers[0]==1){
+                            for (var i=0 ; i<listOrderNumbers.length-1; i++)
+                            {
+                                difference = listOrderNumbers[i+1] - listOrderNumbers[i];
+                                if(difference >1){ 
+                                    breakpoint=listOrderNumbers[i];
+                                    validseq=false; 
+                                    break;
+                                }
+                            }
+                        }
+                        else{
+                            
+                            breakpoint=listOrderNumbers[0];
+                            validseq=false;
+                        }
+                    }
+                    if(validseq==false){
+                        for (var i=0; i<gridDataStore.data.length; i++)
+                        {
+                            if(gridDataStore.getAt(i).get('Order')==breakpoint){
+                                showMessage('{!JSENCODE($Label.InvalidManifestOrderSequence)}');
+                                Ext.getCmp('manifestEditorGrid').getSelectionModel().selectRow(i);
+                            }
+                        }
+                    }
+                    else{ 
+                        convertToWrappedmanifestList();             
+                    }
+                }
+                else if('change_request__c' == '{!JSENCODE(objectName)}'){
+                    var normalChngOrderId = 0;
+                    for (var i=0; i<gridDataStore.data.length; i++) {
+                        if (gridDataStore.getAt(i).get('templateId') != '' && gridDataStore.getAt(i).get('templateId') != 'null') {
+                            if (Ext.util.Format.htmlDecode(gridDataStore.getAt(i).get('status')) != pendingCreationLabel) {
+                                if (normalChngOrderId < gridDataStore.getAt(i).get('Order')) {
+                                    normalChngOrderId = gridDataStore.getAt(i).get('Order');
+                                }
+                            }
+                        }
+                    }
+                    for (var i=0; i<gridDataStore.data.length; i++) {
+                        if (gridDataStore.getAt(i).get('templateId') != '' && gridDataStore.getAt(i).get('templateId') != 'null') {
+                            if (Ext.util.Format.htmlDecode(gridDataStore.getAt(i).get('status')) == pendingCreationLabel) {
+                                if (gridDataStore.getAt(i).get('Order') != '' && (normalChngOrderId >= gridDataStore.getAt(i).get('Order') || normalChngOrderId == 0)) {
+                                    showMessage('{!JSENCODE($Label.InvalidManifestOrderSequence)}');
+                                    Ext.getCmp('manifestEditorGrid').getSelectionModel().selectRow(i);
+                                    validseq=false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (validseq) 
+                        convertToWrappedmanifestList(); 
+                }
+                else if ('incident__c' == '{!JSENCODE(objectName)}') {
+                	var processOrderId = 0;
+                	var normalOrderId = 0;
+                	
+                	for (var i=0; i<gridDataStore.data.length; i++) {
+                		if (gridDataStore.getAt(i).get('processTemplateId') != '' && gridDataStore.getAt(i).get('processTemplateId') != 'null') {
+                			if (Ext.util.Format.htmlDecode(gridDataStore.getAt(i).get('status')) != pendingCreationLabel) {
+                				if (processOrderId < gridDataStore.getAt(i).get('Order')) {
+                					processOrderId = gridDataStore.getAt(i).get('Order');
+               					}
+                			}
+                		}
+                		if (gridDataStore.getAt(i).get('templateId') != '' && gridDataStore.getAt(i).get('templateId') != 'null') {
+                			if (Ext.util.Format.htmlDecode(gridDataStore.getAt(i).get('status')) != pendingCreationLabel) {
+                				if (normalOrderId < gridDataStore.getAt(i).get('Order')) {
+                					normalOrderId = gridDataStore.getAt(i).get('Order');
+               					}
+                			}
+                		}
+                    }
+					for (var i=0; i<gridDataStore.data.length; i++) {
+						if (gridDataStore.getAt(i).get('processTemplateId') != '' && gridDataStore.getAt(i).get('processTemplateId') != 'null') {
+							if (Ext.util.Format.htmlDecode(gridDataStore.getAt(i).get('status')) == pendingCreationLabel) {
+							if (gridDataStore.getAt(i).get('Order') != '' && (processOrderId >= gridDataStore.getAt(i).get('Order') || processOrderId == 0)) {
+									showMessage('{!JSENCODE($Label.InvalidManifestOrderSequence)}');
+									Ext.getCmp('manifestEditorGrid').getSelectionModel().selectRow(i);
+									validseq=false;
+									break;
+								}
+							}
+						}
+						if (gridDataStore.getAt(i).get('templateId') != '' && gridDataStore.getAt(i).get('templateId') != 'null') {
+							if (Ext.util.Format.htmlDecode(gridDataStore.getAt(i).get('status')) == pendingCreationLabel) {
+							if (gridDataStore.getAt(i).get('Order') != '' && (normalOrderId >= gridDataStore.getAt(i).get('Order') || normalOrderId == 0)) {
+									showMessage('{!JSENCODE($Label.InvalidManifestOrderSequence)}');
+									Ext.getCmp('manifestEditorGrid').getSelectionModel().selectRow(i);
+									validseq=false;
+									break;
+								}
+							}
+						}
+                    }
+                    if (validseq)
+                    	convertToWrappedmanifestList(); 
+                }
+                else if ('problem__c' == '{!JSENCODE(objectName)}') {
+                    convertToWrappedmanifestList();
+                }
+            }
+        }
+    </script>
+    <apex:outputpanel id="manifestPanel">
+    <apex:form style="padding:10px;" id="manifestForm">
+    <apex:inputHidden value="{!store}" id="inputHiddenStore"/>
+    <apex:inputHidden value="{!errorRecId}" id="errorRecId"/>
+    <apex:image id="releaseIcon" value="{!IconPath}" width="32" height="32"/>
+         <apex:outputText value="CRUDFLSCHECK# Both CRUD & FLS check required and performed in the controller/class" rendered="false"/> 
+         <apex:outputtext value="{!manifestTitle}" title="{!manifestTitleTooltip}" styleClass="titleHeader" />
+         <hr id="seperator" class="seperatorCls" />         
+         <apex:pageBlock id="manifestPageBlock">         	 
+            <apex:pageBlockButtons styleClass="pg-block-btn" id="manifestBlockButtons" location="both" style="display:none;" > 
+                <apex:commandbutton styleClass="command-btn" onclick="waitbox(0);validateManifestRecords();return false;" value="{!JSENCODE($Label.bmcservicedesk__save)}" disabled="{! !AND(isUpdateable, parentObjState)}"/>
+                <apex:commandbutton styleClass="command-btn" onclick="closeWindow();" value="{!JSENCODE($Label.bmcservicedesk__cancel)}"/>
+                <input type="Button" Class="command-btn" onclick="refresh();" value="{!JSENCODE($Label.Refresh)}"/>
+                <apex:commandbutton styleClass="command-btn" onclick="window.open('/apex/ExportCSV?objectName={!objectName}&Id={!objId}');" value="{!JSENCODE($Label.bmcservicedesk__export)}"/>
+                <apex:commandbutton styleClass="command-btn" onclick="window.print(); return false;" value="{!JSENCODE($Label.bmcservicedesk__print)}"/>
+            </apex:pageBlockButtons>
+            <div id="manifestGrid"></div> 
+        </apex:pageBlock>
+        <div Class="footer-cls"><apex:outputtext rendered="{!IF(objectName == 'problem__c', false, true)}" value="{!JSENCODE($Label.bmcservicedesk__note + ': ' + $Label.bmcservicedesk__manifest_footer_note)}" /></div>
+        <apex:actionFunction action="{!save}" name="save" oncomplete="refreshGrid(); showMessage('{!apexMessage}'); " rerender="inputHiddenStore, errorRecId">
+            <apex:param name="finalgriddata" assignTo="{!finalgriddata}" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="refresh" action="{!refresh}" />
+    </apex:form>
+    </apex:outputpanel>
+    <script>
+    	var pageBlocktopSection = '{!$Component.manifestForm.manifestPageBlock.manifestBlockButtons}';
+        var pageBlockBottomSection = pageBlocktopSection + ':bottom';        
+    </script>    
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/OpenPopupRecordUtility.js"/>
+</apex:page>

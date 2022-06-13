@@ -1,0 +1,127 @@
+<apex:page showHeader="false" docType="HTML-5.0" controller="BMCServiceDesk.CustomerExperienceController">
+    <title>{!$Label.PSATHeader}</title>
+    <link rel="stylesheet" href="{!$Resource.DeepView}/ConsoleViewCustomization/style/jquery-ui.min.css"/>
+    <link rel="stylesheet" href="{!$Resource.CustomerExperience}/style/style.css"/>
+    
+    <!-- VARIABLES INITIALIZATION -->
+    <script type="text/javascript">
+        var version = '{!JSENCODE($CurrentPage.Parameters.v)}';    //The version of the Page to be displayed to User
+        var contactPhone = '{!IF($User.Phone != null, $User.Phone, $User.MobilePhone)}';             //User Phone number at which he has to be contacted
+        var featureMap = JSON.parse('{!options}');       //This decides which features to be displayed to user or not
+        var IncidentManagementExperience = '{!JSENCODE($Label.IncidentManagementExperience)}';
+        var ServiceRequestManagementExperience = '{!JSENCODE($Label.ServiceRequestManagementExperience)}';
+        var ProblemManagementExperience = '{!JSENCODE($Label.ProblemManagementExperience)}';
+        var KnowledgeManagementExperience = '{!JSENCODE($Label.KnowledgeManagementExperience)}';
+        var ChangeManagementExperience = '{!JSENCODE($Label.ChangeManagementExperience)}';
+        var ReleaseManagementExperience = '{!JSENCODE($Label.ReleaseManagementExperience)}';
+        var CMDBExperience = '{!JSENCODE($Label.CMDBExperience)}';
+        var SelfServiceExperience = '{!JSENCODE($Label.SelfServiceExperience)}';
+        var AdministrationExperience = '{!JSENCODE($Label.AdministrationExperience)}';
+        var OverallProductExperience = '{!JSENCODE($Label.OverallProductExperience)}';
+        var OverallSupportExperience = '{!JSENCODE($Label.OverallSupportExperience)}';
+        var OverallCommunityExperience = '{!JSENCODE($Label.OverallCommunityExperience)}';
+        var SurveyVeryDissatisfied = '{!JSENCODE($Label.PSATVeryDissatisfied)}';
+        var SurveyDissatisfied = '{!JSENCODE($Label.PSATDissatisfied)}';
+        var SurveySatisfied = '{!JSENCODE($Label.PSATSatisfied)}';
+        var SurveyVerySatisfied = '{!JSENCODE($Label.PSATVerySatisfied)}';
+        var SurveyNotApplicable = '{!JSENCODE($Label.PSATNotApplicableHover)}';
+        var PSATNA = '{!JSENCODE($Label.NA)}';
+        var isAdminUser = {!IsAdmin};
+        var PropSegragateIncidentServiceRequest = {!PropSegragateIncidentServiceRequest};
+        var methodGetSurveyResult = '{!$RemoteAction.CustomerExperienceController.getSurveyResult}';
+        var privacyStmtPart1 = '{!JSENCODE($Label.PSATPrivacyInformation)}';
+        var privacyStmtPart2 = '{!JSENCODE($Label.PSATPrivacyInformationPart2)}';
+        var privacyStmtPart3 = '{!JSENCODE($Label.PSATPrivacyInformationPart3)}';
+        var privacyStmtPageURL = "{!$Resource.CustomerExperience}/html/BMCSecurityPolicy.htm";
+    </script>
+    
+    <div class="wrapper">
+        <div class="colHeader">{!$Label.PSATHeader}</div>
+        <div class="colHeaderTag">{!$Label.PSATHeaderHelper}</div>
+        <hr/>
+        <table class="detailsTbl">
+            <tr>
+                <td class="sprite sprite-very_dissatisfied"></td>
+                <td class="sprite sprite-dissatisfied"></td>
+                <td class="sprite sprite-satisfied"></td>
+                <td class="sprite sprite-very_satisfied"></td>
+                <td rowspan="2">{!$Label.NA} = {!$Label.PSATNotApplicableHover}</td>
+            </tr>
+            <tr><td>{!$Label.PSATVeryDissatisfied}</td><td>{!$Label.PSATDissatisfied}</td><td>{!$Label.PSATSatisfied}</td><td>{!$Label.PSATVerySatisfied}</td></tr>
+        </table>
+        <div class="leftWrapper">
+            <div class="leftSurveyContainerProduct"></div>
+            <div class="separator-erasor"></div>
+        </div>
+        
+        <div class="middleWrapper"></div>
+        
+        <div class="rightWrapper">
+            <div class="rightSurveyContainerProduct"></div>
+            <div class="separator-erasor"></div>
+        </div>
+        
+        <div class="bottom-separator"></div>
+        
+        <div class="leftWrapper">
+            <div class="leftSurveyContainerService"></div>
+        </div>
+        
+        <div class="middleWrapper"></div>
+        
+        <div class="rightWrapper">
+            <div class="rightSurveyContainerService"></div>
+        </div>
+        
+        <div class="bottom-separator"></div>
+        
+        <table style="width:100%;">
+            <tr><div class="additionalInputs">{!$Label.Comments}</div></tr>
+            <tr>
+                <td style="width:{!IF(isAdmin, '46%', '96%')}">
+                    <textArea id="surveyComment" maxlength="32768" placeHolder="{!$Label.PSATCommentsPlaceHolder}"/>
+                </td>
+                <apex:outputPanel rendered="{!isAdmin}">
+                    <td style="width: 7%"/>
+                    <td valign="top">
+                        <span class="refCustomerLabel">{!$Label.PSATIWillBeHappyToBecomeAReferenceCustomer}</span>
+                    </td>
+                </apex:outputPanel>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="footer">
+        <div class="privacy-stmt-wrapper" style="display: none;">
+            <span class="close-privacy-stmt-wrapper">x</span>
+            <b><u>{!$Label.PSATPrivacyInformationHeader1}:</u></b><br/>
+            <span class="privacy-stmt-part1"/><br/><br/>
+            
+            <b><u>{!$Label.PSATPrivacyInformationHeader2}:</u></b><br/>
+            <span class="privacy-stmt-part2"/>
+        </div>
+        <span class="agreementLabel">{!$Label.PSATIAgreeToSubmitToBMC}</span>
+        <span><a href="#" class="privacy-info-show">See Privacy Information</a></span>
+        <span class="submitBtnPanel"><input class="submitBtn" type="submit" value="{!$Label.SSSubmit}"/></span>
+    </div>
+    
+    <apex:outputPanel styleclass="emailTestPanel" rendered="{!$CurrentPage.Parameters.testEmail != null}" layout="block">
+        <input type="text" max-length="20" id="testEmail" placeholder="Receiver's Email ID"/>
+    </apex:outputPanel>
+        
+    <div id="closePanel" style="display: none;">
+        <div class="overlay" onclick="closeClosePanel();"/>
+        <div class="msgPanel">
+            <div class="messagePanel">
+                {!$Label.PSATSuccessMsg}
+                <div><button class="closeWindow" onclick="window.close();">{!$Label.Ok}</button></div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}"/>
+    <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/jquery-ui.min.js')}"/>
+    <script src="{!$Resource.CustomerExperience}/js/SurveyData.js"></script>
+    <script src="{!$Resource.CustomerExperience}/js/CustExpHelper.js"></script>
+</apex:page>

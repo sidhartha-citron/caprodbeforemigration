@@ -1,0 +1,157 @@
+<apex:page controller="BMCServiceDesk.SSNoteAttachmentController" standardStylesheets="false" action="{!insertTaskfieldSet}" showHeader="false" sidebar="false">
+<div id="themeDiv"></div>
+<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+<style>
+    body,table,.x-body{font:12px arial;color:#000;}
+ </style>
+ <script>
+ function showNoteTip(value, metadata, record){
+     metadata.tdAttr = 'data-qtip="' + Ext.String.htmlEncode(value) + '"';
+    return value;
+}
+ </script>
+<apex:form id="attachmentForm">
+ <apex:actionFunction name="attachFile"  action="{!attachFile}"   />  
+    <apex:actionFunction action="{!createAttRefGenerator}" name="createAttRefGenerator"/>
+    <apex:actionRegion >
+        <apex:actionFunction action="{!deleteAttachment}" name="deleteAttachment" rerender="refreshAttRefGeneratorId" oncomplete="addNoteAndAttachment('att-div-id')">
+            <apex:param name="attachId" assignTo="{!attachmentId}" value=""/>
+            <apex:param name="type" assignTo="{!attachmentType}" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="addAttachmentHandler" rerender="refreshAttRefGeneratorId" />
+        <apex:actionFunction action="{!handleIncidentNoteSubmitRequest}" name="submitIncidentNote" rerender="refreshAttRefGeneratorId" oncomplete="clearNote(); addNoteAndAttachment('note-div-id');">
+            <apex:param name="notesObjvalue" assignTo="{!incidentNote}" value=""/>  
+       </apex:actionFunction>
+    </apex:actionRegion>
+  <div class="rf-main-attachment-div">
+                <div class="rf-attachment-left" >
+                    <div class="rf-attachment-left-1" > 
+                       <div class="rf-div-dark" id="att-div-id">  
+                       <a  class="rf-anchor-attach" href="#" onclick="refreshAttachmentGrid('att-div-id')" title="{!$Label.bmcservicedesk__attachments}">
+                       <apex:outputLabel value="{!$Label.bmcservicedesk__attachments}" style="cursor:pointer;"/>
+                           <label id="att-label-id" value="(0)" /></a>
+                       </div>
+                       <apex:outputpanel rendered="{!displayNoteField}">
+                       <div class="rf-div-light" id="att-note-id" >
+                        <a  class="rf-anchor-attach" href="#" onclick="refreshAttachmentGrid('att-note-id')" title="{!$Label.bmcservicedesk__notes}">
+                          <apex:outputLabel value="{!$Label.bmcservicedesk__notes}" style="cursor:pointer;"/>
+                          <label id="note-label-id" value="(0)" />
+                        </a>
+                       </div>
+                       </apex:outputpanel>
+					   <apex:outputpanel rendered="{!AND(isServiceRequest,displayApprovals,NOT(isPortalUser))}">
+                       		<div class="rf-div-light" id="approvals-div-id" >
+                                <a class="rf-anchor-attach" onclick="refreshAttachmentGrid('approvals-div-id')" title="{!$Label.bmcservicedesk__ssapprovals}">
+	                         		<apex:outputLabel value="{!$Label.bmcservicedesk__ssapprovals}" style="cursor:pointer;"/>
+	                          		<label id="approvals-label-id" value="(0)" />
+                        		</a>
+                       		</div>
+					   </apex:outputpanel>
+                        <apex:outputpanel rendered="{!showTaskChkbox}">
+                            <div class="rf-div-light" id="task-div-id" style="text-align: center;height: 35px;padding-top: 10px;">
+                                <a class="rf-anchor-attach" onclick="refreshAttachmentGrid('task-div-id')" title="{!$Label.bmcservicedesk__navigator_tasks}">
+                                    <apex:outputLabel value="{!$Label.bmcservicedesk__navigator_tasks}" style="cursor:pointer;"/>
+                                    <label id="tasks-label-id" value="(0)" />
+                                </a>
+                            </div>
+                       </apex:outputpanel>
+                    </div>
+                    <div id="divRightSection" class="rf-attachment-left-22">
+                       <div  id="attacheHeaderId" class="rf-attachment-left-note"> 
+                       <img   id="file-info-icon" src="{!$Resource.SSThemes}/SSDefaultTheme/SDEFicons/status-16-information.png" tabindex="0" onfocus="showtooltip();" title="{!$Label.SS_AttachmentLimit}" />
+                        <apex:outputLabel value="{!$Label.bmcservicedesk__file}" styleClass="rf-file-label"></apex:outputLabel>
+                        <apex:inputFile id="inputFile"  fileName="{!attachment.name}"  fileSize="{!filesize}" value="{!attachment.body}"  size="70" styleClass="rf-input-file" onkeydown="moveFocustoGrid(this)" onchange="validateFile();" />
+                       <button name="add" id="file-add-btn" class="rf-toolbar-btn" type="button" title="{!$Label.SS_AttachmentAdd}" disabled="true" onkeydown="moveFocustoGrid(this)"  onclick="AddAttachment()">{!$Label.Add}</button>
+					    <span class="rf-toolbar-sep">|</span>
+                       <button name="del" id="delete-att-btnId" class="rf-toolbar-btn" title="{!$Label.SS_AttachmentDelete}"  disabled="true" onkeydown="moveFocustoGrid(this)"  onClick="RemoveAttachment();return false;">{!$Label.Delete}</button>
+                       <apex:outputLabel id="error_lbl_id" style="color:red;" styleClass="rf-label-td" value="{!validateUrlAndAttachment}"></apex:outputLabel>
+                       <apex:messages style="color:red;float: right;padding:5px 10px 0 0;font-weight:bold;" rendered="{!OR(validateUrlAndAttachment==null,validateUrlAndAttachment=='')}" />
+					   </div>
+                       <apex:outputpanel id="noteHeaderId" styleClass="rf-note-header" layout="block" rendered="{!displayNoteField}">
+                        <apex:outputLabel value="{!$Label.bmcservicedesk__notes}" styleClass="rf-file-label"></apex:outputLabel>
+						<apex:outputText value="CRUDFLSCheck# No association with any sObject fields." rendered="false"/>
+                        <apex:inputTextarea title="{!$Label.bmcservicedesk__ss_notefield}" id="noteTextId"   styleClass="rf-note-area" value="{!incidentNote}" onkeyup="renderAddNoteButton(this);" />
+                       <input class="rf-editor-icon" id="rf-editor-id" type="button" onkeydown="moveFocustoGrid(this);" onclick="viewNoteTextEditor();"></input>  
+                       <button name="add" id="add-note-btnId" class="rf-toolbar-btn"  title="{!$Label.SS_AddNote}" type="button" disabled="true" onkeydown="moveFocustoGrid(this)" onClick="submitIncidentNoteHandler();" >{!$Label.Add}</button>
+                       </apex:outputpanel>
+                       <div  id="attachment-grid" class="attachment-grid-cls"></div>
+                     </div>
+                </div>
+
+               </div>
+<apex:outputpanel id="refreshAttRefGeneratorId">
+<script>
+    var incID = '{!JSENCODE(incidentId)}';           
+    var AttRefGeneratorID='{!JSENCODE(AttRefGeneratorID)}';
+    var noteData= [{!ActionsData}];
+    var attachmentData= [{!AttachmentData}];
+    var approvalData = [{!ApprovalData}];
+	var requestEntriesData = [{!RequestEntriesData}];
+	var dateFormatStr = '{!JSENCODE(dateFormat)}';
+    var showTaskChkbox = {!showTaskChkbox};
+    if(showTaskChkbox == true){
+    var taskcolumnsString = {!taskcolumnsString};
+    var taskfieldsString = {!taskfieldsString};
+    }
+    var taskData=[{!taskData}];
+    var isNoteSaved = {!isNoteSaved};
+    updateAttRefGeneratorId();
+	function updateAttRefGeneratorId(){
+		 window.parent.AttRefGeneratorID=AttRefGeneratorID;
+   }
+</script>
+ </apex:outputpanel>
+ </apex:form>
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+<script>
+
+var SSIncidentActionData= '{!$Page.SSIncidentActionData}'               
+_Labels = {};
+  _Labels.ssOneAttachmentRequired='{!JSENCODE($Label.SS_oneAttachmentRequired)}';
+  _Labels.ssDeleteAttachmentLabel='{!JSENCODE($Label.SSDeleteAttachment)}';
+  _Labels.SSDeleteAttachmentMsg='{!JSENCODE($Label.SSDeleteAttachmentMsg)}';
+  _Labels.FileNameLimitExceeded='{!JSENCODE($Label.FileNameLimitExceeded)}';
+  _Labels.textAreaOverflowLabel='{!JSENCODE($Label.TextAreaOverflow)}';
+  _Labels.DateAndTime='{!JSENCODE($Label.DateAndTime)}';
+  _Labels.Action='{!JSENCODE($Label.ActionId)}';
+  _Labels.Note='{!JSENCODE($Label.Note)}';
+  _Labels.Ok='{!JSENCODE($Label.Ok)}';
+  _Labels.Cancel='{!JSENCODE($Label.Cancel)}';
+  _Labels.notePopupHeader='{!JSENCODE($Label.SS_TicketHistory)}';
+  _Labels.Attachments='{!JSENCODE($Label.Attachments)}';
+  _Labels.File='{!JSENCODE($Label.File)}';
+  _Labels.AddedBy='{!JSENCODE($Label.AddedBy)}';
+  _Labels.requestEntriesInput = '{!JSENCODE($Label.SSInput)}';
+  _Labels.requestEntriesAnswer = '{!JSENCODE($Label.SSAnswer)}';
+  _Labels.approvalsApprover = '{!JSENCODE($Label.SSApprovalApprover)}';
+  _Labels.approvalStatus = '{!JSENCODE($Label.SSApprovalStatus)}';
+  _Labels.approvalDate = '{!JSENCODE($Label.Date)}';
+  _Labels.approvalComments = '{!JSENCODE($Label.SSApprovalJustification)}';
+  _Labels.AttachmentLimit = '{!JSENCODE($Label.SS_AttachmentLimit)}';
+  _Labels.NoteCreationFailed = '{!JSENCODE($Label.NoteCreationFailed)}';
+                               
+      
+     _ComponentIds = {};
+   
+     _ComponentIds.NoteTextId=  '{!$Component.attachmentForm.noteTextId}' ;
+     _ComponentIds.inputFile=  '{!$Component.attachmentForm.inputFile}';
+     _ComponentIds.inputURL=  '{!$Component.attachmentForm.inputURL}';
+     _ComponentIds.error_lbl_id=  '{!$Component.attachmentForm.error_lbl_id}';
+     _ComponentIds.noteHeaderId=  '{!$Component.attachmentForm.noteHeaderId}';
+     var maxAttachmentSizeInBytes = {!MaxAttachmentSize};
+ </script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+<script type="text/javascript" src="{!$Resource.SSjs}/SSNoteAttachment.js"></script>
+<script>
+	if(Sarissa!=undefined && Sarissa._SARISSA_IS_IE && (navigator.userAgent.indexOf("Trident/6")>-1)){  
+		window.XMLSerializer = function(){};      
+		window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+</script>  
+<script type="text/javascript">         
+        var colorCodeList = '{!JSENCODE(themeColorCodeString)}'; 
+        var content = '{!JSENCODE(dynamicStyle)}';
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+</script>
+<script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" /> 
+</apex:page>

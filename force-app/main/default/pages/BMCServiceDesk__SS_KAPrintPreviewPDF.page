@@ -1,0 +1,31 @@
+<apex:page renderAS="PDF" readOnly="true" Controller="BMCServiceDesk.SS_KAPrintPreviewExtension" sidebar="false" showheader="false" >
+    <body style="font-family: Arial Unicode MS">
+        <apex:pageBlock >
+            <apex:pageBlockSection title="{!KAData.Name} - {!KAData.BMCServiceDesk__Title__c}"  collapsible="false" showHeader="true"  columns="1">
+                <apex:outputPanel >
+                    <apex:repeat value="{!KaDetailsList}" var="ArticleData" id="FieldData">
+                        <div style="height: 15px;">
+                            <apex:outputLabel style="text-decoration:underline;font-size:15px;font-weight:bold;word-wrap:break-word;" value="{!$ObjectType.BMCServiceDesk__KM_KnowledgeArticle__c.fields[ArticleData.name].label}"></apex:outputLabel>
+                        </div>
+                        <div style="margin-top:10px;">
+							<span style="word-wrap: break-word;">
+                            	<apex:outputField style="word-wrap: break-word;" value="{!KAData[ArticleData.name]}" ></apex:outputField>
+							</span>
+                        </div>
+                    </apex:repeat>
+                </apex:outputPanel>
+            
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        
+        <br/>
+        <apex:outputLabel rendered="{!flag}" style="text-decoration:underline;font-size:16px;font-weight:bold;" value="{!$Label.bmcservicedesk__attachments}"/>
+        <apex:pageBlock rendered="{!flag}">
+            <apex:pageBlockTable value="{!attachmentList}"   rendered="{!flag}" var="attachment">
+                 <apex:column value="{!attachment.Name}"/>
+                 <apex:column value="{!attachment.CreatedDate}"/>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </body>
+
+</apex:page>

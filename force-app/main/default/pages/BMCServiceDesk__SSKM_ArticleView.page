@@ -1,0 +1,488 @@
+<apex:page controller="BMCServiceDesk.KM_ArticleViewController" standardStylesheets="false" showHeader="false" contentType="text/html">
+<div id="themeDiv"></div>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js" />
+<!-- Manasi -->
+<body id='docBody' onload="initiateSelfClosing()">  
+<!-- End Manasi -->
+<apex:outputPanel rendered="{!isfromSS}">     
+    <apex:stylesheet value="{!$Resource.BMCServiceDesk__Themes}/{!activenow}/SkywalkerStyleSheet.css" />
+    <apex:stylesheet value="{!$Resource.BMCServiceDesk__Themes}/{!activenow}/SSCore.css" />
+</apex:outputPanel>
+
+<c:CommonIncludes />
+<script>
+	var isRFHotkeysDisabled={!isRFHotkeysDisabled};
+</script>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/KM_ArticleView.js" />
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/KMArticleView.css"/>
+    
+<apex:outputPanel rendered="{!isfromSS}">     
+<style>
+    td.x-grid3-hd-over .x-grid3-hd-inner {
+        background-image: url("{!$Resource.Themes}/{!activenow}/SDEFimages/bkheadergradient.png") !important;
+        background-color:transparent !important;
+    }
+    
+    .x-plain-body{
+    	background: None !Important;
+    }
+    
+</style>
+</apex:outputPanel>
+<style>
+ .clsRequestHelpBtn2 {
+    background-image:
+        url("{!$Resource.Themes}/SSDarkYellowTheme/images/en_US/SS_Service_Request_16.png")
+        !important;
+    background-position: 3px 50% !important;
+    background-repeat: no-repeat !important;
+    height: 22px !important;
+    padding-left:20px !important;
+    margin-top: 3px;
+    overflow:visible;
+    border-color: #CCCCCC #666666 #666666 #CCCCCC;
+    border-style: solid;
+    border-width: 1px;
+    cursor: pointer;
+    font-family: Tahoma, MS Sans Serif;
+    font-size: 11px;
+    font-weight: normal;
+    margin-left: 5px;
+    margin-bottom: 5px\9;
+    text-align: right !important;
+    margin-right: 15px;
+}
+
+.requestHelpCls {
+    font-family: Arial !important;
+    font-size: 12px !important;
+    font-weight: bold;
+    padding: 0 5px;
+}
+.ssDefaultFontCls {
+    color: #000000 !important;
+    font-family: Arial !important;
+    font-size: 12px !important;
+}
+.clsBtnToolbar {
+    background:  url("{!$Resource.Themes}/{!activenow}/SDEFimages/grey_bg.gif") repeat-x scroll 0 0 transparent !important;
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    border-color: #CCCCCC #666666 #666666 #CCCCCC !important;
+    border-image: none;
+    border-style: solid;
+    border-width: 1px;
+    color: #000000;
+    cursor: default;
+    font: 12px arial;
+    height: 20px;
+    padding: 0 5px;
+    vertical-align: middle;
+    margin-left: 15px; 
+    margin-bottom: 10px;    
+}
+.clsBtnToolbar:hover{
+    background: none repeat scroll 0 0 #E8E8E9 !important;
+    cursor: pointer;
+}
+
+.ssDefaultFontCls {
+    color: #000000 !important;
+    font-family: Arial !important;
+    font-size: 12px !important;
+}
+#KMTitle{
+
+ font-size: 13px !important;
+ font-family: Arial !important;
+ margin-left: 15px;
+}
+.AddButtonOff {
+    margin-left: 15px; 
+    margin-bottom: 10px;
+    min-width: 112px;
+    padding-bottom: 2px;
+    padding-left: 10px;
+    padding-right: 10px;
+    width: auto;
+       
+}
+.AddButton {
+    margin-left: 15px; 
+    margin-bottom: 10px;	
+}
+</style>
+<script>
+var RatingEmptyTextToolTip = '{!JSENCODE($Label.SelectArticleRatingToolTip)}';
+var incidentPage = "{!$Page.SSIncident}";
+var ratingComboValue = '{!JSENCODE(picklistValue)}';
+var articleId = '{!$CurrentPage.parameters.id}';
+var incidentId = '{!JSENCODE($CurrentPage.parameters.incidentID)}';
+var ssIncidentForm;
+var IsComponent = '{!JSENCODE($CurrentPage.parameters.IsComponent)}';
+var incidentCustomform = '{!customform}';
+if(incidentCustomform == 'STD'){
+	ssIncidentForm = '{!$Page.SelfServiceIncident}'+'?';
+}else if(incidentCustomform == 'CUSTOM'){
+	ssIncidentForm = '{!$Page.SelfServiceIncidentCustom}'+'?isCustom=true';
+}else{
+	ssIncidentForm = '{!$Page.SSTicketLayout}'+'?';
+}
+var problemId = '{!JSENCODE($CurrentPage.parameters.problemID)}';
+var attachmentarray = new Array();
+var feedbackComp = '{!$Component.kmform.feedbackId}';
+var commentsFeedbackLabel = '{!JSENCODE($Label.CommentsFeedback)}';
+var isVisibleInSS = '{!isVisibleInSS}';
+var orgNamespace = '{!JSENCODE(orgNamespace)}';
+var Filename = '{!JSENCODE($Label.SSFileName)}';
+var i=0;
+<apex:repeat value="{!lstAttachmentInfo}" var="attachment">
+    var isFile = {!IF(attachment.isFile, true, false)};
+    if(!isFile) {
+    	attachmentarray[i] = new Array(3);
+	    attachmentarray[i][0]='{!attachment.Id}';
+	    attachmentarray[i][1]='{!attachment.CreatedDate}';
+	    attachmentarray[i][2]='{!JSINHTMLENCODE(attachment.Name)}';
+	    i++;
+	}
+    
+</apex:repeat>
+
+eval('{!RatingList}');
+
+for(var i = 0; i < RatingData.length ; i++) {   
+    var rating = RatingData[i];
+    RatingData[i][0] = Ext.util.Format.htmlDecode(RatingData[i][0]);
+}
+var RatingEmptyText = '{!JSENCODE($Label.SelectArticleRating)}';
+var checkedRadioValue = '{!JSENCODE(selectedCopyOption)}';
+
+function getCalledFromFormValue(){
+    return {!calledFromform};
+}
+
+function getShowFeedbackValue(){
+    return {!showFeedback};
+}
+
+function getIsFromSS(){
+    return {!isfromSS};
+}
+
+function getIsGS(){
+    return {!isGS};
+}
+
+function getFlags(){
+        var FlagArray = new Array(3);
+        FlagArray[0] = {!calledFromform};
+        FlagArray[1] = {!isfromSS};
+        FlagArray[2] = {!isGS};
+        return FlagArray;
+}
+
+function openAttachment(attachmentId){
+    window.open('{!$Page.FileDownloadPage}?attachmentId='+attachmentId);    
+}
+
+function closePopupWindow(){
+    onCompleteAction();
+}
+
+function settingKASize(){
+    return settingKASizeJS();
+}
+
+function createNewRequest(){
+    var url = parent.getFormAssignment(incidentPage);
+    
+    var incident = {
+        xtype: 'ssDetailPortlet',
+        id: 'newIncidentPanel3',
+        cls: 'ssSearchResultsPortlet',
+        tools: [{
+            id: 'close',
+            handler: function (event, toolEl, panel) {
+            incDesc = null;
+            window.parent.ss();
+            var pm = parent.Ext.getCmp('ssHomePortalManager');
+            pm.onSwitchPanel('ssCenterPortal');
+        }}],
+        title: '<div class="portletHeaderIcon searchPortletHeaderIcon"></div><center>{!JSENCODE($Label.SSNewHelpRequest)}</center>',
+        html: '<div class="sky-iframe"><iframe src= "'+url+'?newIncDesc=\" class=\"tab-iframe\" style=\"width:100%;height:100%;border:none;background:white\" /></div>'                
+    }
+    var pm = parent.Ext.getCmp('ssHomePortalManager');
+    pm.onSwitchPanel('ssIncidentDetailPortal', [incident]);
+    window.parent.setKMRequestHelpBreadCrumb('{!JSENCODE(articleObj.Name)}');
+}
+function PrintBtnHandler(){
+      var recordId ='{!JSENCODE(articleObj.id)}';     
+      var print_url;
+       if(orgNamespace!=null && orgNamespace!=='')    
+          print_url='/apex/'+orgNamespace+'__SS_KAPrintPreviewPDF?id='+recordId;
+       else
+           print_url='/apex/SS_KAPrintPreviewPDF?id='+recordId;
+      var windowFeatures= "resizable=1,scrollbars=1,toolbar=1,menubar=1,status=1,location=1";
+      printBtnHandlerWindow = window.open(print_url,'',windowFeatures);
+}
+</script>
+<apex:outputPanel id="renderRadioButtonValue">
+<script>
+    checkedRadioValue = '{!JSENCODE(selectedCopyOption)}'
+    function setResolution(){       
+        if((incidentId != null)&&(incidentId != '')){           
+            articleId='';
+        }       
+       
+         if((problemId != null)&&(problemId != '')){            
+            articleId='';
+        }   
+        if('{!isGS}' == 'true'){            
+             if(document.getElementById('solutionBtn') != null){   
+                document.getElementById('solutionBtn').disabled=true;
+                document.getElementById('solutionBtn').className = 'AddButtonOff';
+             }
+        } else {
+            if('{!isfromSS}' != 'true'){
+                  //code by prem-------------
+                var stdLayout = getStandardLayout(); 
+                                            
+                if(checkedRadioValue == 'link'){
+                    if(stdLayout ){
+                        window.opener.pasteResolution('{!JSENCODE(currentPageUrl)}',articleId , 'link', isVisibleInSS);       
+                    }else{
+                        parent.pasteResolution('{!JSENCODE(currentPageUrl)}',articleId,'link');
+                    }
+                }else if(checkedRadioValue == 'text'){
+                    if(stdLayout ){
+                        
+                        window.opener.pasteResolution('{!JSENCODE(resolutionValue)}',articleId,'text');
+                    }else{
+                        parent.pasteResolution('{!JSENCODE(resolutionValue)}',articleId,'text');
+                    }//end prem----------
+                } else {
+                    closePopupWindow();
+                }
+            }    
+        }
+        return true;
+    }
+</script>
+    </apex:outputPanel>
+	<div id="ssKAToolbarDiv" style="min-height:15px;height:30px;" class="rf-tab-header">	
+        <apex:outputPanel rendered="{!showRequestHelp}">
+			<div style="float:right;padding-right:15px;" ><span class="requestHelpCls">{!JSENCODE($Label.RequestHelpMessage)}</span><span ><a onclick="CheckTicketFrom();" class="submitLinkCls">{!JSENCODE($Label.SS_IncidentHome)}</a></span></div>
+		</apex:outputPanel>
+	</div>
+	
+    <apex:form id="kmform">
+        <div id="KMTitle" class="kaTitleCls">
+             <span style="float:right;padding-right:15px;"><a class="submitLinkCls" onclick="PrintBtnHandler();" >{!$Label.SS_PrintableView}</a></span>
+             <span>{!articleObj.Name}: {!articleObj.Title__c}</span>
+       </div>
+       <!-- <div style="float:right;padding-right:15px;" ><a class="submitLinkCls" onclick="" >Print</a></div>-->
+        <div id="otherInfo1" >
+        <apex:outputPanel id="outerPanel" rendered="{!showArticle}">
+
+
+
+
+
+            <iframe id="ArticleContents" frameborder="0" src="{!$Page.KM_PreviewArticle}?id={!articleObj.id}&forembeddedpage=true&calledFromform=true&fromSS=true&RecordTypeID={!recordtypeId}" style="width: 100%; border: none;" scrolling="no"></iframe>
+
+
+
+            <apex:outputPanel rendered="{!IF(lstAttachmentInfo.size > 0, true,false)}">
+                <div class="x-panel-header headerBackColor" style="height: 15px;"><span><apex:outputLabel id="fieldNameId" value="{!JSENCODE($Label.bmcservicedesk__attachments)}" /></span></div>
+                <div style=" padding-top: 5px; overflow: auto;" id="attachmentDiv">
+                    </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!calledFromform}">
+                <div id="feedbackDetails" style="background-color: rgb(222, 224, 224);">
+                
+                <apex:outputPanel rendered="{!showFeedback}">
+                    <div id="ratingComboDiv" style="float:left; margin-left:15px; margin-top:10px;"></div>
+                    <apex:inputText styleClass="clsInputTextFeedback" value="{!kmFeedbackObj.BMCServiceDesk__Feedback__c}" id="feedbackId" onclick="emptyText();" onfocus="emptyText();"></apex:inputText>
+                    <input type="button" id="inputTxtAreaButton" class="TextboxPopupIcon" onclick="emptyText(); showTextEditor('{!$Component.kmform.feedbackId}', '{!JSENCODE($Label.Feedback)}', '32000', '{!JSENCODE($Label.OK)}', '{!JSENCODE($Label.Cancel)}');"/>
+                    <script> 
+                        var feedbackValue = document.getElementById('{!$Component.kmform.feedbackId}').value;
+                        if(feedbackValue == null || feedbackValue == ''){
+                            document.getElementById('{!$Component.kmform.feedbackId}').value = '{!JSENCODE($Label.CommentsFeedback)}';
+                            document.getElementById('{!$Component.kmform.feedbackId}').style.color = 'gray';
+                        }
+                    </script>
+                </apex:outputPanel>
+                
+                <!-- <apex:outputPanel rendered="{!showSubmit}">
+                    <input type="button" value="Submit" class="AddButton" id="submitBtn" style="width:auto;padding:4px;padding-top:2px;margin-right:10px;margin-top:8px;" onclick="SubmitFeedback(ratingComboValue);"/>
+                </apex:outputPanel> -->
+                <div class="divLine"></div>
+                <apex:outputPanel >                <!-- rendered="{!NOT(isPortalUser)} -->
+                    <table id="actionTable" width="100%">
+                        <tr>
+                            <td align="left" height="20" valign="center" id="checkRequest">
+                                                         
+                            <apex:outputPanel rendered="{!isfromSS}"><div style="float: left; margin-right: 10px; margin-top: 4px;*margin-top: 0px;">
+                                <label class="fileName" style="margin-left: 15px;">{!$ObjectType.KM_Feedback__c.fields.Issue__c.label}</label>
+                                </div>                              
+                                <apex:selectRadio value="{!selectedYesOption}" styleClass="copyRadio" style="margin-bottom:4px;" id="YesNoOptions">
+                                    <apex:selectOptions value="{!kmYesNoOptions}" />                                    
+                                </apex:selectRadio>
+                            </apex:outputPanel>
+                            
+                        </td>
+                        </tr>
+                        <tr>
+                            <td align="left"  valign="bottom">
+                                
+                                <input type="button" value="{!JSENCODE($Label.SSSubmit)}" class="clsBtnToolbar" id="solutionBtn" onclick="document.getElementById('solutionBtn').disabled = true; pasteAsSolutionAndSave(ratingComboValue);" /> 
+                                                                
+                            </td>
+                        </tr>
+                    </table>
+                    </apex:outputPanel> 
+                    
+                    
+                   
+           
+            </div>                    
+        </apex:outputPanel>               
+    </apex:outputPanel>
+    <apex:outputPanel id="atricleError" rendered="{!NOT(showArticle)}">
+         <apex:outputText value="{!JSENCODE($Label.bmcservicedesk__ssrequestarticlenotdisplayed)}" />
+    </apex:outputPanel>
+   
+</div>   
+<!-- -Code by prem -->
+<script>
+function onCompleteAction(){
+if(IsComponent == 'true')
+	setTimeout(function(){window.close()},10);
+else{
+    var activeTab = window.frameElement.getAttribute("id");
+	var tabID = activeTab.slice(7);
+	window.parent.closeTabLater(tabID);
+	}
+}
+</script>
+<apex:actionFunction name="pasteAsSolutionAndSave" action="{!pasteAsSolution}" oncomplete="document.getElementById('solutionBtn').disabled = false; onCompleteAction();" rerender="renderRadioButtonValue">
+    <apex:param assignTo="{!picklistValue}" name="ratingComboValue" value=""/>
+</apex:actionFunction>
+
+<apex:actionFunction name="updateCount" action="{!updateCount}" rerender="none">
+</apex:actionFunction>
+
+</apex:form>
+<script>
+if('{!showSubmit}' == 'true'){
+    if(document.getElementById('SRBtn') != null){
+     //   document.getElementById('SRBtn').disabled=true;
+     //  document.getElementById('SRBtn').className = 'AddButtonOff';   
+    }
+    
+    if(document.getElementById('solutionBtn') != null){ 
+        document.getElementById('solutionBtn').disabled=true;
+        document.getElementById('solutionBtn').className = 'AddButtonOff';
+    }
+}
+
+function enableButtons(){
+    if(document.getElementById('SRBtn') != null){
+        document.getElementById('SRBtn').disabled=false;
+        document.getElementById('SRBtn').className = 'AddButton';
+    }
+    if(document.getElementById('solutionBtn') != null){
+        document.getElementById('solutionBtn').disabled=false;
+        document.getElementById('solutionBtn').className = 'AddButton';
+    }   
+    if(document.getElementById('submitBtn') != null){
+        document.getElementById('submitBtn').disabled=true;
+        document.getElementById('submitBtn').className = 'AddButtonOff';
+    }
+}
+
+// Code By Prem ----------
+    // Nakul -------------
+    var showPopupHeader = getUrlParameter('popupHeader');
+    var showStdLayout = getStandardLayout();
+
+    if(showStdLayout){
+        showPopupHeader = showPopupHeader.replace(/%20/g," ");
+        document.title=showPopupHeader;
+    }
+    var url = document.URL;
+
+    function getStandardLayout(){
+         var showStdLayout = getUrlParameter('standardLayout');
+         return showStdLayout;
+    }
+    function getUrlParameter( param ){
+        param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");;
+        var r1 = "[\\?&]"+param+"=([^&#]*)";
+        var r2 = new RegExp( r1 );
+        var r3 = r2.exec( window.location.href );
+        if( r3 == null ){return ""}
+        else {return r3[1]};
+    }
+    // end Nakul --------------
+    
+        //Added By Manasi
+    var active_element;
+    var bIsMSIE;
+
+    function initiateSelfClosing() {
+        if(showStdLayout){
+            if (Ext.isIE) {
+                active_element = document.activeElement;
+                document.onfocusout = closeWnd;
+                bIsMSIE = true;
+            }
+            else { window.onblur = closeWnd; }
+        }
+    }
+
+    function closeWnd() {
+        if(showStdLayout){
+            if (window.opener != null) {
+                if (bIsMSIE && (active_element != document.activeElement)) {
+                    active_element = document.activeElement;
+                }
+               
+            }   
+        }
+    }
+        
+    function CheckTicketFrom(){    
+    if(IsComponent == 'true')    
+    	window.open(ssIncidentForm+'&IsComponent=true');
+    else
+    	window.parent.openIncidentTab();
+    }
+    //END
+    
+// End Prem
+</script>
+<script>
+	if(Sarissa._SARISSA_IS_IE && ((navigator.userAgent.indexOf("Trident/5")>-1) || (navigator.userAgent.indexOf("Trident/6")>-1))){  
+		window.XMLSerializer = function(){};      
+		window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+</script> 
+<script type="text/javascript">         
+        var colorCodeList = '{!JSENCODE(themeColorCodeString)}'; 
+        var content = '{!JSENCODE(dynamicStyle)}';
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+		var FormEleId=document.getElementById('{!$Component.kmform}');
+</script>
+<script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" />
+</body>
+<!--End Manasi -->
+<script>
+	 window.onload=function()       
+            {   
+                updateCount();
+            }
+</script>
+</apex:page>

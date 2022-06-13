@@ -1,0 +1,93 @@
+<apex:page showHeader="false" standardStylesheets="false">
+ <c:CommonIncludes />
+<style type="text/css">
+.tickerClass{
+	color:#FFF;
+	font-family: Tahoma, MS Sans Serif;
+	font-size: 11px;background-color:#334f67;
+	line-height:30px;
+}
+</style>
+<marquee direction="left" id="marqueeId" style="background:#334f67; height:32px;height:auto\9;" behavior="scroll" onBounce="onBounceHandler(this);">
+    <span id="tickerdiv" class="tickerClass"></span>
+</marquee>
+<script>
+function onBounceHandler(obj){
+if(!Ext.isIE){
+  obj.behavior="scroll";
+  obj.direction="right";
+  obj.direction="left";
+ }
+}
+setInterval("fetchData()", 5*60*1000); // refresh after every 5 minutes.
+</script>
+<script>
+    var isFetchIUCData = 'true';
+	function fetchData(){
+		var con = new Ext.data.Connection();
+		con.request({
+		    url: 'tickerdata',
+		    method: 'POST',  
+		    params: {"isFetchData": isFetchIUCData},
+		    callback: function(opts, success, response){
+            	    if (success) {
+		        	         var dq = Ext.DomQuery;
+							 var xml = response.responseXML;
+							 var node = dq.selectNode('data', xml);
+							 if(document.getElementById('tickerdiv') != null && node.firstChild != null){
+							 	document.getElementById('tickerdiv').innerHTML = decodeURIComponent(node.firstChild.nodeValue);
+							 }else{
+				         	 	document.getElementById('tickerdiv').innerHTML = '';
+				         	 }
+				         	 node = dq.selectNode('impactdata', xml);  
+						     if(node.firstChild != null){
+						     	var nodevalue = fetchNodeData(xml, 'impactdata');
+						     	var nodeText = decodeURIComponent(nodevalue);
+						     	nodeText = replaceAllChars(nodeText,'&nbsp;',' ');
+						     	window.parent.impactData = eval('('+nodeText+')');
+						     }
+						    node = dq.selectNode('urgencydata', xml);  
+						    if(node.firstChild != null){
+						    	var nodevalue = fetchNodeData(xml, 'urgencydata');
+						     	var nodeText = decodeURIComponent(nodevalue);
+						     	nodeText = replaceAllChars(nodeText,'&nbsp;',' ');
+						    	window.parent.urgencyData = eval('('+nodeText+')');
+						    }
+				            isFetchIUCData = 'false';  
+				                return;
+					}
+		    }
+		});
+  }
+	function fetchNodeData(result, tagName){ 
+		var strResult=""; 
+		var stringElement = result.getElementsByTagName(tagName)[0]; 
+		if (stringElement.text!=null && stringElement!=undefined){ 
+			strResult=stringElement.text; 
+		}else 
+			if (stringElement.textContent!=null && stringElement.textContent!=undefined) 
+			{ 
+				strResult=stringElement.textContent; 
+			} 
+		return strResult; 
+	}	
+
+
+	function replaceAllChars(value,stringToFind,stringToReplace){
+   		var temp = value;
+    	var index = temp.indexOf(stringToFind);
+        while(index != -1){
+			temp = temp.replace(stringToFind,stringToReplace);
+        	index = temp.indexOf(stringToFind);
+       	}
+      	return temp;
+	}
+  Ext.onReady(function(){
+  	fetchData();
+  	if(!Ext.isIE && !Ext.isChrome && !Ext.isSafari){
+  		var marObj = document.getElementById('marqueeId');
+  		marObj.behavior="alternate";
+ 	}
+  });
+   </script>
+</apex:page>

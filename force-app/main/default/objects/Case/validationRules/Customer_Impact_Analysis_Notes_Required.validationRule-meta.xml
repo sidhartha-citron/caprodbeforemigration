@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Customer_Impact_Analysis_Notes_Required</fullName>
+    <active>false</active>
+    <description>This validation rule ensures that users enter customer impact analysis notes if a customer impact analysis has been selected.</description>
+    <errorConditionFormula>AND(
+
+RecordType.DeveloperName = &quot;Internal_Application_Support&quot;,
+
+ISBLANK(Customer_Impact_Analysis_Notes__c) ,
+
+OR(
+
+ISPICKVAL(Customer_Impact_Analysis__c, &quot;In Progress&quot;),
+
+ISPICKVAL(Customer_Impact_Analysis__c, &quot;Complete&quot;)
+
+)
+
+)</errorConditionFormula>
+    <errorDisplayField>Customer_Impact_Analysis_Notes__c</errorDisplayField>
+    <errorMessage>Please add Customer Impact Analysis Notes.</errorMessage>
+</ValidationRule>

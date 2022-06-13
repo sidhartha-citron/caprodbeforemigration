@@ -1,0 +1,323 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.ChangeApprovalController" standardStylesheets="false">
+    <title>{!$Label.WelcomeToSDE}</title>
+    <script>
+		var ChangeApprovalServerTime = 0;
+		var ciExpFlag=false;
+		var ChangeApprovalStartTime = '{!starttime}';
+		var data = '';
+		/*Performance Metrics*/
+		var componentFlag=0;
+		var windowloaddate = new Date();
+		var networklatencystart = windowloaddate.getTime();
+		
+		function senddata(){return data;}
+	</script>
+    <c:CommonIncludes />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ChangeStyleSheet.css"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ChangeApproval.js" /> 
+    <script>
+    	Ext.ns("ChangeApprovalPage");
+        ChangeApprovalPage.Labels = {
+        	Approve:'{!JSENCODE($Label.Approve)}',
+        	Reject:'{!JSENCODE($Label.Reject)}',
+        	LaunchCIExplorer:'{!JSENCODE($Label.LaunchCIExplorer)}',
+        	PreviousRecord:'{!JSENCODE($Label.PreviousRecord)}',
+            NextRecord:'{!JSENCODE($Label.NextRecord)}',
+            ApproverInformation:'{!JSENCODE($Label.ApproverInformation)}',
+            ChangeRequestInformation:'{!JSENCODE($Label.ChangeRequestInformation)}',
+            ChangeRequestApproval:'{!JSENCODE($Label.ChangeRequestApproval)}',
+            NetwokLatency:'{!JSENCODE($Label.PM_netwokLatency)}',
+            PageLoad:'{!JSENCODE($Label.PM_PageLoad)}',
+            IncidentApproveInformation:'{!JSENCODE($Label.IncidentApproveInformation)}',
+            IncidentApproval:'{!JSENCODE($Label.incidentApproval)}'
+        }
+        
+    	Ext.ns("ChangeApprovalPageComp");     
+        ChangeApprovalPageComp.ComponentVars = {
+        	ApproverComments:'{!$Component.changeApprovalForm.approver_comments}',
+        	LastName:'{!$Component.changeApprovalForm.lastname}',
+        	FirstName:'{!$Component.changeApprovalForm.firstname}',
+        	Phone:'{!$Component.changeApprovalForm.phone}',
+        	Extension:'{!$Component.changeApprovalForm.extension}',
+        	Approver:'{!$Component.changeApprovalForm.approver}',
+        	Queue:'{!$Component.changeApprovalForm.queue}',        
+        	incidentInformation:'{!$Component.changeApprovalForm.loadPanel2}'        	
+        }
+        
+    	wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+    	var ChangeRequestid = '{!JSENCODE(recordId)}';
+    	var recordType='{!JSENCODE(recordType)}';
+        window.parent.ApprovalNeedsRefresh = false;
+        
+    	function getIsDirect(){
+            return '{!JSENCODE($CurrentPage.parameters.isDirect)}';
+        }
+        
+        function getSDFStylesResPath(){
+	        return '{!$Resource.SDEFStyles}';
+	    }
+        
+        function getPermission(){
+        	return '{!permission}';
+        }
+        function getEmailLinkFlag(){
+        	return '{!JSENCODE(emailLinkFlag)}';
+        }
+        function getNavFlag(){
+        	return '{!JSENCODE(navFlag)}';
+        }
+        
+        function ShowCIExplorer(){
+			ShowCIExplorerJS('{!JSENCODE($Label.CIExpCIExplorer)}', '{!JSENCODE($Label.ConfigurationItemsExplorer)}');
+		}
+		
+	    function getWID(){
+	    	return '{!JSENCODE($CurrentPage.parameters.wid)}';
+	    }
+
+	    function getID(){
+            return '{!JSENCODE($CurrentPage.parameters.id)}';
+	    }
+        
+        function checkIDSet(){
+            if(idset == null || idset == ''){
+                if(getIsDirect() == ''){
+                    if(typeof(window.parent.returnListOfId)=='function')
+                        idset = window.parent.returnListOfId();
+                }else{
+                    if(typeof(window.parent.parent.getIdArray)=='function')
+                        idset =window.parent.parent.getIdArray();
+                        window.parent.handleSave(getWID(),getID());
+                }
+            }
+        }
+        function afterResetSI(){
+              var modName = '{!JSENCODE($CurrentPage.parameters.moduleName)}';
+              var parentWid = '{!JSENCODE($CurrentPage.parameters.parentWid)}';
+              if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined'){
+                    window.parent.parent.refreshSupportingInformation(parentWid,modName);
+              }
+        }
+    </script>
+    
+    <apex:outputPanel id="titlePanel">
+        <script>
+        	ChangeRequestid = '{!JSENCODE(recordId)}';
+        	var pApprovalId = '{!JSENCODE(processInstApprovalId)}'; 
+        	recordType='{!JSENCODE(recordType)}';
+        	
+	        function updateTitle(){
+	            var newTitle = '{!pageTitle}';
+				if(newTitle != null && newTitle != '' && newTitle != 'undefined')
+					window.parent.changeTitle(wid,newTitle,newTitle); 
+	        }
+	        
+	        function showMessage(){
+	        	var errorMessage = '{!JSENCODE(messageString)}'; 
+				Ext.MessageBox.show({
+					width: 250,
+					title: '',
+					msg: errorMessage,
+					buttons: Ext.MessageBox.OK,
+					fn: redirectWindow
+	                   
+				});
+	        }
+	        
+	        function redirectWindow(btn){
+	        	closeWindow();
+	        }
+	        
+	        function handleSave(){
+            	window.parent.handleSave(wid, pApprovalId);
+            }
+            
+            function getEnableCILinkBtn(){
+          	  
+          	  if(recordType == 'Change_Request__c'){
+          	  	return {!enableCILinkBtn};
+          	  }
+          	  if(recordType == 'Incident__c'){
+          	     getFlag();
+          	     return ciExpFlag;
+          	  }
+          	  		   
+		    } 
+        </script>
+    </apex:outputPanel>    
+    
+    <apex:form id="changeApprovalForm">
+        <apex:actionFunction name="ApproveChange" reRender="validationComponent,titlePanel" oncomplete="showMessage();afterResetSI();" action="{!approveORReject}"  id="approveButton">
+            <apex:param name="action" assignTo="{!actionlbl}" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="RejectChange" reRender="validationComponent,titlePanel" oncomplete="showMessage();afterResetSI();" action="{!approveORReject}"  id="rejectButton">
+            <apex:param name="action" assignTo="{!actionlbl}" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction action="{!nextBtnHandler}" name="nextApprovalBtnHandler" reRender="firstname,lastname,phone,extension,approver,Queue,approver_comments,loadPanel,loadPanel2,titlePanel" oncomplete="applyPermissions();updateTitle();handleResetChange();handleElemEvent();handleSave();">
+            <apex:param assignTo="{!approvalIdsString}" name="idSetString" value=""/>            
+        </apex:actionFunction>    
+        <apex:actionFunction action="{!previousBtnHandler}" name="previousApprovalBtnHandler" reRender="firstname,lastname,phone,extension,approver,Queue,approver_comments,loadPanel,loadPanel2,titlePanel" oncomplete="applyPermissions();updateTitle();handleResetChange();handleElemEvent();handleSave();">
+            <apex:param assignTo="{!approvalIdsString}" name="idSetString" value=""/>            
+        </apex:actionFunction>    
+        <table class="clsMainTable">
+            <tr class="clsRowGreyBg">
+                <td>
+                   <div id="CAToolBarTD"></div>
+                </td>
+            </tr>
+            <tr> 
+                <td>
+                    <div id="ApproverInformationDiv"></div>    
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div id="changeApprovalInfoDiv"></div>
+                </td>
+            </tr>  
+             <tr>
+                <td>
+                    <div id="changeApprovalInfoDiv1"></div>
+                </td>
+            </tr>        
+            <tr>
+                <td>
+                    <div id="actionButtonsDiv"></div>
+                </td>
+            </tr>
+        </table>
+        
+        <div id="ApproverInfoPanel">
+            <table class="clsTable">
+                <tr>
+                    <td class="clsInputLabelTDCompPartI"><apex:outputLabel value="{!$ObjectType.User.fields.LastName.label}" /></td>         
+                    <td class="clsInputTextBoxTD"><apex:inputtext title="{!$Label.bmcservicedesk__tooltipchangeapprovallastname}" id="lastname" value="{!lastName}" styleClass="clsInputTextBoxReadOnly" /></td>
+                    <td class="clsInputLabelTDCompPartII"><apex:outputLabel value="{!$ObjectType.User.fields.Phone.label}" /></td>            
+                    <td><apex:inputtext id="phone" title="{!$Label.bmcservicedesk__tooltipchangeapprovalphone}" value="{!phone}" styleClass="clsInputTextBoxReadOnly" /></td>           
+                </tr>
+                <tr>
+                    <td class="clsInputLabelTDCompPartI"><apex:outputLabel value="{!$ObjectType.User.fields.FirstName.label}" /></td>            
+                    <td class="clsInputTextBoxTD"><apex:inputtext id="firstname" title="{!$Label.bmcservicedesk__tooltipchangeapprovalfirstname}" value="{!firstName}" styleClass="clsInputTextBoxReadOnly" /></td>           
+                    <td class="clsInputLabelTDCompPartII"><apex:outputLabel value="{!$ObjectType.User.fields.Extension.label}" /></td>          
+                    <td ><apex:inputtext id="extension" value="{!extension}" title="{!$Label.bmcservicedesk__tooltipchangeapprovalextension}"  styleClass="clsInputTextBoxReadOnly" /></td>            
+                </tr>
+                <tr>
+                    <td class="clsInputLabelTDCompPartI"><apex:outputLabel value="{!$Label.bmcservicedesk__approverid} " /></td>          
+                    <td class="clsInputTextBoxTD"><apex:inputtext id="approver" title="{!$Label.bmcservicedesk__tooltipchangeapprovalinitiatorid}" value="{!approverId}" styleClass="clsInputTextBoxReadOnly" /></td>
+                    <td class="clsInputLabelTDCompPartII"><apex:outputLabel value="{!$Label.bmcservicedesk__queue}" /></td>          
+                    <td><apex:inputtext id="Queue" value="{!queueName}" styleClass="clsInputTextBoxReadOnly" /></td>
+                </tr>
+            </table>
+        </div>    
+        
+   
+     <apex:outputPanel id="loadPanel2"  layout="block">       
+       <apex:outputPanel id="changeApprovalComponent1"   layout="block" rendered="{!renderChangeComp}" >
+       		
+            	<div class="div15pxVspacing"></div>    
+            	<c:ChangeAssesment changeNum="{!JSENCODE(recordId)}" emailLinkFlag="{!JSENCODE(emailLinkFlag)}" id="changeInformation"  ></c:ChangeAssesment>
+       </apex:outputPanel>
+       
+        <apex:outputPanel id="IncidentApprovalComponent1"  layout="block" rendered="{!renderIncidentComp}" >
+            	<div class="div15pxVspacing"></div>  
+            	
+            	<c:IncidentApprovalComponent incidentNum="{!JSENCODE(recordId)}" emailLinkFlagVal="{!JSENCODE(emailLinkFlag)}" id="incidentInformation"  ></c:IncidentApprovalComponent>
+				<script>
+            		if(isRecordDeleted()){
+        				Ext.Msg.alert(IncidentApproval.Labels.Information,IncidentApproval.Labels.DeletedRecord, function(){
+        				if((typeof(window.parent)!='undefined')&&(typeof(window.parent.popUpWindow)!= 'undefined'))
+            			window.parent.popUpWindow.close();
+        				closeWindow();
+        				});
+        			}
+        		</script>
+       </apex:outputPanel>
+      
+    </apex:outputPanel>
+    
+        <div id="approvalInfo">
+            <table class="clsTable">
+                <tr>              
+                    <td class="clsInputLabelTD" colspan="2">
+                        <apex:outputLabel value="{!$Label.bmcservicedesk__comments}" />
+                    </td>         
+                </tr>
+                <tr>    
+                    <td class="clsInputTextAreaTD" colspan="2">
+                        <apex:inputTextarea title="{!$Label.bmcservicedesk__tooltipchangeapprovalcomments}" id="approver_comments" value="{!approverComment}" styleClass="clsCommentTextArea"/>
+                    </td>          
+                </tr>
+            </table>
+        </div>   
+     <apex:outputPanel id="loadPanel">
+		<script>
+	         
+			if(recordType=='Incident__c' && componentFlag){					     	
+			    Ext.getCmp('approvalpanel').setTitle(ChangeApprovalPage.Labels.IncidentApproval);
+			    Ext.getCmp('infopanelInc').setTitle(ChangeApprovalPage.Labels.IncidentApproveInformation);
+			}
+			
+			if(recordType=='Change_Request__c' && componentFlag ){	
+				Ext.getCmp('approvalpanel').setTitle(ChangeApprovalPage.Labels.ChangeRequestApproval);
+				    Ext.getCmp('infopanelInc').setTitle(ChangeApprovalPage.Labels.ChangeRequestInformation);			
+			}
+	
+		</script>
+	</apex:outputPanel>
+         
+    </apex:form>
+    <script>
+		var ChangeApprovalEndTime = '{!starttime}';
+		var serverstarttime = '{!serverstarttime}';
+		ChangeApprovalServerTime = (ChangeApprovalEndTime - serverstarttime);
+		data += '{!JSENCODE($Label.PM_servertime)}';
+		data += ChangeApprovalServerTime;
+		data += '<br>';
+		var networkstart = ChangeApprovalEndTime;
+	</script>
+	<script>
+	if(recordType=='Change_Request__c'){
+		document.getElementById('{!$Component.changeApprovalForm.changeInformation.chanhe.CatgeoryId}').title = "{!JSENCODE($Label.tooltipChangeApprovalCategory)}";
+		document.getElementById('{!$Component.changeApprovalForm.changeInformation.chanhe.ChangeTypeId}').title = "{!JSENCODE($Label.tooltipChangeApprovalChangeType)}";
+		document.getElementById('{!$Component.changeApprovalForm.changeInformation.chanhe.ImpactId}').title = "{!JSENCODE($Label.tooltipChangeApprovalimpact)}";
+		document.getElementById('{!$Component.changeApprovalForm.changeInformation.chanhe.UrgencyId}').title = "{!JSENCODE($Label.tooltipChangeApprovalUrgency)}";
+		document.getElementById('{!$Component.changeApprovalForm.changeInformation.chanhe.PriorityId}').title = "{!JSENCODE($Label.tooltipChangeApprovalpriority)}";
+		document.getElementById('linkdiv').title = "{!JSENCODE($Label.tooltipChangeApprovalChangeId)}";
+		
+		document.getElementById('{!$Component.changeApprovalForm.changeInformation.chanhe.ChangeDescriptionId}').title = "{!JSENCODE($Label.tooltipChangeApprovaldescription)}";	
+		var buttonclickd = '';
+		function setToolTip(buttonclickd){
+			 if(buttonclickd == 'ChangeReasonBtnId'){
+				 document.getElementById('{!$Component.changeApprovalForm.changeInformation.chanhe.ChangeDescriptionId}').title = "{!JSENCODE($Label.tooltipChangeApprovalReason)}";
+			 }
+			 if(buttonclickd == 'ChangeDescriptionBtnId'){  
+				document.getElementById('{!$Component.changeApprovalForm.changeInformation.chanhe.ChangeDescriptionId}').title = "{!JSENCODE($Label.tooltipChangeApprovaldescription)}";
+			 }
+			 if(buttonclickd == 'RollOutPlanBtnId'){
+				document.getElementById('{!$Component.changeApprovalForm.changeInformation.chanhe.ChangeDescriptionId}').title = "{!JSENCODE($Label.tooltipChangeApprovalRollout)}";
+			 }
+			 if(buttonclickd == 'BackOutPlanBtnId'){
+				document.getElementById('{!$Component.changeApprovalForm.changeInformation.chanhe.ChangeDescriptionId}').title = "{!JSENCODE($Label.tooltipChangeApprovalBackout)}";
+			 }
+			
+		}
+	}
+	function getFlag(){
+		if(recordType=='Incident__c'){
+			if((document.getElementById('{!$Component.changeApprovalForm.incidentInformation.incidentComponent.ciExplorer}').value)=='false'){		
+				ciExpFlag = false;
+			}else{
+				ciExpFlag= true;
+			}
+		}
+	}
+	function renderUI(){
+		if(recordType=='Incident__c'){
+        	if((document.getElementById('{!$Component.changeApprovalForm.incidentInformation.incidentComponent.uiBtn}').value)=="disabled"){
+        		document.getElementById('userInputId').style.visibility="hidden"; 
+       		}
+       	}
+    }
+	renderUI();  
+	</script>
+</apex:page>

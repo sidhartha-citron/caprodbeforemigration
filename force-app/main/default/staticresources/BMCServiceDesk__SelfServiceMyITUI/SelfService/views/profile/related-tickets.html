@@ -1,0 +1,50 @@
+<!-- Timeline -->
+		<div class="profile-activity-stream Branding-Right_Panel-activity related_tickets_list">
+			<div class="profile-inner related_tickets_inner">
+				<!-- Separate view for approvals -->
+				<div ng-if="profileCtrlState.currentTimelineFilter.id === 'approvals'" ng-include="'views/approval/approvals.html'"></div>
+
+				<!-- Profile toolbat and timeline for everything except for approvals -->
+				<div ng-if="profileCtrlState.currentTimelineFilter.id !== 'approvals'">
+					<div class="timeline-toolbar">		
+						<div><ng-include src="templateUrls.filterUrl"/></div>
+						
+					</div>
+					
+					<!--<div class="profile-activity-stream__loading-spinner-container">-->
+						
+					<!--</div>-->
+					<div id="activity-stream-all">
+						<loading-spinner if="isRelatedTicketsLoading" wide="true" inline="true"></loading-spinner>
+						<div ng-repeat="activityItem in profileCtrlState.timelineItems | filter: filterActivityItems" activity-stream-item timeline-style="true"></div>
+						<div ng-show="!(activityStreamModel.cache['user' + userModel.userId].isLoading || profileCtrlState.timelineLoadingFlagsByType[profileCtrlState.currentTimelineFilter.type])">
+							<div class="support-back-link-container profile-back-link profile-page-navigator" 
+							 >
+								<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goToPrevPage()" ng-show="isPreviousEnabled">
+									&#10094; {{ selfServiceLabels.Previous }} 
+								</a>
+							</div>	
+							<div class="support-back-link-container profile-back-link profile-page-navigator" ng-show="isPreviousEnabled || isNextEnabled">
+								{{ selfServiceLabels.Page }} {{currentPageNo}}
+							</div>
+							<div class="support-back-link-container profile-back-link profile-page-navigator profile-page-navigator-next" 
+							>
+								<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goToNextPage()" ng-show="isNextEnabled">
+									{{ selfServiceLabels.Next }} &#10095;
+								</a>
+							</div>
+						</div>
+						<div ng-show="profileCtrlState.timelineItems.length == 0">
+							<h5 class="support-results__message related-tickets-list-results__message">
+								{{selfServiceLabels.noResults}}
+							</h5>
+						</div>
+					</div>
+					<!--<div class="activity-stream__loading-more" ng-if="profileCtrlState.timelineItems &&  profileCtrlState.allowMorePastItems"
+						 past-items-loader
+						 load-past-activity-items="refreshActivityStream()">
+					</div>-->
+				</div>
+			</div>
+		</div>
+<!--</div>-->	

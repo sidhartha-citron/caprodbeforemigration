@@ -1,0 +1,178 @@
+<apex:page controller="BMCServiceDesk.CMDBCiEditController" standardStylesheets="false" showheader="false">		    
+		       
+	<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" />
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/src/ux/CheckColumn.js" id="CheckColumn-js"/>	
+	<script src="{!$Resource.SDEFCommonJS}/CMDBCiEdit.js" type="text/javascript"></script>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSCommon.js" id="JSCommon-js"/>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />	
+	<link title="aero" rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBTheme.css" media="screen" />
+	<link title="aero" rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBCiEdit.css" media="screen" />
+	<link title="aero" rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBManagerStyles.css" media="screen" />
+	<link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />
+	<script>
+		  var closeWarningMsgLabel = '{!JSENCODE($Label.closeWindowLabel)}';
+          var closeWindowLabel = '{!JSENCODE($Label.closeWindow)}';
+		  var ViewsTitle ='{!JSENCODE($Label.Views)}';
+		  var ShowDerivedCIs = '{!JSENCODE($Label.CMDBShowDerivedCIs)}';
+		  var  filterlbl    = '{!JSENCODE($Label.Filter)}';
+		  var PCChangelbl = '{!JSENCODE($Label.PrimaryClientChangeMsg)}';	
+		  var orgNamespace = '{!pNamespace}';	
+		  var PE = 'П';// for comma separator;
+		  var EF = 'ф'; // for # separator;
+		  var selectColumn = '{!JSENCODE($Label.SelectColumn)}';
+		  var emptyvaltext = '{!JSENCODE($Label.Value)}';
+		  var prevPage =  '{!JSENCODE($Label.previousPage)}';
+		  var nextPage = '{!JSENCODE($Label.nextPage)}' ;
+		  var validateMinimumCharsSearchPage = '{!JSENCODE($Label.GsErrorMsg)}';
+		  var btnRun = '{!$Component.frmCMDBCiEdit.btnRun}';
+		  var FilterAttribute = '{!JSENCODE(Filter_AttributeAPIName)}';
+		  var ClassAPIName ='{!$Component.frmCMDBCiEdit.txtFilter_CMDBClassAPIName}';
+		  var attributeName = '{!$Component.frmCMDBCiEdit.txtFilter_AttributeAPIName}';
+		  var txtFilterAttribute = '{!$Component.frmCMDBCiEdit.txtFilter_AttributeValue}';
+		  var saveMsg = '{!JSENCODE($Label.SavedSuccessfully)}';			  		  
+		  var of  ='{!JSENCODE($Label.Of)}';
+		  var Record = '{!JSENCODE($Label.Records)}';	  		  
+		  var save ='{!JSENCODE($Label.Save)}';		  
+		  var search = '{!JSENCODE($Label.Search)}';
+		  var clear ='{!JSENCODE($Label.Clear)}';
+		  var ClearSelection = '{!JSENCODE($Label.ClearSelection)}'
+		  var selectcolumn = '{!JSENCODE($Label.CMDB_SelectColumn)}';
+		  var selectvalue ='{!JSENCODE($Label.CMDB_Column_Value)}';
+		  var wikiUrl = '{!wikiUrl}';
+		  var ext4Resource = '{!$Resource.ExtJS4_1_3}';
+          var SaveData_Remote = "{!$RemoteAction.CMDBCiEditController.SaveDataCall}";
+		  var dateFormat = '{!dateFormat}';
+		  var dateFormatOnly = '{!dateFormatOnly}';
+		  var CMDBTextFieldLimitExceeded = '{!JSENCODE($Label.CMDBTextFieldLimitExceeded)}';
+		  var CMDBPopupOK = '{!JSENCODE($Label.Ok)}';
+		  var CMDBPopupCancel = '{!JSENCODE($Label.Cancel)}';
+		  var LabelYes = '{!JSENCODE($Label.ExtjsMessageYes)}';
+		  var LabelNo = '{!JSENCODE($Label.ExtjsMessageNo)}';
+		  var pleasewait = '{!JSENCODE($Label.PleaseWait)}';
+		  var PageSizeCookie = {!PageSize};
+    	  var isReconOn = Boolean('{!JSENCODE(IF(isReconOn,"true", ""))}');
+		  var Records_per_page = '{!JSENCODE($Label.Records_per_page)}';
+		  var noRecordsFoundMsg = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+		  var MultiEditSaveConfirmation = '{!JSENCODE($Label.MultiEditSaveConfirmation)}';
+		  var MultiEditRowTooltip = '{!JSENCODE($Label.MultiEditRowTooltip)}';
+		  var MultiEditCheckBoxDisabledTooltip = '{!JSENCODE($Label.MultiEditCheckBoxDisabledTooltip)}';
+		  var MultiEditRowText = '{!JSENCODE($Label.MultiEditRowText)}';
+		  var MultiEditBacktoInline = '{!JSENCODE($Label.MultiEditBacktoInline)}';
+		  var MultiEditBacktoMassEdit = '{!JSENCODE($Label.MultiEditBacktoMassEdit)}';
+		  var MultiEditReconExceptionBulk = '{!JSENCODE($Label.MultiEditReconExceptionBulk)}';
+    	  var MultiEditReconExceptionSingle = '{!JSENCODE($Label.MultiEditReconExceptionSingle)}';
+		  var multiEditReconMessage = '{!JSENCODE($Label.MultiEditReconMessage)}';
+		  var Confirm_Action = '{!JSENCODE($Label.Confirm_Action)}';
+		  var Reload = '{!JSENCODE($Label.CIExpReload)}';
+          var SelectedCMDBClass= '{!JSENCODE(SelectedCMDBClassSelectoption)}';
+          var ObjId = '{!JSENCODE($CurrentPage.parameters.ObjId)}';
+		  var selectedIdsList = '{!JSENCODE($CurrentPage.parameters.selectedIds)}';
+          var BackToFuflillRequestLabel = '{!JSENCODE($Label.BackToFuflillRequestLabel)}';
+		  var LKFId = '{!JSENCODE($CurrentPage.parameters.LKFId)}';
+		  var MarkasDeleted = '{!MarkasDeleted}';
+		  var MarkAsDeletedLabel = "{!JSENCODE($Label.Include_MarkAsDeleted)}";
+		  var selectFrom = "{!JSENCODE($Label.SelectFrom)}";
+		  var locations = "{!JSENCODE($Label.Locations)}";
+		  var classname = '{!JSENCODE($CurrentPage.parameters.classname)}';
+		  var SortColumn = "{!JSENCODE(Sortcolumn)}";
+		  var SortDirection = "{!JSENCODE(SortDirection)}";
+		  var isServerSideSorting = {!isServerSideSorting};
+		  var reconFldsJSON = '';
+          var reconRuleFlds;
+    	  var strFieldsNotUpdatedDueToPriorityRules = '{!JSENCODE($Label.FieldsNotUpdatedDueToPriorityRulesOnMultiInstance)}';
+	</script>
+	
+<div id="contentDiv"></div>
+    <apex:form id="frmCMDBCiEdit" >         
+                       
+        <apex:actionFunction action="{!run}" name="ShowSubCI" rerender="gridDataload" oncomplete="reload();enableDisablePagingButtons();syncRecords();" >
+            <apex:param name="ShowSubClassInstances" assignTo="{!ShowSubClassInstances}" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!run}" name="ShowMarkasDelted" rerender="gridDataload" oncomplete="reload();enableDisablePagingButtons();syncRecords();" >
+            <apex:param name="MarkasDeleted" assignTo="{!MarkAsDeleted}" value=""/>
+        </apex:actionFunction>
+		
+		<apex:actionFunction action="{!ChangeListViewPageRecords}" name="ChangeListViewPageRecords" rerender="gridDataload" oncomplete="reload();enableDisablePagingButtons();syncRecords();hideLoadingIcon();" >         
+            <apex:param name="CMDBMultiEditPageSize" assignTo="{!PageSize}" value=""/>
+        </apex:actionFunction>		
+        <apex:actionFunction action="{!run}" name="performPagination" rerender="gridDataload" oncomplete="reload();enableDisablePagingButtons();syncRecords();hideLoadingIcon();" >         
+            <apex:param name="PageNo" assignTo="{!PageNo}" value=""/>
+			<apex:param name="SortColumn" assignTo="{!SortColumn}" value=""/>
+			<apex:param name="SortDirection" assignTo="{!SortDirection}" value=""/>
+        </apex:actionFunction>                     
+        <apex:inputHidden value="{!Filter_CMDBClassAPIName}" id="txtFilter_CMDBClassAPIName" />
+        <apex:inputHidden value="{!Filter_AttributeAPIName}" id="txtFilter_AttributeAPIName" />
+        <apex:inputHidden value="{!Filter_AttributeValue}" id="txtFilter_AttributeValue" />
+        <div id="SaveMessageDiv" class="msgPadding message errorM3" style="display:none">
+            <table class="messageTable" cellspacing="0" cellpadding="0" border="0" style="padding: 0px; margin:  4px 2px 4px 2px;">
+                <tr valign="top">
+                    <td>
+                        <img class="SaveSuccessIcon" title="{!JSENCODE($Label.MultiRecordsSave)}" src="/s.gif" alt="{!JSENCODE($Label.SavedSuccessfully)}" />
+                    </td>
+                    <td>
+                        <div id="SaveMessage"  class="messageText" >{!JSENCODE($Label.MultiRecordsSave)}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="WarningMessageDiv" style="display:none">
+            <div class="d-notification d-notification_warning d-notification_content">
+                <div class="d-notification__icon d-icon-left-exclamation_triangle"></div>
+                <div class="d-notification__supporting-text">
+                    <h3 class="d-notification__item" id="warningMessageId"></h3>
+                    
+                </div>
+            </div>
+        </div>    
+        
+    <div id="toolbar"></div>
+        <div id='grid'></div>
+        <apex:outputPanel id="gridDataload" >       
+        <script>            
+            var datastore = {!IF(jsoncontent == null || jsoncontent == '' ,'null',jsoncontent)}; 
+			function showException(filterException){
+                var msg;
+				if(filterException != null && filterException != ''){
+					if (filterException.indexOf('Invalid date/time') != -1)
+						msg = '{!JSENCODE($Label.datetimeValidation)}';
+					else
+						msg = filterException;
+                    var popupBox = Ext.MessageBox.show({
+                                msg: msg,
+                                cls: 'popupBtnCls',
+                                buttons: Ext.Msg.OK,
+                                icon: Ext.MessageBox.WARNING
+                            });
+                    }
+            }
+			
+		    reconFldsJSON = "{!JSENCODE(reconRuleFlds)}";
+            if(typeof(reconFldsJSON) != 'undefined' && reconFldsJSON != null && reconFldsJSON != ''){
+                reconRuleFlds = JSON.parse(reconFldsJSON);
+            }
+			
+        </script>           
+        </apex:outputPanel>     
+        <div class="hideDiv" id='divhidden' >
+            <apex:commandButton value="Run" action="{!run}" id="btnRun" rerender="gridDataload" oncomplete="reload();enableDisablePagingButtons();syncRecords();showException('{!JSENCODE(filterException)}');"/>
+        </div>
+    </apex:form>    
+    <style> 
+    .x-grid-checkheader {
+        height: 14px;
+        background-image: url('{!$Resource.ExtJS4_1_3}/resources/themes/images/default/grid/unchecked.gif');
+        background-position: 50% -2px;
+        background-repeat: no-repeat;
+        background-color: transparent;
+    }
+
+	.x-grid-checkheader-checked {
+		background-image: url('{!$Resource.ExtJS4_1_3}/resources/themes/images/default/grid/checked.gif');
+	}
+	
+	
+	</style>	
+</apex:page>

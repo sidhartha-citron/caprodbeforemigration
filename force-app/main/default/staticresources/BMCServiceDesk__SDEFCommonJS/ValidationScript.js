@@ -1,0 +1,1 @@
+function validateRequired(b){var a=true;if(b==null||b==""){a=false}return a}function validateEmail(b){var a=true;apos=b.indexOf("@");dotpos=b.lastIndexOf(".");if(b==null||b==""||apos<1||dotpos-apos<2){a=false}return a};

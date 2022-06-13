@@ -1,0 +1,325 @@
+<apex:page controller="BMCServiceDesk.CMDBManagerController" standardStylesheets="true" showheader="{!AND(isStdForm ,NOT(isFromRelationship))}" sidebar="false" cache="true" extensions="BMCServiceDesk.CMDBClassAccess,BMCServiceDesk.CMDBRemoteActions" tabStyle="Remedyforce_CMDB__tab" title="{!JSENCODE($Label.bmcservicedesk__remedyforcecmdb)}">
+<label id="DoNotHaveAccess"></label>
+<body>
+    <script>
+		Visualforce.remoting.timeout = 120000;
+		var StdWorkspacesPage = '{!$Page.StdWorkspacesPage}';
+		var wikiUrlForList = '{!wikiUrlForList}';
+		var wikiUrlForCIForm = '{!wikiUrlForCIForm}';
+        var wikiUrlForAssetForm = '{!wikiUrlForAssetForm}';
+        var wikiUrlForBusinessService = '{!wikiUrlForBusinessService}';
+        var calledFromReport = '{!JSENCODE($CurrentPage.parameters.isCalledFromReport)}';
+        var CMDBMangerServerTime = 0;
+        var isStdForm={!isStdForm};
+		var isFromRelationship={!isFromRelationship};
+		var srcInstanceId = '{!JSENCODE($CurrentPage.parameters.InstanceID)}';
+        var CMDBMangerStartTime = '{!starttime}';
+        var strSelectColumn = '{!JSENCODE($Label.SelectColumn)}';
+        var strDescending = '{!JSENCODE($Label.Descending)}';
+        var strAscending = '{!JSENCODE($Label.Ascending)}';
+		var InvalidFilterCriteria = '{!JSENCODE($Label.InvalidFilterCriteria)}';
+        var isACEnabled = {!isACEnabled};
+        var isDiscoveryEnabled = {!isDiscoveryEnabled};
+        var DiscoveryVersion = '{!DiscoveryVersion}';
+        
+		var isManualOSSelectionEnabled = {!manualOSSelectionEnabled};
+        var osCookieVal = '';
+        if(isManualOSSelectionEnabled && Ext.util.Cookies.get('apex__OSForBCMBinary')){
+            osCookieVal = Ext.util.Cookies.get('apex__OSForBCMBinary');
+        }
+		var windows64Lbl = '{!JSENCODE($Label.Windows64bit)}';
+		var linux64Lbl = '{!JSENCODE($Label.Linux64Bit)}';
+		var macOSLbl = '{!JSENCODE($Label.MacOS)}';
+		var osSelectTooltipLbl = '{!JSENCODE($Label.OSSelectTooltip)}';
+		var replacementLbl = '';
+		if(isACEnabled){
+			replacementLbl = '{!JSENCODE($Label.ACActions)}';
+		}else if(isDiscoveryEnabled){
+			replacementLbl = '{!JSENCODE($Label.CIAction)}';
+		}
+        osSelectTooltipLbl = osSelectTooltipLbl.replace('{0}', replacementLbl);
+		var isLightningExperience = {!isLightningExperience};
+        var makeConsoleAPICallFromServer = {!makeAPICallsFromServer};
+        if(!makeConsoleAPICallFromServer && (isLightningExperience || (!!navigator.userAgent.match(/Trident.*rv\:11\./)))){
+            makeConsoleAPICallFromServer = true;
+        }
+		
+        var isDKEnable = {!isDKEnabled};
+        var hideReportButton = {!hideReportButton};
+        var isFPUserValidated = {!isFPUserValidated};
+        var strDKServer = '{!JSENCODE(DKServer)}';
+		var EnableDKConsole = false;
+		var incGridforBE = JSON.parse('{!JSENCODE(colGridforBE)}');
+		var incGridforBS = JSON.parse('{!JSENCODE(colGridforBS)}');
+        var labelTooltipCollapseNavigator = '{!JSENCODE($Label.TooltipCollapseNavigator)}';
+        var labelTooltipExpandNavigator = '{!JSENCODE($Label.TooltipExpandNavigator)}';
+        var enableFPConsole = '{!showFPConsole}';
+        var isAdmin = '{!isAdminUser}';
+        var userId = '{!$User.Id}';
+        var cmdbViewSearch = '{!JSENCODE($Label.CMDB_View_Search)}';        
+        var cmdbInstanceSearch = '{!JSENCODE($Label.CMDB_Instance_Search)}';
+        var hasPreviousVersion = '{!hasPreviousVersion}';
+        var launchcieditor = '{!JSENCODE($Label.CMDBLaunchCIEditor)}';
+        var isAssetManagementEnabled = {!isAssetManagementEnabled};
+        var isCIManagementEnabled = {!isCIManagementEnabled};
+		var selectedTab = '{!JSENCODE(selectedTab)}';
+        var selectedTabFromCookie = Ext.util.Cookies.get('apex__'+userId+'TabName');                           
+        var isFlattenedCmdb = {!isFlattenedCmdb};
+		var FilterLabel = '{!JSENCODE($Label.Filter)}';
+		var AdvancedSearch = '{!JSENCODE($Label.AdvancedSearch)}';
+		var ClearFilterLabel = '{!JSENCODE($Label.ClearFilters)}';
+		var AdvancedFilterName;
+        var CannotAccessRFCMDB = '{!JSENCODE($Label.CannotAccessRFCMDB)}';
+        var ClassesLbl = '{!JSENCODE($Label.ManageClasses)}';
+        var showCI = {!CIShow};
+        var showAsset = {!AssetShow};
+        var updateCI = {!CIUpdate};
+        var updateAsset = {!AssetUpdate};
+        var deleteCI = {!CIDelete};
+        var deleteAsset = {!AssetDelete};
+        var deleteMsgLbl = '{!JSENCODE($Label.CIAssetInstanceDeleteMsg)}';
+        var lblToDelOnlyCI = '{!JSENCODE($Label.DeleteOnlyCI)}';
+        var lblToDelOnlyAsset = '{!JSENCODE($Label.DeleteOnlyAsset)}';
+        var lblToDelBothCIAndAsset = '{!JSENCODE($Label.DeleteAssetAndCI)}';
+        var isTabAccessible =  {!isTabAccessible};
+        var pleaseWaitMsg = '{!JSENCODE($Label.PleaseWait)}';
+        var instTypeCILbl = '{!JSENCODE($Label.CMDB_TAB_CIs)}';
+        var instTypeAssetLbl = '{!JSENCODE($Label.CMDBAsset)}';
+        var instTypeCIAssetLbl = '{!JSENCODE($Label.InstanceTypeFldLblCIandAsset)}';
+		var isFilterEnabled = '{!JSENCODE($Label.AdvancedSearchFilterAcessMessage)}';
+		var actions = '{!JSENCODE($Label.Actions)}';
+		var MultiEditBacktoInline = '{!JSENCODE($Label.MultiEditBacktoInline)}';
+		var remoteActionCustomView = '{!$RemoteAction.CMDBClassAccess.getCustomListView}';
+		var getSuperClassList = '{!$RemoteAction.CMDBClassAccess.getSuperClassList}';
+        var uiTheme = '{!$User.UIThemeDisplayed}';
+    	var userLanguage = '{!JSENCODE(userLanguage)}';
+		var isCMDBClassPermissionsEnable = {!isCMDBClassPermissionsEnable};
+		var isCMDBUpgradeCustomer = {!isCMDBUpgradeCustomer};
+		var fallBackToUpgrade = isCMDBUpgradeCustomer && !isCMDBClassPermissionsEnable;
+		var fallBackToFresh = !isCMDBUpgradeCustomer && !isCMDBClassPermissionsEnable;
+		/* Server Side Variables */        
+        var _ServerLabels = {};        
+        _ServerLabels.PageFirst = "{!JSENCODE($Label.FirstPage)}"
+        _ServerLabels.PageNext = "{!JSENCODE($Label.Next)}"
+        _ServerLabels.PageRefresh = "{!JSENCODE($Label.Refresh)}"
+        _ServerLabels.PageLast = "{!JSENCODE($Label.LastPage)}"
+        _ServerLabels.PagePrevious = "{!JSENCODE($Label.Previous)}"
+        _ServerLabels.Page = "{!JSENCODE($Label.Page)}"
+        _ServerLabels.Of = "{!JSENCODE($Label.Of)} {0}"
+        _ServerLabels.LabelOf = "{!JSENCODE($Label.Of)}"
+        _ServerLabels.Records = "{!JSENCODE($Label.Records)}"  
+        _ServerLabels.RecordsPerPage = "{!JSENCODE($Label.Records_per_page)}";
+        _ServerLabels.NoRecordFoundMsg = "{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}";
+		_ServerLabels.Clear = "{!JSENCODE($Label.Clear)}";
+		_ServerLabels.Actions = '{!JSENCODE($Label.Actions)}';
+		_ServerLabels.ClearFilters = '{!JSENCODE($Label.ClearFilters)}';
+		_ServerLabels.HasNoFilters = '{!JSENCODE($Label.HasNoFilters)}';
+		_ServerLabels.SelectCIs = '{!JSENCODE($Label.SelectCIs)}';
+		_ServerLabels.SelectCI = '{!JSENCODE($Label.SelectCMDBInstances)}';
+		_ServerLabels.Select = '{!JSENCODE($Label.Select)}';
+		_ServerLabels.Cancel = '{!JSENCODE($Label.Cancel)}';
+        _ServerLabels.SelectedInstances = '{!JSENCODE($Label.SelectedInstances)}';
+    </script>
+  <c:CommonIncludes isExtJS4="true" />
+   <c:ACCommon isExtJS4Enabled="true" hideViewSummary="false" renderedIn="{!JSENCODE($Label.bmcservicedesk__cmdblistview)}"/>	
+    <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBManagerStyles_V2.css" />
+   	<link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CommonHelp.js" id="CommonHelp-js"/>
+	<apex:outputPanel rendered="{!IF( userLanguage=='iw', true, false )}">
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/CMDBManagerStylesRTL.css" />
+	</apex:outputPanel>
+<script type="text/javascript">
+/* Start of server rendered javascript */
+{!ServerVariablesString};
+/* End of server rendered javascript */ 
+var CIFORCE_RES_PATH = '{!$Resource.CIForce}';
+var orgNamespace = '{!orgNamespace}'; 
+var orgNameSpaceWithoutUnderScore = '{!orgNamespace}';
+_RemotingActions={};
+_RemotingActions.getClassInstances = "{!$RemoteAction.CMDBManagerController.getClassInstances}";
+_RemotingActions.getBinaryFileFromBCM = "{!$RemoteAction.CMDBManagerController.getBinaryFileFromBCM}";
+_RemotingActions.getWebConsoleUrl = "{!$RemoteAction.CMDBRemoteActions.getWebConsoleUrl}";
+var imageHelp='{!$Resource.SDEFStyles}';
+
+var tbarOptions = new Array(2);
+tbarOptions[0]={autoEl:  {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif', title:'{!JSENCODE($Label.previousPage)}' }, cls:'cursorCls',id:'PreviousPageButton',listeners : { render: function(f){f.el.on('click', function(){if(CMDBManagerNamespace.instance.InstancesGrid.store.proxy.reader.jsonData.hasPrevious){CMDBManagerNamespace.instance.GoToPreviousPage();}})}}};
+tbarOptions[1]={autoEl:  {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif', title:'{!JSENCODE($Label.nextPage)}' }, id:'NextPageButton',cls:'marginRight10',listeners : { render: function(f){f.el.on('click', function(){if(!inprogress){if(CMDBManagerNamespace.instance.InstancesGrid.store.proxy.reader.jsonData.hasNext){inprogress = 1; CMDBManagerNamespace.instance.GoToNextPage();}}})}}};
+
+	/*Performance Metrics*/
+	var windowloaddate = 0;
+	var networklatencystart = 0;
+	var iscreatable;
+	var isdeletable;
+	var isupdateable;
+	var isabstract;
+	var serverstarttime = '{!serverstarttime}';
+	var etime = '{!serverendtime}';
+	var data = '';
+	data += '{!JSENCODE($Label.PM_servertime)}';
+	/*if(etime - stime == 0){
+	    data += 0;
+	}*/
+	function senddata(){return data;}
+	function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+     }
+     
+     var errorStr= '{!errorString}';
+	function getSDFStylesResPath(){
+		var resPath = '{!$Resource.SDEFStyles}';
+		return resPath;
+	}
+</script>
+
+<!-- TODO: MOVE the scripts & CSS to a ZIP resource once done.  -->
+<script src="{!$Resource.SDEFCommonJS}/CMDBControls.js" type="text/javascript"></script>
+<script src="{!$Resource.SDEFCommonJS}/CMDBClassChooser_V2.js" type="text/javascript"></script>
+<script src="{!$Resource.SDEFCommonJS}/CMDBManager.js" type="text/javascript"></script>
+<script src="{!$Resource.SDEFCommonJS}/CMDBCIExplorer.js" type="text/javascript"></script>
+<script>
+		var inprogress = 0;
+		var classaccess;
+		function getSDFStylesResPath(){
+          return '{!$Resource.SDEFStyles}';
+        }
+</script>
+    
+        <apex:outputPanel id="successId">
+        <script>
+            function DeleteDone(){
+               backFromDetailPage = true;
+               CMDBManagerNamespace.instance.ExplorerItemClickHandler(CMDBManagerNamespace.instance.SelectedRecordID, true);
+                var success_message = '{!JSENCODE(success)}';  
+                if(success_message == 'success'){
+                  
+                }
+                else{
+                    var WinMsgError = Ext.create('Ext.window.MessageBox');
+		 			WinMsgError.baseCls = 'bmc-notiltle-msg'; 
+                    WinMsgError.show({
+                        title: '{!JSENCODE($Label.Error)}',
+                        msg: success_message,
+                        icon: Ext.MessageBox.ERROR,
+                        buttons: Ext.MessageBox.OK
+                    });
+                } 
+            }
+         errorStr= '{!errorString}';
+			</script>
+		</apex:outputPanel> 
+		<apex:outputPanel id="acErrorPanel" rendered="{!OR(isACEnabled,isDiscoveryEnabled)}"> 
+			<script>
+				function showACError(){
+					if(errorStr != null && errorStr !=''){
+					 	var WinMsg = Ext.create('Ext.window.MessageBox');
+						WinMsg.baseCls = 'bmc-message';
+                        WinMsg.show({
+                            title: '',
+                            msg: errorStr,
+                            width:300,
+                            height:'auto',
+                            buttons: Ext.Msg.OK
+	              		});
+					}else {
+						launchConsole();
+					}
+				}
+        </script>
+		</apex:outputPanel> 
+        
+        <apex:outputPanel id="CountUpdatePanel"> 
+            <script>
+                function showInfoMessage(errorMessage ){
+                    var msgTxt = '';
+                    if(errorMessage != ''){
+                        msgTxt = errorMessage ;
+                    }else{
+                        msgTxt = '{!JSENCODE($Label.CountUpdateBatchSubmitted)}';
+                    }
+                    var WinMsg = Ext.create('Ext.window.MessageBox');
+					WinMsg.baseCls = 'bmc-message';
+                    WinMsg.show({
+                        title: '{!JSENCODE($Label.information)}',
+                        msg: msgTxt  ,
+                        width:300,
+                        height:'auto',
+                        buttons: Ext.Msg.OK
+                    });
+                }
+            </script>
+        </apex:outputPanel>
+<div id="contentDiv"></div>
+<apex:form >
+	<apex:actionFunction Name="saveCMDBJSON" action="{!saveCMDBJSON}" onComplete="javascript:void(0);" >
+    </apex:actionFunction>
+   <apex:actionFunction Name="deleteCIs" action="{!deleteCIs}" onComplete="DeleteDone()" reRender="successId" >
+            <apex:param name="deleteCIclass" value="" assignTo="{!deleteCIclass}" /> 
+            <apex:param name="deleteCIInstanceID" value="" assignTo="{!deleteCIInstanceID}" /> 
+    </apex:actionFunction>
+    
+    <apex:actionFunction Name="deleteOnlyCI" action="{!deleteOnlyCI}" onComplete="DeleteDone()" reRender="successId" >
+            <apex:param name="deleteCIInstanceID" value="" assignTo="{!deleteCIInstanceID}" /> 
+    </apex:actionFunction>
+    <apex:actionFunction Name="deleteOnlyAsset" action="{!deleteOnlyAsset}" onComplete="DeleteDone()" reRender="successId" >
+            <apex:param name="deleteCIInstanceID" value="" assignTo="{!deleteCIInstanceID}" /> 
+    </apex:actionFunction>
+    <apex:actionFunction Name="checkAccessOnFilter" action="{!checkAccessOnFilter}" onComplete="if(!{!isFilterAccesible}){showInfoMessage(isFilterEnabled );}else{openWindow()}" reRender="successId" >
+    </apex:actionFunction>
+    <apex:actionFunction Name="updateCIRelationshipCountBatchJS" action="{!updateCIRelationshipCountBatch}" onComplete="showInfoMessage('{!errorMessage }');" />
+    <apex:outputPanel rendered="{!OR(isACEnabled, isDiscoveryEnabled)}"> 
+    <apex:actionRegion >
+	    <apex:actionFunction Name="directConnectDevice" action="{!callXMLRPC}" rerender="successId,acErrorPanel" onComplete="hideWaitMsg();hideWaitMsgBar();showACError();">
+    	<apex:param name="actionContext" value=""/>
+    	<apex:param name="deviceId" value=""/>
+    	<apex:param name="contextId" value=""/>
+    </apex:actionFunction>
+    </apex:actionRegion>
+    <apex:actionRegion >
+    <apex:actionFunction Name="launchConsole" action="{!launchConsole}" />
+    </apex:actionRegion>
+    </apex:outputPanel>
+   </apex:form>
+   	<script>
+		var CMDBMangerEndTime = '{!endtime}';
+		CMDBMangerServerTime = (CMDBMangerEndTime - serverstarttime);
+		data += CMDBMangerServerTime;
+		data += '<br>';
+		//time to calculate page rendertime 
+		var pageloaddate = new Date();
+		var renderingstartitme = pageloaddate.getTime();
+		try{
+                  window.parent.parent.CMDBManagerWin = this;
+        } catch(e){}
+		
+
+		if(!{!jsonExists})
+			window.setTimeout(saveCMDBJSON,1000);
+
+        if(isTabAccessible  == false)
+        {
+            if(typeof(document.getElementById('DoNotHaveAccess')) != undefined)
+                document.getElementById('DoNotHaveAccess').textContent = CannotAccessRFCMDB;
+        }
+        function getSFDocumentURL(id){
+            var baseSFDocUrl;
+            if(!baseSFDocUrl){
+                baseSFDocUrl = '{!URLFOR($Action.Document.Download, '015000000000000000', [retURL=''])}';	
+            }
+            if(id)
+            baseSFDocUrl =  baseSFDocUrl.replace('015000000000000000', id);
+            return baseSFDocUrl;
+        }
+		
+	</script>
+	</body>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+    
+    <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}"/>
+    
+	<apex:outputpanel id="filterpanel">
+		<c:FilterComponent FilterObjectName="BMC_BaseElement__c" FilterAdditionalInfo="cmdb"/>
+	</apex:outputpanel>
+</apex:page>

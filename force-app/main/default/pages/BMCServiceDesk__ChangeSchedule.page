@@ -1,0 +1,386 @@
+<apex:page id="schedulePage" showHeader="false" controller="BMCServiceDesk.ChangeScheduleController" extensions="BMCServiceDesk.CustomMetadataTypeUtility" standardStylesheets="false">
+<html>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFExtJS31}/resources/css/ext-all.css" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS31}/adapter/ext/ext-base.js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS31}/ext-all.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS31}/src/locale/ext-lang-{!userlocale}.js" />
+    <c:UserContextComponent />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ChangeSchedule.js" />
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/HTML_ENCODE_DECODE.js" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBTheme.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBManagerStyles.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ChangeSchedule.css" />
+     <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CommonHelp.js" id="CommonHelp-js"/>
+     <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/IDforExtControl.js" id="IDforExtControl-js"/>
+     <script type="text/javascript" src="{!$Resource.BMCRFCommonJS}/StdLayoutCommon.js"></script>
+	 <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+	 <script type="text/javascript" >
+	    var parentWindow = '';
+        if ((window.opener != null) && (window.opener.parent!= null) && (window.opener.location!= null))
+            parentWindow = window.opener.parent;
+		var htmlToolTip;
+		var loggedInuserId = '{!$User.Id}';
+		var FilterLabel = '{!JSENCODE($Label.Filter)}';
+		var CRTtipHeader = '{!JSENCODE(ChangeTooltipHeader)}';
+		var RelTtipHeader = '{!JSENCODE(ReleaseTooltipHeader)}';
+		var TaskTtipHeader = '{!JSENCODE(TaskTooltipHeader)}';
+		var CurrentViewParam = '{!JSENCODE(CurrentView)}';
+		var ClientDateParam = '{!JSENCODE(ClientDate)}';
+		var lblSave = '{!JSENCODE($Label.Save)}';
+   		var lblCancel = '{!JSENCODE($Label.Cancel)}';
+   		var ChangeColorCodeTitle = '{!JSENCODE($Label.ChangeColorCodes)}';
+		var isAdminUser = {!isAdmin};
+		var releaseLabel = '{!JSENCODE($Label.Release)}';
+        var changeLabel = '{!JSENCODE($Label.Change_Request)}';
+		var currentPage = 'ChangeSchedule';
+		var isFilterApplied = '{!isFiltered}';
+		var namespacePrefix = 'BMCServiceDesk__';
+	if(getStandardLayout()){           
+            document.title='{!JSENCODE($Label.Navigator_ChangeSchedule)}';
+    }
+	var helpResource;
+        var installversion = {!installversion};
+	    userLanguage = '{!userLanguage}';
+	    var showJapaneseHelp = '{!showJapaneseHelp}';
+		if (userLanguage == 'ja' && showJapaneseHelp.toLowerCase() == 'true'){
+			helpResource = '{!$Resource.StdFormHelp_JA}';
+	    }else{
+			helpResource = '{!$Resource.StdFormHelp}';
+	    }
+    var isoDateFormat = 'Y-m-d H:i:s';
+
+    ExtJSDate= Date.parseDate('{!JSENCODE(ExtJSDate)}', isoDateFormat);
+    ExtJSViewType= '{!JSENCODE(ExtJSViewType)}';
+    ExtJSStartTime= '{!JSENCODE(ExtJSStartTime)}';
+    ExtJSChangeNumberOrType= '{!JSENCODE(ExtJSChangeNumberOrType)}';
+    ExtJSReleaseNumberOrType= '{!JSENCODE(ExtJSReleaseNumberOrType)}';
+    
+    function loadFromServer()
+    {
+        var StateValues = {
+                           DrawerDatePicker: ExtJSDate,
+                           DrawerChangeGroup : ExtJSChangeNumberOrType,
+                           DrawerReleaseGroup : ExtJSReleaseNumberOrType,
+                           DrawerStartTimeField: ExtJSStartTime,
+                           DrawerViewCombo: ExtJSViewType
+                       };
+        return StateValues;
+    }
+    controlHeight=parseInt('{!PassedHeight}');
+    
+    // This data comes from server
+    function getCalendarLegendData()
+    {
+    codes = {!LegendCodesArray};
+    return codes;
+    /* Sample data
+    return {codes:[
+    
+        {
+                code: '#FF0000',
+                title:'Emergency Change'
+            },  
+        {
+                code: '#F2F2F2',
+                div_html: '<s>CR123</s>',
+                title:'Closed Change'
+            }
+        ]};*/
+    }
+    function setTimeOptionData()
+    {
+        var data = {!TimeOptionsData};
+        var o=document.getElementById("StartTime");
+        var option=null;
+        for(var i=0;i<data.length;i++)
+        {
+            option = new Option(data[i].title, data[i].value);
+            option.selected = (i==0);
+            o.options.add(option);
+        }
+        o.disabled = !(ExtJSViewType == ViewComboValues.day12 || ExtJSViewType == ViewComboValues.day24);
+    }
+    function setCookieData() {
+		alert(readCookie('taskfilter'));
+		if (readCookie('taskfilter') != '') {
+			document.getElementById('taskFilterValue').value = replaceAll(readCookie('taskfilter'), '%#$#%', NONPRINT);
+			//alert(document.getElementById('taskFilterValue').value);
+			cookieValue(document.getElementById('taskFilterValue').value);
+		}
+	}
+/* The following should come from server -- so these will not be in a JS file */
+    
+var Labels = 
+   {
+       RefreshButtonTooltip: "{!JSENCODE($Label.Refresh)}",
+	   UndoBtnTooltip: "{!JSENCODE($Label.ClearFilter)}",
+       PrintButtonTooltip: "{!JSENCODE($Label.Print)}",
+       HeaderViews: "{!JSENCODE($Label.Views)}",
+       
+        lblChangeRequest: '{!JSENCODE($ObjectType.Change_Request__c.label)}',
+        lblCR: '{!JSENCODE($ObjectType.Change_Request__c.LabelPlural)}',
+        lblStage: '{!JSENCODE($Label.StageValue)}',
+        lblPriority: '{!JSENCODE($ObjectType.Change_Request__c.fields.FKPriority__c.label)}',
+        lblChangeType: '{!JSENCODE($ObjectType.Change_Request__c.fields.Change_Type__c.label)}',
+        lblStatus: '{!JSENCODE($ObjectType.Change_Request__c.fields.Status__c.label)}',
+        lblAssignedTo: '{!JSENCODE($Label.AssignedTo)}',
+        lblInitiator: '{!JSENCODE($ObjectType.Change_Request__c.fields.FKInitiator__c.label)}',
+        lblStartDate: '{!JSENCODE($ObjectType.Change_Request__c.fields.Scheduled_Start_Date__c.label)}',
+        lblEndDate: '{!JSENCODE($ObjectType.Change_Request__c.fields.Scheduled_End_Date__c.label)}',
+        lblName: '{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.name.label)}',
+        lblPSO: '{!JSENCODE($ObjectType.Projected_Service_Outage__c.label)}',
+        lblPSOs: '{!JSENCODE($ObjectType.Projected_Service_Outage__c.LabelPlural)}',
+        lblAffectedService: '{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Affected_Service__c.label)}',
+        lblBOStartDate: '{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Start_Date__c.label)}',
+        lblBOEndDate: '{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.End_Date__c.label)}',
+        lblBlackoutPeriod: '{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Blackout__c.label)}',
+        lblPrevious: '{!JSENCODE($Label.Previous)}',
+        lblNext: '{!JSENCODE($Label.Next)}',
+        lblTrue: '{!JSENCODE($Label.True)}',
+        lblFalse: '{!JSENCODE($Label.False)}',
+        lblRelease: '{!JSENCODE($Label.Release)}',
+        lblDescription: '{!JSENCODE($Label.Description)}',
+        lblCategory: '{!JSENCODE($ObjectType.Release__c.fields.FKCategory__c.label)}',
+        lblReleaseType: '{!JSENCODE($ObjectType.Release__c.fields.Release_Type__c.label)}',
+        lblReleaseSubType: '{!JSENCODE($ObjectType.Release__c.fields.Release_Subtype__c.label)}',
+        lblDeploymentType: '{!JSENCODE($ObjectType.Release__c.fields.Deployment_Type__c.label)}',
+        lblStatus: '{!JSENCODE($ObjectType.Release__c.fields.FKStatus__c.label)}',
+        lblStartImplementation: '{!JSENCODE($ObjectType.Release__c.fields.StartImplementationDate__c.label)}',
+        lblEndImplementation: '{!JSENCODE($ObjectType.Release__c.fields.EndImplementationDate__c.label)}',
+        lblStartDeployment: '{!JSENCODE($ObjectType.Release__c.fields.StartDeploymentDate__c.label)}',
+        lblEndDeployment: '{!JSENCODE($ObjectType.Release__c.fields.EndDeploymentDate__c.label)}',
+        lblApply: '{!JSENCODE($Label.Apply)}',
+        lblTasks: '{!JSENCODE($Label.Navigator_Tasks)}',
+        lblTimeline: '{!JSENCODE($Label.ViewTimeline)}',
+        lblTable: '{!JSENCODE($Label.ViewTable)}',
+        lblLinkedTo: '{!JSENCODE($Label.LinkedTo)}',
+        lblTask: '{!JSENCODE($Label.Task)}',
+        lblType: '{!JSENCODE($Label.Type)}',
+        lblUnscheduledTasks: '{!JSENCODE($Label.UnscheduledTasks)}',
+        lblScheduledStart: '{!JSENCODE($ObjectType.Task__c.fields.Scheduled_Start_Date__c.label)}',
+        lblScheduledEnd: '{!JSENCODE($ObjectType.Task__c.fields.Scheduled_End_Date__c.label)}',
+        lblNoRecordsFound: '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}',
+        lblReport: '{!JSENCODE($Label.Report)}',
+		lblSettings: '{!JSENCODE($Label.Settings)}',
+        lblSave: '{!JSENCODE($Label.Save)}',
+        lblCancel: '{!JSENCODE($Label.Cancel)}',
+		lblCreationPending: '{!JSENCODE($Label.Pending_Creation)}',
+		lblShowTasks: '{!JSENCODE($Label.ShowTasks)}',
+		lblHideTasks: '{!JSENCODE($Label.HideTasks)}',
+		lblOpenTask: '{!JSENCODE($Label.OpenTask)}',
+		lblWarning: "{!JSENCODE($Label.Warning)}",
+        lblGsErrorMsg:"{!JSENCODE($Label.GsErrorMsg)}",
+        lblSearch:"{!JSENCODE($Label.search)}",
+        lblTaskType: '{!JSENCODE($ObjectType.Task__c.fields.taskType__c.label)}',
+        lblReleaseCoordinator: '{!JSENCODE($ObjectType.Release__c.fields.FKReleaseCoordinator__c.label)}',
+        lblEmptySearchText:"{!JSENCODE($Label.SSSearch)}",
+        lblCollisionDetected: "{!JSENCODE($Label.CollisionDetected)}",
+        lblInformation:'{!JSENCODE($Label.Information)}',
+        lblFilterAccessMsg: '{!JSENCODE($Label.noAccessOnChangeScheduleFilter)}',
+		LayoutInsufficientAccess: '{!JSENCODE($Label.LayoutInsufficientAccess)}',
+		LayoutInsufficientAccessGeneric : '{!JSENCODE($Label.LayoutInsufficientAccessGeneric)}',
+       junk007:""
+   };
+    
+    var CurrentPage = "{!$CurrentPage.name}";
+    var LegendImgSrc = "{!$Resource.SDEFStyles}/SDEFbuttons/b_change_schedule_legend.png";
+    var BarImgsrc= "{!$Resource.SDEFStyles}/SDEFimages/black_bg.gif";
+    var PrevImgSrc = "{!$Resource.SDEFStyles}/SDEFbuttons/b_previous_change.gif";
+    var NextImgSrc = "{!$Resource.SDEFStyles}/SDEFbuttons/b_next_change.gif";
+    var viewTimelineImgSrc = "{!$Resource.SDEFStyles}/SDEFbuttons/view_timeline_selected.png";
+    var viewTableImgSrc = "{!$Resource.SDEFStyles}/SDEFbuttons/view_table_unselected.png";
+    var isRFConsoleEnabled = '{!isRFConsoleEnabled}';
+    
+    var unSchedule="{!JSENCODE(getUnscheduleTasks)}"; 
+/* End of server variables */
+var combolinkedVal={!getLinkedToRecords};
+var SelectedLinkedName="{!JSENCODE(getSelectedLinkedName)}";
+var isLightningExperience = {!IF(isLightningExperience,true,false)}; 
+var layoutIdJSON_CR= JSON.parse('{!JSENCODE(layoutIdJSON_CR)}');
+var isMultipleLayoutEnabledCR = {!isMultipleLayoutEnabledCR};
+var isMultipleLayoutEnabledTS = {!isMultipleLayoutEnabledTS};
+</script>
+
+
+<apex:form >
+    <apex:actionFunction action="{!RefreshCalendarData}" name="RefreshCala" >
+        <apex:param name="CurrentView" assignTo="{!CurrentView}" value=""/>
+        <apex:param name="ClientDate" assignTo="{!ClientDate}" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction name="changeTask" action="{!ChangeTasks}" OnComplete="changeGridValue()" reRender="taskPanel">
+                <apex:param assignTo="{!getSelectedLinkedName}" name="SelectedLinkedName" value=""/>
+                <apex:param assignTo="{!taskFilterValue}" name="taskFilterValue" value=""/> 
+    </apex:actionFunction>
+	<apex:actionFunction action="{!GetChangeData}" name="applyChangeFilter"  reRender="CalendarDataChange"  OnComplete="RefreshButtonClick(true);" >
+          <apex:param assignTo="{!filterQuery}" name="qryString" value=""/> 
+    </apex:actionFunction>
+    <apex:actionFunction action="{!GetReleaseData}" name="applyReleaseFilter"  reRender="CalendarDataRelease"  OnComplete="RefreshButtonClick(true);" >
+          <apex:param assignTo="{!filterQuery}" name="qryString" value=""/> 
+    </apex:actionFunction>
+	<apex:actionFunction action="{!deleteFilterCookies}" name="deleteCookies"  reRender="" OnComplete="RefreshButtonClick(true);">
+    </apex:actionFunction>
+    <apex:actionFunction Name="checkAccessOnFilter" action="{!checkAccessOnFilter}" onComplete="if(!{!isFilterAccesible}){showInfoMessage();}else{openWindow();}" reRender="" >
+    </apex:actionFunction>
+    <input type="hidden" id="taskFilterValue" name="taskFilterValue" value="{!taskFilterValue}"/>
+</apex:form>
+
+
+<div id="contentDiv"></div> 
+<div id="unscheduleDiv"></div>
+<apex:outputPanel id="CalendarData">
+<script>
+var isConsoleEnabled = '{!isConsoleEnabled}';
+var taskFilterCookie = '{!CookieTaskFilter}';
+{!ChangeTypeArray};
+{!HeaderLabel};
+
+{!HeaderColumnData};
+{!ChangeGridData}
+{!BlackoutGridData}
+
+{!ReleaseTypeArray};
+{!ReleaseGridData};
+
+var taskTypes = '{!TaskTypes}';
+var taskRecordFound = {!taskRecordFound};
+
+{!TaskTypeArray};
+</script>
+</apex:outputPanel>
+
+<apex:outputPanel id="CalendarDataChange">
+	<script>
+		{!ChangeTypeArray};
+		{!HeaderLabel};
+		{!HeaderColumnData};
+		{!ChangeGridData};
+		{!BlackoutGridData}
+		{!TaskTypeArray};
+	</script>
+</apex:outputPanel>
+
+<apex:outputPanel id="CalendarDataRelease">
+	<script>
+		{!HeaderLabel};
+		{!HeaderColumnData};
+		{!BlackoutGridData}
+		{!ReleaseTypeArray};
+		{!ReleaseGridData};
+		{!TaskTypeArray};
+	</script>
+</apex:outputPanel>
+
+<div id="drawerPanelContent" align="center" classs="x-hide-display" style="display:none;">
+<table width="180px" cellspacing="0" cellpadding="0" border="0" align="left" style="margin-left:10px;">
+    <tr><td height="15"></td></tr>  
+    <tr>
+        <td colspan="2">
+            <select id="ViewType" onchange="EnableDisableTime();ViewChanged();" style="width:100%" title="{!$Label.CalendarViewTypeTooltip}">
+                <option value="DayView12">{!$Label.OneDay12}</option>
+                <option value="DayView24">{!$Label.OneDay24}</option>
+                <option value="WeekView" >{!$Label.OneWeek}</option>
+                <option value="MonthView">{!$Label.OneMonth}</option>
+            </select>
+        </td>
+    </tr>
+    <tr><td height="15"></td></tr>  
+    <tr>
+        <td colspan="2">
+            <div id="datePickerHolder"></div>
+        </td>
+    </tr>
+
+    <tr><td height="15"></td></tr>  
+    
+    <tr style="vertical-align:baseline" >
+        <td  align="left">
+            <label for="radio2">{!$Label.StartTime}</label>
+        </td>
+        <td align="right">
+            <select id="StartTime" style="width:70px;" title="{!$Label.CalendarStartTimeTooltip}">
+            </select>
+        </td>
+    </tr>
+    <tr><td height="13" colspan="2"></td></tr>
+    <tr><td height="13" colspan="2">
+        <div>
+            <div class="hrline"></div>
+        </div>
+    </td></tr>
+    <tr><td height="13" colspan="2"></td></tr>
+    <tr style="vertical-align:baseline" >
+        <td  align="left" colspan="2" class="leftviewheader">
+            {!$Label.CIExpChanges}
+        </td>
+    </tr>      
+    <tr>
+        <td align="left">
+            <table cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right:5px;vertical-align:top;">
+            <input style="vertical-align:middle" type="checkbox" checked="checked" id="chkChange" name="radioNumberOrType" />
+            </td><td>
+            <label for="chkChange" style="">{!$Label.Show}</label>
+            </td></tr></table>
+        </td>
+        <td align="right">
+            <select id="cmbChange" style="width:80px;">
+                <option selected="" value="Number">{!$Label.By_Number}</option>
+                <option value="Type">{!$Label.By_Type}</option>
+            </select>
+        </td>
+    </tr>
+    <tr><td height="13" colspan="2"></td></tr>
+    <tr style="vertical-align:baseline" >
+        <td  align="left" colspan="2" class="leftviewheader">
+            {!$Label.Releases}
+        </td>
+    </tr>
+    <tr>
+        <td align="left">
+            <table cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right:5px;vertical-align:top;">
+            <input style="vertical-align:middle" type="checkbox" checked="checked" id="chkRelease" name="radioNumberOrType" />
+            </td><td>
+            <label for="chkRelease" style="white-space:nowrap">{!$Label.Show}</label>
+            </td></tr></table>
+        </td>
+        <td align="right">
+            <select id="cmbRelease" style="width:80px;">
+                <option selected="" value="Number">{!$Label.By_Number}</option>
+                <option value="Type">{!$Label.By_Type}</option>
+            </select>
+        </td>
+    </tr>
+    <tr><td height="13" colspan="2"></td></tr>
+    <tr>
+        <td align="left" colspan="2">
+            <input type="button" id="btnApply" onclick="FireOnChangeEvent();" value="{!$Label.Apply}" class="applybutton" />
+        </td>
+    </tr>
+</table>
+</div>
+<div>
+    <apex:OutPutPanel id="taskPanel"> 
+        <script>
+		 {!TaskGridData};
+            {!getUnscheduleTasks}
+            taskRecordFound = {!taskRecordFound};
+            unScheduleTaskRecordFound ={!unScheduleTaskRecordFound};
+			var layoutIdJSON_TS= JSON.parse('{!JSENCODE(layoutIdJSON_TS)}');
+        </script>
+        <apex:OutPutPanel id="noRecordsPanel" rendered="{!NOT(taskRecordFound)}"> 
+            <div id="noTaskRecord" style="vertical-align: middle; text-align: center; margin-top: 60px; display:none;">
+                {!$Label.MsgNoRecordFoundSearchPage}
+            </div>
+        </apex:OutPutPanel>
+        
+    </apex:OutPutPanel>
+	<script>
+	    var _remote_createInsertAndUpdateBody="{!$RemoteAction.CustomMetadataTypeUtility.createInsertAndUpdateBody}";
+    	function ShowHideTaskPanel() {
+ 			Ext.getCmp('mainTaskCalendar').expand();
+    	}
+    </script>
+</div>
+</html>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/OpenPopupRecordUtility.js"/>
+</apex:page>

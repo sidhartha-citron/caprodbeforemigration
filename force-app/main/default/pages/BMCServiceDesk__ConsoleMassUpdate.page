@@ -1,0 +1,208 @@
+<apex:page id="massupdatePage" controller="BMCServiceDesk.ConsoleMassUpdateController" standardStylesheets="false" showHeader="false" sidebar="false"  title="{!$Label.bmcservicedesk__massupdatewindowtitle}">
+  <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+  <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ConsoleMassUpdate.css" />
+  <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+ <c:UserContextComponent />
+<script>
+    var PE ='П'; //Cyrillic character
+    var EF ='ф'; //Cyrillic character
+    var NONPRINT ='¬'; //non printable character
+    var DZHE     ='џ'; //Cyrillic character
+    var seperator=PE+DZHE;
+    var endchar = EF +NONPRINT ;
+    var fieldDetails='{!JSENCODE(fieldDetails)}';
+    var picklistData='{!JSENCODE(picklistDetails)}';
+    var orgnamespace='{!JSENCODE(orgnamespace)}';
+    var PleaseWait = '{!JSENCODE($Label.PleaseWait)}';
+    var InvalidNumbermsg='{!JSENCODE($Label.TemplateInvalidNumber)}';
+    var InvalidEmailAddressmsg = '{!JSENCODE($Label.TemplateInvalidEmailAddress)}';
+    var InvalidPercentmsg='{!JSENCODE($Label.TemplateInvalidPercent)}';
+    var InvalidCurrencymsg='{!JSENCODE($Label.TemplateInvalidCurrency)}';
+    var InvalidPhonemsg='{!JSENCODE($Label.TemplateInvalidPhone)}';
+    var updateMsg='{!JSENCODE($Label.RecordsUpdatedmsg)}';
+    var EnterValueMsg='{!JSENCODE($Label.EnterValueMsg)}';
+    var NotUpdatedMsg='{!JSENCODE($Label.RecordsNotUpdatedMsg)}';
+    var ErrorMsgTemplateS='{!JSENCODE($Label.ErrorMsgTemplateS)}';
+    var MassUpdate='{!JSENCODE($Label.massUpdateWindowTitle)}';
+    var updateDataStr;
+    var selectedType;
+    var lookupObj;
+    var parentObj='{!($CurrentPage.parameters.modulename)}';
+    var fAPIName; 
+    var displayLabel; 
+    var errormsg; 
+    var selectedId;
+    var errorFlag=0 ;
+    var inputTxtId='{!$Component.massupdatePage:massUpdateForm:inputTxt}';
+    var inputTxtAreaId='{!$Component.massupdatePage:massUpdateForm:inputTxtArea}';
+    var selectListId='{!$Component.massupdatePage:massUpdateForm:selectList}';
+    var datetimeinputId ='{!$Component.massupdatePage:massUpdateForm:datetimeinput}';
+    var dateTimePopupImgId='{!$Component.massupdatePage:massUpdateForm:dateTimePopupImg}';
+    var inputDateId='{!$Component.massupdatePage:massUpdateForm:inputDate}';
+    var datePopupImgId='{!$Component.massupdatePage:massUpdateForm:datePopupImg}';
+    var fieldValueId='{!$Component.massupdatePage:massUpdateForm:fieldValue}';
+    var selectRdId='{!$Component.massupdatePage:massUpdateForm:selectRd}';
+    var rchtxtareaId='{!$Component.massupdatePage:massUpdateForm:inputRichTxtArea}';
+    var inputsecretId='{!$Component.massupdatePage:massUpdateForm:inputsecret}';
+    var isServiceRequest = '{!JSENCODE(isServiceRequest)}';
+    
+    
+     function getWaitbox(){ 
+        var  waitMsg= new Ext.LoadMask(Ext.getBody(), {msg:PleaseWait ,id:'waitMsggId'});
+    }
+    function showWaitbox()
+    {
+        if(Ext.getCmp('waitMsggId')!=null)
+            Ext.getCmp('waitMsggId').show();
+    }
+
+    function hideWaitbox()
+    {
+        if(Ext.getCmp('waitMsggId')!=null)
+            Ext.getCmp('waitMsggId').hide();
+    }
+    
+    function showDateTimePicker(){
+        var dateTimeInputId = document.getElementById('{!$Component.massUpdateForm.datetimeinput}');
+        _datePicker.Show(dateTimeInputId);
+    }
+function showDatePicker(){
+        var dateInputId = document.getElementById('{!$Component.massUpdateForm.inputDate}');
+        _datePicker.Show(dateInputId);
+    }  
+    if(typeof(SDEDateFormat)=='undefined' || SDEDateFormat==null ||  SDEDateFormat=='')
+    {
+        this.SDEDateFormat =  "m/d/Y h:i A";
+    }
+    getWaitbox();
+      FilterDatePickerPopup = function(){}
+    FilterDatePickerPopup.prototype = {
+        dateFormat : SDEDateFormat,
+        Show : function(forFielID) {
+        var TextField = Ext.get(forFielID);
+        var rgn = TextField.getRegion();
+        var win =  Ext.create('Ext.window.Window', {
+            height: 230,
+            width: 280,
+            x:rgn.right255,
+            y:rgn.top235,
+            layout: 'fit',
+            items: { 
+                xtype: 'datepicker',
+                handler: function (dp, date) {
+                        TextField.dom.value = Ext.Date.format(date,SDEDateFormat);                      
+                        var datefieldId =  TextField.dom.id;
+                        if(datefieldId.indexOf("inputDate") > 0){
+                                        var temp = document.getElementById(datefieldId).value;           
+                                        var cdate = temp.split(' ');
+                                        TextField.dom.value = cdate[0].replace(',','');
+                        }                               
+                        dataModifiedFlag = 1;
+                        TextField = null;
+                        win.close();
+                }
+            }
+        }).show();  
+        }
+    }
+    var _datePicker = new FilterDatePickerPopup();
+   function toggle_messege(type) {
+   if(type=='inline')
+   {
+     document.getElementById("div_messege").style.display = 'inline';
+     document.getElementById("href_collapse").style.display = 'inline';
+     document.getElementById("href_expand").style.display = 'none';
+   }else
+   {
+       document.getElementById("div_messege").style.display = 'none';
+     document.getElementById("href_collapse").style.display = 'none';
+     document.getElementById("href_expand").style.display = 'inline';
+       
+   }
+
+}
+    
+ </script>
+ 
+<apex:form id="massUpdateForm">
+<apex:outputPanel id="dummyPanel">
+</apex:outputPanel>
+
+<table  width="100%" height="100%">
+   
+    <tr >
+        <td width="100%" colspan="2" style="padding-left:15px">
+            <label Class="msgcls" style="">{!JSENCODE($Label.massEditMessage)}</label>
+        </td>
+    </tr>
+    <tr >       
+    <td style="width:18%;position:relative;">
+         <label Class="lblcls" style="text-overflow:ellipsis;top:10px;">{!JSENCODE($Label.CIExpField)}</label>
+        </td>
+        <td id="fieldlist" style="width:82%;position:relative;">
+       
+        <apex:selectList title="Fields" value="{!strFieldName}" size="1" onchange="changeInputtype(this);" id="selectList" style="margin-top:25px;width:270px;position:relative;" styleclass="selectlst">
+        <apex:selectOptions value="{!fieldlist}"></apex:selectOptions>   
+        </apex:selectList>
+       
+        </td>
+    </tr>
+
+    <tr>
+      <td height="210" style="vertical-align:top;width:18%;position:relative;">
+          <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__value)}" style="top:5px;" styleClass="lblcls"/>
+      </td>
+      <td height="210" id="TDId" style="vertical-align:top;width:82%;position:relative;">
+			<apex:outputText value="CRUDFLSCheck# Only FLS check is required & performed, CRUD check not required. FLS checks are added when populating fieldlist apex:selectList which prevents non updateable fields from appearing" rendered="false"/>
+              <apex:inputText id="inputTxt" value="{!fieldValue}" styleClass="inputtxt" style="display:inline;margin-top:5px;"  />
+              <apex:inputSecret id="inputsecret" value="{!fieldValue}" styleClass="inputtxt" style="display:none;margin-top:5px;"/>
+              <img class="closeIconDis" title="{!$Label.Clear}" onclick="clearvalue();" 
+               onmouseout="this.className='closeIconDis'" src="/s.gif"  id="closeimgId" onmouseover="this.className='closeIconEnable'; " style="cursor: pointer;display:none;margin-left:-2px;"/>
+              <apex:image styleClass="lookupIcon" style="display:none;margin-left:5px;" id="lookUp1" onclick="openlookuppopup();" />
+              <input type="button" Class="lookupIcon" style="display:none;margin-left:2px;" id="lookUp" onclick="openlookuppopup();" />
+              <apex:inputTextarea id="inputTxtArea" value="{!fieldValue}" style="display:none;" styleClass="inputtxtarea"  onkeyup=""/>
+              <div id="rchtxtdiv" style="display:none;margin-top:5px;width:270px;">
+              <apex:inputTextarea id="inputRichTxtArea" richText="true" value="{!richtextValue}" style="display:none;"  styleClass="inputtxtarea" onkeyup=""/>
+              </div>
+              <apex:inputText id="datetimeinput" styleClass="inputtxt" style="display:none;"/>
+              <apex:image id="dateTimePopupImg"   style="display:none;" styleClass="dateimgcls"  value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDateTimePicker();"/>
+              <apex:inputText id="inputDate"  styleClass="inputtxt" style="display:none;"/>
+              <apex:image id="datePopupImg"  style="display:none;" styleClass="dateimgcls" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDatePicker();"/>
+              <apex:selectRadio id="selectRd" value="{!fieldValue}" styleClass="selectitems">                                                            
+                  <apex:selectOptions value="{!booleanItems}" />
+              </apex:selectRadio>
+              <select id="selectLst" size="1"  style="display:none;height:20px;margin-top:5px;width:270px;">
+              </select>
+              <apex:inputhidden id="fieldValue" value="{!fieldValue}" /> 
+             
+         
+      </td>
+    </tr>
+    <tr>
+    <td colspan="2" height="20">
+       
+    </td>
+
+    </tr>
+    
+ </table>
+ <div style="height:35px;background-color: #DEE0E0;position: absolute;bottom: 0;width: 100%;line-height: 35px;" >
+    <input type="button" value="{!JSENCODE($Label.Ok)}" style="margin-left:10px;" class="btn" onClick="callupdatefuntion();" />
+    <input type="button" value="{!JSENCODE($Label.Cancel)}" class="btn" onClick="window.close();" / >
+    <input type="button" value="{!JSENCODE($Label.Apply)}" class="btn"  onClick="formupdatedata();"/>
+</div>
+
+  <apex:actionFunction name="updateRecords"   action="{!updateRecords}"  oncomplete="oncompletefunction('{!JSENCODE(errormsgstr)}');">
+          <apex:param assignTo="{!selectedIds}" name="selectedIds" value=""/>
+          <apex:param assignTo="{!updateField}" name="updateDataStr" value=""/>
+          </apex:actionFunction>
+</apex:form>
+ <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ConsoleMassUpdate.js"/>
+<script>
+  function setFocusOnlist()
+    {
+        document.getElementById(selectListId).focus();
+    }
+   window.onload=setFocusOnlist; 
+</script>
+</apex:page>

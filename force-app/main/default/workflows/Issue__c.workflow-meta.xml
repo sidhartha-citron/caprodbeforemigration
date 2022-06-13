@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>Issue_Notification_Ready_for_Testing</fullName>
+        <description>Issue Notification: Ready for Testing</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <recipients>
+            <field>Raised_By__c</field>
+            <type>userLookup</type>
+        </recipients>
+        <recipients>
+            <field>Testing_Owner__c</field>
+            <type>userLookup</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>Issue_Management/Issue_Generic_Status_Change</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>Reassign_to_Internal_Citron</fullName>
+        <field>OwnerId</field>
+        <lookupValue>Internal_Citron</lookupValue>
+        <lookupValueType>Queue</lookupValueType>
+        <name>Reassign to Internal Citron</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>LookupValue</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <rules>
+        <fullName>Issue Notification%3A Ready for Testing Statuses</fullName>
+        <actions>
+            <name>Issue_Notification_Ready_for_Testing</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Issue__c.Status__c</field>
+            <operation>equals</operation>
+            <value>Ready for Testing (Sandbox),Ready for Testing (Production)</value>
+        </criteriaItems>
+        <description>Ready for Testing (Sandbox and Production)</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Issue Notification%3A Testing Failed Statuses</fullName>
+        <actions>
+            <name>Issue_Notification_Ready_for_Testing</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Issue__c.Status__c</field>
+            <operation>equals</operation>
+            <value>Testing Failed (Sandbox),Testing Failed (Production)</value>
+        </criteriaItems>
+        <description>Testing Failed (Sandbox and Production)</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Reassign to Internal Queue</fullName>
+        <actions>
+            <name>Reassign_to_Internal_Citron</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <formula>AND(CreatedDate &lt;= NOW(),
+ ISPICKVAL(Status__c , &quot;New&quot;)
+)</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+</Workflow>

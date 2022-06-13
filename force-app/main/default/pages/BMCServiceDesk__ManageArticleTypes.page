@@ -1,0 +1,170 @@
+<apex:page controller="BMCServiceDesk.ManageArticleTypesController" showHeader="false" standardStylesheets="false">
+<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/ManageArticleTypes.css" type="text/css" />
+
+ <apex:form id="formId" style="display:none">
+
+<table cellspacing="0" cellpadding="0" width="100%" border="0" > 
+    <tr>
+        <td valign="top" colspan="3"><div id="divTB" /></td>
+    </tr>
+    <tr>
+        <td valign="top" colspan="3" class="RecordTypeComboClsTd1">
+            <apex:outputPanel layout="block" style="margin-left: -1px;">
+                <table>
+                    <tr>
+                        <td class="mapInstrucntionCls" valign="middle">
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__recordtype}"/>
+                        </td>
+                        <td class="RecordTypesComboCls">
+                            <div id="RecordTypesCombo"></div>
+                        </td>
+                    </tr>
+                </table>
+            </apex:outputPanel>         
+        </td>
+    </tr>
+    <tr>
+        <td align="left" colspan="3" class="RecordTypeComboClsTd2">
+            <table>
+                <tr>
+                    <td class="clsBoldInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__availablefields}" /></td>
+                    <td width="40;">&nbsp;</td>
+                    <td align="left" class="clsBoldInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__selectedfields}" /></td>
+                </tr>
+                <tr>
+                    <td valign="top"><div id="KAfieldsGrid"></div></td>
+                     <td>
+                     <input type="button" id="MoveNextButtonId" onkeypress="moveNext();" class="bmcButtonArrownext" onclick="moveNext();"/> <br></br>
+                     <input type="button" id="MovePrevButtonId" onkeypress="movePrevious();" class="bmcButtonArrowPrev"  onclick="movePrevious();"/>
+                      </td> 
+                    <td valign="top"><div id="SelectedFieldsGrid"></div></td>
+                    <td>
+                     <input type="button" id="MoveUpButtonId" onkeypress="moveSelectedRow('up');" class="bmcButtonArrowUp" onclick="moveSelectedRow('up');"/>                       <br></br>
+                     <input type="button" id="MoveDownButtonId" onkeypress="moveSelectedRow('down');" class="bmcButtonArrowDown"  onclick="moveSelectedRow('down');"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="top" colspan="3">&nbsp;</td>
+                </tr>
+            </table>
+         </td>
+     </tr>    
+</table>
+<table class="recordTypeTable mapInstrucntionCls">
+    <tr>
+        <td>
+            <div class="recordTypeIcon"> {!JSENCODE($Label.RecordTypeIcon)}</div>
+        </td>
+        <td class="recordTypeTD">
+            <div>
+                <input type="radio" id="defaultIconID" name="selectOption" value="default" class="defaultIconTD" onclick="disableBrowse()" >{!JSENCODE($Label.UseDefault)}</input><br/>
+                <input type="radio" id="customIconID" name="selectOption" value="custom" class="customIconTD" onclick="enableBrowse()">{!JSENCODE($Label.SelectCustom)} ({!JSENCODE($Label.CMDBIconSize)}) </input>
+            </div>
+        </td>
+    </tr>
+ </table>
+ <table class="browseTable mapInstrucntionCls">
+    <tr>
+        <td class="iconTable"></td>
+        <td class="clsImage">
+            <div id="enclosingDiv" class="EnclosingCls">
+            <apex:image id="recordType_id" height="32" width="32px"/>
+            </div>
+        </td>
+        <td>
+        <div class="recordTypeLabel"> <input type="button"  id="browseIconId" onclick="openImagePopup()" value="{!JSENCODE($Label.Browse)}" class="selectBtnCls" disabled="true" ></input></div>
+        </td>
+        <td class="NotificationIcon">
+            <img src="{!$Resource.Themes}/SSDefaultTheme/images/en_US/SS_Information_16.png"/>
+        </td>
+        <td class="NotificationMessage">
+            <apex:outputLabel value="{!$Label.bmcservicedesk__customiconinstruction}" />
+        </td>
+    </tr>
+</table>
+<script>
+var imageURL = '{!URLFOR($Action.Document.Download,'015000000000000000',[retURL=""])}';
+var NPRINT = '¬';
+var folderId='{!folderid}';
+var recordType_id = '{!$Component.recordType_id}';
+var  img_trans = "{!$Resource.SDEFStyles}/SDEFimages/_.GIF";
+var FormId = '{!$Component.formId}';
+
+function getImageID(attachmentId){
+    var recordType_div = document.getElementById(recordType_id);
+    var tempDOCID = '015000000000000000';
+    if(recordType_div && attachmentId){
+        recordType_div.src = imageURL.replace(tempDOCID,attachmentId);
+    }
+	recordType_div.className="" ;
+    Icon_id = attachmentId ;
+    Icon_X = attachmentId ;
+} 
+</script>
+
+<apex:outputPanel id="Refreshstore">
+    <script> 
+        var RecordTypeOptions, KAfieldsGrid, KAfieldsStore, SelectedfieldsStore, RowIndex, Checked, ctrlSelectWhenChecked = '';
+		var Indexes = new Array();
+        var AlreadySelected = new Array();
+        var resolutionField = new Array();
+        //Array store for record type comboBox
+        var RecordTypeOptionsData = {!RecordOptions};
+        var selectedRecordType = '{!JSENCODE(selectedRecordType)}';       
+        
+        var KaFieldsData = {!KaFieldsData};
+        if(KAfieldsStore!=null && KAfieldsStore!=undefined && KaFieldsData!=null)
+            KAfieldsStore.loadData(KaFieldsData);
+            
+        var SelectFieldsData = JSON.parse("{!JSENCODE(SelectFieldsData)}");
+        if(SelectedfieldsStore!=null && SelectedfieldsStore!=undefined && SelectFieldsData!=null)
+            SelectedfieldsStore.loadData(SelectFieldsData);
+            
+        var Icon_id,Icon_X,Saved_Icon ;
+        function SetIcon(){    
+             Icon_id = '{!JSENCODE(iconID)}';
+             Icon_X = Icon_id ;
+             Saved_Icon = Icon_id ;
+            changeIconTypeSelection();
+        }
+    </script>
+</apex:outputPanel>
+
+<apex:actionFunction action="{!fetchRecordTypeData}" name="ChangeGridData" rerender="Refreshstore" oncomplete="hideWaitbox();SetIcon();">
+   <apex:param assignTo="{!selectedRecordType}" name="selectedRecordType" value="" />
+</apex:actionFunction>
+<apex:actionFunction action="{!SaveData}" name="saveData" oncomplete="hideWaitbox();showSaveMessage();" >
+    <apex:param name="SavedFieldsData" value="" assignTo="{!SavedFieldsData}" />
+    <apex:param assignTo="{!selectedRecordType}" name="selectedType" value="" />
+    <apex:param assignTo="{!iconToBeDeleted}" name="Saved_Icon" value="" />
+</apex:actionFunction>
+
+
+</apex:form>
+
+<script>
+var PleaseWait = '{!JSENCODE($Label.PleaseWait)}';
+var SaveMsg = '{!JSENCODE($Label.SavedSuccessfully)}';
+var fields = '{!JSENCODE($Label.Fields)}';
+var save = '{!JSENCODE($Label.Save)}';
+var resValue = '{!JSENCODE($Label.Copy_to_Resolution)}';
+var resValueTooltip = '{!JSENCODE($Label.resValueTooltip)}';
+resValueTooltip = resValueTooltip.replace('\\n', '&#013;');
+var AddImage = '{!JSENCODE($Label.AddImage)}';
+var errorMsg = '{!JSENCODE($Label.NoFieldSelectedError)}';
+var ResErrorMsg = '{!JSENCODE($Label.ResolutionField_Validation)}';
+var helpLabel = '{!JSENCODE($Label.TooltipHelp)}';
+var SDEFStylesPATH = '{!$Resource.SDEFStyles}';
+var OrgNamespace = '{!Nspace}';
+var helpResource='',wikiUrl='{!wikiUrl}', userLanguage = '{!userLanguage}',showJapaneseHelp = '{!showJapaneseHelp}';
+    if (userLanguage == 'ja' && showJapaneseHelp.toLowerCase() == 'true'){
+        helpResource = '{!$Resource.StdFormHelp_JA}';
+    }else{
+        helpResource = '{!$Resource.StdFormHelp}';
+    }
+</script>
+
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ManageArticleTypes.js"></script> 
+</apex:page>

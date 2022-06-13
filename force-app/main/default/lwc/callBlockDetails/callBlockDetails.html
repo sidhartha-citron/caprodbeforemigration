@@ -1,0 +1,429 @@
+<template>
+    <template if:true={largedevice}>
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+            aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse"
+                            size="small">
+                        </lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">
+                        <div class="slds-page-header">
+                            <div class="slds-page-header__row">
+                                <div class="slds-page-header__col-title">
+                                    <div class="slds-media">
+                                        <div class="slds-media__figure">
+                                            <template if:true={isLead}>
+                                                <lightning-icon icon-name="standard:lead"></lightning-icon>
+                                            </template>
+                                            <template if:false={isLead}>
+                                                <lightning-icon icon-name="standard:contact"></lightning-icon>
+                                            </template>
+                                        </div>
+                                        <div class="slds-media__body">
+                                            <div class="slds-page-header__name">
+                                                <div class="slds-page-header__name-title">
+                                                    <h1>
+                                                        <span class="slds-page-header__title slds-truncate"
+                                                            title={headerlabel}>{headerlabel}</span>
+                                                    </h1>
+                                                </div>
+                                            </div>
+                                            <p class="slds-page-header__name-meta">
+                                                {secondHeaderlabel}&nbsp;{rowdetails.name} |
+                                                <lightning-formatted-phone value={rowdetails.phonetodisplay}>
+                                                </lightning-formatted-phone>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </h2>
+                </header>
+                <!-- Modal/Popup Box LWC body starts here -->
+                <template if:true={isLoaded}>
+                    <lightning-spinner style="top:6.5rem; bottom:11rem" variant="brand" alternative-text="Loading Tasks"
+                        size="medium">
+                    </lightning-spinner>
+                </template>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <lightning-layout multiple-rows>
+                        <lightning-layout-item class={Mainhideclass} size="12">
+                            <template if:false={isLeadConvert}>
+                                <lightning-layout multiple-rows>
+                                    <lightning-layout-item size={vsize} padding="around-small">
+                                        <template if:true={showpicklist}>
+                                            <lightning-combobox label="Reaction" name="Reaction"
+                                                options={controllingPicklist} value={selectedControlling}
+                                                onchange={fetchDependentValue} required>
+                                            </lightning-combobox>
+                                        </template>
+                                    </lightning-layout-item>
+                                    <lightning-layout-item size=6 padding="around-small">
+                                        <template if:true={showdependent}>
+                                            <lightning-combobox label="Call Disposition" name="Call Disposition"
+                                                options={finalDependentVal} value={selectedControlling}
+                                                disabled={dependentDisabled} required onchange={getcalldisposition}>
+                                            </lightning-combobox>
+                                        </template>
+                                    </lightning-layout-item>
+                                    <lightning-layout-item size=6 padding="around-small" if:true={isPostive}>
+                                        <template if:true={isPostive}>
+                                            <lightning-input name="Subject" value={strSubj} label="Event Subject"
+                                                onchange={handleSubjectChange}>
+                                            </lightning-input>
+                                        </template>
+                                    </lightning-layout-item>
+                                    <lightning-layout-item size=6 padding="around-small" if:true={isPostive}>
+                                        <template if:true={isPostive}>
+                                            <label class="slds-form-element__label">Event Start Date & Time</label>
+                                            <lightning-input variant="label-hidden" class="slds-m-bottom_medium evtdate"
+                                                type="datetime" onchange={getStartdatetimehandle} value={datetimevalue}
+                                                required>
+                                            </lightning-input>
+                                        </template>
+                                    </lightning-layout-item>
+                                    <lightning-layout-item size=6 padding="around-small" if:true={isPostive}>
+                                        <template if:true={isPostive}>
+                                            <label class="slds-form-element__label">Event End Date & Time</label>
+                                            <lightning-input variant="label-hidden"
+                                                class="slds-m-bottom_medium evtenddate" type="datetime"
+                                                onchange={getEnddatetimehandle} value={evtEndTime} required>
+                                            </lightning-input>
+                                        </template>
+                                    </lightning-layout-item>
+                                    <lightning-layout-item size=6 padding="around-small" if:true={showLeadDisqualify}>
+                                        <template if:true={showLeadDisqualify}>
+                                            <template if:true={isleaddisqualify}>
+                                                <lightning-combobox name="Lead Disqualify Reason"
+                                                    label="Lead Disqualify Reason" value={disqualifyvalue}
+                                                    options={disqualifypicklist.data.values}
+                                                    onchange={handledisqualifyChange} required>
+                                                </lightning-combobox>
+                                            </template>
+                                        </template>
+                                    </lightning-layout-item>
+                                    <template if:true={isPostive}>
+                                        <lightning-layout-item size=6 padding="around-small">
+                                            <lightning-input type="email" onchange={getemailhandle}
+                                                label="Change  Email" value={emailvalue} required>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+                                    </template>
+                                    <template if:true={isPostive}>
+                                        <lightning-layout-item size=6 padding="around-small">
+                                            <lightning-input name="Location" value={rowdetails.address}
+                                                label="Event Location" onchange={handleLocationChange}>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+                                    </template>
+                                    <template if:true={isfollowup}>
+                                        <lightning-layout-item size=12 padding="around-small">
+                                            <div class="slds-section slds-is-open">
+                                                <h3 class="slds-section__title slds-theme_shade">
+                                                    <span class="slds-truncate slds-p-horizontal_small"
+                                                        title="Follow up task">Follow up task</span>
+                                                </h3>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size=6 padding="around-small" style="margin-top:-1rem">
+                                            <lightning-input variant="label-stacked"
+                                                label="Check the box to Schedule Follow up (Defaults to next Call Block or Customize Follow up Due date below)"
+                                                value={followupcheck} type="checkbox" onchange={handleFollowUpChange}
+                                                checked={followupcheck}>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size=6 padding="around-small" style="margin-top:-1rem">
+                                            <lightning-input
+                                                field-level-help="Checking this will make task as high priority"
+                                                label="Set Follow Up as Important" value={prioritycheck} type="checkbox"
+                                                onchange={handlePriorityChange} checked={prioritycheck}>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size=6 padding="around-small" style="margin-top:-1rem">
+                                            <lightning-input type="date" label="Follow Up Due Date"
+                                                onchange={handlefollowUpDueDate} title="Follow Up Due Date"
+                                                date-style="medium" value={followUpDueDate}>
+                                            </lightning-input>
+                                        </lightning-layout-item>
+                                    </template>
+                                    <template if:true={isPostive}>
+                                        <lightning-layout-item size=12 padding="around-small">
+                                            <lightning-textarea label="Event Invitee Message"
+                                                value={inputInternalNoteValue} onchange={handleInternalNoteChange}
+                                                required={isNotesRequired} field-level-help={label.inviteeMessage}
+                                                class="txtarea">
+                                            </lightning-textarea>
+                                        </lightning-layout-item>
+                                    </template>
+                                    <lightning-layout-item size=12 padding="around-small">
+                                        <lightning-textarea field-level-help={label.internalnotes} label="Notes"
+                                            value={inputNoteValue} onchange={handleNoteChange}>
+                                        </lightning-textarea>
+                                    </lightning-layout-item>
+                                    <!-- <lightning-layout-item size=6 padding="around-small">
+                                <lightning-button onclick={handleCancel} label="Cancel" variant="brand">
+                                </lightning-button>
+                            </lightning-layout-item>
+                            <template if:true={showSaveNContinue}>
+                                <lightning-layout-item size=6 padding="around-small">
+                                    <lightning-button onclick={handlesave} label="Save & Continue" variant="brand">
+                                    </lightning-button>
+                                </lightning-layout-item>
+                            </template>
+                            <template if:true={isLead}>
+                                <template if:true={showSaveNConvert}>
+                                    <lightning-layout-item size=6 padding="around-small">
+                                        <lightning-button onclick={saveNconvert} label="Save & Convert" variant="brand">
+                                        </lightning-button>
+                                    </lightning-layout-item>
+                                </template>
+                            </template> -->
+                                </lightning-layout>
+                            </template>
+                        </lightning-layout-item>
+                        <lightning-layout-item size=12 padding="around-small" class={activityHideclass}>
+                            <c-panel active-sections={activeSections} timeline-groups={timelineGroups}
+                                onconvertsuccess={gotoCallBlock}></c-panel>
+                            <template if:false={previousTasks}>
+                                <div
+                                    class="slds-text-align_center slds-text-heading_medium slds-text-color_error slds-text-font_monospace">
+                                    No
+                                    Previous Tasks.</div>
+                            </template>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12">
+                            <template if:true={isLeadConvert}>
+                                <c-convert-lead lead-idtoconvert={rowdetails.idtoupdate}
+                                    convertedname={rowdetails.companyname} ldname={rowdetails.name}
+                                    ondupencounter={handleDupe} onselectedrow={handleselectedrow}
+                                    onconvertsuccess={hideButton}>
+                                </c-convert-lead>
+                            </template>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                </div>
+                <!-- Modal/Popup Box LWC footer starts here -->
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeModal}
+                        title="Cancel">Cancel</button>&nbsp;
+                    <template if:false={isDupe}>
+                        <template if:false={hideConvertButton}>
+                            <button class="slds-button slds-button_neutral" onclick={toggle}
+                                title={buttonlbl}>{buttonlabel}</button>
+                        </template>
+                    </template>
+                    <template if:true={sideCollapsed}>
+                        <template if:true={showSaveNContinue}>
+                            <lightning-layout-item size=6 padding="around-small">
+                                <lightning-button onclick={handlesave} label="Save & Continue" variant="neutral">
+                                </lightning-button>
+                            </lightning-layout-item>
+                        </template>
+                    </template>
+                    <template if:true={isLead}>
+                        <template if:false={isDupe}>
+                            <template if:true={sideCollapsed}>
+                                <template if:false={hideConvertButton}>
+                                    <template if:true={showSaveNConvert}>
+                                        <lightning-layout-item size=6 padding="around-small">
+                                            <lightning-button onclick={saveNconvert} label=" Save & Convert"
+                                                variant="brand">
+                                            </lightning-button>
+                                        </lightning-layout-item>
+                                    </template>
+                                </template>
+                            </template>
+                        </template>
+                    </template>
+                    <template if:true={isDupe}>
+                        <template if:false={hideConvertButton}>
+                            <lightning-button label="Convert" variant="brand" onclick={callConvert}>
+                            </lightning-button>
+                        </template>
+                    </template>
+                    <template if:true={blntoCallblock}>
+                        <lightning-button label="Go to CallBlock" variant="brand" onclick={handleCallBlock}>
+                        </lightning-button>
+                    </template>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    <template if:false={largedevice}>
+        <div class="wrapper slds-card slds-p-left_xx-small slds-p-right_xx-small">
+            <div class="slds-page-header">
+                <div class="slds-page-header__row">
+                    <div class="slds-page-header__col-title">
+                        <div class="slds-media">
+                            <div class="slds-media__figure">
+                                <lightning-icon icon-name={rowdetails.iconname}></lightning-icon>
+                            </div>
+                            <div class="slds-media__body">
+                                <div class="slds-page-header__name">
+                                    <div class="slds-page-header__name-title">
+                                        <h1>
+                                            <span class="slds-page-header__title slds-truncate"
+                                                title={rowdetails.companyname}>{rowdetails.companyname}</span>
+                                        </h1>
+                                    </div>
+                                </div>
+                                <p class="slds-page-header__name-meta">{rowdetails.name} • <lightning-formatted-phone
+                                        value={rowdetails.phonetodisplay}>
+                                    </lightning-formatted-phone>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="scrollable">
+                <lightning-layout multiple-rows>
+                    <lightning-layout-item size=12 small-device-size="12">
+                        <template if:true={showpicklist}>
+                            <lightning-combobox placeholder="Select Reaction" label="Reaction" name="Reaction"
+                                options={controllingPicklist} value={selectedControlling} onchange={fetchDependentValue}
+                                required class="slds-p-top_x-small slds-text-body_small">
+                            </lightning-combobox>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item size=12 small-device-size="12">
+                        <template if:true={showdependent}>
+                            <lightning-combobox placeholder="Select Call Disposition" label="Call Disposition"
+                                name="Call Disposition" options={finalDependentVal} value={selectedControlling}
+                                disabled={dependentDisabled} required onchange={getcalldisposition}
+                                class="slds-p-top_x-small slds-text-body_small">
+                            </lightning-combobox>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item size=12 small-device-size="12">
+                        <template if:true={isPostive}>
+                            <lightning-input name="Subject" value={strSubj} label="Event Subject"
+                                onchange={handleSubjectChange} class="slds-p-top_x-small slds-text-body_small">
+                            </lightning-input>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item size=12 small-device-size="12">
+                        <template if:true={isPostive}>
+                            <label class="slds-form-element__label slds-text-body_small">Event Start Date & Time</label>
+                            <lightning-input variant="label-hidden"
+                                class="slds-p-top_x-small slds-text-body_small slds-m-bottom_medium evtdate"
+                                type="datetime" onchange={getStartdatetimehandle} value={datetimevalue} required>
+                            </lightning-input>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item size=12 small-device-size="12">
+                        <template if:true={isPostive}>
+                            <label class="slds-form-element__label">Event End Date & Time</label>
+                            <lightning-input variant="label-hidden"
+                                class="slds-m-bottom_medium evtenddate slds-p-top_x-small slds-text-body_small"
+                                type="datetime" onchange={getEnddatetimehandle} value={evtEndTime} required>
+                            </lightning-input>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item size=12 small-device-size="12">
+                        <template if:true={isPostive}>
+                            <lightning-input class="slds-p-top_x-small slds-text-body_small" name="Location"
+                                value={rowdetails.address} label="Event Location" onchange={handleSubjectChange}>
+                            </lightning-input>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item size=12 small-device-size="12">
+                        <template if:true={isPostive}>
+                            <lightning-input type="email" class="slds-p-top_x-small slds-text-body_small"
+                                onchange={getemailhandle} label="Change  Email" value={emailvalue} required>
+                            </lightning-input>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item size=12 small-device-size="12">
+                        <template if:true={isPostive}>
+                            <lightning-textarea label="Event Invitee Message" value={inputInternalNoteValue}
+                                onchange={handleInternalNoteChange} required={isNotesRequired}
+                                field-level-help={label.inviteeMessage}
+                                class=" slds-p-top_x-small slds-text-body_small">
+                            </lightning-textarea>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item size=12 small-device-size="12">
+                        <template if:true={showLeadDisqualify}>
+                            <template if:true={isleaddisqualify}>
+                                <lightning-combobox class=" slds-p-top_x-small slds-text-body_small"
+                                    name="Lead Disqualify Reason" label="Lead Disqualify Reason" value={disqualifyvalue}
+                                    options={disqualifypicklist.data.values} onchange={handledisqualifyChange} required>
+                                </lightning-combobox>
+                            </template>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item size=12 small-device-size="12">
+                        <lightning-textarea field-level-help={label.internalnotes} label="Notes" value={inputNoteValue}
+                            onchange={handleNoteChange}>
+                        </lightning-textarea>
+                    </lightning-layout-item>
+                    <template if:true={isfollowup}>
+                        <template if:true={isfollowup}>
+                            <lightning-layout-item size=12 small-device-size="12">
+                                <div class="slds-section slds-is-open">
+                                    <h3 class="slds-section__title slds-theme_shade">
+                                        <span class="slds-page-header__title slds-truncate slds-p-horizontal_small"
+                                            title="Follow up task">Follow up task</span>
+                                    </h3>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size=12 small-device-size="12" large-device-size="6">
+                                <lightning-input class=" slds-p-top_x-small slds-text-body_small"
+                                    label="Check the box to Schedule Follow up (Defaults to next Call Block or Customize Follow up Due date below)"
+                                    value={followupcheck} type="checkbox" onchange={handleFollowUpChange}
+                                    checked={followupcheck}>
+                                </lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item size=12 small-device-size="12" large-device-size="6"
+                                style="margin-top:-1rem">
+                                <lightning-input field-level-help="Checking this will make task as high priority"
+                                    label="Set Follow Up as Important" value={prioritycheck} type="checkbox"
+                                    onchange={handlePriorityChange} checked={prioritycheck}>
+                                </lightning-input>
+                            </lightning-layout-item>
+                        </template>
+                    </template>
+                    <!-- <lightning-layout-item size=12 small-device-size="12" large-device-size="6">
+                        <template if:true={isfollowup}>
+                            <lightning-input class=" slds-p-top_x-small slds-text-body_small"
+                                label="Schedule Follow Up on Next Call Block" value={followupcheck} type="checkbox"
+                                onchange={handleFollowUpChange} checked={followupcheck}>
+                            </lightning-input>
+                        </template>
+                    </lightning-layout-item> -->
+                </lightning-layout>
+            </div>
+            <div class="footer">
+                <ul class="slds-button-group-list">
+                    <li>
+                        <lightning-button variant="base" label="Cancel" title="Cancel" icon-name="utility:chevronleft"
+                            icon-position="left" onclick={handleCancel} style="margin-right:10rem">
+                        </lightning-button>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <template if:true={showSaveNConvert}>
+                            <lightning-button onclick={saveNconvert} variant="base" label="Save & Convert"
+                                title="Save & Convert" icon-name="action:lead_convert" icon-position="right"
+                                class="slds-float_right">
+                            </lightning-button>
+                        </template>
+                        <template if:true={showSaveNContinue}>
+                            <lightning-button variant="base" onclick={handlesave} label="Save & Continue"
+                                title="Save & Continue" icon-name="utility:chevronright" icon-position="right"
+                                class="slds-float_right">
+                            </lightning-button>
+                        </template>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </template>
+</template>

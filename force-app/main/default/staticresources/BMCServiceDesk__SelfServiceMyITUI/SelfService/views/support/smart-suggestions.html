@@ -1,0 +1,101 @@
+<div class="suggestions-container">
+  	<div class="suggestions-panel-header">
+		<span>{{suggestionsHeader}}</span>
+		<span class="d-icon-cross hide-suggestions" ng-click="closeSuggestions()"></span>
+	</div>
+	<div class="suggestion-result" ng-repeat="item in ssResult track by $index" ng-click="openAccordian(item)">
+		<div class="suggestions-header-container" ng-class="{'disabled-accrodian': item.size == 0}">
+			<span class="suggestions-count Branding-Right_Panel-default_button">{{item.size}}</span>
+			<span class="suggestions-item-header">{{item.Title}}</span><span ng-class="accordion.current == item.name?'d-icon-right-angle_up':'d-icon-right-angle_down'" style="color:#333;float: right;padding-right: 12px;" ng-show="!data && item.size > 0"></span>
+		</div>
+		<div class="smart-suggestions-result-container" ng-show="accordion.current == item.name" ng-class="{'selected-accordian' : accordion.current == item.name}">
+			<div class ="smart-suggestions-item" ng-show="item.name == 'KA'" ng-repeat="ditem in item.data track by $index">
+				<div ng-click="openItem(ditem, 'KA',item.data)" class="suggestions-data-container">
+					<div class="support-request-container-width">
+						<img class="IconWrapper_26"
+							 ng-src="{{resourceUrl}}styles/img/KA_faq_26.svg"
+							 ng-if="ditem.ArticleType=='FAQ'"
+							 alt="" />
+						<img class="IconWrapper_26"
+							 ng-src="{{resourceUrl}}styles/img/KA_howTo_26.svg"
+							 ng-if="ditem.ArticleType=='How To'"
+							 alt="" />
+						<img class="IconWrapper_26"
+							 ng-src="{{resourceUrl}}styles/img/KA_error_26.svg"
+							 ng-if="ditem.ArticleType=='Known Error'"
+							 alt="" />
+						<img class="IconWrapper_26"
+							 ng-src="{{resourceUrl}}styles/img/KA_problem_26.svg"
+							 ng-if="ditem.ArticleType=='Problem Solution'"
+							 alt="" />	
+						<img class="IconWrapper_26"
+							 ng-src="{{resourceUrl}}styles/img/KA_custom_26.svg"
+							 ng-if="ditem.ArticleType!='Problem Solution' &&
+								ditem.ArticleType!='How To' &&
+								ditem.ArticleType!='Known Error' && ditem.ArticleType!='FAQ'"
+							 alt="" />
+						<div class="smart-suggestions-item-container" title="{{ditem.Title}}">
+							<!-- <div class="smart-suggestions-item__title bold-text prelineText" ng-bind="ditem.Name"></div>  -->
+							<div class="smart-suggestions-item__title bold-text ellipsisText" ng-bind="ditem.Title"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class ="smart-suggestions-item" ng-show="item.name == 'TMSR'"  ng-repeat="ditem in item.data track by $index">
+				<div ng-click="openItem(ditem, 'SRD', '')" ng-show="ditem.ItemType=='SRD'" class="suggestions-data-container">	
+					<div class="support-request-container-width">	
+						<img ng-src="{{resourceUrl}}styles/img/ServiceRequest_26.svg" ng-if="!ditem.image" class="IconWrapper_26"/>		
+						<img ng-src="{{ditem.image}}" ng-if="ditem.image" class="IconWrapper_26"/>								
+						<div class="smart-suggestions-item-container">
+							<div class="smart-suggestions-item__title bold-text ellipsisText" ng-bind="ditem.Name" title="{{ditem.Name}}"></div>
+							<div class="smart-suggestions-item__description ellipsisText" ng-bind="ditem.Description" title="{{ditem.Description}}"></div>
+						</div>
+					</div>
+				</div>	
+				<div ng-click="openItem(ditem, 'TM', '')" ng-show="ditem.ItemType=='TM'" class="suggestions-data-container">			
+					<div class="support-request-container-width">
+						<img ng-src="{{resourceUrl}}styles/img/Ticket_26.svg" class="IconWrapper_26"/>	 
+						<div class="smart-suggestions-item-container">
+							<div class="smart-suggestions-item__title bold-text ellipsisText" ng-bind="ditem.Name" title="{{ditem.Name}}"></div>			
+							<div class="smart-suggestions-item__description ellipsisText" ng-bind="ditem.Description" title="{{ditem.Description}}"></div>
+						</div>
+					</div>	
+				</div>			
+			</div>
+			<div class ="smart-suggestions-item" ng-show="item.name == 'TM'" ng-repeat="ditem in item.data track by $index">
+				<div ng-click="openItem(ditem, 'TM','')" class="suggestions-data-container">				
+					<div class="support-request-container-width">
+						<img ng-src="{{resourceUrl}}styles/img/Ticket_26.svg" class="IconWrapper_26"/>	 
+						<div class="smart-suggestions-item-container">
+							<div class="smart-suggestions-item__title bold-text ellipsisText" ng-bind="ditem.Name" title="{{ditem.Name}}"></div>			
+							<div class="smart-suggestions-item__description ellipsisText" ng-bind="ditem.Description" title="{{ditem.Description}}"></div>
+						</div>
+					</div>	
+				</div>
+			</div>
+			<div class ="smart-suggestions-item" ng-show="item.name == 'SRD'"  ng-repeat="ditem in item.data track by $index">
+				<div ng-click="openItem(ditem, 'SRD', '')" class="suggestions-data-container">	
+					<div class="support-request-container-width">	
+						<img ng-src="{{resourceUrl}}styles/img/ServiceRequest_26.svg" ng-if="!ditem.image" class="IconWrapper_26"/>	
+						<img ng-src="{{ditem.image}}" ng-if="ditem.image" class="IconWrapper_26"/>		
+						<div class="smart-suggestions-item-container">
+							<div class="smart-suggestions-item__title bold-text ellipsisText" ng-bind="ditem.Name" title="{{ditem.Name}}"></div>
+							<div class="smart-suggestions-item__description ellipsisText" ng-bind="ditem.Description" title="{{ditem.Description}}"></div>
+						</div>
+					</div>
+				</div>				
+			</div>
+			<div class ="smart-suggestions-item" ng-show="item.name == 'BR'"  ng-repeat="ditem in item.data track by $index">
+				<div ng-click="openItem(ditem, 'BR', item.data)" class="suggestions-data-container">				
+					<div class="support-request-container-width">
+						<img class="IconWrapper_26" ng-src="{{resourceUrl}}styles/img/BroadCast_26.svg"/>
+						<div class="smart-suggestions-item-container">
+							<div class="smart-suggestions-item__title bold-text ellipsisText" ng-bind="ditem.Name" title="{{ditem.Name}}"></div>
+							<div class="smart-suggestions-item__description ellipsisText" ng-bind="ditem.Description" title="{{ditem.Description}}"></div>
+						</div>
+					</div>
+				</div>				
+			</div>
+		</div>
+	</div>		
+</div>

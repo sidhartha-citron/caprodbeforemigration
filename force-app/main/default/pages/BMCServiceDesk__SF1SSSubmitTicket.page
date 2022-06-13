@@ -1,0 +1,101 @@
+<apex:page doctype="html-5.0" showHeader="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false">
+	<link href="{!$Resource.Salesforce1}/SelfService/css/SF1SSSubmitTicket.css" rel="stylesheet" />
+	<link href="{!$Resource.Salesforce1}/SelfService/css/SF1SSActivityTimeline.css" rel="stylesheet" />
+	
+	<div class="rf-headercls">
+        <rf-header  label="{{config.header}}" actionlabel=" " action-menu="config.menuItem" menucss="{{config.showMenu ? 'rf-overflow-icon  __icon-ellipsis rf-menuOptionsLink' : ''}}" action-item="ticketActions()" actioncss="{{config.formless!='' ? '' : ((!config.AllowSubmitTicket) ? 'disable-submit header-link __icon-right-check' : 'header-link __icon-right-check')}}"  hidebackbutton='false' backurl="/SuperBox" action="saveTicket(form)" disable-action="config.formless != ''" back-action="goBack()" attachment-enable="config.recordState" attachment-action="attachmentInclusion(attachment)"></rf-header>
+	</div>
+    <rf-popup showpopup="config.showConfirmationMsg" additional-info-required="config.ResolutionRequired" confirm-message="{{config.confirmationMsg}}" cancel-label="{{config.cancelButtonLabel}}" placeholder-text="{!$Label.ResolutionRequired}" fieldvalue="config.resolutionFieldVal" actionlabel="{{config.buttonActionLabel}}" actionitem="popupAction(label)"  ></rf-popup>
+	
+	<div class="scrollable">
+		<div id="onBehalfOf" ng-if="config.isOnBehalfOf" class="pull-right rf-onBehalfOf rf-onBehalfPosition" ng-click="getUsersForOnBehalfOf()" ng-class="(config.formless!='' ? 'rf-onBehalfOfDisabled':'')">
+		   <div><span> {{config.onBehalfOfLabel}}: <span style="font-weight: normal;font-weight: bold;"> {{OnBehalfOf.fRefFieldVal}} </span></span></div>
+			<div class="__icon-right-triangle_down rf-onBehalfOfIcon" ng-class="IsAndroid ? '' : '__icon-right-triangle_down_iphone'"> </div>
+		</div>
+
+		<form novalidate="novalidate" name="form" class="{{config.isOnBehalfOf ? 'topMarginFormCls' : ''">
+		
+			<div class="form-group" ng-repeat="incident in incidentData">
+				
+				<div class="control-group">	
+				
+					<div ng-if="incident.fsLabel!=''">
+						<div class="rf-fieldSetLabel rf-cm-headerColor col-xs-12 col-md-12"> 
+							{{incident.fsLabel}} 
+						</div>
+					 </div>
+						
+					<div class="col-xs-12 col-md-6" ng-if="!incident.isHidden">
+						<div ng-if="incident.fadditionalInfo.indexOf('NotFromFS')==-1 && incident.fName.indexOf('fkclient__c')==-1 && incident.fLabel!= '<BLANK>' ">
+                            <label for="{{incident.fName}}" class="rf-labelCls rf-cm-form-labelColor">{{incident.fLabel}}</label>
+									
+							<ng-form name="subForm" ng-if="config.formless == '' && incident.fType != 'FORMULA'">
+                                 <div ng-class="(incident.fisRequired==true || incident.fName.indexOf('incidentdescription__c')>0) && (config.formless == '')?'rf-InputRequired':(incident.fType=='BOOLEAN' ? 'displayInLineClass' : '')">            
+
+									<div class="d-text" ng-if="incident.fType=='REFERENCE'">
+	                                    <label ng-hide = "(config.formless == '' && incident.fisReadonly==true) || incident.fRefFieldVal.length || incident.fName.lastIndexOf('fkopenby__c')>0" class="__icon-right-search __icon-only" ng-click="openlookup($parent.incident);" id="{{incident.fName}}"/>
+	                                    <input type="{{incident.fType}}" ng-click="openlookup($parent.incident);" id="{{incident.fName}}" value="{{incident.fRefFieldVal}}" name="formField" ng-model="$parent.incident.fRefFieldVal"  ng-required="incident.fisRequired==true" ng-class = "(incident.fisReadonly==true || incident.fName.lastIndexOf('fkopenby__c')>0)? 'rf-ss-disabled' :(submitted && (subForm.formField.$error.required)) ? 'rf-mandatoryField rflookupcls' : 'rflookupcls'" class="rf-inputCls form-control" ng-disabled="incident.fisReadonly==true" readonly="true" tabindex="1"/>
+	                                    <span ng-show="incident.fisReadonly!=true && incident.fRefFieldVal.length" class="__icon-right-cross rf-clearicon"  ng-click="clearLookupvalue($parent.incident, $event)"></span>
+									</div>
+	                                <input type="{{incident.fType}}" name="formField" class="rf-inputCls" ng-class = "incident.fisReadonly==true ? 'rf-ss-disabled form-control' :(submitted && (subForm.formField.$error.required || subForm.formField.$error.email)) ? 'rf-mandatoryField form-control' : 'form-control'" id="{{incident.fName}}" value="{{incident.fvalue}}" ng-model="$parent.incident.fvalue"  ng-required="incident.fisRequired==true" ng-readonly="incident.fisReadonly==true"  ng-if="incident.fType=='TEXT' || incident.fType=='STRING' || incident.fType=='PHONE' || incident.fType=='EMAIL'" maxlength="{{incident.fLength}}" ng-disabled="incident.fisReadonly==true" tabindex="1"/>
+								
+	                                <input type="url" name="formField" class="rf-inputCls" ng-class = "incident.fisReadonly==true ? 'rf-ss-disabled form-control' :(submitted && (subForm.formField.$error.required || subForm.formField.$error.url)) ? 'rf-mandatoryField form-control' : 'form-control'" id="{{incident.fName}}" value="{{incident.fvalue}}" ng-model="$parent.incident.fvalue"  ng-required="incident.fisRequired==true" ng-readonly="incident.fisReadonly==true"  ng-if="incident.fType=='URL'" maxlength="{{incident.fLength}}" ng-disabled="incident.fisReadonly==true" pattern="(https|http|ftp)?://.+" tabindex="1"/>
+	                                
+	                                <input type="number" ng-keydown="IsAndroid ? preventTabbing($event,$index) : ''" name="formField" class="rf-inputCls" ng-class = "incident.fisReadonly==true ? 'rf-ss-disabled form-control' :(submitted && (subForm.formField.$error.required || subForm.formField.$error.number)) ? 'rf-mandatoryField form-control' : 'form-control'" id="{{incident.fName}}" value="{{incident.fvalue}}" ng-model="$parent.incident.fvalue"  ng-required="incident.fisRequired==true" ng-readonly="incident.fisReadonly==true"  ng-if="incident.fType=='DOUBLE' || incident.fType=='PERCENT' || incident.fType=='CURRENCY'" ng-disabled="incident.fisReadonly==true" tabindex="1"/>
+									
+	                                <input type="{{config.CanViewEncryptedData ? 'text' : 'password'}}" name="formField" class="rf-inputCls" ng-class = "incident.fisReadonly==true ? 'rf-ss-disabled form-control' :(submitted && subForm.formField.$error.required) ? 'rf-mandatoryField form-control' : 'form-control'" id="{{incident.fName}}" value="{{incident.fvalue}}" ng-model="$parent.incident.fvalue"  ng-required="incident.fisRequired==true" ng-readonly="incident.fisReadonly==true"  ng-if="incident.fType=='ENCRYPTEDSTRING'" ng-disabled="incident.fisReadonly==true " maxlength="{{incident.fLength}}" tabindex="1"/>
+										
+	                                <div ng-if="incident.fType=='DATE'">
+										<input type="date" name="formField" class="rf-inputCls rf-dateInput" ng-class = "incident.fisReadonly==true ? 'rf-ss-disabled form-control' :(submitted && subForm.formField.$error.required) ? 'rf-mandatoryField form-control' : 'form-control'" id="{{incident.fName}}" value="{{incident.fvalue}}" ng-model="$parent.incident.fvalue" ng-required="incident.fisRequired==true" ng-readonly="incident.fisReadonly==true" ng-disabled="incident.fisReadonly==true" tabindex="1"/>
+										<span ng-show="incident.fisReadonly!=true && incident.fvalue != '' && IsAndroid" class="__icon-right-cross rf-clearicon rf-dateClearIcon"  ng-click="clearLookupvalue($parent.incident, $event)"></span>
+									</div>	
+									
+									<div ng-if="incident.fType=='DATETIME'">
+										<input type="datetime-local" name="formField" class="rf-inputCls rf-dateInput" ng-class = "incident.fisReadonly==true ? 'rf-ss-disabled form-control' :(submitted && subForm.formField.$error.required) ? 'rf-mandatoryField form-control' : 'form-control'" id="{{incident.fName}}" value="{{incident.fvalue}}" ng-model="$parent.incident.fvalue"  ng-required="incident.fisRequired==true" ng-readonly="incident.fisReadonly==true" ng-disabled="incident.fisReadonly==true" tabindex="1"/>
+										<span ng-show="incident.fisReadonly!=true && incident.fvalue != '' && IsAndroid" class="__icon-right-cross rf-clearicon rf-dateClearIcon"  ng-click="clearLookupvalue($parent.incident, $event)"></span>
+									</div>
+									
+	                                <input type="checkbox" name="formField" ng-class = "submitted && subForm.formField.$error.required ? 'rf-mandatoryField checkbox' : 'checkbox'" id="{{incident.fName}}" value="{{incident.fvalue}}" ng-model="$parent.incident.fvalue"  ng-checked="incident.fvalue=='true'" ng-required="incident.fisRequired==true" ng-readonly="incident.fisReadonly==true"  ng-if="incident.fType=='BOOLEAN'" class="rf-boolean rf-inputCls" ng-disabled="incident.fisReadonly==true" tabindex="1"/>
+										
+									<textarea name="formField" class="rf-inputCls rf-textarea"    ng-class = "[submitted && subForm.formField.$error.required ? 'rf-mandatoryField form-control' : 'form-control',config.formless != ''  ? 'inOneLineClass' : 'form-control']" id="{{incident.fName}}" ng-required="incident.fisRequired==true || incident.fName.indexOf('incidentdescription__c')>0"  ng-readonly="incident.fisReadonly==true || incident.fName.indexOf('incidentresolution__c')>0"   ng-if="incident.fType=='TEXTAREA'" ng-model="$parent.incident.fvalue" maxlength="{{incident.fLength}}" ng-disabled="incident.fisReadonly==true || incident.fName.indexOf('incidentresolution__c')>0"  txtarea-resizedir="layoutDone" tabindex="1"> {{incident.fvalue}} </textarea> 
+									
+									<div ng-if="incident.fType=='PICKLIST' || incident.fType=='MULTIPICKLIST'">
+	                                    <select  name="formField" class="rf-inputCls" id="{{incident.fName}}" ng-model="$parent.incident.fvalue" ng-if="incident.fType=='PICKLIST'" ng-class="incident.fisReadonly? 'rf-ss-disabled form-control' :(submitted && subForm.formField.$error.required) ? 'rf-mandatoryField form-control' : 'form-control'" style="padding-left: 8px;padding-right: 22px;" ng-disabled="incident.fisReadonly" ng-required="incident.fisRequired" tabindex="1">                                    
+	                                        <option ng-repeat="pickVal  in incident.picklistValues" name="{{pickVal.value}}" value="{{pickVal.value}}" ng-selected="incident.fvalue==pickVal.value" >{{pickVal.label}}</option>
+										</select>
+										
+	                                    <select name="formField" class="rf-inputCls" id="{{incident.fName}}" multiple="multiple" ng-model="$parent.incident.fvalue" ng-change="handleNoDataSelection($parent.incident);" ng-if="incident.fType=='MULTIPICKLIST'" ng-class="incident.fisReadonly ? 'rf-ss-disabled form-control' :(submitted && subForm.formField.$error.required) ? 'rf-mandatoryField form-control' : 'form-control'" style="padding-left: 8px;" ng-disabled="incident.fisReadonly" ng-required="incident.fisRequired" tabindex="1">
+											<option ng-repeat="pickVal in incident.picklistValues" name="{{pickVal.value}}" value="{{pickVal.value}}" ng-selected="incident.fvalue.indexOf(pickVal.value)!=-1"> {{pickVal.label}}</option>
+										</select>
+										<span ng-hide = "(config.formless == '' && incident.fisReadonly==true)" ng-class="incident.fisReadonly!=true ? '__icon-right-triangle_down rf-picklistIcon':''"></span>
+									</div>
+                                </div> 
+                                <span class="rf-required" ng-if="config.formless == ''" ng-show="submitted && subForm.formField.$error.required">{!$Label.EnterValue}</span>
+                                <span class="rf-required" ng-if="config.formless == '' && (incident.fType=='EMAIL')" ng-show="submitted && subForm.formField.$error.email">{!$Label.ValidationOnEmail}</span>
+                                <span class="rf-required" ng-if="config.formless == '' && (incident.fType=='URL')" ng-show="submitted && subForm.formField.$error.url">{!$Label.invalidURL}</span>
+                                <span class="rf-required" ng-if="config.formless == '' && (incident.fType=='DOUBLE' || incident.fType=='PERCENT' || incident.fType=='CURRENCY')" ng-show="submitted && subForm.formField.$error.number">{!$Label.numericValueRequired}</span>
+							</ng-form>
+							<div ng-if="config.formless != '' && incident.fType != 'FORMULA' && incident.fvalue == '' " ng-class="config.objName == 'CMDB' ? 'cmdbDetailsView' : 'displayInLineClass' ">
+								<label class="rf-displayOption rf-dissabledHeight rf-inputCls">--</label>
+							</div>
+							<div ng-if="config.formless != '' && (incident.fType != 'FORMULA' || config.objName == 'CMDB') && incident.fvalue != ''" ng-switch="incident.fType" ng-class="config.objName == 'CMDB' ? 'cmdbDetailsView': incident.fType!='TEXTAREA' ? 'displayInLineClass' : ''">
+								<label ng-switch-when="REFERENCE" class="rf-displayOption rf-dissabledHeight rf-inputCls">{{incident.fRefFieldVal}}</label>
+								<input class="rf-checkboxInput rf-inputCls checkbox rf-boolean" ng-switch-when="BOOLEAN" disabled="disabled"   ng-checked="incident.fvalue == 'true'" type="checkbox"/>
+								<a  ng-switch-when="URL"  ng-href="{{$parent.incident.fvalue}}" target='_System' class="textUnderlineStyle">{{incident.fvalue}}</a>
+								<label ng-switch-default="default" class="rf-displayOption rf-dissabledHeight rf-inputCls preWrapCSS">{{incident.fvalue}}</label>
+							</div>
+							<div ng-if="incident.fType=='FORMULA' && config.objName != 'CMDB'" class="rf-ss-disabled rf-inputCls form-control" style="padding:1px 0px 1px 0px;"  ng-class="config.objName == 'INC' && config.formless != ''  ? 'makeClickableForSpecificField' : ''"> 
+								<p class="rf-formula" ng-bind-html="incident.fvalue  | formatEmailFilter" ng-class="getClassUnderLineCheck($parent.incident.fvalue)" ng-if="config.formless != ''"> </p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div> 
+			<div class="attachmentContainer">
+				<div ng-repeat="attachment in attachments" style="margin-bottom:5px;">
+					<attachment-tile id="{{attachment.tempId}}" icon-class="{{attachment.iconClass}}" name="{{attachment.name}}" attachment-size="{{attachment.attachmentSize}}" delete-attachment="deleteAttachment(attachment.tempId)" enable-delete="true" is-inactive="true" show-progressbar="false"> </attachment-tile>
+				</div>
+			</div>
+		</form>
+	</div>
+</apex:page>

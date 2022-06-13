@@ -1,0 +1,668 @@
+<div class="modal-body sr-modal-body" style="display: block;" set-Height="setEditIntFormHeight">
+	<div error-panel type="modal"></div>
+	<loading-spinner overlay="true" if="srDetailsModalState.srLoading"></loading-spinner>
+	
+	<div ng-if="isRequest">
+		<div id="support-modal__srd-header-description" class="support-modal__srd-header-container" ng-show="!srDetailsModalState.srLoading" style="border: 1px solid #d9d9d9;" tabindex="0">
+			<div class="support-modal__srd-header-icon {{supportModel.config.icon}}" ng-if="!supportModel.config.image"></div>
+			<div class="support-modal__srd-header-icon" ng-if="supportModel.config.image" >		
+				<img src="{{supportModel.config.image}}" ng-if="supportModel.config.image" class="support-modal__srd-header-icon"/>
+			</div>
+			<div class="floatRightCls floatLeftCls" ng-if="!srDetailsModalState.srLoading && !isDisableEdit && supportModel.config.recordState && srDetailsModalState.isCloseAllowed && isRequest">
+				<button type="button" class="btn Branding-Right_Panel-button_outline" style="color: #00a79d; border-radius: 5px;min-height:36px;" ng-click="cancelRequest()" ng-disabled="!userModel.permissions.isEditTicketOrSRAllowed && !userModel.permissions.isSubmitTicketOrSRAllowed">{{ $root.selfServiceLabels.closeServiceRequest }}</button>
+			</div>
+			<h3 ng-class="{'support-modal__srd-header-title': supportModel.srData.SRColumnLayoutForSS3 != 2,'support-modal__srd-header-title_for_2_column_edit':supportModel.srData.SRColumnLayoutForSS3 == 2}" class="marginRightSRTitleRTLCLls rf-sr-header">{{supportModel.config.recordName}}<span ng-if="supportModel.config.recordStateValue" class="rf-separator"></span>{{supportModel.config.recordStateValue}}</h3>
+			<b><div ng-class="{'support-modal__srd-header-description': supportModel.srData.SRColumnLayoutForSS3 != 2,'support-modal__srd-header-description_for_2_column_edit':supportModel.srData.SRColumnLayoutForSS3 == 2}" class="paddingRightSRTitleRTLCls marginRightSRTitleRTLCLls" style="font-size: 14px;margin-top: 5px;" ng-if="supportModel.config.Title" ng-bind="supportModel.config.Title" ></div></b>
+		</div>
+	</div>
+	
+	
+	<div ng-if="isTicket" ng-show="!srDetailsModalState.srLoading">
+		<div id="support-modal__srd-header-description" ng-if="incidentDetails" class="support-modal__srd-header-container" style="border: 1px solid #d9d9d9;" tabindex="0">
+			<div ng-show="!srDetailsModalState.srLoading">
+				<div class="ticketHeaderFloatCls" ng-class="{'rf-form-header': (!srDetailsModalState.srLoading && !isDisableEdit && incidentDetails.isStateOpen && srDetailsModalState.isCloseAllowed && isTicket)}">
+					<h3 class="rf-ticket-header">{{incidentDetails.requestId}}<span ng-if="incidentDetails.status" class="rf-separator"></span>{{incidentDetails.status}}</h3>
+					<div class="rf-submittedDate" ng-if="incidentDetails.createDate" >
+						<strong>{{$root.selfServiceLabels.submittedDate}}:</strong> {{incidentDetails.createDate}}
+					</div>
+				</div>
+				<div class="floatRightCls floatLeftCls" ng-if="!srDetailsModalState.srLoading && !isDisableEdit && incidentDetails.isStateOpen && srDetailsModalState.isCloseAllowed && isTicket">
+					<button type="button" class="btn Branding-Right_Panel-button_outline" style="color: #00a79d; border-radius: 5px;" ng-click="cancelRequest()" ng-disabled="!userModel.permissions.isEditTicketOrSRAllowed && !userModel.permissions.isSubmitTicketOrSRAllowed">{{ $root.selfServiceLabels.closeIncident }}</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="srdForm" style="padding:10px; overflow-y: auto; width: 100%;" set-Height="setEditContentDivHeight" additional-Param="{{isRequest}}">
+		<div ng-if="isRequest">
+			<div aria-button id="instructionsDiv" style="width: 100%; border: 1px solid; border-color: #3cb6ce; margin-top: 10px; margin-bottom: 10px; cursor: pointer;" ng-if="supportModel.config.instructions" ng-click="supportModel.clickedOnInstructions()">
+				<table style="width: 100%; border-color: #3cb6ce;table-layout: fixed;">
+					<tr>
+						<td style="width: 52px;background-color: #3cb6ce;">
+							<span class="d-icon-exclamation_circle" style="color:#ffffff;width: 30px;font-size: 30px;height: 30px;vertical-align: middle;padding: 10px;"></span>
+						</td>
+						<td style="padding: 10px;">
+							<div class="{{supportModel.config.ellipsisCls}} support-request__description-maxheight support-request__description-content" ng-if="supportModel.config.isRichTextInstr==false"
+							ng-bind-html="supportModel.config.actualInstr | createAnchors"></div>
+							<div id="richTextInstrDiv" class="{{supportModel.config.instructionCls}} support-request__instruction-content"
+							ng-if="supportModel.config.isRichTextInstr"  ng-bind-html="supportModel.trustedHtml(supportModel.config.actualInstr)" style="overflow-y: scroll;">
+							</div>
+						</td>
+					</tr>
+				</table>
+				<div ng-if="supportModel.displayShowMoreShowLess()">
+					<a class="support-request__expandcollapse-links Branding-Right_Panel-hyperlink" style="padding-right:0px"
+						ng-if="supportModel.config.showCollapsedInstruction" 
+						ng-click="supportModel.toggleUserInstruction()">{{$root.selfServiceLabels.ShowMore}}
+					</a>
+					<a class="support-request__expandcollapse-links Branding-Right_Panel-hyperlink" style="padding-right:0px"
+						ng-if="supportModel.config.showCollapsedInstruction==false" 
+						ng-click="supportModel.toggleUserInstruction()">{{$root.selfServiceLabels.ShowLess}}
+					</a>
+				</div>
+			</div>
+			<srd-on-behalf-of-question on-behalf-of-enabled="srdDetailsCtrlState.onBehalfOfEnabled" requested-for="srdDetailsCtrlState.requestedFor" ng-if="(isRequest && supportModel.config.action == 'EDIT')"></srd-on-behalf-of-question>
+			
+			<div aria-button style="width: 100%; background-color: #f2f2f2; margin-top: 20px; border: solid 1px; border-color: #d9d9d9;" ng-click="changeValueOfBoolean('detail')" ng-show="!srDetailsModalState.srLoading">
+				<table style="width: 100%;">
+					<tr>
+						<td style="width: 91%;">
+							<strong style="margin-left: 20px; margin-right: 20px;">{{$root.selfServiceLabels.DetailsSectionHeader}}</strong>
+						</td>
+						<td>
+							<div class="expandIcon" ng-if="!isDetailSectionCollapsed">
+								<span class="d-icon-right-angle_up" style="color:#999"></span>
+							</div>
+							<div class="expandIcon" ng-if="isDetailSectionCollapsed">
+								<span class="d-icon-right-angle_down" style="color:#999"></span>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div id="DetailsSectionId" style="width:100%; border: solid 1px; border-color: #d9d9d9; margin-top: -1px; padding: 15px;" ng-hide="isDetailSectionCollapsed" tabindex="0">
+				<div ng-if="!srDetailsModalState.srLoading && supportModel.config.action == 'VIEW'">
+					
+					<div ng-repeat="staticField in supportModel.srData.SRStaticFields.fields | StaticFieldsFilter:'Text'">
+						<table style="width:100%" ng-if="staticField.isVisible">
+							<tr style="line-height: 2;">
+								<td style="width:40%;vertical-align:top;" class="wrapContentsForAllIE">
+									<strong class="wrapContents">{{ staticField.Text }}:</strong>
+								</td>
+								<td style="width:60%" class="wrapContentsForAllIE">
+									<span class="wrapContents">{{ staticField.Value }}</span>
+								</td>
+							</tr>
+						</table>
+					</div>
+					
+					<div ng-repeat="displayOption in supportModel.srData.SRDisplayFields.fields | removeUndefined:'Label'">
+						<table style="width:100%">
+							<tr style="line-height: 2;">
+								<td style="width:40%;vertical-align:top;" class="wrapContentsForAllIE">
+									<strong class="wrapContents">{{ displayOption.Label }}:</strong>
+								</td>
+								<td style="width:60%" class="wrapContentsForAllIE">
+									<span ng-if="displayOption.Name == 'customerPrice'" class="wrapContents">{{ supportModel.config.priceLocalized }}</span>
+									<span ng-if="displayOption.Name == 'totalPrice'" class="wrapContents">{{supportModel.displayOptions.totalPriceLocalized}}</span>
+									<span ng-if="displayOption.Name != 'customerPrice' && displayOption.Name != 'totalPrice'"class="wrapContents">{{ displayOption.Value }}</span>
+								</td>
+							</tr>
+						</table>
+					</div>
+					
+					<div id="clearDiv" class="Branding-Right_Panel-separator" style="padding-top: 5px; padding-bottom: 5px; height: 1px; margin-bottom: 10px;" ng-if="supportModel.srData.SRLeftRightPanelFields.fields.length > 0"></div>
+				
+					<div ng-repeat="fieldArray in supportModel.srData.SRLeftRightPanelFields.fields">
+					<div class="srd-question"
+						 	ng-repeat="field in fieldArray"
+						 data-id="{{field.apiName}}"
+						 data-answer="{{field.Value}}"
+						 title=""
+						data-visibility="{{field.isVisible}}"
+							ng-if="field.Type != 'Blank'"
+						>
+						<table style="width:100%;table-layout:fixed;">
+							<tr style="line-height: 1.5;" >
+								<td style="width:40%;vertical-align:top;">
+									<strong class="inline-block">{{ field.Text }}:</strong>
+								</td>
+								<td style="width:60%">
+										<span class="wrapContents" ng-if="field.isFormula && field.Type == 'textfield' && field.Value != null && field.Value.toString().indexOf('<script') == -1" ng-bind-html="to_trusted(field.Value)"></span>
+										<span class="wrapContents" ng-if="field.isFormula && field.Type!='checkbox' && field.Value != null && (field.Type != 'textfield' || (field.Type == 'textfield' && field.Value.toString().indexOf('<script') != -1))" ng-bind="field.Value"></span>
+										<span class="wrapContents" ng-if="!field.isFormula && field.Type!='richtextarea' && field.Type!='checkbox'
+											&& field.Type!='url'">{{ field.Value }}</span>
+										<span ng-if="field.Type=='checkbox'"><input type="checkbox"
+										 ng-checked="field.Value" disabled="disabled"/></span>
+										<div id="rtfViewDiv" class="wrapContents" ng-if="field.Type=='richtextarea'" ng-bind-html="to_trusted(field.Value)"></div>
+										<div class="wrapContents" ng-if="field.Type=='url'" ng-bind-html="field.Value | createAnchors"></div>
+								</td>
+							</tr>
+						</table>
+					</div>
+					</div>
+					
+					<div id="clearDiv" class="Branding-Right_Panel-separator" style="padding-top: 5px; padding-bottom: 5px; height: 1px; margin-bottom: 10px;" ng-if="supportModel.srData.SRIncidentFieldSet.fields.length > 0"></div>
+					<div ng-if="supportModel.srData.SRIncidentFieldSet.fields.length > 0">
+						<!-- Commenting field set label name based on EAP feedback. -->
+						<!--<h4 ng-bind="supportModel.srData.SRIncidentFieldSet.fieldSetLabel"></h4>-->
+					</div>
+					<div class="srd-question"
+					 ng-repeat="incField in supportModel.srData.SRIncidentFieldSet.fields"
+					 title="{{incField.Tooltip}}">
+						<table style="width:100%; table-layout:fixed;" ng-if="question.Type != 'header section'">
+							<tr style="line-height: 1.5;" >
+								<td style="width:40%;vertical-align:top;" class="wrapContentsForAllIE">
+									<strong class="wrapContents">{{ incField.Text }}:</strong>
+								</td>
+								<td style="width:60%;overflow:auto;" class="wrapContentsForAllIE">
+									<span class="wrapContents" ng-if="incField.isFormula && incField.Type =='textfield' && incField.Value != null && incField.Value.toString().indexOf('<script') == -1" ng-bind-html="to_trusted(incField.Value)"></span>
+									<span class="wrapContents" ng-if="incField.isFormula && incField.Type!='checkbox' && incField.Value != null && (incField.Type !='textfield' || (incField.Type =='textfield' && incField.Value.toString().indexOf('<script') != -1))" ng-bind="incField.Value"></span>
+									<span class="wrapContents" ng-if="!incField.isFormula && incField.Type!='richtextarea' && incField.Type!='checkbox'
+										&& incField.Type!='url'">{{ incField.Value }}</span>
+									<span ng-if="incField.Type=='checkbox'"><input type="checkbox"
+									 ng-checked="incField.Value" disabled="disabled"/></span>
+									<div id="rtfViewDiv" class="wrapContents" ng-if="incField.Type=='richtextarea'" ng-bind-html="to_trusted(incField.Value)"></div>
+									<div class="wrapContents" ng-if="incField.Type=='url'" ng-bind-html="incField.Value | createAnchors"></div> 		
+								</td>
+							</tr>
+						</table>
+					</div>
+						
+						
+					<div id="clearDiv" class="Branding-Right_Panel-separator" style="padding-top: 5px; padding-bottom: 5px; height: 1px; margin-bottom: 10px;" ng-if="supportModel.srData.SRInputs"></div>
+					  
+					<div class="srd-question"
+					 ng-repeat="question in supportModel.srData.SRInputs | orderObjectBy: 'Order'"
+					 ng-if="question.IsHidden == false">
+						<table style="width:100%; table-layout:fixed;" ng-if="question.Type != 'header section'">
+							<tr style="line-height: 1.5;" >
+								<td style="width:40%;vertical-align:top;" class="wrapContentsForAllIE">
+									<strong class="wrapContents" ng-if="question.Type!='hyperlink'">{{ question.Text }}:</strong>
+									<strong ng-if="question.Type=='hyperlink'">{{question.Text[0]}}<a class="Branding-Right_Panel-hyperlink" href={{question.Url}} target="_blank" title={{question.Tooltip}} aria-label="{{question.Text[0]}}{{question.Text[1]}}{{question.Text[2]}}" role="link">{{question.Text[1]}}</a>{{question.Text[2]}}</strong>
+								</td>
+								<td style="width:60%;" class="wrapContentsForAllIE" ng-if="question.Type!='hyperlink'">
+										<span class="wrapContents" ng-if="question.Type!='richtextarea' && question.Type!='checkbox'">{{ question.Value }}</span>
+										<span ng-if="question.Type=='checkbox'"><input type="checkbox"
+											ng-checked="question.Value"  disabled="disabled"/></span>
+										<div id="rtfViewDiv" class="wrapContents" ng-if="question.Type=='richtextarea'" ng-bind-html="to_trusted(question.Value)"></div>
+								</td>
+							</tr>
+						</table>
+						
+						<div class="support-modal__header_section" ng-if="question.Type == 'header section'">
+							<h4 ng-bind="question.Text"></h4>
+						</div>						
+					</div>
+				</div>
+				
+				<div ng-if="supportModel.config.action == 'EDIT'">
+					<form autoComplete="off" name="editRequestForm" novalidate>
+						<div ng-init="setForm(editRequestForm);"></div>
+						<div ng-if="supportModel.srData.SRColumnLayoutForSS3 != 2" ng-repeat="displayOption in 	supportModel.srData.SRDisplayFields.fields  | removeUndefined:'Label'">
+							<div ng-if="displayOption.Name != 'requestFor' || !userModel.isOnBehalfOfEnabled" ng-include="supportModel.srData.resourceUrl+'views/support/SRStaticOptionFields.html'"></div>
+						</div>
+						<div class="row" ng-if="supportModel.srData.SRColumnLayoutForSS3 == 2">
+							<div class="col-md-6 modalLayoutWidth">				
+								<div ng-show="$even" ng-repeat="displayOption in supportModel.srData.SRDisplayFields.fields  | removeUndefined:'Label' | filterEditableFields:userModel.isOnBehalfOfEnabled">
+									<div ng-if="displayOption.Name != 'requestFor' || !userModel.isOnBehalfOfEnabled" ng-include="supportModel.srData.resourceUrl+'views/support/SRStaticOptionFields.html'"></div>
+									</div>
+								</div>	
+							<div class="col-md-6 modalLayoutWidth floatLeftRtl" style="float: right;">
+								<div ng-show="$odd" ng-repeat="displayOption in supportModel.srData.SRDisplayFields.fields  | removeUndefined:'Label' | filterEditableFields:userModel.isOnBehalfOfEnabled">
+									<div ng-if="displayOption.Name != 'requestFor' || !userModel.isOnBehalfOfEnabled" ng-include="supportModel.srData.resourceUrl+'views/support/SRStaticOptionFields.html'"></div>
+								</div>
+							</div>						
+						</div>
+						<div class="row" ng-if="supportModel.srData.SRColumnLayoutForSS3 == 2">
+							<div class="col-md-6 modalLayoutWidth">				
+								<div ng-show="$even " ng-repeat="displayOption in supportModel.srData.SRDisplayFields.fields  | removeUndefined:'Label' | filterNonEditableFields">
+									<div ng-include="supportModel.srData.resourceUrl+'views/support/SRStaticOptionFields.html'"></div>
+								</div>				
+							</div>							
+						
+							<div class="col-md-6 modalLayoutWidth floatLeftRtl" style="float:right;">
+								<div ng-show="$odd" ng-repeat="displayOption in supportModel.srData.SRDisplayFields.fields  | removeUndefined:'Label' | filterNonEditableFields">
+									<div ng-include="supportModel.srData.resourceUrl+'views/support/SRStaticOptionFields.html'"></div>
+							</div>
+						</div>
+					</div>
+					
+					<div id="clearDiv" class="Branding-Right_Panel-separator" style="padding-top: 10px; padding-bottom: 15px; height: 1px; margin-bottom: 25px;" ng-if="supportModel.srData.SRLeftRightPanelFields.fields.length > 0"></div>
+
+					<div ng-if="supportModel.srData.SRColumnLayoutForSS3 != 2">
+						<div ng-repeat="fieldArray in supportModel.srData.SRLeftRightPanelFields.fields">
+							<div class="srd-question" 
+								 ng-repeat="field in fieldArray" 
+								 data-id="{{field.apiName}}" 
+								 data-answer="{{field.Value}}" 
+								 title="" 
+								 data-visibility="{{field.isVisible}}">
+								<div ng-include="supportModel.srData.resourceUrl+'views/support/RequestDetailFieldsetFields.html'"></div>
+						</div>
+					</div>
+					</div>
+
+					<div ng-if="supportModel.srData.SRColumnLayoutForSS3 == 2">
+						<div class="row srd-question" ng-repeat="fieldArray in supportModel.srData.SRLeftRightPanelFields.fields">
+							<div ng-repeat="field in fieldArray">
+								<div class="col-md-6 modalLayoutWidth" 
+									 ng-class="field.DisplayColumn == 2 ? 'srd-rightfield-align' : 'srd-leftfield-align'" 
+									 data-id="{{field.apiName}}" 
+									 data-answer="{{field.Value}}" 
+									 title="" 
+									 data-visibility="{{field.isVisible}}">
+									<div ng-include="supportModel.srData.resourceUrl+'views/support/RequestDetailFieldsetFields.html'"></div> <!-- i.e. fields are coming from Service Request Left Panel field set -->
+							</div>
+							</div>
+							</div>
+						</div>						
+						
+					<div id="clearDiv" class="Branding-Right_Panel-separator" style="padding-top: 10px; padding-bottom: 15px; height: 1px; margin-bottom: 25px;" ng-if="supportModel.srData.SRInputs"></div>
+					<div class="srd-question"
+						 ng-repeat="question in supportModel.srData.SRInputs | orderObjectBy: 'Order'"
+						 data-id="{{question.id}}"
+						 data-answer="{{question.Value}}"
+						 data-visibility="{{question.isVisible}}"
+							 ng-if="supportModel.srData.SRColumnLayoutForSS3 != 2"
+						>
+								<div ng-include="supportModel.srData.resourceUrl+'views/support/SRInputFields.html'"></div>
+							</div>
+					<div ng-if="supportModel.srData.SRColumnLayoutForSS3 == 2" ng-repeat="header in supportModel.srData.headers | orderObjectBy: 'Order'">			
+							<div class="row" ng-repeat="arr in header">  
+								<div ng-repeat="question in arr">
+									<div ng-if="question.headerId != 'tempRootHeaderId' && question.Type == 'header section'">
+										<div ng-hide="!question.isVisible && question.isSRInput" tabindex="0">
+											<div style="margin-bottom: 10px;" data-id="{{question.Id}}" data-answer="{{question.Value}}" ng-switch="question.Type"  ng-if="question.isVisible==true">
+												<ng-form name="subFormInputs">
+													<!-- {{question}} -->
+													<srd-header-section ng-switch-when="header section" data="question"></srd-header-section>			
+												</ng-form>
+											</div>
+										</div>
+									</div>
+											
+									<div ng-if="question.Type == 'richtextarea' && question.DisplayInFullSpan && question.isVisible==true" class="col-md-12 srd-question" data-id="{{question.Id}}" data-answer="{{question.value}}" ng-switch="question.Type">
+										<div  ng-include="supportModel.srData.resourceUrl+'views/support/SRInputFields.html'"></div>
+									</div>
+
+									<div ng-if="!question.DisplayInFullSpan && question.Type != 'header section' && question.isVisible==true" class="col-md-6 modalLayoutWidth srd-question" ng-class="question.DisplayInSecondColumn ? 'srd-rightfield-align' : 'srd-leftfield-align'" data-id="{{question.Id}}" data-answer="{{question.value}}" ng-switch="question.Type">
+										<div  ng-include="supportModel.srData.resourceUrl+'views/support/SRInputFields.html'"></div>
+									</div>
+								</div>
+							</div>
+					</div>
+					</form>	
+				</div>
+			</div>
+				
+					
+		</div>
+			
+		<div ng-if="isTicket" ng-show="!srDetailsModalState.srLoading">
+		
+			<div ng-if="(isTicket && !isDisableEdit && incidentDetails.isStateOpen)" style="padding: 0px 10px;">
+				<srd-on-behalf-of-question on-behalf-of-enabled="srdDetailsCtrlState.onBehalfOfEnabled" requested-for="srdDetailsCtrlState.requestedFor" ng-if="(isTicket && !isDisableEdit && incidentDetails.isStateOpen)"></srd-on-behalf-of-question>
+			</div>
+			<div aria-button style="width: 100%; background-color: #f2f2f2; margin-top: 10px; border: solid 1px; border-color: #d9d9d9;" ng-click="changeValueOfBoolean('detail')" ng-show="!srDetailsModalState.srLoading">
+				<table style="width: 100%;">
+					<tr>
+						<td style="width: 91%;">
+							<strong style="margin-left: 20px; margin-right: 20px;">{{$root.selfServiceLabels.DetailsSectionHeader}}</strong>
+						</td>
+						<td>
+							<div class="expandIcon" ng-if="!isDetailSectionCollapsed">
+								<span class="d-icon-right-angle_up" style="color:#999"></span>
+							</div>
+							<div class="expandIcon" ng-if="isDetailSectionCollapsed">
+								<span class="d-icon-right-angle_down" style="color:#999"></span>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<form autoComplete="off" name="editRequestForm" novalidate>
+						<div ng-init="setForm(editRequestForm);"></div>
+			<div id="DetailsSectionId" style="width:100%; border: solid 1px; border-color: #d9d9d9; margin-top: -1px; padding: 15px;" ng-hide="isDetailSectionCollapsed" tabindex="0">
+				<div ng-show="!srDetailsModalState.srLoading">
+					<div ng-if="!isDisableEdit && incidentDetails.isStateOpen">
+						<div class="srd-question" ng-repeat="field in incidentFldsToDisplay | incidentFieldsFilter: 'Text'"
+							 data-id="{{field.id}}"
+							 data-answer="{{field.Value}}"
+							 title="{{field.Tooltip}}"
+							 data-visibility="{{field.isVisible}}"
+							>
+							<ng-form name="subFormInputs">
+								<div ng-switch="field.Type" ng-if="field.Text != '<BLANK>'">
+									<srd-text-question ng-switch-when="textfield" data="field"></srd-text-question>
+									<srd-text-question ng-switch-when="phone" data="field"></srd-text-question>
+									<srd-text-question ng-switch-when="email" data="field"></srd-text-question>
+									<srd-text-question ng-switch-when="url" data="field"></srd-text-question>
+									<srd-text-question ng-switch-when="textarea" data="field"></srd-text-question>
+									<srd-text-question ng-switch-when="encryptedstring" data="field"></srd-text-question>
+									<srd-radio-question ng-switch-when="radiobutton" data="field"></srd-radio-question>
+									<srd-checkbox-question ng-switch-when="checkbox" data="field"></srd-checkbox-question>
+									<srd-number-question ng-switch-when="number" data="field"></srd-number-question>
+									<srd-menu-question ng-switch-when="picklist" data="field"></srd-menu-question>
+									<srd-date-time-question ng-switch-when="date/time" data="field"></srd-date-time-question>
+									<srd-date-question ng-switch-when="date" data="field"></srd-date-question>
+									<srd-reference-question-tree ng-switch-when="lookup" data="field" for-sr="true" ng-if="field.isCategory"></srd-reference-question-tree>
+									<srd-reference-question ng-switch-when="lookup" data="field" ng-if="!(field.isCategory)" on-behalf-of-user="srdDetailsCtrlState.requestedFor.userId"></srd-reference-question>
+									<srd-text-question ng-switch-when="richtextarea" data="field"></srd-text-question> 
+									
+									<span class="srd-question-error_message" ng-show="formSubmitted && (subFormInputs.formField.$error.required || subFormInputs.radioButtonForm.formField.$error.required)">{{selfServiceLabels.EnterValue}}</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.email">{{selfServiceLabels.InvalidEmailAddress}}</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.maxlength">{{selfServiceLabels.InvalidLength}} ({{selfServiceLabels.Maximum}} {{field.FieldLength}})</span>
+									<span class="srd-question-error_message" ng-show="(subFormInputs.formField.$error.positiveValue || subFormInputs.formField.$error.number)">{{selfServiceLabels.InvalidNumber}}</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.url">{{selfServiceLabels.InvalidURL}}</span>				
+									<span class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.min">{{selfServiceLabels.OutOfRange}}({{selfServiceLabels.MinimumValue}} {{field.Validations.MinValue}})</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.max">{{selfServiceLabels.OutOfRange}}({{selfServiceLabels.MaximumValue}} {{field.Validations.MaxValue}})</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.minmax">{{selfServiceLabels.OutOfRange}} ({{selfServiceLabels.ExpectedRange}}{{field.Validations.MinValue}}-{{field.Validations.MaxValue}})</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.minlength">{{selfServiceLabels.InvalidLength}} ({{selfServiceLabels.MinimumLength}} {{field.Validations.MinValue}})</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date' && subFormInputs.formField.$error.ValidDate">{{selfServiceLabels.InvalidDate}}</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date/time' && subFormInputs.formField.$error.ValidDate">{{selfServiceLabels.InvalidDate}}</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date' && subFormInputs.formField.$error.smaller">{{selfServiceLabels.Expected}}{{field.Text}} < {{field.errorMsg}}</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date' && subFormInputs.formField.$error.greater">{{selfServiceLabels.Expected}}{{field.Text}} > {{field.errorMsg}}</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date/time' && subFormInputs.formField.$error.smaller">{{selfServiceLabels.Expected}}{{field.Text}} < {{field.errorMsg}}</span>
+									<span class="srd-question-error_message" ng-show="formSubmitted && data.Type=='date/time' && subFormInputs.formField.$error.greater">{{selfServiceLabels.Expected}}{{field.Text}} > {{field.errorMsg}}</span>
+								</div>
+								<div ng-if="field.Text == '<BLANK>'" style="height: 40px;">
+									
+								</div>
+							</ng-form>
+						</div>
+					</div>
+					<div ng-if="isDisableEdit || !incidentDetails.isStateOpen">
+						<div ng-repeat="field in incidentFldsToDisplay | incidentFieldsFilter: 'Text'">
+							<table style="width: 100%;table-layout:fixed;">
+								<tr style="width: 100%; line-height: 2;">
+									<td class="form-field-label">
+										<strong>{{ field.Text }}:</strong>
+									</td>
+									<td class="wrapContentsForAllIE" Style="Width: 60%;">
+										<span class="wrapContents" ng-if="field.isFormula && field.Type =='textfield' && field.Value != null && field.Value.toString().indexOf('<script') == -1" ng-bind-html="to_trusted(field.Value)"></span>
+										<span class="wrapContents" ng-if="field.isFormula && field.Type!='checkbox' && field.Value != null && (field.Type !='textfield' || (field.Type =='textfield' && field.Value.toString().indexOf('<script') != -1))" ng-bind="field.Value"></span>
+										<span class="wrapContents" ng-if="!field.isFormula && field.Type!='richtextarea' && field.Type!='checkbox' && field.Type!='number'
+											&& field.Type!='url'">{{ field.Value }}</span>
+										<span ng-if="field.Type=='checkbox'"><input type="checkbox"
+										 ng-checked="field.Value" disabled="disabled"/></span>
+										 <span class="wrapContents" ng-if="field.Type=='number'" ng-bind="localizeNumber(field.Value)"></span>
+										<div id="rtfViewDiv" class="wrapContents" ng-if="field.Type=='richtextarea'" ng-bind-html="to_trusted(field.Value)"></div>
+										<div class="wrapContents" ng-if="field.Type=='url'" ng-bind-html="field.Value | createAnchors"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<form>
+		</div>
+		
+		<div aria-button style="width: 100%; background-color: #f2f2f2; margin-top: 10px; border: solid 1px; border-color: #d9d9d9;" ng-click="changeValueOfBoolean('attachment')" ng-show="!srDetailsModalState.srLoading && ((isTicket && (incidentDetails.isStateOpen || supportModel.attachmentData.attachments.length > 0)) || (isRequest && ((supportModel.config.recordState && (supportModel.attachmentData.canHaveAttachments || supportModel.attachmentData.attachments.length > 0)) || (!supportModel.config.recordState && supportModel.attachmentData.attachments.length > 0))))">
+			<table style="width: 100%;">
+				<tr>
+					<td style="width: 80%;">
+						<strong style="margin-left: 20px; margin-right: 20px;">{{$root.selfServiceLabels.AttachmentSectionHeader}}</strong>
+					</td>
+					<td style="width: 17%;">
+						<div style="background-color: #999999; float: right; width: 45px; height: 30px; border-radius: 4px; text-align: center; font-size: 15px;" ng-if="supportModel.attachmentData.attachments.length > 0">
+							<label style="vertical-align: sub; margin-bottom: 0px; font-weight: normal; color: #ffffff;">{{supportModel.attachmentData.attachments.length}}</label>
+						</div>
+					</td>
+					<td>
+						<div class="expandIcon" ng-if="!isAttachmentSectionCollapsed">
+							<span class="d-icon-right-angle_up" style="color:#999"></span>
+						</div>
+						<div class="expandIcon" ng-if="isAttachmentSectionCollapsed">
+							<span class="d-icon-right-angle_down" style="color:#999"></span>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id="AttachmentsSectionId" style="width:100%; border: solid 1px; border-color: #d9d9d9; margin-top: -1px; padding: 15px;" ng-hide="isAttachmentSectionCollapsed">
+			<div id="NewAttachmentsSectionId" style="width:100%;margin-top: 5px;" ng-show="((isRequest && supportModel.attachmentData.canHaveAttachments && supportModel.config.recordState) || (isTicket && incidentDetails.isStateOpen))">
+				<srd-attachments data="supportModel.attachmentData" ng-show="(isRequest && supportModel.attachmentData.canHaveAttachments && supportModel.config.recordState) || (isTicket && incidentDetails.isStateOpen)"></srd-attachments>
+			</div>
+			<div class="activity-log Branding-Right_Panel-activity" Style="border: none; max-height: none;" ng-if="supportModel.attachmentData.attachments.length > 0">
+				<div class="activity-log__item Branding-Right_Panel-activity" Style="border: none;padding-left:0px;" ng-class="{'firstAttachment':$index == 0,'notFirstAttachment':$index > 0}" ng-if=" supportModel.attachmentData.attachments.length > 0" ng-repeat="attachment in supportModel.attachmentData.attachments"> <!-- margin-top: 10px; -->
+					<div class="activity-log__item-user-thumbnail-container" style="padding-left: 0px;" ng-class="{'activity-log__item-user-thumbnail-container_one_column' : supportModel.srData.SRColumnLayoutForSS3 != 2 || supportModel.config.action != 'EDIT'}">
+						<img src="{{attachment.createdByImgURL}}"/>
+					</div>
+					<div class="activity-log__item-content" ng-class="{'widthFor2ColumnLayout': supportModel.srData.SRColumnLayoutForSS3 == 2 && supportModel.config.action == 'EDIT'}">
+						<div class="activity-log__item-submitter" ng-bind-html="attachment.CreatedByName"></div>
+						<div class="activity-log__item-date">{{ attachment.LastModifiedDate}}</div>
+
+						<div class="activity-log__item-text">
+						<div class="{{attachment.iconClass}} attachment-type-icon" style="margin-top: -10px;font-size:28px;" ></div>
+						<span aria-button class="__icon-trash icon-delete d-icon-trash" style="margin-top: -5px !important;" ng-click="removeAttachment((attachment.isFile?attachment.contentDocumentId:attachment.Id))" ng-show="!isDisableEdit && ((isTicket && incidentDetails.isStateOpen) || (isRequest && supportModel.config.recordState)) && (supportModel.config.loggedInUserId == attachment.CreatedById)" title= {{$root.selfServiceLabels.deleteAttachment}}>
+						</span>
+							<a target="_blank" ng-if="!attachment.isFile" href="/servlet/servlet.FileDownload?file={{attachment.Id}}" style="margin-left: 10px;" class="activity-log__attachment Branding-Right_Panel-hyperlink" title="{{supportModel.htmlUnescape(attachment.Name)}}" >
+								<span class="activity-log__attachment-name">{{supportModel.htmlUnescape(attachment.Name)}}</span>
+								{{attachment.attachmentSize | fileSize}}
+							</a>
+							<a target="_blank" ng-if="attachment.isFile" href="/sfc/servlet.shepherd/version/download/{{attachment.Id}}" style="margin-left: 10px;" class="activity-log__attachment Branding-Right_Panel-hyperlink" title="{{supportModel.htmlUnescape(attachment.Name)}}" >
+								<!-- <ins class="activity-log__attachment-icon i {{ attachment.name | fileTypeIconClass }}"></ins>  -->
+								<span class="activity-log__attachment-name">{{supportModel.htmlUnescape(attachment.Name)}}</span>
+								{{attachment.attachmentSize | fileSize}}
+							</a>						
+						</div>	
+					</div>
+					<hr class="Branding-Right_Panel-separator" style="margin-top: -1px;"/>
+				</div>
+			</div>
+		</div>
+			
+		<div ng-if="srDetailsModalState.isNoteAllowed && (!isDisableEdit || comments.length > 0) && ((((isRequest && (supportModel.config.recordState || (comments.length > 0))) || (isTicket && (incidentDetails.isStateOpen || (comments.length > 0))))))">
+			<div aria-button style="width: 100%; background-color: #f2f2f2; margin-top: 10px; border: solid 1px; border-color: #d9d9d9;" ng-click="changeValueOfBoolean('note')"  ng-show="!srDetailsModalState.srLoading">
+				<table style="width: 100%;">
+					<tr>
+						<td style="width: 80%;">
+							<strong style="margin-left: 20px; margin-right: 20px;">{{$root.selfServiceLabels.NotesSectionHeader}}</strong>
+						</td>
+						<td style="width: 17%;">
+							<div style="background-color: #999999; float: right; width: 45px; height: 30px; border-radius: 4px; text-align: center; font-size: 15px;" ng-if="comments.length > 0">
+								<label style="vertical-align: sub; margin-bottom: 0px; font-weight: normal; color: #ffffff;">{{comments.length}}</label>
+							</div>
+						</td>
+						<td>
+							<div class="expandIcon" ng-if="!isNotesSectionCollapsed">
+									<span class="d-icon-right-angle_up" style="color:#999"></span>
+							</div>
+							<div class="expandIcon" ng-if="isNotesSectionCollapsed">
+								<span class="d-icon-right-angle_down" style="color:#999"></span>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div id="NotesSectionId" style="width:100%; border: solid 1px; border-color: #d9d9d9; margin-top: -1px; padding: 15px;" ng-hide="isNotesSectionCollapsed">
+				<div id="addNewCommentDiv" style="margin-bottom: 15px;" ng-if="!isDisableEdit && srDetailsModalState.isNoteAllowed && ((isTicket && incidentDetails.isStateOpen) || (isRequest && supportModel.config.recordState))">
+					<loading-spinner overlay="true" if="srDetailsModalState.addingComment"></loading-spinner>
+					<table style="width: 100%;">
+						<tr>
+							<td>
+								<textarea id="noteTextArea" class="default-input_wide sr-log-input" ng-model="srDetailsModalState.logText" ng-show="!isDisableEdit && srDetailsModalState.isNoteAllowed && ((isTicket && incidentDetails.isStateOpen) || (isRequest && supportModel.config.recordState))" placeholder={{$root.selfServiceLabels.addNotesComments}}></textarea>							</td>
+						</tr>
+						<tr>
+							<td>
+								<div class="noteSectionCls" ng-show="srDetailsModalState.logText">
+									<button id="addNoteBtn" type="button" class="btn Branding-Right_Panel-button_outline Branding-Right_Panel-default_button btn-primary addButtonCls" 
+										ng-click="srDetailsModalState.addingComment=true; addCommentAndAttachment()"
+										ng-disabled="!srDetailsModalState.logText || srDetailsModalState.addingComment">
+										{{$root.selfServiceLabels.newCommentPlaceholder}}
+									</button>
+									<button id="cancelBtn" type="button" class="btn Branding-Right_Panel-button_outline" 
+										ng-click="CancelAddingNote()"
+										ng-disabled="!srDetailsModalState.logText || srDetailsModalState.addingComment">
+										{{$root.selfServiceLabels.cancel}}
+									</button>
+									</div>		
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div class="activity-log Branding-Right_Panel-activity" Style="border: none; max-height: none;" ng-if="comments.length > 0">
+					<div class="activity-log__item Branding-Right_Panel-activity" Style="border: none; margin-top: 10px;" ng-repeat="comment in comments | orderBy: '-createDate'">
+						<div aria-button ng-click="getNoteRecord(comment.Id)">
+							<div class="activity-log__item-user-thumbnail-container">
+								<img src="{{comment.SubmitterUserImgURL}}"/>
+							</div>
+							<div class="activity-log__item-content">
+								<div class="activity-log__item-submitter" ng-bind-html="comment.Submitter"></div>
+								<div class="activity-log__item-date">{{ comment.CreatedDate}}</div>
+								<div class="activity-log__item-text">
+									<activity-log-text data="reduceTheString(comment.Notes)" ng-if="comment.Notes"></activity-log-text>
+									<activity-log-text data="reduceTheString(comment.Summary)" ng-if="!comment.Notes"></activity-log-text>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div ng-show="isRequest && supportModel.config.showApprovals && approvalDetails.length > 0">
+			<div aria-button style="width: 100%; background-color: #f2f2f2; margin-top: 10px; border: solid 1px; border-color: #d9d9d9;" ng-click="changeValueOfBoolean('approval')" ng-show="!srDetailsModalState.srLoading">
+				<table style="width: 100%;">
+					<tr>
+						<td style="width: 80%;">
+							<strong style="margin-left: 20px; margin-right: 20px;">{{$root.selfServiceLabels.ApprovalSectionHeader}}</strong>
+						</td>
+						<td style="width: 17%;">
+							<div style="background-color: #999999; float: right; width: 45px; height: 30px; border-radius: 4px; text-align: center; font-size: 15px;" ng-if="approvalDetails.length > 0">
+								<label style="vertical-align: sub; margin-bottom: 0px; font-weight: normal; color: #ffffff;">{{approvalDetails.length}}</label>
+							</div>
+						</td>
+						<td>
+							<div class="expandIcon" ng-if="!isApprovalsSectionCollapsed">
+								<span class="d-icon-right-angle_up" style="color:#999"></span>
+							</div>
+							<div class="expandIcon" ng-if="isApprovalsSectionCollapsed">
+								<span class="d-icon-right-angle_down" style="color:#999"></span>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div id="ApprovalsSectionId" style="width:100%; border: solid 1px; border-color: #d9d9d9; margin-top: -1px; padding: 10px;" ng-hide="isApprovalsSectionCollapsed">
+				<div ng-repeat="approval in approvalDetails">
+					<div aria-button style="background-color: #f2f2f2; padding: 10px; margin-top: 5px;" ng-click="showDetails('approval', approval);">
+						<table style="width: 100%">
+							<tr>
+								<td style="width: 40%">
+									<label style="margin-bottom: 0px; font-weight: bold;">{{$root.selfServiceLabels.Approver}}:</label>
+								</td>
+								<td style="width: 60%">
+									<label style="margin-bottom: 0px; font-weight: normal;">{{supportModel.htmlUnescape(approval.approversName)}}</label>
+								</td>
+							</tr>
+							<tr>
+								<td style="width: 40%">
+									<label style="margin-bottom: 0px; font-weight: bold;">{{$root.selfServiceLabels.status}}:</label>
+								</td>
+								<td style="width: 60%">
+									<label style="margin-bottom: 0px; font-weight: normal;">{{supportModel.htmlUnescape(approval.status)}}</label>
+								</td>
+							</tr>
+							<tr>
+								<td style="width: 40%">
+									<label style="margin-bottom: 0px; font-weight: bold;">{{$root.selfServiceLabels.date}}:</label>
+								</td>
+								<td style="width: 60%">
+									<label style="margin-bottom: 0px; font-weight: normal;">{{approval.date}}</label>
+								</td>
+							</tr>
+							<tr>
+								<td style="width: 40%">
+									<label style="margin-bottom: 0px; font-weight: bold;">{{$root.selfServiceLabels.Justification}}:</label>
+								</td>
+								<td style="width: 60%">
+									<label style="margin-bottom: 0px; font-weight: normal;">{{reduceTheString(supportModel.htmlUnescape(approval.comment))}}</label>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div ng-if="srDetailsModalState.canSeeTasks && taskDetails.tasksList.length > 0">
+			<div aria-button style="width: 100%; background-color: #f2f2f2; margin-top: 10px; border: solid 1px; border-color: #d9d9d9;" ng-click="changeValueOfBoolean('task')" ng-show="!srDetailsModalState.srLoading">
+				<table style="width: 100%;">
+					<tr>
+						<td style="width: 80%;">
+							<strong style="margin-left: 20px; margin-right: 20px;">{{$root.selfServiceLabels.TasksSectionHeader}}</strong>
+						</td>
+						<td style="width: 17%;">
+							<div style="background-color: #999999; float: right; width: 45px; height: 30px; border-radius: 4px; text-align: center; font-size: 15px;" ng-if="taskDetails.tasksList.length > 0">
+								<label style="vertical-align: sub; margin-bottom: 0px; font-weight: normal; color: #ffffff;">{{taskDetails.tasksList.length}}</label>
+							</div>
+						</td>
+						<td>
+							<div class="expandIcon" ng-if="!isTaksSectionCollapsed">
+								<span class="d-icon-right-angle_up" style="color:#999"></span>
+							</div>
+							<div class="expandIcon" ng-if="isTaksSectionCollapsed">
+								<span class="d-icon-right-angle_down" style="color:#999"></span>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div id="TasksSectionId" style="width: 100%; border: solid 1px; border-color: #d9d9d9; margin-top: -1px; padding: 10px;" ng-hide="isTaksSectionCollapsed" tabindex="0">
+				<div ng-if="taskDetails.tasksAccessible">
+					<div ng-repeat="task in taskDetails.tasksList" style="background-color: #f2f2f2; padding: 10px; margin-top: 5px;">
+						<div aria-button ng-click="showDetails('task', task);">
+							<strong>{{task.Name}}</strong>
+							<table style="width:100%;">
+								<tr ng-repeat="fldName in taskDetails.ApiNameOfFlds" ng-if="fldName != 'Name'">
+									<td class="form-field-label">
+										<label style="margin-bottom: 0px; font-weight: bold;">{{taskDetails.fldLabels[fldName]}}:</label>
+									</td>
+									<td style="width: 60%;">
+										<label style="margin-bottom: 0px; font-weight: normal;" ng-bind-html="((task[fldName]))" ng-show="taskDetails.fldTypes[fldName] == 'richtextareafield' || taskDetails.fldTypes[fldName] == 'formulatextfield'"></label>
+										<label style="margin-bottom: 0px; font-weight: normal;" ng-bind="reduceTheString(task[fldName])" ng-show="!(taskDetails.fldTypes[fldName] == 'richtextareafield' || taskDetails.fldTypes[fldName] == 'formulatextfield')"></label>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+<div class="modal-footer" ng-class="{'modal-footer-padding': isDisableEdit}">
+	<div class="modal-footer__btn-container">
+		<button type="button" class="btn Branding-Right_Panel-default_button Branding-Right_Panel-button_outline btn-primary" ng-click="submitSR()" ng-disabled="srDetailsModalState.logText"
+				ng-show="!srDetailsModalState.srLoading && !isDisableEdit && ((isRequest && supportModel.config.action == 'EDIT') || (isTicket && incidentDetails.isStateOpen))">
+			{{$root.selfServiceLabels.submit}}
+		</button>
+		<button type="button" class="btn Branding-Right_Panel-button_outline sr-button_close" ng-disabled="srDetailsModalState.logText" ng-class="{'btn-primary' : !isDisableEdit && ((isRequest && supportModel.config.action 	== 'VIEW') || (isTicket && !incidentDetails.isStateOpen)), 'Branding-Right_Panel-default_button' : !isDisableEdit && ((isRequest && supportModel.config.action == 'VIEW') || (isTicket && !incidentDetails.isStateOpen))}" ng-click="close()" ng-show="!isDisableEdit">{{ $root.selfServiceLabels.cancel }}
+		</button>
+		<button type="button" class="btn Branding-Right_Panel-button_outline sr-button_reopen" ng-click="confirmReopen()"
+				ng-show="!srDetailsModalState.srLoading && !isDisableEdit && srDetailsModalState.isReopenAllowed && ((isRequest && !supportModel.config.recordState && supportModel.config.action == 'VIEW') || (isTicket && !incidentDetails.isStateOpen))" ng-disabled="!userModel.permissions.isEditTicketOrSRAllowed && !userModel.permissions.isSubmitTicketOrSRAllowed">
+			{{$root.selfServiceLabels.reopen}}
+		</button>		
+		<button type="button" class="btn Branding-Right_Panel-button_outline sr-button_reopen" ng-click="editSR()"
+				ng-show="!srDetailsModalState.srLoading && !isDisableEdit && isRequest && srDetailsModalState.isEditAllowed && supportModel.config.action == 'VIEW' && !supportModel.config.permissions.isEditDisabled">
+			{{$root.selfServiceLabels.change}}
+		</button>
+		<button type="button" class="btn Branding-Right_Panel-button_outline sr-button_reopen" ng-click="copySR()" ng-disabled="srDetailsModalState.logText"
+				ng-show="!srDetailsModalState.srLoading && !isDisableEdit && srDetailsModalState.isRequestAgainAllowed && ((isRequest && supportModel.config.action == 'VIEW' && !supportModel.config.permissions.isCopyDisabled) || (isTicket))" ng-disabled="!userModel.permissions.isSubmitTicketOrSRAllowed">
+			{{$root.selfServiceLabels.requestAgain}}
+		</button>
+		<button type="button" class="btn Branding-Right_Panel-button_outline sr-button_request-again"
+			ng-click="showSrdCreateDialog()"
+			ng-show="!srDetailsModalState.srLoading && !isDisableEdit && srDetailsModalState.isRequestAgainAllowed && selectedSR.isRequestedByCurrentUser && isRequest"
+			ng-disabled="srDetailsModalState.aifSrdLoading || !supportModel.config.isSubmitTicketOrSRAllowed">
+			<loading-spinner if="srDetailsModalState.aifSrdLoading" inline="true"></loading-spinner>
+			{{$root.selfServiceLabels.requestAgain}}
+		</button>
+	</div>
+</div>

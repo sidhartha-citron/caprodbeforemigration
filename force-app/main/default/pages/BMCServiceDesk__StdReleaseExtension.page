@@ -1,0 +1,28 @@
+<apex:page standardController="BMCServiceDesk__Release__c" extensions="BMCServiceDesk.StdReleaseExtensionController" id="releasePage" showHeader="false" standardStylesheets="false">
+<head>
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/NavigatorStyleSheet.css"/>
+</head>
+    <apex:form target="_parent">
+		<apex:outputpanel rendered="{!IF($CurrentPage.parameters.ishideStageProgression =='true',false,true)}">
+        <c:StdLayoutStageProgression ObjectNameVal="Release__c" status="{!current_status}"/>
+        </apex:outputpanel>
+        <apex:actionFunction name="refreshRelease" action="{!refreshRelease}" />
+        <apex:actionFunction name="doAction" action="{!doAction}" oncomplete="if(getUrlParameter('isCalledFromConsole')=='true'){window.opener.refreshRelatedLists();window.close();}" />
+    </apex:form>
+    <script>
+        function getUrlParameter(param ) {
+            param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");;
+            var r1 = "[\\?&]"+param+"=([^&#]*)";
+            var r2 = new RegExp( r1 );
+            var r3 = r2.exec( window.location.href);
+            if( r3 == null ){return ""}
+            else {return r3[1]};
+        }
+        doAction();
+    	var errorMsg = '{!JSENCODE(messageString)}';
+    	if (errorMsg.length > 0) {
+	    	alert(errorMsg);
+	    	refreshRelease();
+    	}
+    </script>
+</apex:page>

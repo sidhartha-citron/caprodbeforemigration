@@ -1,0 +1,658 @@
+<apex:page Controller="BMCServiceDesk.SSQuickLinkController"  showheader="false" sidebar="false" standardStylesheets="false"> 
+   
+     <c:SelfServiceCommonIncludes />
+      <style>
+          //Added By Navneet
+          
+         .bgBtnGrey {
+            -moz-background-clip:border;
+            -moz-background-inline-policy:continuous;
+            -moz-background-origin:padding;
+            background:transparent  url(/resource/SDEFimages/grey_bg.gif) repeat;
+            border-top:1px solid #cccccc;
+            border-left:1px solid #cccccc;
+            border-right:1px solid #666666;
+            border-bottom:1px solid #666666;
+            margin-top:0px;
+            margin-left:0px;
+            color:black;
+            font:tahoma,arial,verdana,sans-serif;
+            font-size:11px;
+            font-weight:normal;
+            width:auto;
+            height:auto;
+        }
+         
+        .trBgColor {
+            background-color:#DFE3E6;
+            border-color:#6A7378 #DFE3E6 #DFE3E6;
+        }  
+          
+          .ssRightSidebarPortal .x-panel-body {
+                background-color:#FFFFFF;
+                border:medium none;
+                padding:0;
+            }
+      
+           .x-grid3-row .x-grid-row-checker {
+             width: 18px;
+           }
+           
+        .x-grid3-hd-row td {
+            font-family: Tahoma, MS Sans Serif;
+            font-weight: bold;
+            font-size: 11px;
+            color: #000000;
+            border-bottom: solid 1px #013B66;
+            border-right: solid 1px #013B66;
+            border-bottom: solid 1px #7CC0EA;
+            border-right: solid 1px #7CC0EA;
+        }
+
+        .clsInputSelectBoxClass {
+            -x-system-font:none;
+            color:#000000;
+            font-family:Tahoma,MS Sans Serif;
+            font-size:11px;
+            font-size-adjust:none;
+            font-stretch:normal;
+            font-style:normal;
+            font-variant:normal;
+            font-weight:normal;
+            height:16px;
+            line-height:normal;
+            padding-top:0px;
+            vertical-align:top;
+        }
+        
+        .quickLinkCategory {
+            font-size:11px;
+            font-family:Tahoma,MS Sans Serif;
+            color:#004075;
+            font-weight:bold;
+            padding-left:4px;
+            padding-top:2px;
+        }
+        
+        .x-grid3-hd-inner {
+            background-color: #3597D2;
+            font-family: Tahoma, MS Sans Serif;
+            font-weight: bold;
+            font-size: 11px;
+            color: #FFFFFF;
+            border-bottom: solid 1px #013B66;
+            border-right: solid 1px #013B66;
+            border-bottom: solid 1px #7CC0EA;
+            border-right: solid 1px #7CC0EA;
+        }
+        
+        
+        td.x-grid3-hd-over .x-grid3-hd-inner,td.sort-desc .x-grid3-hd-inner,td.sort-asc .x-grid3-hd-inner,td.x-grid3-hd-menu-open .x-grid3-hd-inner
+            {
+            background-color: #2E7DB3;
+            background-image: none;
+        }
+        
+        .x-grid3-row-selected {
+            background-color: #E0EE70 !important;
+            background-image: none;
+            border-color: #a3bae9;
+        }
+        
+        .x-grid3-cell-text {
+            white-space: normal;
+        }
+        
+        .x-grid3-cell {
+            white-space: normal;
+        }
+        
+        
+        .x-grid3-hd-row td, .x-grid3-row td, .x-grid3-summary-row{
+            font-family: Tahoma, MS Sans Serif;
+            font-size:11px;
+        } 
+
+		.x-toolbar-left, .x-toolbar-cell {
+		background-color:#CCD8E7;
+		}
+		
+</style>
+
+<script type="text/javascript">
+    var removeHandler = function (button, event){
+                            var tempRecord= Ext.getCmp('faqCategoryGrid').store;
+                            var linkName = tempRecord.getAt(selectedRowIndex).get('quickLinkName');
+                            var linkURL = tempRecord.getAt(selectedRowIndex).get('quickLinkURL');
+                           if((linkName == null || linkName == '') && (linkURL == null || linkURL == '')){
+                                button = 'ok';
+                                
+                                
+                                (button,event);
+                           }else{   
+                                  Ext.Msg.show({
+                                       cls:'messagePopup',
+                                       title:'{!JSENCODE($Label.RemoveQuickLink)}',
+                                       msg: 'Do you want to delete this Quick Link ?',
+                                       buttons: Ext.Msg.OKCANCEL,
+                                       fn: removeQuickLinkHandler,
+                                       width: 300,
+                                       icon: Ext.MessageBox.WARNING ,
+                                       frame:false
+                                    });
+                            }    
+    }; 
+    
+    function showErrorMsg_invalidURL(messageString){
+                         
+                    
+                     var icon = Ext.MessageBox.WARNING ;
+                     Ext.Msg.show({
+                       
+                       title:'Warning',
+                       msg: messageString,
+                       buttons: Ext.Msg.OK,              
+                       icon: icon ,
+                       width: 350
+                     
+                    });
+                }
+                
+ </script>
+ 
+     <apex:outputPanel id="onReadyPanel">
+        <script type="text/javascript">
+        var objList;
+        var order =Math.floor(Math.random()*125);
+        
+    function saveQuickLink(){
+        //alert('called save function.....');
+        objList = '';               
+       var modifiedRecord = Ext.getCmp('faqCategoryGrid').getStore().getModifiedRecords();
+        var totalSavedRecord = Ext.getCmp('faqCategoryGrid').getStore().getTotalCount(); 
+        var totalRecord = Ext.getCmp('faqCategoryGrid').getStore().getCount(); 
+        var count;
+         var gridRecord= Ext.getCmp('faqCategoryGrid').store;
+        //alert('modifiedRecord---->' + modifiedRecord.length);
+        if( (modifiedRecord == null || modifiedRecord == '') && (totalRecord > totalSavedRecord) ){
+                //alert('Empty object Inserted.... ');
+                objList = objList + 'undefined' + ','+ 'undefined' + ',' + 'undefined' + ',' + 'undefined' + ',' + 'undefined' +'#' ;
+                
+        }else{
+                var quickURL;
+                for (count=0 ; count < gridRecord.data.length ; count++)    {
+                    quickURL = SDF.util.httpUrlCheck(gridRecord.getAt(count).get('quickLinkURL'));
+                    document.getElementById('{!$Component.defaultForm.btnSubmit}').disabled= true;
+                    if(!quickURL){
+                        var msg = '{!JSENCODE($Label.InvalidQuickLinkURL)}';
+                        showErrorMsg_invalidURL(msg);
+                        document.getElementById('{!$Component.defaultForm.btnSubmit}').disabled= false;
+                        return;
+                    }
+                    recName = gridRecord.getAt(count).get('quickLinkNumber');
+                    //recURLOrder = gridRecord.getAt(count).get('URLOrder');
+                    recURLOrder = count+1; 
+                    order++;
+                    recQuickLinkName = gridRecord.getAt(count).get('quickLinkName');
+                    recQuickLinkURL = gridRecord.getAt(count).get('quickLinkURL');
+                    recQuickLinkPermanent = gridRecord.getAt(count).get('quickLinkPermanent');
+                
+                    
+                       // alert('Inside nested else.....');
+                        objList = objList + recName + ','+ recURLOrder + ',' + recQuickLinkName + ',' + recQuickLinkURL + ',' + recQuickLinkPermanent +'#' ;
+        
+                    
+                }
+        }
+       // alert('objList------> ' + objList);
+        
+        updateObjList(objList);
+       // alert('objListafter------> ' + objList);
+        
+      //saveDefaults();
+    }
+    
+    
+    
+    
+    var removeQuickLinkHandler = function(button ,event) {
+        if(button=='ok'){
+            var delRecord = Ext.getCmp('faqCategoryGrid').getStore().getAt(selectedRowIndex);
+            var delName = delRecord.get('quickLinkNumber');
+            deleteQuickLink(delName); 
+            Ext.getCmp('faqCategoryGrid').render('faqCategory-grid');
+            Ext.getCmp('faqCategoryGrid').getStore().remove(delRecord);
+                Ext.getCmp('deleteId').setDisabled(true);
+                Ext.getCmp('upBtn').setDisabled(true);
+                Ext.getCmp('downBtn').setDisabled(true);
+            
+            
+        }else if (button=='cancel'){
+            return;
+        }
+    };
+     var ResetBtnHandler = function(button,event) {
+   
+        reset();
+        
+    }; 
+    
+    var ChngBtnHandler= function(button,event) {   };
+    
+    //##########################  onready function #################################################
+     
+    Ext.onReady(function(){
+    
+         Ext.QuickTips.init();
+    // ---------------------------------code by Rajan------------------------------------------
+    
+     var fm = Ext.form;
+  //Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+ 
+    function UpBtnHandler(){
+            if(Ext.getCmp('upBtn').disabled == false ){
+                  var index=selectedRowIndex;   
+                  var rec1 = grid.store.getAt(index); 
+                  var rec2 = grid.store.getAt(index-1); 
+                  grid.stopEditing();
+                  store.insert(index-1,rec1);
+                  store.insert(index,rec2);
+                  //grid.startEditing(index-1, 0);
+                  grid.getView().refresh(); 
+                  selectedRowIndex--;
+                  var numOfrecord = store.data.length;
+              if(selectedRowIndex == 0 || numOfrecord == 1){
+                Ext.getCmp('upBtn').setDisabled(true);
+              }
+              else{      
+                Ext.getCmp('upBtn').setDisabled(false);
+              }
+              if((selectedRowIndex == (numOfrecord - 1)) || (numOfrecord == 1)){
+                Ext.getCmp('downBtn').setDisabled(true);
+              }
+              else{      
+                Ext.getCmp('downBtn').setDisabled(false);
+              }
+            }
+                   
+        }
+    function DownBtnHandler(){
+        if(Ext.getCmp('downBtn').disabled == false ){
+               var index=selectedRowIndex;   
+               var rec1 = grid.store.getAt(index); 
+               var rec2 = grid.store.getAt(index+1); 
+               grid.stopEditing();
+               store.insert(index,rec2);
+               store.insert(index+1,rec1);
+               //grid.startEditing(index, 0);
+               grid.getView().refresh();  
+               selectedRowIndex++;
+                   var numOfrecord = store.data.length;
+              if(selectedRowIndex == 0 || numOfrecord == 1){
+                Ext.getCmp('upBtn').setDisabled(true);
+              }
+              else{      
+                Ext.getCmp('upBtn').setDisabled(false);
+              }
+              if((selectedRowIndex == (numOfrecord - 1)) || (numOfrecord == 1)){
+                Ext.getCmp('downBtn').setDisabled(true);
+              }
+              else{      
+                Ext.getCmp('downBtn').setDisabled(false);
+              }
+        }     
+   }
+       
+       function refresh(){
+        var i=0;
+        while(store.data.length>i){
+           var record = grid.getStore().getAt(i);
+           var fieldName = grid.getColumnModel().getDataIndex(3);
+           var data = record.get(fieldName);
+           var j=0;
+           while(typeEditor.store.data.length>j){
+           var rec= typeEditor.store.getAt(j).get('value');
+            if(rec==data){
+                var rec1=typeEditor.store.getAt(j).get('name');
+                record.set(fieldName ,rec1);
+                 
+            }
+            j++;
+           }
+           i++;
+        }
+       
+    }
+   store = new Ext.data.SimpleStore({
+    fields: [
+                {
+                    
+                    name: 'quickLinkNumber',
+                    type: 'string'
+                },{
+                   
+                    name: 'URLOrder',
+                    type: 'string'
+                },    
+                {
+                    
+                     name: 'quickLinkName',
+                    type: 'string'
+                },
+                {
+                    
+                    name: 'quickLinkURL', 
+                    type: 'string'
+                },
+                {
+                   
+                    name: 'quickLinkPermanent', 
+                    type: 'boolean'
+                }
+            ]
+                  
+  });
+  
+      var listData;
+    listData =[{!listData}];
+   
+    store.loadData(listData);
+    
+    var cm = new Ext.grid.ColumnModel({
+          // specify any defaults for each column
+          defaults: {
+              sortable: true // columns are not sortable by default           
+          },
+          columns: [
+          
+          { id: 'quickLinkName',
+                header: '{!JSENCODE($Label.Name)}', 
+                dataIndex: 'quickLinkName',
+                height:100,
+                width: 200,
+                editor: new fm.TextField({
+                    allowBlank: true,
+                    listeners: {
+                    render: function(c) {
+                      Ext.QuickTips.register({
+                        target: c.getEl(),
+                        text: '{!JSENCODE($Label.UrlName)}'
+                      });
+                    }
+                  } 
+                })
+                
+              },
+                
+              { id: 'quickLinkURL',
+                header: '{!JSENCODE($Label.URL)}',
+                height:100, 
+                width: 290, 
+                dataIndex: 'quickLinkURL',
+                editor: new fm.TextField({
+                    allowBlank: true,
+                    listeners: {
+                    render: function(c) {
+                      Ext.QuickTips.register({
+                        target: c.getEl(),
+                        text: '{!JSENCODE($Label.UrlLink)}'
+                      });
+                    }
+                  }
+                })               
+              }
+             
+          ]
+    });
+  
+   
+    var grid = new Ext.grid.EditorGridPanel({
+        // specify any defaults for each column
+        id: 'faqCategoryGrid',
+        store: store,
+        //renderTo: 'faqCategory-grid',
+        cm: cm,
+        //sm:sm,
+        //clicksToEdit: 1,
+        stripeRows: true,
+        selModel: new Ext.grid.RowSelectionModel({singleSelect : true}),
+        //autoExpandColumn: 'quickLinkURL',
+        height: 200,
+        width:'100%',
+        autoWidth: true,
+        viewConfig: {
+                //headersDisabled: true ,// disable grid headers
+                forceFit:true,
+                scrollOffset: 0
+        },
+        listeners: {
+            rowclick:function(grid, r, e) {
+              selectedRowIndex=r;
+              rowIndex=r;
+              Ext.getCmp('deleteId').setDisabled(false);
+              
+              var tempRecord= Ext.getCmp('faqCategoryGrid').store;
+              var linkName = tempRecord.getAt(selectedRowIndex).get('quickLinkName');
+              var linkURL = tempRecord.getAt(selectedRowIndex).get('quickLinkURL');
+                 
+              // Enable/disable up down buttons
+              var numOfrecord = store.data.length;
+              if(selectedRowIndex == 0 || numOfrecord == 1){
+                Ext.getCmp('upBtn').setDisabled(true);
+              }
+              else{      
+                Ext.getCmp('upBtn').setDisabled(false);
+              }
+              if((selectedRowIndex == (numOfrecord - 1)) || (numOfrecord == 1)){
+                Ext.getCmp('downBtn').setDisabled(true);
+              }
+              else{      
+                Ext.getCmp('downBtn').setDisabled(false);
+              }
+              
+              //disable if emptyRow is selected
+              if((linkName == null || linkName == '') && (linkURL == null || linkURL == '')){
+                    Ext.getCmp('upBtn').setDisabled(true);
+                    Ext.getCmp('downBtn').setDisabled(true);
+               }  
+            },
+            afteredit: function(e){
+             // refresh();
+            }
+            
+        }       
+    });
+
+    grid.render('faqCategory-grid');
+    //grid.getSelectionModel().selectFirstRow();
+    
+     var SamplePanel = Ext.extend(Ext.Panel, {
+                renderTo: 'quickBtnToolbar',
+                defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+
+            });
+        new SamplePanel({
+                title: '',
+            cls:'toolSpCls',
+                bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+                tbar: [ {
+                    scale: 'medium',
+                    iconCls: 'addCls',
+                    tooltipType : 'title',
+                    tooltip: '{!JSENCODE($Label.New)}',
+                    id:'newId',
+                    //hidden:disableTrue,
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('addCls');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('addCls');          
+                        }
+                    },     
+                    handler : function(){
+                        var totalRows = grid.getStore().getCount();
+                        var Cat = grid.getStore().recordType;
+                        var p = new Cat({
+                        category: '',
+                        description: ''
+                        
+                        });
+                        grid.stopEditing();
+                        store.insert(totalRows, p);
+                        grid.startEditing(totalRows, 0);
+                    }
+                } ,' ',{
+                    scale: 'medium',
+                    iconCls: 'deleteCls',
+                    tooltipType : 'title',
+                    tooltip: '{!JSENCODE($Label.Delete)}',
+                    disabled : true,
+                    id:'deleteId',
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('deleteCls');    
+                         },
+                         mouseout: function(){
+                            this.setIconClass('deleteCls');          
+                         }
+                    },              
+                    handler: removeHandler
+
+                },' ',{
+             xtype: 'box',
+             id: 'upBtn',
+             disabled: true,
+             autoEl: {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up.png',title:'Up',name:'linkUp'},
+             style : 'cursor:pointer;',
+             listeners:{
+              render: function(c) {
+                   c.getEl().on('click', function(){
+                  
+                     UpBtnHandler();
+                   });
+                    c.getEl().on('mouseover', function(){
+                        document.images['linkUp'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up_mouseover.png';
+                   });
+                   c.getEl().on('mouseout', function(){
+                        document.images['linkUp'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up.png';
+                   });
+              }
+                }
+            
+         
+        },
+        {
+            xtype: 'box',
+            id: 'downBtn',
+            disabled: true,
+            autoEl: {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down.png', title:'Down',name:'linkDown'},
+            style : 'cursor:pointer;',
+            listeners:{
+              render: function(c) {
+                   c.getEl().on('click', function(){
+                      DownBtnHandler();
+                   });
+                    c.getEl().on('mouseover', function(){
+                        document.images['linkDown'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down_mouseover.png';
+                   });
+                   c.getEl().on('mouseout', function(){
+                        document.images['linkDown'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down.png';
+        });
+              }
+             }
+        }]
+   });
+ });  
+ 
+ function callRefresh(page){
+    
+  if(errormsg!= null && errormsg != '' && errormsg!="Saved successfully."){
+                 // alert('error '+errormsg);
+                    showErrorMsg_invalidURL(errormsg);
+                }else{
+                
+                Ext.getCmp('deleteId').setDisabled(true);
+                Ext.getCmp('upBtn').setDisabled(true);
+                Ext.getCmp('downBtn').setDisabled(true);
+                
+                //window.parent.refreshQuickLink('quickLinksWidgetPortlet',page);
+                //window.parent.refreshWholePage();
+                window.parent.SDF.quicklinks.refresh();
+                window.parent.SDF.quicklinks.popUpWindow.close();
+                }  
+      }           
+ </script>
+ </apex:outputPanel>
+ 
+ <apex:outputPanel id="commitId">
+  <script>
+    var listData;
+    listData =[{!listData}];
+     
+  
+  </script>
+  </apex:outputPanel>
+  <apex:outputPanel id="msgPanel">
+  <script>
+   function showErrorMsg(){
+                     var msg = new Array();
+                     msg = "{!JSENCODE(messageString)}";
+                     if(msg!=null && msg !=''){
+                         var message= msg;                          
+                            Ext.MessageBox.show({                                
+                                title: '{!JSENCODE($Label.Navigator_SelfServiceSettings)}',
+                                msg:message ,
+                                width:300,
+                                buttons: Ext.MessageBox.OK
+                            });
+                    }
+                }
+                
+  </script>
+  </apex:outputPanel>
+
+<apex:form id="defaultForm" >
+ 
+    <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+           <apex:outputPanel id="errorId">
+           <script>
+               var errormsg = '{!messageString}';  
+           </script> 
+    </apex:outputPanel>
+  
+       <apex:actionFunction name="updateObjList" action="{!updateQuickLink}" rerender="errorId,commitId, dummypanel,dummypanel123,validationComponent" oncomplete="callRefresh('SSQuickLinksWidget')">
+        <apex:param name="savedName" assignTo="{!quickObjList}"  value=""/>
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="deleteQuickLink" action="{!deleteQuickLink}"  rerender="dummypanel123,dummypanel, validationComponent, errorId">
+        <apex:param name="deleteName" assignTo="{!savedID}"  value=""/>
+    </apex:actionFunction>
+    
+     <table class="clsMainTable" cellspacing="0" cellpadding="0" width="100%" height="100%">
+         
+          <tr class="clsRowGreyBg">
+            <td class="cls5pxTopPadding" >
+                                                     
+                 <div id="quickBtnToolbar"></div>
+                                                     
+                 <div id="faqCategory-grid"></div>
+                 
+             </td>           
+         </tr>
+       
+         <tr class="trBgColor">
+         
+            <td valign="top" align="right" style="padding-right:10px">
+                
+                <apex:commandButton id="btnSubmit" value="{!$Label.bmcservicedesk__sssubmit}" styleClass="btnGrey"   onclick="saveQuickLink();"   rerender="dummypanel,dummypanel123"/>
+                <apex:commandButton value="{!$Label.bmcservicedesk__cancel}" styleClass="btnGrey" action="{!clearList}" oncomplete="window.parent.SDF.quicklinks.popUpWindow.close();"/>
+           </td>
+         
+         </tr>
+                    
+     </table>
+    
+  </apex:form>
+
+ </apex:page>

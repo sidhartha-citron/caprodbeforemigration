@@ -1,0 +1,243 @@
+<apex:page controller="BMCServiceDesk.AdminSelfServiceController" showHeader="false" standardStylesheets="false" action="{!AdminBannerConfigLoader}" id="pg">
+	<c:CommonIncludes />
+    <script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/Spinner.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/SpinnerField.js"></script>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Spinner.css" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSelfService.css"/>
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+	<apex:form id="form">
+	     
+   		   <c:ValidationComponent errorMsgList="{!JSENCODE(messageString)}" id="validationComponent"></c:ValidationComponent>
+   		   <apex:outputPanel id="errorId">
+	           <script> 
+	               
+	                var errormsg = '{!JSENCODE(messageString)}'; 
+	           </script>
+     </apex:outputPanel>
+	<div id = "btnToolbar"/>
+	 <apex:outputPanel id="mainPanel">
+	 <div id="helpDiv" style="margin-top:10px;float: right;"></div>
+	  <apex:inputhidden value="{!BroadcastSpeed}" id="broadcastspeedid"/>
+      <apex:inputhidden value="{!bannerInterval}" id="broadcastintervalid"/>
+         <apex:inputhidden value="{!showMsgorTextUI}" id="showMsgorTextUIid"/>
+       <table class = "bannerMainPanel"> 
+			<apex:outputPanel rendered="{!Not(isFreshInstallWithoutSS2)}" layout="none">
+			<tr>
+                <td>
+                     <apex:inputCheckBox id="showPortalHeader"  disabled="{!disableSS2Settings}"
+                     	value="{!selfServiceBean.Show_Hide_SSTopHeader}"/>
+                </td>
+                <td colspan="2" align="left" margin-left="-20px">
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__showapplicationbanner}" 
+                    	styleClass="clsInputCheckBoxLabel {!if(disableSS2Settings,'DisabledLabel','')}"/>
+                </td>
+                
+            </tr>
+			<tr><td class = "div2pxVspacing"></td></tr>
+			</apex:outputPanel>
+             <tr>
+                 <td >
+                      <apex:inputCheckBox id="showProfile"
+                      value="{!selfServiceBean.Show_My_Profile_Link}" 
+                      onClick="enableAllowUserFunction()"/>
+                 </td>
+                 <td colspan="2">
+                     <apex:outputLabel value="{!$Label.bmcservicedesk__showmyprofile}" 
+                     styleClass="clsInputCheckBoxLabel"/>
+                 </td>
+                 
+             </tr>
+                 
+             <apex:outputPanel rendered="{!disableSS2Settings}" layout="none">
+             <tr><td class = " height20px"></td></tr>
+             <tr> <td colspan="3" class = "sectionHeaderLabelBrd">{!$Label.Broadcast_Settings}</td>
+             </tr>
+             </apex:outputPanel>
+                    
+             <apex:outputPanel rendered="{!disableSS2Settings}" layout="none">
+             
+             
+             <tr style="height: 30px;">
+                 <td>
+                   <input type="radio" name="BroadcastScroll"  class= "MsgScrollCls"  value="true" onclick="setScrollType()"/>
+                 </td>
+                 <td>
+                 <label>{!$Label.Message_Scroll}</label>
+                 </td>
+                 
+            </tr>
+            
+				<tr>
+            <td></td>
+             <td> <apex:image url="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles,'/SDEFimages/msgscrollgif.gif')}" height="40px" width="600px"/></td>
+            </tr>
+               <tr style="height: 35px;">
+              <td class="width5px"></td>
+              <td > 
+              <span class="floatLeft" style="padding-top: 5px;">{!$Label.Scroll_Interval}:</span>
+               <div id="MessageScrollIntervalTD"  class="floatLeft" ></div>
+                <span style ="float:left; padding-top: 5px;">{!$Label.seconds}</span>
+
+              </td>
+              </tr>
+				
+              <tr style="height: 30px;">
+                  <td>               
+                 <input type="radio" name="BroadcastScroll"  class= "TextScrollCls"  value="false" onclick="setScrollType()"/>
+                 </td>
+                 <td>
+                 <label>{!$Label.Text_Scroll} </label>
+                 </td>
+                 
+             </tr>
+             <tr><td></td>
+                 <td>
+             <apex:image url="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles,'/SDEFimages/textscrollgif.gif')}" height="40px" width="600px"/></td>
+             </tr>
+             </apex:outputPanel>
+             <tr><td class = "div2pxVspacing"></td></tr>
+             
+             <apex:outputPanel rendered="{!Not(isFreshInstallWithoutSS2)}" layout="none">
+             <tr>
+                    <td  >
+                    
+                    <apex:inputCheckBox id="showBroadcast"  disabled="{!disableSS2Settings}"
+                    value="{!selfServiceBean.AllowSS_ConfigureBroadcastSpeed}"/>
+                    
+                    </td> 
+
+                    <td >
+                    
+                    
+                    <apex:OutputLabel value="{!$Label.bmcservicedesk__allowcb}"
+                    styleClass="clsInputCheckBoxLabel {!if(disableSS2Settings,'DisabledLabel','')}"/> 
+                    
+                    </td>
+
+
+                </tr>
+               
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!disableSS2Settings}" layout="none">
+             <tr>
+                <td class="width5px"></td>
+				<td colspan="2">
+                   
+					<table> 
+					<tr>
+                        
+                        <td colspan="2"> {!$Label.Scroll_speed}:
+                        </td>
+                               <td> 
+                       <apex:OutputLabel value="{!$Label.bmcservicedesk__slow}"/>
+                        </td> 
+                        <td ><div id="basic-slider" /> </td>
+                        <td ></td>
+                        <td > 
+                        <apex:OutputLabel value="{!$Label.bmcservicedesk__fast}" styleClass="clsSlider" />
+                        </td>
+                    </tr>
+                   </table> 
+                                </td>
+	                         </tr>
+              
+                          
+             </apex:outputPanel>
+            
+             
+                <apex:outputPanel rendered="{!Not(disableSS2Settings)}" layout="none">
+                <tr> <td class="div2pxVspacing"></td></tr>
+					<tr>
+                
+                <td colspan="2">
+                    <apex:pageBlock id="theBlock">
+                    <table> 
+                    <tr>
+                        <td >{!$Label.defaulttickerspeed}</td>
+	                         </tr>
+					<tr><td class="div2pxVspacing"></td></tr>
+					 <tr id="SliderBannerId">
+                   	<td > 
+                       <apex:OutputLabel style="margin-top: 7px;float:left;" value="{!$Label.bmcservicedesk__slow}"/>
+                       <div style= "float:left;" id="basic-slider" /> 
+                        <apex:OutputLabel style="padding-left: 7px; margin-top: 7px; float: left;" value="{!$Label.bmcservicedesk__fast}" styleClass="clsSlider" />
+                      
+					</td> 
+					</tr>
+
+
+					</table> 
+</apex:pageBlock>
+				</td>
+				</tr>
+                </apex:outputPanel>
+                
+            </table>
+           </apex:outputPanel>
+             <apex:actionFunction name="save" action="{!bannerConfigSave}" rerender="errorId,commitId" onComplete="waitMsg.hide();showErrorMsg();" >
+             
+             </apex:actionFunction>
+             <apex:actionFunction name="reset" action="{!bannerConfigReset}" rerender="mainPanel,errorId,resetPanel" onComplete="resetFields();"/>
+	</apex:form>
+          
+	<script>
+		var saveLabel = '{!JSENCODE($Label.save)}';
+		var undoDefaultSettingPageLabel='{!JSENCODE($Label.Reset)}';	
+		var broadcastSpeedValue='{!JSENCODE($Component.pg.form.broadcastspeedid)}';
+		var pheaderId='{!JSENCODE($Component.pg.form.showPortalHeader)}';
+		var shwprofile=('{!JSENCODE($Component.pg.form.showProfile)}');
+        
+        var shwBroadcast=('{!JSENCODE($Component.pg.form.showBroadcast)}');
+        var disableSS2Settings='{!IF(disableSS2Settings, 'true','false')}';
+        var messageTitle = '{!JSENCODE($Label.AdminBanner)}';
+ 		var bannerInterval= {!bannerInterval};
+        var showMsgorTextUI ={!showMsgorTextUI};
+       
+        
+        var broadcastIntervalValue='{!JSENCODE($Component.pg.form.broadcastintervalid)}';
+        var showMsgorTextUIValue='{!JSENCODE($Component.pg.form.showMsgorTextUIid)}'
+        //var broadcastSpeedValue='{!JSENCODE($Component.pg.form.broadcastspeedid)}';
+        
+       
+    </script>
+	<apex:outputpanel id="commitId">
+		<script>
+			defaultbroadcastSpeedValue = (document.getElementById(broadcastSpeedValue) != null) ? document.getElementById(broadcastSpeedValue).value : 5 ;
+		</script>
+	</apex:outputpanel>
+	<apex:outPutPanel id="resetPanel">
+		<script>
+        var showBanner = {!selfServiceBean.Show_SS3_Banner};
+        window.onload = function () { 
+            setRadioButtons();
+        }
+
+        function setRadioButtons() {
+            if(disableSS2Settings =='true'){
+                if(showBanner)
+                 {
+                    document.getElementsByClassName("MsgScrollCls")[0].setAttribute("checked","true");
+                 }
+                else{
+                 document.getElementsByClassName("TextScrollCls")[0].setAttribute("checked","true");
+                 }
+            }
+        }
+
+		 function resetFields(){
+            showMsgorTextUI = {!showMsgorTextUI};
+			createSlider(defaultbroadcastSpeedValue); 
+			if(disableSS2Settings == 'true') {
+				bannerInterval= {!bannerInterval};
+				createSpinner();
+			}
+		}
+         
+        setRadioButtons();
+        var wikiUrl = '{!wikiUrl}';
+        parent.addHelpOnPage(document.getElementById('helpDiv'),'banner_settings.htm',wikiUrl);
+		</script>
+	</apex:outPutPanel>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminBannerConfiguration.js"/>  
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/SliderTip.js"/>
+</apex:page>

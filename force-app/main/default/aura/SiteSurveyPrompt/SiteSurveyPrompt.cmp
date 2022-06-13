@@ -1,0 +1,88 @@
+<aura:component >
+    
+    <aura:attribute name="locationId" type="String"/>
+    <aura:attribute name="isRoom" type="Boolean" default="true"/>
+    <aura:attribute name="surveyLocation" type="Survey_Location__c" default="{'sobjectType':'Survey_Location__c'}"/>
+    
+    <aura:attribute name="value" type="String"/>
+    <aura:attribute name="prodName" type="String"/>
+    <aura:attribute name="quantity" type="Decimal"/>
+    <aura:attribute name="quantityChosen" type="Decimal"/>
+    <aura:attribute name="isDisabled" type="Boolean" default="false" />
+    
+    <aura:attribute name="isSkill" type="Boolean" default="false"/>
+    <aura:attribute name="skillId" type="String"/>
+    <aura:attribute name="skillMessage" type="String"/>
+    
+    <aura:attribute name="isSkillSave" type="Boolean" default="false"/>
+    <aura:attribute name="notSavedRecords" type="String"/>
+    <aura:attribute name="notSavedSkillMessage" type="String"/>
+    
+    <aura:method name="setPromptLocationDetails" action="{!c.setDeleteLocationRecord}" description="Method to facilitate deleting Survey Location">
+        <!-- <aura:attribute name="surveyLocation" type="Survey_Location__c" default="{'sobjectType':'Survey_Location__c'}"/> -->
+        <aura:attribute name="recordId" type="String"/>
+    </aura:method>
+    
+    <aura:method name="setPromptAssetDetails" action="{!c.setDeleteAssetRecord}" description="Method to facilitate deleting Survey Asset Location">
+        <!-- <aura:attribute name="surveyLocation" type="Survey_Location__c" default="{'sobjectType':'Survey_Location__c'}"/> -->
+        <aura:attribute name="value" type="String"/>
+        <aura:attribute name="quantity" type="Decimal"/>
+    </aura:method>
+    
+    <aura:method name="setPromptSkillDetails" action="{!c.setDeleteSkillRecord}" description="Method to facilitate deleting Site Survey Skills">
+        <!-- <aura:attribute name="surveyLocation" type="Survey_Location__c" default="{'sobjectType':'Survey_Location__c'}"/> -->
+        <aura:attribute name="skillId" type="String"/>
+        <aura:attribute name="skillMessage" type="String"/>
+    </aura:method>
+    
+    <aura:method name="setPromptSkillDetailsForSave" action="{!c.setDeleteSkillRecordBySave}" description="Method to facilitate deleting Site Survey Skills before Save">
+        <!-- <aura:attribute name="surveyLocation" type="Survey_Location__c" default="{'sobjectType':'Survey_Location__c'}"/> -->
+        <aura:attribute name="notSavedRecords" type="String"/>
+    	<aura:attribute name="notSavedSkillMessage" type="String"/>
+    </aura:method>
+    
+    <aura:registerEvent name="promptEvent" type="c:SiteSurveyPromptEvent"/>
+    
+    <div class="slds-hide" aura:id="promptSection">
+        <section role="alertdialog" tabindex="-1" aria-labelledby="prompt-heading-id" aria-describedby="prompt-message-wrapper" class="slds-modal slds-fade-in-open slds-modal_prompt">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-theme_error slds-theme_alert-texture">
+                    
+                    <h2 class="slds-text-heading_medium" id="prompt-heading-id">{!$Label.c.Site_Survey_Delete}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <aura:if isTrue="{!v.isSkill}">
+                        <aura:if isTrue="{!v.isSkillSave}">
+                            <p class="slds-text-align_center slds-text-color_error slds-text-heading_medium">{!v.notSavedSkillMessage}</p> 
+                            <p class="slds-text-align_center slds-text-color_error slds-text-heading_medium">{!v.notSavedRecords}</p> 
+                            <aura:set attribute="else">
+                            	<p class="slds-text-align_center slds-text-color_error slds-text-heading_medium">{!v.skillMessage}</p> 
+                            </aura:set>
+                        </aura:if>
+                        <aura:set attribute="else">
+                            <aura:if isTrue="{!v.isRoom}">
+                                <p class="slds-text-align_center slds-text-color_error slds-text-heading_medium">{!$Label.c.Site_Survey_Delete_Record}</p>
+                                <aura:set attribute="else">
+                                    <p class="slds-text-align_center slds-text-color_error slds-text-heading_medium">
+                                        {!$Label.c.Site_Survey_Confirm_Delete}&nbsp;{!v.quantity}&nbsp;{!v.prodName}&nbsp;{!$Label.c.Site_Survey_Confirm_Delete_Part2}
+                                    </p>
+                                    <br/>
+                                    <!--<lightning:input aura:id="quantity" type="number" label="Quantity to Delete" min="1" value="{!v.quantityChosen}" max="{!v.quantity}" onchange="{!c.validate}"/>-->
+                                </aura:set>
+                            </aura:if>
+                        </aura:set>
+                    </aura:if>
+                    
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeModal}"/>
+                    <aura:if isTrue="{! !v.isSkillSave}">
+                    	<lightning:button variant="destructive" label="{!$Label.c.Site_Survey_Delete}" onclick="{!c.handleDelete}" class="slds-button" />    
+                    </aura:if>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+    
+</aura:component>

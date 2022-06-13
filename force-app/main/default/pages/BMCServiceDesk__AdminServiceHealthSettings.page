@@ -1,0 +1,64 @@
+<apex:page controller="BMCServiceDesk.AdminServiceHealthSettingsController" showHeader="false" sidebar="false" standardStylesheets="false">
+<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminServiceHealthSettings.css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+
+<div id="toolbarDiv"/>
+<apex:form id="mainform">
+
+ <apex:actionFunction name="save" action="{!save}" oncomplete="showMessage(SuccessMsg);">
+ <apex:param name="DisplayServiceOutageForVal" id="DisplayServiceOutageForVal" value="" assignTo="{!DisplayServiceOutageForVal}"/> 
+ </apex:actionFunction>
+
+<script>
+var saveLbl = '{!JSENCODE($Label.Save)}';
+var ServiceHealthSettingsLbl = '{!JSENCODE($Label.ServiceHealthSettings)}';
+var SuccessMsg = '{!JSENCODE($Label.SavedSuccessfully)}';
+var WaitImg   = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+var DisplayServiceOutageForVal='{!DisplayServiceOutageForVal}';
+</script>
+
+	<div id="helpDiv" class="clshelpDiv"></div>
+ 
+<table width="100%" style="margin-left:20px;">
+    <tr>
+        <td width="15%" style="padding-top: 20px;">
+        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__serviceoutagehistoryfor)}" styleClass="clsLabel"/>
+        </td> 
+        <td width="5%" style="padding-top: 20px;">
+        <div  id="daysSpiner" style="margin-top:5px;height:20px;margin-left:10px;"></div>
+        </td>       
+        <td width="80%" style="padding-top: 20px;padding-left: 4px;">
+        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__days)}" styleClass="clsLabel"/>
+        </td>
+    </tr>
+    
+    <tr>
+        <td colspan="3"  class="tdclass">
+        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__showserviceslinkedto)}" styleClass="clsLabel" style="padding-right:10px"/>
+        <apex:inputCheckbox id="clientCheck" value="{!ShowServicesLinkedToClientInSSVal}"/>
+        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__clientwindowheadersearchpage)}" for="clientCheck" styleClass="clsCheckBoxLabel" style="padding-right:20px"/>
+        <apex:inputCheckbox id="accountCheck" value="{!ShowServicesLinkedToAccountInSSVal}"/>
+        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__clientsaccount)}" for="accountCheck" styleClass="clsCheckBoxLabel" />
+        </td>
+    </tr>
+        
+    <tr>  
+        <td colspan="3" class="tdclass"> 
+        <apex:inputCheckbox id="enableToSubscribe" value="{!SubscribeToNotificationOnSOval}"/>
+        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__enabletosubscribeonso)}" for="enableToSubscribe" styleClass="clsCheckBoxLabel"/>
+        </td>           
+    </tr>
+
+</table>
+
+	<script>
+        var wikiUrl = '{!JSENCODE(wikiUrl)}';
+        parent.addHelpOnPage(document.getElementById('helpDiv'), '', wikiUrl);    
+    </script>
+	
+</apex:form>
+
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script> 
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminServiceHealthSettings.js"></script>
+</apex:page>

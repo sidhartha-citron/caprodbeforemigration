@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>Send_GetFeedback_Post_Installation_Survey</fullName>
+        <description>Send GetFeedback Post Installation Survey</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email</field>
+            <type>email</type>
+        </recipients>
+        <senderAddress>donotreply@citronhygiene.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>Survey_Emails_Templates/Post_Installation_Survey_Email</template>
+    </alerts>
+    <alerts>
+        <fullName>Send_NPS_Survey_Initial_Email_to_Contact</fullName>
+        <description>Send NPS Survey Initial Email to Contact</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email</field>
+            <type>email</type>
+        </recipients>
+        <senderAddress>marketing@citronhygiene.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>Survey_Emails_Templates/NPS_Survey_Initial_HTML</template>
+    </alerts>
+    <alerts>
+        <fullName>Send_NPS_Survey_Reminder_Email_to_Contact</fullName>
+        <description>Send NPS Survey Reminder Email to Contact</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email</field>
+            <type>email</type>
+        </recipients>
+        <senderAddress>marketing@citronhygiene.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>Survey_Emails_Templates/NPS_Survey_Reminder_HTML</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>Post_Installation_Survey_Sent_Date</fullName>
+        <description>Updates Contact Post Installation Survey Sent Date when the GetFeedback Post Installation Survey was sent.</description>
+        <field>Post_Installation_Survey_Sent_Date__c</field>
+        <formula>NOW()</formula>
+        <name>Post Installation Survey Sent Date</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Last_Name</fullName>
+        <field>LastName</field>
+        <formula>LastName &amp; &quot; - Inactive&quot;</formula>
+        <name>Update Last Name</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>ringdna100__Unset_Contact_RingDNA_Context</fullName>
+        <field>ringdna100__RingDNA_Context__c</field>
+        <literalValue>0</literalValue>
+        <name>Unset Contact RingDNA Context</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <rules>
+        <fullName>Send Initial NPS Survey</fullName>
+        <actions>
+            <name>Send_NPS_Survey_Initial_Email_to_Contact</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Contact.Send_Initial_NPS_Survey__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Contact.Email</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Send Post Installation Survey</fullName>
+        <active>true</active>
+        <criteriaItems>
+            <field>Contact.Send_Post_Installation_Survey__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+        <workflowTimeTriggers>
+            <actions>
+                <name>Send_GetFeedback_Post_Installation_Survey</name>
+                <type>Alert</type>
+            </actions>
+            <actions>
+                <name>Post_Installation_Survey_Sent_Date</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>3</timeLength>
+            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+    </rules>
+    <rules>
+        <fullName>Send Reminder NPS Survey</fullName>
+        <actions>
+            <name>Send_NPS_Survey_Reminder_Email_to_Contact</name>
+            <type>Alert</type>
+        </actions>
+        <active>false</active>
+        <criteriaItems>
+            <field>Contact.Send_Reminder_NPS_Survey__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Contact.Email</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Set Contact Deactive</fullName>
+        <actions>
+            <name>Update_Last_Name</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Contact.Status__c</field>
+            <operation>equals</operation>
+            <value>Inactive</value>
+        </criteriaItems>
+        <description>Set last name with &quot;Inactive&quot; when contacts are set to inactive.</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>ringdna100__Unset Contact RingDNA Context</fullName>
+        <actions>
+            <name>ringdna100__Unset_Contact_RingDNA_Context</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Contact.ringdna100__RingDNA_Context__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+</Workflow>

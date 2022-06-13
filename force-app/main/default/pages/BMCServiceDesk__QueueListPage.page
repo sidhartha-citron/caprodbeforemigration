@@ -1,0 +1,82 @@
+<apex:page controller="BMCServiceDesk.QueueAssignment" showheader="false">
+<c:CommonIncludes />
+    <style>
+
+    .x-grid3-hd-row td, .x-grid3-row td, .x-grid3-summary-row td 
+    {
+		font-family:Tahoma, MS Sans Serif;
+		font-size:11px;
+		font-size-adjust:none;
+		font-style:normal;
+		font-variant:normal;
+		font-weight:normal;
+		line-height:normal;
+	}
+
+        .x-grid3-hd-row td {
+             font-family: Tahoma, MS Sans Serif;
+             font-weight: bold;
+             font-size: 11px;
+             color: #000000;
+             border-bottom :solid 1px  #013B66;
+             border-right:solid 1px #013B66;
+             border-bottom :solid 1px #7CC0EA;
+             border-right:solid 1px #7CC0EA;     
+        }
+        .x-grid3-hd-inner {
+             background-color: #2E7DB3;
+             font-family: Tahoma, MS Sans Serif;
+             font-weight: bold;
+             font-size: 11px;
+             color: #FFFFFF;
+             border-bottom: solid 1px  #013B66;
+             border-right: solid 1px #013B66;
+             border-bottom: solid 1px #7CC0EA;
+             border-right: solid 1px #7CC0EA;     
+        }
+        td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-asc .x-grid3-hd-inner, td.x-grid3-hd-menu-open .x-grid3-hd-inner {
+            background-color: #2E7DB3;
+            background-image: none;        
+        }
+        .x-grid3-row-selected {
+            background-color: #E0EE70 !important;
+            background-image: none;
+            border-color: #a3bae9;
+        }
+        .x-grid3-cell-text{
+            white-space: normal;
+        }
+        .x-grid3-cell{  
+            white-space: normal;
+            width: 100%;
+        }
+        /*.x-grid3-row-over {background-color: #E0EE70 !important;background-image: none;}*/
+        /*.x-toolbar{border-color: #DEE0E0; background-color:#DEE0E0; background-image: none;}*/
+        .x-toolbar-left { background-color: #DEE0E0;}
+</style>
+    
+    
+ <script>
+ 	function clkHandler(btn){};   
+    Ext.onReady(function(){
+	<apex:outputText value="CRUDFLSCheck# False Positive: No association to any sObject field." rendered="false" />;
+    var grid = <apex:outputtext value="{!grid}" escape="false"/>;
+    var storedData = grid.getStore();
+    if(storedData.getCount() == 0)
+    {
+    	var msgIcon = Ext.MessageBox.INFO;//Default
+    	Ext.MessageBox.show({
+    	title:"{!JSENCODE($Label.Information)}",
+    	msg:"{!JSENCODE($Label.msgNoRecordFoundSearchPage)}",
+	    width:300,
+       	buttons: Ext.MessageBox.OK,
+        fn: clkHandler,
+        icon: msgIcon
+	   });
+	   grid.enableHdMenu = false;
+    }
+    grid.render("gridPanel");
+    });
+ </script>
+    <div id="gridPanel"></div>
+</apex:page>

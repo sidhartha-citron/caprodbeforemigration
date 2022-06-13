@@ -1,0 +1,118 @@
+<apex:page id="SS_ContactUs" controller="BMCServiceDesk.SSIncidentController" action="{!handleIncidentRequest}" showHeader="false" standardStylesheets="false">
+<style>
+	.clsInputTextAreaAsLabel{
+		width: 100%;
+		border: 0px; 
+		resize: none; 
+		background-color: white;
+		overflow: auto;
+		color: black;
+		font: 12px Arial,Tahoma,Verdana,Geneva,Helvetica,sans-serif,MS Sans Serif !important;
+	}
+	.messageCell{
+		font: 12px 'Salesforce Sans',Arial,Tahoma,Verdana,Geneva,Helvetica,sans-serif,MS Sans Serif !important;
+	}
+</style>
+<div id="themeDiv"></div>
+<apex:form id="contactUsForm">
+<apex:actionFunction action="{!handleSubmitContactUs}" name="saveContactUS"  oncomplete="javascript:window.parent.closeTabLater('rf-tile-CONTACT');"/>
+<div class="divToolBar">
+      <apex:commandButton id="btnSubmit" value="{!$Label.bmcservicedesk__sscontactussubmit}" title="{!$Label.bmcservicedesk__ss_submitcontact} (Ctrl+Alt+S)"  action="{!handleSubmitContactUs}" styleclass="ssBtnCls" oncomplete="isErrorFound();" rerender="errorMsg"></apex:commandButton>
+      <input type="button" id="btnCancel" value="{!$Label.SSCancel}" title="{!$Label.SS_ContactCancel}" class="ssBtnCls" onclick="window.parent.closeTab('rf-tile-CONTACT');" />
+</div>
+<apex:pageMessages id="errorMsg"/>
+<div style="padding:5px;">
+
+       <table cellpadding="5px" cellspacing="0" style="width: 100%;" >
+       	<tr>
+       		<td>
+      			<apex:outputText rendered="{!IF(ContactUsMessage != null && ContactUsMessage != '', true, false)}">
+			        <div id="ssContactUsHeaderMessage" class="x-form-field">
+                        <apex:inputTextarea readonly="true" value="{!ContactUsMessage}" rows="{!noOfLines}" disabled="true" styleclass="clsInputTextAreaAsLabel"/>
+			        </div>
+			    </apex:outputText>
+       		</td>
+       	</tr>
+        <tr>
+          <td>
+   			<apex:outputLabel value="{!$Label.bmcservicedesk__sscontactussubject}:" styleClass="x-form-field" rendered="{!$ObjectType.BMCServiceDesk__Incident__c.fields.BMCServiceDesk__incidentDescription__c.Accessible}"/> <br />
+         	<apex:inputText id="subj" title="{!$Label.bmcservicedesk__ss_contactsubject}" value="{!contactUsSubject}" onkeydown="if(event.keyCode == 13) return false;" style="width: 400px;" styleClass="clsInputTextBox" rendered="{!((( currentIncident == null || currentIncident.incidentObj == null ||currentIncident.incidentObj.Id == null || currentIncident.incidentObj.Id == '') && $ObjectType.BMCServiceDesk__Incident__c.fields.BMCServiceDesk__incidentDescription__c.Createable)||(( currentIncident != null && currentIncident.incidentObj != null && currentIncident.incidentObj.Id != null && currentIncident.incidentObj.Id != '') && $ObjectType.BMCServiceDesk__Incident__c.fields.BMCServiceDesk__incidentDescription__c.Updateable))}"/>
+          </td>
+       </tr>
+       
+       <tr>
+          <td style="vertical-align: top;">
+       		<apex:outputLabel value="{!$Label.bmcservicedesk__sscontactusmessagetext}:" styleClass="x-form-field" rendered="{!$ObjectType.BMCServiceDesk__Incident__c.fields.BMCServiceDesk__incidentDescription__c.Accessible}"/> <br />
+          	<apex:inputTextarea id="desc" title="{!$Label.bmcservicedesk__ss_contactmessage}" value="{!contactUsMessageBody}" style="width:800px; height:325px;overflow-y:auto;overflow-x:hidden;" styleClass="x-form-field x-form-text" rendered="{!((( currentIncident == null || currentIncident.incidentObj == null ||currentIncident.incidentObj.Id == null || currentIncident.incidentObj.Id == '') && $ObjectType.BMCServiceDesk__Incident__c.fields.BMCServiceDesk__incidentDescription__c.Createable)||(( currentIncident != null && currentIncident.incidentObj != null && currentIncident.incidentObj.Id != null && currentIncident.incidentObj.Id != '') && $ObjectType.BMCServiceDesk__Incident__c.fields.BMCServiceDesk__incidentDescription__c.Updateable))}"/>
+          </td>
+       </tr>
+      </table>
+</div>
+
+</apex:form>
+<script>
+    if(Sarissa._SARISSA_IS_IE && ((navigator.userAgent.indexOf("Trident/5")>-1) || (navigator.userAgent.indexOf("Trident/6")>-1))) {  
+      window.XMLSerializer = function(){};      
+      window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+</script>
+
+<script type="text/javascript">         
+    	var colorCodeList = '{!JSENCODE(themeColorCodeString)}'; 
+        var content = '{!JSENCODE(dynamicStyle)}';
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+		//for shortcuts
+		document.onkeydown = function(e) {
+			if(!window.parent.isRFHotkeysDisabled){
+			e = e || window.event;
+			if(typeof(e) == 'undefined' || e == 'null')
+				return; 
+			k = e.which || e.charCode || e.keyCode; // because of browser differences...			
+			if(k==27){ //Esc - Cancel
+				window.parent.closeTab('rf-tile-CONTACT');
+				return;
+			}
+			 // only these key combinations are allowed rest are ignored
+			if ((!(e.ctrlKey && e.altKey)) || (k != 83)&& (k!=77)&& (k!=81)&& (k!=72)&& (k!=66))
+				return;
+			if(e.ctrlKey && e.altKey){
+				if(k==83 ) //Ctrl+Alt+S - Submit
+					saveContactUS(); 
+			}
+			if(k==77){ //Ctrl+Alt+M - My Cart
+					window.parent.showCart();
+			}
+			if(k==66){ //Ctrl+Alt+B - Broadcast			
+			window.parent.showBroadcast();			
+			}
+			if(k==81){ //Ctrl+Alt+Q - Quick Links
+					window.parent.OpenQuickLinks();			
+			}
+			if(k==72){ //Ctrl+Alt+H - Profile/Help
+			if(window.parent.isShowMyProfile || window.parent.isShowSSBanner)
+			window.parent.MoreOptionsctxMenu.show();
+			else
+			window.parent.openHelp();
+			}
+			}
+		}		
+		
+		if(window.parent.SSKeyNavigation!=undefined){
+		window.parent.SSKeyNavigation('CONTACT-SAVE',saveContactUS); 		
+		//This method is to close Contact US tab if there are no record found 
+		function isErrorFound(){
+			var errorMsgString=document.getElementById("{!$Component.contactUsForm.errorMsg}").textContent;
+			if(errorMsgString.length>0)
+				return false;
+			else	
+				javascript:window.parent.closeTabLater('rf-tile-CONTACT');
+		}																 
+}
+</script>
+<script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" /> 
+<script>
+	if(window.parent.isRFHotkeysDisabled){   
+    	setTitle(document.getElementById('{!$Component.contactUsForm.btnSubmit}'),'{!JSENCODE($Label.SS_SubmitContact)}');  
+    }
+</script>
+</apex:page>

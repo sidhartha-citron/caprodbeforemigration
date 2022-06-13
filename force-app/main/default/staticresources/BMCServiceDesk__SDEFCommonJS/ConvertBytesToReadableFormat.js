@@ -1,0 +1,1 @@
+function getReadableSize(c){var e="KB";var b=0;var d=c/1024;var a=0;if(d>1024){e="MB";a=d/1024;if(a>1024){e="GB";b=a/1024;if(b%1===0){b=Math.ceil(b)}else{b=b.toFixed(2)}}else{b=Math.ceil(a)}}else{b=Math.ceil(d)}return(b+" "+e)};

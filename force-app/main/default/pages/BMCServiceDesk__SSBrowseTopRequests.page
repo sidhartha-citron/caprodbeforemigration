@@ -1,0 +1,60 @@
+<apex:page id="SSBrowseTopRequests" controller="BMCServiceDesk.SSBrowseCategoryController"  sidebar="false" showHeader="false" standardStylesheets="false">
+<!--  Incident template list view for browse functionality -->
+<div id="popularSRListDiv" class="browseTemplateDivCls">
+<table width="100%">  
+    <tbody>
+        <tr>
+            <!--  First column, Popular incidnet template -->
+            <td valign="top">
+                <table id="popularRequestFirstTbl" border="0" cellspacing="0" cellpadding="0">
+                    <tr><td colspan="2"><div class="div2pxVspacing"></div></td></tr>
+                    <apex:repeat first="0" rows="{!noOfRows}" value="{!PRLineItemBeanList}" var="PopularReqs" id="PopularReqsFirstCol">
+                    <tr id="popreq{!PopularReqs.PRTemplateId}">
+                        <td class="popRequestsDivCls">
+                            <apex:image styleClass="sshomeImage" url="{!URLFOR($Resource.BMCServiceDesk__Themes, 'SSDefaultTheme/images/en_US/service-32.png')}"/>
+                        </td>
+                        <td>
+                            <div class="topRequestItemCls">
+	                            <a class="homePopularRequestsText" id="popreqName{!PopularReqs.PRTemplateId}" title="{!$Label.SubmitALabel} {!PopularReqs.PRTemplateName} {!$Label.ServiceRequestLabel}" onclick="openPopularRequest('{!PopularReqs.PRType}', '{!PopularReqs.PRTemplateId}','{!JSENCODE(PopularReqs.PRTemplateName)}',false);"></a>
+	                            <div id="info{!PopularReqs.PRTemplateId}" title="{!JSENCODE(PopularReqs.PRDescription)}" class="requestInfoCls"></div>
+	                            <script>
+	                                    new Ext.form.Label({renderTo:'info{!PopularReqs.PRTemplateId}',text: Ext.util.Format.ellipsis("{!JSENCODE(PopularReqs.PRDescription)}",80), tooltipType:'title', tooltip:"{!JSENCODE(PopularReqs.PRDescription)}"});
+                                        RemedyForceHTMLProcessor.setText(document.getElementById('popreqName{!PopularReqs.PRTemplateId}'), Ext.util.Format.ellipsis("{!JSINHTMLENCODE(PopularReqs.PRTemplateName)}",80));  
+	                            </script>
+                            </div>
+                        </td>
+                    </tr>
+                    </apex:repeat>  
+                </table>
+            </td>
+            <!--  .End of first column, Popular incident template -->
+            
+            <!--  Second column, Popular incident template -->
+            <td valign="top">
+                <table id="popularRequestSecondTbl" border="0" cellspacing="0" cellpadding="0">
+                    <tr><td colspan="2"><div class="div2pxVspacing"></div></td></tr>
+                    <apex:repeat first="{!noOfRows}" value="{!PRLineItemBeanList}" var="PopularReqs" id="PopularReqsSecondCol">
+                    <tr id="popreq{!PopularReqs.PRTemplateId}">
+                        <td class="popRequestsDivCls">
+                            <apex:image styleClass="sshomeImage" url="{!URLFOR($Resource.BMCServiceDesk__Themes, 'SSDefaultTheme/images/en_US/service-32.png')}"/>
+                        </td>
+                        <td>
+                            <div class="topRequestItemCls">
+	                            <a class="homePopularRequestsText" id="popreqName{!PopularReqs.PRTemplateId}" title="{!$Label.SubmitALabel} {!PopularReqs.PRTemplateName} {!$Label.ServiceRequestLabel}" onclick="openPopularRequest('{!PopularReqs.PRType}', '{!PopularReqs.PRTemplateId}','{!JSENCODE(PopularReqs.PRTemplateName)}',false);"></a>
+	                            <div id="info{!PopularReqs.PRTemplateId}" title="{!JSENCODE(PopularReqs.PRDescription)}" class="requestInfoCls"></div>
+	                            <script>
+	                                    new Ext.form.Label({renderTo:'info{!PopularReqs.PRTemplateId}',text: Ext.util.Format.ellipsis("{!JSENCODE(PopularReqs.PRDescription)}",85), tooltipType:'title', tooltip:"{!JSENCODE(PopularReqs.PRDescription)}"});
+                                        RemedyForceHTMLProcessor.setText(document.getElementById('popreqName{!PopularReqs.PRTemplateId}'), Ext.util.Format.ellipsis("{!JSINHTMLENCODE(PopularReqs.PRTemplateName)}",80)); 
+	                            </script>
+                            </div>
+                        </td>
+                    </tr>
+                    </apex:repeat> 
+                </table>
+            </td>
+            <!--  .End of second column, Popular incidnet template -->
+        </tr>
+    </tbody>
+</table>   
+</div>
+</apex:page>

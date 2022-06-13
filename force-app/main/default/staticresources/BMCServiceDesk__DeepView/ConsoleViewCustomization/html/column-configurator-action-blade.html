@@ -1,0 +1,64 @@
+<div class="config-window-container">
+	<div id="sideBarloader" />
+	<div id="sideBarActionMask" class="dialog-whiteMask"/>
+	<div class="action-blade__header">
+		<h2 id="modalLabel" class="action-blade__title">{{_labels.SelectAndOrderColumns}} </h2>
+	</div>
+	<div class="action-blade__body clearfix">
+		<div loading-spinner if="state.savingConfiguration" overlay="true" centered="true"></div>
+
+		<div class="column-configurator">
+			<div class="column-configurator__outer-container initial-margin">
+				<div class="column-configurator__container-name">{{_labels.AvailableColumns}}</div>
+				
+				<div  ui-sortable="sortableOptionsList" class="column-configurator__container sortable-data-container" ng-model="availableColumns"
+					 role="main" id="availableColumns">
+					<div ui-sortable-selectable id="{{column.APIName}}" class="column-configurator__column available-column" tabindex="0" ng-repeat="column in availableColumns" ng-bind-html="column.fieldLabel">					
+					</div>
+				</div>
+			</div>
+			<div class="userselection-button-container" >
+				<button title="{{_labels.LeftToRight}}"  type="submit" class="userselection-button" ng-click="moveRight()">
+					<span class="d-icon-angle_right dpl-button-icon"/>
+				</button>
+				<button title="{{_labels.RightToLeft}}"  type="submit" class="userselection-button" ng-click="moveLeft()">
+					<span class="d-icon-angle_left dpl-button-icon"/>
+				</button>
+			</div>
+			<div class="column-configurator__outer-container" >
+				<div class="column-configurator__container-name">{{_labels.SelectedColumns}}  ({{_labels.MaxColumns}} {{maxColumns}})
+				<span ng-if ="modulename != 'Projected_Service_Outage__c'" class="d-icon-info_circle ConsoleListViewMaxfieldInfo " title="{{_labels.ConsoleListViewMaxfieldInfo}}"></span>
+				</div>				
+				<div  class="column-configurator__container" >	
+					<div  class="column-configurator__column identifier-field"  ng-bind-html='identifierField.fieldLabel'>
+					</div>
+					<div ui-sortable="sortableOptionsList" class="sortable-data-container" ng-model="selectedColumns"
+						  role="main" id="selectedColumns">					 
+						<div ui-sortable-selectable id="{{column.APIName}}" class="column-configurator__column selected-column" tabindex="0" ng-repeat="column in selectedColumns" ng-bind-html="column.fieldLabel" >
+						</div>						
+					</div>	
+				</div>				
+			</div>
+			<div class="userselection-button-container" >
+				<button title="{{_labels.Top}}" type="submit" class="userselection-button dpl-button-icon  rotate-icon-up" ng-click="moveTop()">
+					<span class="d-icon-angles_left"/>
+				</button>
+				<button title="{{_labels.Up}}" type="submit" class="userselection-button dpl-button-icon" ng-click="moveUp()">
+					<span class="d-icon-angle_up"/>
+				</button>
+				<button title="{{_labels.Down}}" type="submit" class="userselection-button dpl-button-icon" ng-click="moveDown()">
+					<span class="d-icon-angle_down"/>
+				</button>
+				<button  title="{{_labels.Bottom}}" type="submit" class="userselection-button dpl-button-icon  rotate-icon-down" ng-click="moveBottom()">
+					<span class="d-icon-angles_left"/>
+				</button>
+			</div>
+		</div>
+	</div>
+	<div class="action-blade__footer clearfix">
+		<div class="action-blade__button-container" role="main">
+			<button type="submit" class="bmc-btn-primary" ng-click="submit()">{{_labels.Save}}</button>
+			<button type="button" class="bmc-btn-small" ng-click="cancel()">{{_labels.Cancel}}</button>
+		</div>
+	</div>
+</div>

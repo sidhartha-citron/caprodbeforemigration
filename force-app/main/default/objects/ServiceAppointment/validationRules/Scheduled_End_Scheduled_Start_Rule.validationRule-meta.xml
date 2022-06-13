@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Scheduled_End_Scheduled_Start_Rule</fullName>
+    <active>true</active>
+    <errorConditionFormula>/*AND( NOT( ISBLANK( SchedStartTime ) ) ,  NOT( ISBLANK( SchedEndTime ) ),   (OR(ISCHANGED(SchedStartTime ) ,  ISCHANGED(SchedEndTime ))), (SchedEndTime &lt; SchedStartTime + (5/24/60)))
+
+ AND (NOT( ISBLANK( SchedStartTime ) ) , NOT( ISBLANK( SchedEndTime ) ), (OR(ISCHANGED(SchedStartTime ) , ISCHANGED(SchedEndTime ))), (TIMEVALUE(SchedEndTime) &lt; (TIMEVALUE(SchedStartTime) + 360000))) */
+
+AND ( 
+NOT( ISBLANK( SchedStartTime ) ) , 
+NOT( ISBLANK( SchedEndTime ) ), 
+(OR(ISCHANGED(SchedStartTime ) , ISCHANGED(SchedEndTime ))), 
+((SchedEndTime - SchedStartTime )*24*60 ) &lt; 6 
+)</errorConditionFormula>
+    <errorMessage>Scheduled Start Time and Scheduled End Time must be at least 6 minutes apart</errorMessage>
+</ValidationRule>

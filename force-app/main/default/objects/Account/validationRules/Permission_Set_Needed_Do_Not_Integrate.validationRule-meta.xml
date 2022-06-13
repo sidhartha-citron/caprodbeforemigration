@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Permission_Set_Needed_Do_Not_Integrate</fullName>
+    <active>true</active>
+    <description>Integration Status = Do Not Integrate can only be set with permission sets.</description>
+    <errorConditionFormula>ISCHANGED(AccPac_Integration_Status__c) &amp;&amp; 
+ISPICKVAL(AccPac_Integration_Status__c, &quot;Do Not Integrate&quot;) &amp;&amp; 
+!($Permission.Set_Integration_Status_to_Do_Not_Integrate)  &amp;&amp; CASESAFEID($User.ProfileId) &lt;&gt; $Setup.Field_Service_Settings__c.Integration_User_Profile__c</errorConditionFormula>
+    <errorDisplayField>AccPac_Integration_Status__c</errorDisplayField>
+    <errorMessage>You may not set the value to &quot;Do Not Integrate&quot; unless you have the correct permissions.</errorMessage>
+</ValidationRule>

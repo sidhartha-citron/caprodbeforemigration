@@ -1,0 +1,327 @@
+<apex:page standardStylesheets="false" sidebar="false" showHeader="false"  controller="BMCServiceDesk.SuggestedOwnerMappingCriteriaController">
+ 
+	<c:CommonIncludes />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomViews.css" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SuggestedOwnerMapping.css" />
+    <script>
+    	var lblStaff = '{!JSENCODE($Label.IncidentsStaff)}';
+	 	var lblQueue = '{!JSENCODE($Label.Queue)}';
+	 	var lblDefQueue = '{!JSENCODE($Label.QueueAutoAssignment)}';
+	 	var objName = 'BMCServiceDesk__Incident__c';
+	 	var defQID = '{!JSENCODE(objMapping.Assigned_Queue__c)}';
+	 	var defQName = '';
+	 	var defQComp = '{!$Component.suggestedOwnerCriteriaForm.assignValue}';
+	 	var strMappingID = '{!JSENCODE(strMappingID)}';
+    </script>
+    <script src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js" type="text/javascript"></script>
+	<script src="{!$Resource.SDEFCommonJS}/SuggestedOwnerMappingCriteria.js" type="text/javascript"></script>
+	
+	<apex:form id="suggestedOwnerCriteriaForm" style="overflow-x:hidden;">
+    	<apex:actionFunction name="save" action="{!save}" id="saveActionFunction" reRender="afterSavePanel,validationComponent" oncomplete="DisplayAfterSaveMessage();refreshSLTList();registerSave();updateSuggTitle();">
+			<apex:param assignTo="{!objMapping.Inactive__c}" name="inactiveValue" value=""/>
+			<apex:param assignTo="{!queueIds}" name="queueIds" value=""/>
+			<apex:param assignTo="{!userIds}" name="userIds" value=""/>
+			<apex:param assignTo="{!defQID}" name="defQID" value=""/>
+		</apex:actionFunction>
+		<apex:inputHidden id="applySTStr"  value="{!objMapping.BMCServiceDesk__Criteria_Advanced_Expression__c}"/>
+		<table  cellspacing="0" cellpadding="0" border="0" class="tab-main-table" id="qualificationPanel">
+			<tr>
+		    	<td width="50%"><div id="toolBar"></div></td>
+		    </tr>
+		    <tr>
+			  <td>
+			  <apex:outputPanel id="sltMainTablePanel">
+			       <table cellpadding="0" cellspacing="0" border="0" width="100%">
+			         <tr>
+			         <td colspan="2"><div class="div15pxVspacing" /></td>
+			         </tr>
+			         <tr>
+			            <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Suggested_Owner_Mapping__c.fields.Name.label}" /> <span class="clsRequiredBlack">*</span></td>
+			            <td style="padding-bottom:5px;"><apex:inputText value="{!objMapping.Name}" title="{!$ObjectType.BMCServiceDesk__Suggested_Owner_Mapping__c.fields.Name.inlineHelpText}" id="slt_title_id" styleClass="clsInputTextBox" style="width:40%" /></td> 
+			         </tr>
+			       </table>
+				   </apex:outputPanel>
+			            </td>
+			         </tr>
+            <tr>
+				<td>
+					<apex:outputPanel id="qualsPanel">
+						<table class="output-panel-toolbar-table" bgcolor="#DEE0E0" cellpadding="0" cellspacing="0">
+							<tr bgcolor="#DEE0E0" height="40">
+								<td width="270px" class="pad-10px-td" title="{!$Label.ToolTipQualificationFieldlist}">
+									<div id="extFieldList"></div>
+								</td>
+								<td width="120px" class="pad-10px-td" title="{!$Label.ToolTipOperator}">
+									<div id="compareOpDiv"></div>
+								</td>
+								<td width="150px" class="pad-10px-td" title="{!$Label.ToolTipValueField}">
+									<table cellpadding="0" cellspacing="0">
+										<tr>
+											<td style="padding-right: 5px;">
+												<apex:inputText id="inputTxt" style="display:block;"  styleClass="qualInputEle"/ >
+												<input type="text" id="referenceID" value=""  style="display:none;" />
+												<apex:inputText id="datetimeinput" styleClass="qualInputEle" style="display:none"/>
+												<apex:inputText id="inputDate" styleClass="qualInputEle" style="display:none"/>
+												<apex:inputTextarea id="inputTxtArea" style="display:none" styleClass="clsQualTextarea" onkeyup="validateLength('{!$Component.suggestedOwnerCriteriaForm.inputTxtArea}',selectedTextAreaLength);"/>
+											</td>
+											<td>
+												<input type="button" id="lookUp" class="lookupIconOn" style="display:none;" onClick="openQualLookup();"/>
+												<input type="button" id="inputTxtAreaButtonEle" class="TextboxPopupIcon" style="display:none" onclick="showTextEditor('{!$Component.suggestedOwnerCriteriaForm.inputTxtArea}', selectedLabel, selectedTextAreaLength, '{!$Label.OK}', '{!$Label.Cancel}');" />
+												<apex:image id="dateTimePopupImg"  styleClass="CMDB_DatePickerImage" style="display:none" width="19px" height="19px" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDateTimePicker();"/>
+												<apex:image id="datePopupImg"  styleClass="CMDB_DatePickerImage" style="display:none" width="19px" height="19px" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDatePicker();"/>
+											</td>
+											<td>
+												<div id="picklistCombo"/>	
+											</td>
+											<td>
+												<div id="booleanCombo"/>		
+											</td>
+										</tr>
+									</table>
+								</td>
+								<td width="130px" id="qualButtonTD" class="pad-10px-td" title="{!$Label.ToolTipLogOperator}">
+									<div id="qualLogicalOperatorCombo"></div>
+								</td>
+								<td width="90px" style="padding-left: 5px;"> 
+									<img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_add.png" onClick="addSLTQData();"  id="addButtonId" title="{!$Label.Add}" />
+									<img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_update.png" onClick="upadateSLTQData();" id="updateButtonId" style="display:none;" title="{!$Label.Update}" />   
+									<img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png" onClick="removeSLTQData();" id="removeButtonId" disabled="true" title="{!$Label.Remove}" />                                                           
+
+								</td>
+								<td>&nbsp;</td>
+							</tr>
+						</table>
+					</apex:outputPanel>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<table class="output-panel-toolbar-table" id="qual_grid_table_id"  cellpadding="0" cellspacing="0">
+						<tr>
+							<td>
+								<div id="qualificationGridDiv"/>             				
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+            <!-- Changes for US208376 start -->
+            <tr>
+				<table>
+					<tr>
+                        <td colspan="3" style="height:50px">
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__queueautoassignment}" styleClass="clsInputLabelTD clsAutoQueueAssignment"/>
+                             <img id="file-info-icon" src="{!$Resource.SSThemes}/SSDefaultTheme/SDEFicons/status-16-information.png" tabindex="0" title="{!$Label.QueueAutoAssignmentTooltip}" />
+                         </td>   
+                        
+					</tr>
+                    <tr>
+                    	<td colspan="3" class="clsInputLabelTD" style="padding:0px;">
+                     		<apex:outputpanel rendered="{!(!$ObjectType.BMCServiceDesk__Suggested_Owner_Mapping__c.fields.BMCServiceDesk__Assigned_Queue__c.Accessible)}">
+                          	<table class="boxContainer">
+	                          	<tr>
+	                          		<td><img src="/img/msg_icons/warning24.png"/></td>
+	                            	<td>
+		                            	<apex:outputpanel rendered="{!NOT(isAdminUser)}">
+		                            		<apex:outputLabel value="{!$Label.bmcservicedesk__profilenonsysadminpermission}"/>
+		                            	</apex:outputpanel>
+		                            	<apex:outputpanel rendered="{!isAdminUser}">
+		                            		<apex:outputLabel value="{!$Label.bmcservicedesk__profilesysadminpermission}" />&nbsp;
+		                            		<apex:outputLink value="https://docs.bmc.com/docs/display/REMF/Performing+minimum+post-upgrade+procedures" target="_blank">{!$Label.bmcservicedesk__here}</apex:outputLink>
+		                            		<apex:outputText value="."/>
+		                            	</apex:outputpanel>
+	                            	</td>
+	                           	</tr>
+                          	</table>
+                          	<table>
+								<tr>
+									<td style="height:10px;"></td>
+								</tr>
+                    		</table>
+							</apex:outputpanel>
+                        </td>
+                    </tr>
+					<tr>
+						<td class="clsInputLabelTD" style="padding-left:0px;">
+							<apex:outputLabel value="{!$Label.bmcservicedesk__queue}"/>
+						</td>
+						<td class="clsInputTextBoxTD" style="width:2%;">
+							<apex:inputText id="assignValue" value="{!objMapping.BMCServiceDesk__Assigned_Queue__c}" styleClass="clsInputTextBoxReadOnly" onmouseover="this.setAttribute('readonly', 'readonly');" style="background-color:white;"/>
+						</td>
+						<td class="lookupIconTD">
+							<div class="lookUpIconDiv" style="display:inline">
+								<apex:commandButton onclick="openQueueOnlyPopUp();" reRender="dummy" styleClass="lookupIconOn" />
+							</div>
+							<div class="lookUpIconDiv" style="display:inline">
+								<apex:commandButton onclick="resetQueue();" reRender="dummy" styleClass="bmcRefresh"/>
+							</div>
+						</td>
+					</tr>
+				</table>
+            </tr>
+            <hr/>
+            <!-- Changes for US208376 end -->
+            <tr>
+				<apex:outputLabel value="{!$Label.bmcservicedesk__suggestedowners}" styleClass="clsInputLabelTD" style="font-size:14px;padding-left:0px;font-weight:bold;color:#2E7DB3;display:block;padding-bottom:5px;"/>
+			</tr>
+            <tr>
+	            <td align="center">
+	                <table cellpadding="0" cellspacing="0" width="100%">
+	                    <tr>
+	                        <td align="left">
+	                            <div id='userID' style="text-align: left;">
+	                            </div>
+	                        </td>
+	                        <td align="right">
+	                            <div id='queueID' style="text-align: left;">
+	                            </div>
+	                        </td>
+	                    </tr>
+	                </table>    
+	            </td>
+			</tr>
+		</table>
+        <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+	</apex:form>
+	
+	<apex:outputPanel id="qualDataPanel">
+		<script>
+			listData = {!stCriteriaApplyConditions};
+		</script>
+	</apex:outputPanel>
+	<apex:outputPanel id="fldTypePanel">
+        <script>
+        	fldData = {!fieldData};
+		</script>
+    </apex:outputPanel>
+	
+	<script>
+		var extJsResource ='{!$Resource.SDEFExtJS}';   
+		var SdefStyles='{!$Resource.SDEFStyles}';
+         DZHE     ='џ'; //Cyrillic character
+		EF       ='ф'; //Cyrillic character
+		nonPrint = '¬';
+		PE = 'П';
+		Ext.ns("SuggestedOwnerMappingCriteriaPage");
+		SuggestedOwnerMappingCriteriaPage.Labels = {
+			Information: '{!JSENCODE($Label.Information)}',
+            suggestedOwnerTitleEmpty:'{!JSENCODE($Label.suggestionTitleEmpty)}',
+            ValidateLogicalOperatorForQual:'{!JSENCODE($Label.FulfillmentConditionOperatorMsg)}',
+			servicetargetOrder : "{!JSENCODE($Label.serviceTargetConditionOrder)}",
+			FieldName:'{!JSENCODE($Label.FieldName)}',
+			serviceTargetOperator : "{!JSENCODE($Label.Operator)}",
+			operandValue : "{!JSENCODE($Label.Value)}",
+			groupingOperator : "{!JSENCODE($Label.groupingOperator)}",
+			LogicalOperator:'{!JSENCODE($Label.LogicalOperator)}',
+			SelectFieldErrMsg:'{!JSENCODE($Label.ErrorMsgTemplateS)}',
+			SelectCmpOpMsg:'{!JSENCODE($Label.SelectCompOpMessage)}',
+			EnterValMsg:'{!JSENCODE($Label.EnterValueMsg)}',
+			SelectLogOpMsg:'{!JSENCODE($Label.SelectLogicalOpMsg)}',
+            DeletedRecord: '{!JSENCODE($Label.DeletedRecord)}',
+            Save: '{!JSENCODE($Label.Save)}',
+		 	Reset: '{!JSENCODE($Label.Reset)}',
+		 	labelSavedSuccessfully : '{!JSENCODE($Label.SavedSuccessfully)}',
+		 	Inactive: '{!JSENCODE($ObjectType.Suggested_Owner_Mapping__c.fields.Inactive__c.label)}',
+		 	validateCondIfQueue: '{!JSENCODE($Label.ConditionReqIfQueueSelected)}',
+		 	SuggOwnerHeader: '{!JSENCODE($ObjectType.Suggested_Owner_Mapping__c.label)}'
+		}
+		
+	    var clickedOnce = false; 
+	    var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+    
+		labelField = "<"+"{!JSENCODE($Label.CIExpField)}"+">";
+		labelAND='{!JSENCODE($Label.SLM_AND)}';
+		labelOR='{!JSENCODE($Label.OR)}';
+		labelNONE='{!JSENCODE($Label.opnone)}';
+		labelOperator = "<"+"{!JSENCODE($Label.Operator)}"+">";
+		labelLogicalOperator = "<"+"{!JSENCODE($Label.LogicalOperator)}"+">";
+		isRecDeleted ={!isRecDeleted};
+		inActive = {!objMapping.Inactive__c};
+        function getApplySTStrEle() {
+	   		return document.getElementById('{!$Component.suggestedOwnerCriteriaForm.applySTStr}');
+	    }
+		function getSDFStylesResPath(){
+          return '{!$Resource.SDEFStyles}';
+		}
+		function getInputTxtEle(){
+			return document.getElementById('{!$Component.suggestedOwnerCriteriaForm.inputTxt}');
+		}
+		function getInputTextAreaEle(){
+			return document.getElementById('{!$Component.suggestedOwnerCriteriaForm.inputTxtArea}');
+		} 
+		function getDateTimeInputEle(){
+			return document.getElementById('{!$Component.suggestedOwnerCriteriaForm.datetimeinput}');	
+		}
+		function getDateTimePickerImg(){
+			return document.getElementById('{!$Component.suggestedOwnerCriteriaForm.dateTimePopupImg}');
+		}
+		function getDateInputEle(){
+			return document.getElementById('{!$Component.suggestedOwnerCriteriaForm.inputDate}');	
+		}
+		function getDatePickerImg(){
+			return document.getElementById('{!$Component.suggestedOwnerCriteriaForm.datePopupImg}');
+		}
+		function getLookupEle(){
+			return document.getElementById('lookUp');
+		}
+		function getLookUpPanelEle(){
+			return document.getElementById('{!$Component.lookUpPanel}');
+		}
+        function getsuggestedOwnerTitleEle(){
+		   	return document.getElementById('{!$Component.suggestedOwnerCriteriaForm.slt_title_id}');
+	   } 
+	   
+	   function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+       }
+       
+	   var selectedQueueIds = '{!JSENCODE(objMapping.Suggested_Queue__c)}';
+	   var selectedStaffIds = '{!JSENCODE(objMapping.Suggested_Staff__c)}';
+	   var isFlattenedCmdb = {!isFlattenedCmdb};
+	   
+	   function registerSave(){
+	   	if(clickedOnce){
+	   		clickedOnce=false;
+	   		window.parent.registerSave(wid);   		
+   		}
+	   }
+	   
+		document.onclick = activateWindow; 
+		function handleChange(){
+			if(!clickedOnce){
+				clickedOnce = true;
+				window.parent.registerChange(wid);
+			}
+		}
+		
+		function resetQueue(){
+			var assignedQComp = document.getElementById(defQComp);
+			if(assignedQComp!=null && assignedQComp.value!=''){
+				assignedQComp.value='';
+                defQID = '';
+			}
+		}
+    </script>
+    <apex:outputPanel id="afterSavePanel">
+      <script>
+      errormsg = '{!JSENCODE(messageString)}';
+      Id='{!objMapping.ID}';
+      isInactive= '{!objMapping.Inactive__c}';
+      SuggestionTitle = '{!JSENCODE(objMapping.Name)}';
+      isRecDeleted ={!isRecDeleted};
+	  function getServiceTitleValue(){
+			return '{!JSINHTMLENCODE(objMapping.Name)}';
+   	  }
+
+	</script>
+     </apex:outputPanel>
+     
+    <apex:outputpanel id="resetUserAndQueueID">
+	    <script>
+	        var resultSet, resultSetUser;
+	        {!strRsUser}
+	        {!strRsQueue}
+	        renderUserGrid();
+	    </script>
+	</apex:outputpanel>
+</apex:page>

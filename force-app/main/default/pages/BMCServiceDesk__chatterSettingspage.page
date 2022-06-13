@@ -1,0 +1,67 @@
+<apex:page controller="BMCServiceDesk.ChatterSettingsController" showHeader="false" standardStylesheets="false" >
+    
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+  
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/chatterSettings.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <c:CommonIncludes />      
+     
+<body id="bodyContents">			
+ 
+	<apex:form id="form">								
+		<apex:actionFunction name="saveChatterSetting" action="{!saveChatterSetting}" onComplete="isComplete();" reRender="">		
+			<apex:param assignTo="{!DisableRemedyforceChatter}" name="DisableRemedyforceChatter" value=""/>	
+			<apex:param assignTo="{!IncidentChatterPostsJson}" name="IncidentChatterPostsData" value=""/>	
+		</apex:actionFunction>
+		<div id="btnToolbar" class="clsRowGreyBg"></div>
+		<div id="helpDiv" class="clshelpDiv"></div>
+		<div id="contentDiv" class = "clsMainPanel"></div>
+	</apex:form>
+	<script>
+			var Labels={};
+			Labels.ChatterGroup = '{!JSINHTMLENCODE($Label.ChatterGroup)}';
+			Labels.PCG_SelectChatterGroup = '{!JSINHTMLENCODE($Label.PCG_SelectChatterGroup)}';
+			Labels.PriorityWindowHeaderSearchPage = '{!JSINHTMLENCODE($Label.PriorityHeader)}';
+			Labels.ImpactWindowHeaderSearchPage = '{!JSINHTMLENCODE($Label.Navigator_Impact)}';
+			Labels.UrgencyWindowHeaderSearchPage = '{!JSINHTMLENCODE($Label.Urgency)}';
+			Labels.PCG_EnableFeature = '{!JSINHTMLENCODE($Label.PCG_EnableFeature)}';
+			var sdef_styles_path = '{!$Resource.SDEFStyles}';
+			var propDisableRFChatter ='{!DisableRemedyforceChatter}';
+			var errorMessage = '{!errorMessage}';
+			var chatterDisable = '{!JSINHTMLENCODE($Label.DisableRemedyforceChatter)}';
+			var saveMessage = '{!JSINHTMLENCODE($Label.SavedSuccessfully)}';			
+			var lblSave= '{!JSENCODE($Label.Save)}';
+			ShowIncidentChatterPosts = true;
+			chatterGroupsData = JSON.parse("{!JSENCODE(ChatterGroupsJson)}");				
+			IncidentChatterPostsGridData = {!IncidentChatterPostsJson};
+			IncidentChatterPostsGridData = {!IncidentChatterPostsJson}; 
+		    var msgTitle = '{!JSINHTMLENCODE($Label.GlobalSearchChatter)}';
+		    var waitMsg =   new Ext.Window({ 
+                    height:100, 
+                    width:200, 
+                    resizable:false, 
+                    closable : false, 
+                    header:false,
+                    frame:false, 
+                    shadow :false, 
+                    modal:true,
+                    items:[{ 
+                        xtype:'panel', 
+                        height:100, 
+                        width:200, 
+                        bodyStyle:'background-color:transparent;border:none;', 
+                        html:'<div align="center"><img src="{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif" /></div>' 
+                    }] 
+            });         
+			if(propDisableRFChatter == 'false'){
+				propDisableRFChatter = false;
+			}
+			else{
+				propDisableRFChatter = true;
+			}
+            var wikiUrl = '{!wikiUrl}';
+            parent.addHelpOnPage(document.getElementById('helpDiv'),'chatter_settings.htm',wikiUrl);
+	</script>
+</body>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/chatterSettings.js" />
+</apex:page>

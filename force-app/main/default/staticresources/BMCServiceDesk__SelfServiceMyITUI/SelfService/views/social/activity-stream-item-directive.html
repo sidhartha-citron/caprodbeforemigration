@@ -1,0 +1,190 @@
+<div id="activity-items" class="activity-item activity-item_type_{{activityItem.feedObjectType}}" 
+	 ng-class="{
+		 'activity-item_clickable': activityItem.isRequest
+		     || activityItem.isTicket 
+			|| activityItem.feedObjectType === 'appointment'
+			|| activityItem.feedObjectType === 'broadcast' && activityItem.feedData.url
+			|| activityItem.isApproval,
+		 'activity-item_comment': itemType === 'comment',
+		 'activity-item_commented': itemType === 'commented',
+		 'activity-item_notification': allowNotificationStyling && activityItem.isNotification,
+		 'activity-item_sticky-notification': allowNotificationStyling && activityItem.isSticky,
+		 'activity-item_loading': activityItem.markAsReadInProgress || activityItem.deletingPostInProgress,
+		 'activity-item_deleted': activityItem.deleted,
+		 'timeline-activity-item': timelineStyle,
+		 'timeline-activity-item_today': timelineStyle && activityItem.timelineOptions.isToday,
+		 'timeline-activity-item_first-in-group': timelineStyle && activityItem.timelineOptions.isFirstInGroup,
+		 'timeline-activity-item_last-in-group': timelineStyle && activityItem.timelineOptions.isLastInGroup,
+		 'timeline-activity-item_last': timelineStyle && $last
+	 }" 
+	 ng-click="openDetails(activityItem)">
+	<!-- "X" icon that marks notification as read, for sticky notifications -->
+	<ins ng-if="allowNotificationStyling && activityItem.isSticky" class="i-activity-item-sticky-close" ng-click="markAsRead($event)"></ins>
+
+	<!-- Item header, containing icon/thumbnail, title/username, and timestamp, depending on item type -->
+	<div class="activity-item__header">
+		<ins ng-if="allowNotificationStyling && activityItem.isNotification" class="activity-item__type-icon" ng-class="{
+			'i-activity-item-sticky-microblog': activityItem.feedObjectType === 'microblog'
+		}"></ins>
+
+		
+
+		<!-- Name of request and icon, for SRM of CLM requests -->
+		<div>
+			<div style="float:left;" ng-if="activityItem.isRequest|| activityItem.isTicket || activityItem.isClmRequest" class="activity-item__request-name nowrap-line" title="{{activityItem.feedText}}">
+				<ins ng-if="activityItem.isRequest" class="activity-item__type-icon SRTimeLineIcon" ng-mouseover="supportModel.timelineHover($event, true, true)" ng-mouseleave="supportModel.timelineHover($event, true, false)"></ins>
+				<ins ng-if="activityItem.isTicket" class="activity-item__type-icon incidentTimeLineIcon" ng-mouseover="supportModel.timelineHover($event, true, true)" ng-mouseleave="supportModel.timelineHover($event, true, false)"></ins>
+				{{htmlUnescape(activityItem.feedText)}}&nbsp;&nbsp;|&nbsp;&nbsp;{{htmlUnescape(activityItem.dispStatus)}}
+			</div>
+			<div style="float:right;" ng-if="activityItem.ActionStatus" class="activity-item__request-name nowrap-line" >
+				<span class="d-icon-right-flag SSActionFlag" title={{$root.selfServiceLabels.SSAction}}></span>
+			</div>
+			<div style="clear:both;"></div>
+		</div>
+		
+		<div ng-if="itemType !== 'comment'">
+			<!-- User thumbnail and name with profile link, for microblog-like items and for services with no name -->
+			<a ng-if="activityItem.showAsMicroblog"
+			   class="activity-item-header__profile-link"
+			   ui-sref="{{getProfileStateLink(activityItem.createdById, activityItem.createdByType, true)}}"
+			>
+				<img class="activity-item__header-userpic" thumbnail-img="{{thumbnailCache.get(activityItem.createdByType, activityItem.createdById)}}" placeholder="user" />
+				{{activityItem.createdByFirstName}} {{activityItem.createdByLastName}}
+			</a>
+
+			<!-- Timeline timestamp, for items as above (and requests, and appointments), only when timeline styling is on -->
+			<div aria-hidden="true" class="timeline-activity-item__timeline-time"
+				 ng-if="timelineStyle
+				 	&& (
+				 		activityItem.showAsMicroblog
+				 		|| activityItem.isRequest
+						|| activityItem.isTicket 
+				 		|| activityItem.feedObjectType === 'appointment'
+				 		|| activityItem.feedObjectType === 'service'
+				 		|| activityItem.isClmRequest
+					)" ng-mouseover="supportModel.timelineHover($event, true, true)" ng-mouseleave="supportModel.timelineHover($event, true, false)">
+				{{activityItem.createDate | getTime}}
+			</div>
+		
+			<div ng-repeat="field in activityItem.dynamicFields" class="activity-item__status">
+				<div>
+					<label class="activity-item__labels" ng-bind-html="to_trusted(field.label)" ></label>
+					<label class="activity-item__values" ng-if="field.type != 'TEXTAREA' && field.type != 'RICHTEXTAREA' && field.type != 'FORMULA' && field.type != 'BOOLEAN' && field.type != 'URL' " ng-bind-html="field.value"></label>
+					<label class="activity-item__values" ng-if="field.type == 'URL'" onclick="if (window.event && window.event.stopPropagation) window.event.stopPropagation(); else event.stopPropagation();" ng-bind-html="field.value"></label>
+					<label class="activity-item__values" ng-if="field.type == 'FORMULA'" ng-bind-html="to_trusted(field.value)"></label>
+					<label class="activity-item__values block-with-text" ng-if="field.type == 'TEXTAREA'" ng-bind-html="field.value" style="white-space: pre-wrap; word-wrap: break-word;"></label>
+					<label class="activity-item__values block-with-text" ng-if="field.type == 'RICHTEXTAREA'" ng-bind-html="to_trusted(field.value)"style="white-space: pre-wrap; word-wrap: break-word;"></label>
+					</label>
+					<span ng-if="field.type=='BOOLEAN'"><input type="checkbox" ng-checked="field.value" disabled="disabled"/></span>
+				</div>
+            </div>
+            
+
+			<!-- Date and time, for all items except for appointments -->
+			<div class="activity-item__timestamp" ng-if="!(activityItem.feedObjectType === 'appointment')">
+			</div>
+		</div>
+
+		<!-- Comment timestamp and commenter name with userpic, for comment -->
+		<div ng-if="itemType === 'comment'">
+			<span class="activity-item__timestamp">{{activityItem.createDate | getDate}}</span>
+			<a class="activity-item__commenter-profile-link" 
+				ui-sref="{{getProfileStateLink(activityItem.createdById, activityItem.createdByType, true)}}">
+				<img class="activity-item__header-userpic" thumbnail-img="{{thumbnailCache.get(activityItem.createdByType, activityItem.createdById)}}" placeholder="user" />
+				{{activityItem.createdByFirstName}} {{activityItem.createdByLastName}}
+			</a>
+		</div>
+	</div>
+
+	<!-- Appointment date and time, for appointment notifications -->
+	<div ng-if="allowNotificationStyling && activityItem.isNotification && activityItem.feedObjectType === 'appointment'">
+		{{activityItem.appointmentTime.toDate() | date: 'short'}}<span ng-if="activityItem.appointmentLocation.shortLocationString">, {{activityItem.appointmentLocation.shortLocationString}}</span>
+	</div>
+
+	<!-- Text of post, for microblog-like items, broadcasts, and regular appointments  -->
+	<div ng-if="activityItem.showAsMicroblog
+		|| activityItem.feedObjectType === 'service'
+		|| (activityItem.feedObjectType === 'appointment' && (!activityItem.isNotification || !allowNotificationStyling))
+		|| activityItem.feedObjectType === 'application'"
+		class="activity-item__text" activity-item-text="activityItem.feedText"></div>
+
+	
+
+	<!-- Body of broadcast, for broadcasts -->
+	<div ng-if="activityItem.feedObjectType === 'broadcast'">{{activityItem.feedData.msg}}</div>
+
+	<!-- Text of comment, for comments -->
+	<div ng-if="itemType === 'comment'" class="activity-item__text" activity-item-text="activityItem.commentText"></div>
+
+	<!-- Shared post data -->
+	<div ng-if="activityItem.referencedBy" class="activity-item__referenced-item">
+		<div class="activity-item__header">
+			<a class="activity-item-header__profile-link" ui-sref="{{getProfileStateLink(activityItem.referencedBy.createdByUserId, 'user', true)}}">
+				{{activityItem.referencedBy.createdByFirstName}} {{activityItem.referencedBy.createdByLastName}}
+			</a>
+			<div class="activity-item__timestamp">
+				{{activityItem.referencedBy.createdOn | date: 'mediumDate'}} {{activityItem.referencedBy.createdOn | date: 'shortTime'}}
+			</div>
+		</div>
+		<div class="activity-item__text" activity-item-text="activityItem.referencedBy.feedText"></div>
+		<activity-item-attachments ng-if="activityItem.referencedBy.hasAttachments"
+			attachments="activityItem.referencedBy.attachments"
+			activity-item-id="{{activityItem.referencedBy.id}}"
+		>
+		</activity-item-attachments>
+	</div>
+
+	<!-- Attachments section -->
+	<activity-item-attachments ng-if="activityItem.hasAttachments"
+		attachments="activityItem.attachments"
+		activity-item-id="{{activityItem.id}}"
+		activity-item-type="{{itemType}}"
+	>
+	</activity-item-attachments>
+	
+	<!-- Controls section -->
+	<div class="activity-item__controls" ng-if="!(activityItem.isNotification && allowNotificationStyling)">
+		<span ng-if="activityItem.showAsMicroblog && itemType !== 'commented'" class="activity-item__control-item" ng-click="$state.go('updates.activity-item-comments', { activityItemId: activityItem.id })">
+			<span class="i i-activity-item-control-comment"></span>
+			<span ng-if="activityItem.commentCount" class="activity-item__control-item-counter">{{activityItem.commentCount}}</span>
+		</span>
+		<span ng-if="activityItem.showAsMicroblog" class="activity-item__control-item" ng-class="{ 'activity-item__control-item_disabled': activityItem.likeToggleInProgress }">
+			<span class="i i-activity-item-control-like" ng-click="toggleComment()" ng-class="{ 'i-activity-item-control-like_liked': activityItem.selfLike }"></span>
+			<span ng-if="activityItem.likeCount" class="activity-item__control-item-counter">{{activityItem.likeCount}}</span>
+		</span>
+		<span ng-if="isSocialEnabled && activityItem.showAsMicroblog" class="activity-item__control-item">
+			<span class="i i-activity-item-control-share" ng-click="sharePost(activityItem)"></span>
+		</span>
+		<span ng-if="itemType !== 'comment' && !activityItem.isRequest && activityItem.feedObjectType !== 'service' && activityItem.feedObjectType !== 'appointment' && activityItem.feedObjectType !== 'application' && activityItem.createdById === userModel.userId" class="activity-item__control-item">
+			<span class="i i-activity-item-control-delete" ng-click="deletePost($event)"></span>
+		</span>
+
+		<!-- Icons for comment and delete, for requests -->
+		<!--<span ng-if="activityItem.isRequest && itemType !== 'commented'" class="activity-item__control-item">
+			<span class="i i-activity-item-control-comment"></span>
+			<span ng-if="activityItem.commentCount" class="activity-item__control-item-counter">{{activityItem.commentCount}}</span>
+		</span>-->
+		<!--<span class="activity-item__control-item"
+			ng-if="(activityItem.isRequest || activityItem.isTicket ) && itemType !== 'commented' && activityItem.feedData.status != 'CLOSED'"
+			ng-click="showRequestCancellationDialog(activityItem, $event)">
+			<span class="i i-activity-item-control-delete"></span>
+		</span>-->
+	</div>
+
+	<!-- Timeline display elements -->
+	<div class="timeline-activity-item__timeline-elements" ng-if="timelineStyle" ng-mouseover="supportModel.timelineHover($event, true, true)" ng-mouseleave="supportModel.timelineHover($event, true, false)">
+		<ins class="i-timeline-bubble-pointer"></ins>
+		<ins class="timeline-activity-item__the-line" style="cursor: default; pointer-events: none;"></ins>
+		<ins class="timeline-activity-item__timeline-dot"
+			 ng-class="{ 'timeline-activity-item__timeline-dot_today': activityItem.timelineOptions.isToday }">
+		</ins>
+		<div class="timeline-activity-item__group-title" ng-if="activityItem.timelineOptions.isFirstInGroup" style="cursor: default; pointer-events: none;">
+			<span ng-if="activityItem.timelineOptions.relativeDateLabel">
+				{{activityItem.timelineOptions.relativeDateLabel}}
+			</span>
+			<span ng-if="!activityItem.timelineOptions.relativeDateLabel">
+				{{activityItem.createDate | getDate}}
+			</span>
+		</div>
+	</div>
+</div>

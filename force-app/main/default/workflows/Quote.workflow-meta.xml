@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fieldUpdates>
+        <fullName>Update_Quebec_Taxes</fullName>
+        <field>Tax</field>
+        <formula>TVQ__c +  TPS__c</formula>
+        <name>Update Quebec Taxes</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Quote_Expiry_Date</fullName>
+        <field>ExpirationDate</field>
+        <formula>TODAY() + 30</formula>
+        <name>Update Quote Expiry Date</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Quote_Name</fullName>
+        <field>Name</field>
+        <formula>Opportunity.Account.Name &amp; &quot; - &quot; &amp;  TEXT(ExpirationDate)</formula>
+        <name>Update Quote Name</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Tax</fullName>
+        <field>Tax</field>
+        <formula>Tax_Percent__c *  Subtotal</formula>
+        <name>Update Tax</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <rules>
+        <fullName>Calculate Quebec Tax</fullName>
+        <actions>
+            <name>Update_Quebec_Taxes</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>false</active>
+        <booleanFilter>1 OR (2 AND 3)</booleanFilter>
+        <criteriaItems>
+            <field>Quote.Quote_Location__c</field>
+            <operation>equals</operation>
+            <value>Quebec,Brossard,Trois Rivières</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote.Tax_Percent__c</field>
+            <operation>equals</operation>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote.Quote_Location__c</field>
+            <operation>equals</operation>
+            <value>Ottawa</value>
+        </criteriaItems>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <rules>
+        <fullName>Calculate Regular Tax</fullName>
+        <actions>
+            <name>Update_Tax</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>false</active>
+        <criteriaItems>
+            <field>Quote.Tax_Percent__c</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote.Quote_Location__c</field>
+            <operation>notEqual</operation>
+            <value>Quebec,Brossard,Trois Rivières</value>
+        </criteriaItems>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <rules>
+        <fullName>Update Quote Expiry Date</fullName>
+        <actions>
+            <name>Update_Quote_Expiry_Date</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>false</active>
+        <criteriaItems>
+            <field>Quote.CreatedById</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <triggerType>onCreateOnly</triggerType>
+    </rules>
+    <rules>
+        <fullName>Update Quote Name</fullName>
+        <actions>
+            <name>Update_Quote_Name</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>false</active>
+        <criteriaItems>
+            <field>Quote.CreatedById</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <triggerType>onCreateOnly</triggerType>
+    </rules>
+</Workflow>

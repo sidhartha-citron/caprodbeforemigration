@@ -1,0 +1,71 @@
+<aura:component implements="force:lightningQuickAction,force:appHostable,flexipage:availableForAllPageTypes,force:hasRecordId" access="global" controller="InputLookup">
+    <aura:attribute name="searchString" type="String"/>
+    <aura:attribute name="searchResults" type="SObject[]"/>
+    <aura:attribute name="sObjectType" type="String"/>
+    <aura:attribute name="label" type="String"/>
+    <aura:attribute name="icon" type="String"/>
+    <aura:attribute name="selectedResult" type="SObject"/>
+    <aura:attribute name="value" type="Id"/>
+    <aura:attribute name="required" type="Boolean" default="false"/>
+
+	<!--<aura:handler name="init" value="{!this}" action="{!c.doInit}" />-->
+	<aura:handler name="change" value="{!v.value}" action="{!c.valueChange}"/>    			                    
+
+    <!-- Event to notify the Site Survey Skill Requirement Component that a Skill is selected by the user -->
+    <aura:registerEvent name="skillChosenEvent" type="c:SkillSelected"/>
+	<aura:registerEvent name="VehicleChosenEvent" type="c:VehicleSelected"/>
+
+<div aura:id="lookup" class="slds-form-element slds-lookup" data-select="single">
+    <label class="slds-form-element__label">
+    	<aura:if isTrue="{!v.required}"><abbr class="slds-required" title="required">*</abbr> </aura:if>
+        {!v.label}
+    </label>
+<div id="a" tabindex="-1" onfocusout="{!c.lookup_hide}">
+    <div class="slds-form-element__control">
+        <div class="slds-input-has-icon slds-input-has-icon--right">
+            <aura:if isTrue="{!empty(v.selectedResult)}">
+                <!--<lightning:icon class="slds-input__icon" iconName="utility:search" size="x-small"/>-->
+                <ui:inputText aura:id="searchInput" class="slds-lookup__search-input slds-input" placeholder="{!$Label.c.Site_Survey_Search + ' '+ (v.sObjectType != 'Location' ? v.sObjectType : $Label.c.Vehicle )}" value="{!v.searchString}" updateOn="keyup" keyup="{!c.lookup_typeahead}" focus="{!c.lookup_show}"/>
+                <aura:set attribute="else">
+                    <div class="slds-pill_container">
+                        <span class="slds-pill">
+                            
+                            <span class="slds-icon_container slds-icon-standard-account slds-pill__icon_container">
+                                <lightning:icon class="slds-icon" iconName="{!v.icon}" size="x-small"/>
+                                <span class="slds-assistive-text">{!v.sObjectType}</span>
+                            </span>
+                            <aura:if isTrue="{!!empty(v.selectedResult.MasterLabel)}">
+                            <span class="slds-pill__label">{!v.selectedResult.MasterLabel}</span>
+                            </aura:if>
+                            <aura:if isTrue="{!empty(v.selectedResult.MasterLabel)}">
+                            <span class="slds-pill__label">{!v.selectedResult.Name}</span>
+                            </aura:if>
+                            <lightning:buttonIcon class="slds-button slds-button--icon slds-pill__remove" iconName="utility:close" variant="bare" onclick="{!c.lookup_unselect}"/>
+                        </span>
+                    </div>
+                </aura:set>
+            </aura:if>            
+        </div>
+    </div>
+    <div class="slds-lookup__menu">
+        <div class="slds-lookup__item--label slds-text-body--small">"{!v.searchString}" in {!v.sObjectType}</div>
+        <ul class="slds-lookup__list" role="listbox">
+            <aura:iteration items="{!v.searchResults}" var="r" indexVar="i">
+                <li role="presentation">
+                    <a class="slds-lookup__item-action slds-media slds-media--center" id="{!i}" role="option" onclick="{!c.lookup_select}">
+                        <div class="slds-media__body">
+                            <aura:if isTrue="{!!empty(r.MasterLabel)}">
+                            <div class="slds-lookup__result-text">{!r.MasterLabel}</div>
+                            </aura:if>
+                            <aura:if isTrue="{!empty(r.MasterLabel)}">
+                                <div class="slds-lookup__result-text">{!r.Name}</div>
+                            </aura:if>
+                        </div>
+                    </a>
+                </li>
+            </aura:iteration>
+        </ul>
+    </div>
+</div>
+</div>
+</aura:component>

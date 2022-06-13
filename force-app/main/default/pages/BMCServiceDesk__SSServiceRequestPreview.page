@@ -1,0 +1,208 @@
+<apex:page id="SSServiceRequestPreview" controller="BMCServiceDesk.SSRequestDefController" sidebar="false" showHeader="false" standardStyleSheets="true">
+<div id="themeDiv"></div>
+
+<apex:form >
+	<div class="srpreview-tbar">
+		<div style="float:left;">
+			<table  height="100%" cellspacing="0" cellpadding="0">
+			<tr>
+	           	<td><input type="button" id="requestBtn-top" title="{!$Label.SS_RequestNow} (Ctrl+Alt+N)" value="{!$Label.RequestNow}" class="ssBtnCls" onclick="requestNowHandler();"/></td>
+	           	<td width="10"/>
+	           	<apex:outputPanel rendered="{!AND(showCartPortlet,NOT(isComponent))}">
+	           		<td><input type="button" id="cartBtn-top" title="{!$Label.SS_AddToCart} (Ctrl+Alt+A)" value="{!$Label.saveToCart}" class="ssBtnCls" onclick="addToCart();"/></td>
+				</apex:outputPanel>
+			</tr>
+			</table>
+		</div>
+		<div style="float:right;">
+			<apex:outputPanel rendered="{!showRequestHelp}">
+				<table  height="100%" cellspacing="0" cellpadding="2">
+				<tr>
+		           	<td><apex:outputLabel value="{!$Label.bmcservicedesk__requesthelpmessage}" styleClass="requestHelpCls"/></td>
+		           	<td width="5"/>
+		           	<td tabindex="0"><apex:outputLabel value="{!$Label.bmcservicedesk__ss_incidenthome}" styleClass="submitLinkCls" onclick="submitTicket();"/></td>
+		           	<td width="20"/>
+				</tr>
+				</table>
+			</apex:outputPanel>
+		</div>
+    </div>
+    <div id="srpreview-contents" class="srpreview-contents">
+		<table width="100%" cellspacing="0" cellpadding="0" border="0">
+			<tr><td colspan="2" height="5"/></tr>
+			<tr>
+				<td colspan="2">
+			    	<img class="ssImageCls" src="{!IF(imageUrl!='DEFAULT',imageUrl,URLFOR($Resource.SSThemes,'SSDefaultTheme/SDEFicons/ServiceRequestDefault32.png'))}"/> 
+					<div class="rf-sr-infotd">
+				    	<apex:outputLabel styleClass="srHeaderCls" value="{!requestDef.Name}"/>
+					</div>
+				</td>
+			</tr>
+			<apex:outputPanel rendered="{!isTurnAround}">
+				<tr><td colspan="2" height="15"/></tr>
+				<tr>
+					<td width="10%">
+				    	<apex:outputLabel styleClass="boldFontCls" value="{!$Label.bmcservicedesk__reqdefturnaroundtime}: "/>
+				    </td>
+				    <td>
+				    	<apex:outputText value="CRUDFLSCHECK# Both CRUD & FLS check are not required ( SRM_RequestDefinition__c is a metadata object)" rendered="false"/> 
+					    <apex:outputText value="{!turnaroundTime}"/>
+					</td>
+				</tr>
+			</apex:outputPanel>
+			<apex:outputPanel rendered="{!isPrice}">
+				<tr><td colspan="2" height="10"/></tr>
+				<tr>
+					<td width="10%">
+						<apex:outputLabel styleClass="boldFontCls" value="{!$Label.bmcservicedesk__reqdefprice}: "/>
+					</td>
+					<td>
+						<apex:outputText value="CRUDFLSCHECK# Both CRUD & FLS check are not required ( SRM_RequestDefinition__c is a metadata object)" rendered="false"/> 
+				    	<apex:outputText value="{!customerPrice}"/>
+					</td>
+				</tr>
+			</apex:outputPanel>
+			<tr><td colspan="2" height="15"/></tr>
+			<tr>
+				<td colspan="2">
+					<apex:outputField value="{!requestDef.BMCServiceDesk__Description__c}" rendered="{!NOT(showRTFDescription)}"/>
+					<apex:outputField value="{!requestDef.BMCServiceDesk__Description_Rich_Text__c}" rendered="{!showRTFDescription}"/>
+				</td>
+			</tr>
+		</table>
+	</div>
+    <div class="srpreview-bbar">
+		<div style="float:left;">
+			<table  height="100%" cellspacing="0" cellpadding="0">
+			<tr>
+	           	<td><input type="button" id="requestBtn-bottom" title="{!$Label.SS_RequestNow} (Ctrl+Alt+N)" value="{!$Label.RequestNow}" class="ssBtnCls" onclick="requestNowHandler();"/></td>
+	           	<td width="10"/>
+	           	<apex:outputPanel rendered="{!AND(showCartPortlet,NOT(isComponent))}">
+	           		<td><input type="button" id="cartBtn-bottom" title="{!$Label.SS_AddToCart} (Ctrl+Alt+A)" value="{!$Label.saveToCart}" class="ssBtnCls" onclick="addToCart();"/></td>
+				</apex:outputPanel>
+			</tr>
+			</table>
+		</div>
+		<div style="float:right;"></div>
+	</div>
+    <apex:actionFunction name="addToCart" action="{!addToCart}" rerender="" oncomplete="updateParentCartIcon();parent.closeTabLater(tabID);"/>
+</apex:form> 	
+<script>
+	var tabTitle = '{!JSENCODE($Label.ServiceRequestLabel)}'+': '+'{!JSENCODE(requestDef.Name)}';
+	var requestId = '{!JSENCODE($CurrentPage.parameters.reqDefId)}';
+	var serviceRequestForm = '{!$Page.SelfServiceIncidentCustom}';
+	var ssIncidentStdForm;
+	var formAssigned = '{!formAssigned}';
+	var CartBtn = document.getElementById('cartBtn-top');
+	if(formAssigned=='STD'){
+		ssIncidentStdForm = '{!$Page.SelfServiceIncident}';
+	}else if(formAssigned=='CUSTOM'){
+		ssIncidentStdForm = '{!$Page.SelfServiceIncidentCustom}';
+	}else{
+		ssIncidentStdForm = '{!$Page.SSTicketLayout}';
+	}
+	
+	var isComponent = {!isComponent};
+	var activeTab,tabID;
+	if(!isComponent && parent.changeTabTitle && window.frameElement){
+		parent.changeTabTitle('SRPRE'+requestId,tabTitle);
+	    activeTab = window.frameElement.getAttribute("id");
+		tabID = activeTab.slice(7);
+    }
+    else if(isComponent){
+    	window.document.title = tabTitle;
+    }
+	
+	function requestNowHandler(){
+		var tabUrl = serviceRequestForm+'?isServiceRequest=true&reqDefId='+requestId;
+		if(isComponent){
+			window.location.href = tabUrl+'&isComponent=true';
+		}else{
+			parent.addNewTab(true,'SR'+requestId+Math.random(),tabTitle,tabUrl);
+			parent.closeTab('SRPRE'+requestId);
+		}
+	}
+	
+	function submitTicket(){
+		if(isComponent){
+			var tabUrl = ssIncidentStdForm+'?isComponent=true';
+			if(formAssigned=='CUSTOM'){
+				tabUrl = serviceRequestForm+'?&isCustom=true&isComponent=true'; 
+			}
+			window.open(tabUrl);
+		}else{	
+			parent.openIncidentTab();
+		}
+	}
+	function updateParentCartIcon() {
+		if(!isComponent){
+	   		parent.cartItemCount= parent.cartItemCount+1;
+	    	parent.updateCartIcon();
+		}
+	}
+	
+	if(Sarissa._SARISSA_IS_IE && (navigator.userAgent.indexOf("Trident/6")>-1)){  
+		window.XMLSerializer = function(){};      
+		window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+	
+	var isRFHotkeysDisabled={!isRFHotkeysDisabled};
+	//for shortcuts
+document.onkeydown = function(e) {
+if(!isRFHotkeysDisabled){
+    e = e || window.event;
+    if(typeof(e) == 'undefined' || e == 'null')
+        return; 
+    k = e.which || e.charCode || e.keyCode; // because of browser differences...
+	 // only these key combinations are allowed rest are ignored
+    if ((!(e.ctrlKey && e.altKey)) || ((k != 78) && (k != 65)&& (k != 66)&& (k != 77)&& (k != 81)&& (k != 72)))
+        return;
+	
+	if(e.ctrlKey && e.altKey){
+		if(k==78 ) //Ctrl+Alt+N - Request Now
+			requestNowHandler(); 
+		if(k==65 && !isComponent){ //Ctrl+Alt+A - Add to cart
+			if(CartBtn)		
+			CartBtn.click();
+		}
+		if(!isComponent){
+		if(k==77){ //Ctrl+Alt+M - My Cart
+			window.parent.showCart();
+		}
+		if(k==66){ //Ctrl+Alt+B - Broadcast			
+			window.parent.showBroadcast();			
+		}
+		if(k==81){ //Ctrl+Alt+Q - Quick Links
+			window.parent.OpenQuickLinks();			
+		}
+		if(k==72){ //Ctrl+Alt+H - Profile/Help
+			if(window.parent.isShowMyProfile || window.parent.isShowSSBanner)
+			window.parent.MoreOptionsctxMenu.show();
+			else
+			window.parent.openHelp();
+	    }
+	}
+	}
+}
+}
+if(window.parent.SSKeyNavigation!=undefined){
+		window.parent.SSKeyNavigation('SRPREVIEW-RN',requestNowHandler);
+		if(CartBtn)
+		window.parent.SSKeyNavigation('SRPREVIEW-ADD',addToCart);
+}
+</script>
+<script type="text/javascript">         
+        var colorCodeList = '{!JSENCODE(themeColorCodeString)}';          
+        var content = '{!JSENCODE(dynamicStyle)}';
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+</script>
+<script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" />
+<script>
+	if(isRFHotkeysDisabled){   
+		setTitle(document.getElementById('requestBtn-top'),'{!JSENCODE($Label.SS_RequestNow)}'); 
+		setTitle(document.getElementById('cartBtn-top'),'{!JSENCODE($Label.SS_AddToCart)}');
+		setTitle(document.getElementById('requestBtn-bottom'),'{!JSENCODE($Label.SS_RequestNow)}');
+		setTitle(document.getElementById('cartBtn-bottom'),'{!JSENCODE($Label.SS_AddToCart)}'); 
+	}
+</script>
+</apex:page>

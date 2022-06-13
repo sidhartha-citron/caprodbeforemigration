@@ -1,0 +1,79 @@
+   	<div class="quick-view-container" id="quickViewContainer" ng-if="showSidebarOnly == false">   
+        <div tabindex="0"  class="Quick-Details-RelatedList-headerRow" >
+            <div class="Quick-Details-RelatedList-headerRow-content" ng-click="showHideRecordDetails()">
+                <span class="header-content" ng-class="{'d-icon-angle_right': !recordDetailsClicked,'d-icon-angle_down': recordDetailsClicked} " ng-if=" nodeKeys && nodeKeys.length > 0"></span>
+                <span class="header-content sidebar-headerrow-text" title="{{ObjectLabels['singular'][objectMetaData.APIName == 'Service_Request__c'? objectMetaData.APIName : selectedNodeAPI]}} #{{rootData.Name}}">{{ObjectLabels["singular"][objectMetaData.APIName == 'Service_Request__c'? objectMetaData.APIName : selectedNodeAPI]}} #{{rootData.Name}}</span>
+            </div>
+            <div class="record-details-button-wrapper">
+                <span class="btn-panel-quickdetail {{newObjectMetaDataMap.get(selectedNodeID) ? 'enabled' : 'disabled'}}" ng-if=" nodeKeys && nodeKeys.length > 0">
+                    <button class="__icon-right-pencil {{newObjectMetaDataMap.get(selectedNodeID) ? 'enabled' : 'disabled'}}" ng-click="enableEdit();" title="{{_Labels.quickDetails.edit}}" ng-show="!enableQuickEdit" ng-disabled="disableEditButton"></button>
+                    <button class='__icon-check' ng-click="saveRecord();" title="{{_Labels.quickDetails.save}}" ng-show="enableQuickEdit"></button>
+                    <button class='__icon-left-reply' ng-click="cancelEdit();" title="{{_Labels.quickDetails.cancel}}" ng-show="enableQuickEdit"></button>
+                </span>
+                <span class="separator quickdetail" ng-if="nodeKeys && nodeKeys.length > 0"></span>
+                <button class="btn-service-target {{isServiceEnabled ? 'enabled' : 'disabled'}}" ng-click="queryServiceTargets(isServiceEnabled, true);" title="{{_Labels.quickDetails.serviceTarget}}">
+					<span class="serviceTarget {{serviceTargetIcon}}"/>
+				</button>
+            </div>
+        </div> 
+		<table class="quickView" ng-show="recordDetailsClicked">                     
+            <tbody ng-repeat="node in nodeKeys track by $index" ng-if="node != 'attributes' && node != 'Attachments' && node != 'Histories' && node.indexOf('.') < 0">
+            <tr ng-if="fieldMetaData[node] != undefined && fieldMetaData[node] != '' && fieldMetaData[node]['fldLabel'] != undefined && fieldMetaData[node]['fldLabel'] != null && fieldMetaData[node]['isReadable']">                                   
+				<!-- Laebl Column -->
+                <td class="quickview-table-label">
+                    <h6 class="question-label" style="margin: 0;color: #666;">{{fieldMetaData[node]['fldLabel']}} <span class="sidebar-required" ng-if="fieldMetaData[node].isRequired != undefined && fieldMetaData[node].isRequired && enableQuickEdit && fieldMetaData[node].isWritable &&((fieldMetaData[node]['fieldType'] == 'BOOLEAN') || (fieldMetaData[node]['fieldType'] != 'REF-PICKLIST') || (fieldMetaData[node]['fieldType'] != 'PICKLIST') ||  (fieldMetaData[node]['fieldType'] != 'REFERENCE') || (fieldMetaData[node]['fieldType'] != 'EMAIL') || (fieldMetaData[node]['fieldType'] != 'DATE') || (fieldMetaData[node]['fieldType'] != 'DOUBLE') || ( fieldMetaData[node]['fieldType'] != 'STRING') ||  ( fieldMetaData[node]['fieldType'] != 'DATETIME') || ( fieldMetaData[node]['fieldType'] != 'TEXTAREA' && fieldMetaData[node]['isCalculated'] != true))">  ({{_Labels.modal.Required}})</span></h6>                                                   
+                </td>                                   
+                <!-- Detail Column -->
+                <td colspan="2">
+                    <!-- Read-only Panel -->
+                    <span ng-if="!fieldMetaData[node].isWritable || !enableQuickEdit" style="width:100%;display: inline-block;">
+						<span ng-if="fieldMetaData[node]['fieldType'] == 'BOOLEAN'" ng-class="rootData[node] ? '__icon-check' : '__icon-cross'" style="height: 15px;width:15px"/>
+                        <span ng-if="(fieldMetaData[node]['fieldType'] == 'STRING' && fieldMetaData[node]['isCalculated'] == false) || (fieldMetaData[node]['fieldType'] != 'DATETIME' && fieldMetaData[node]['fieldType'] != 'DATE'  && fieldMetaData[node]['fieldType'] != 'BOOLEAN' && fieldMetaData[node]['fieldType'] != 'STRING')" style="width:94%;display: inline-block;;">
+                            {{fieldMetaData[node]['fieldType'] == 'REFERENCE' || fieldMetaData[node]['fieldType'] == 'REF-PICKLIST'  
+                            ? node == 'OwnerId' ? rootData['Owner'].Name : rootData[fieldMetaData[node]['relationshipName']].Name 
+                            : rootData[node]}}
+                        </span>
+                        <span ng-if="fieldMetaData[node]['fieldType'] == 'DATETIME'">{{parseDate(rootData[node])}}</span>
+                        <span ng-if="fieldMetaData[node]['fieldType'] == 'STRING' && fieldMetaData[node]['isCalculated'] == true" ng-bind-html="rootData[node]"></span>
+                        <span ng-if="fieldMetaData[node]['fieldType'] == 'DATE'">{{parseDateOnly(rootData[node])}}</span>
+                    </span>
+					<!-- Edit Panel begins -->
+                        <span ng-if="fieldMetaData[node].isWritable && enableQuickEdit">                                                                 
+                            <!-- PCIKLIST CREATED FROM RECORDS - IMPACT/URGENCY -->
+                            <select ng-options="item.Id as item.Name for item in fieldMetaData[node]['defaultValues']"  
+                            ng-model="fieldMetaData[node].fvalue"                                                                ng-if="enableQuickEdit && fieldMetaData[node]['fieldType'] == 'REF-PICKLIST'" 
+                            class="quick-edit" ng-init="fieldMetaData[node].fvalue = rootData[node]"                                                                 reqd="{{fieldMetaData[node].isRequired}}"/>
+                                                        
+                            <!-- PCIKLIST CREATED FROM PICKLIST TYPE FIELDS -->
+							<select ng-model="fieldMetaData[node].fvalue"  ng-if="enableQuickEdit && fieldMetaData[node]['fieldType'] == 'PICKLIST'" class="quick-edit"  ng-init="fieldMetaData[node].fvalue = rootData[node]"  reqd="{{fieldMetaData[node].isRequired}}">
+                                <option ng-selected="{{fieldMetaData[node].fvalue == item }}" ng-repeat="item in fieldMetaData[node]['defaultValues']" value="{{item}}" title="{{item}}">
+                                    {{(item.length > 35)? (item| limitTo :35)+'...':item}}
+                                </option>
+                            </select>
+							<!-- LOOKUP INPUT -->
+                            <input type="{{fieldMetaData[node]['fieldType']}}" class="quick-edit" style="width: 90%; display: inline-block;" 
+                            ng-click="getlookup(node, fieldMetaData[node]['referenceTo'])" mg-model="fieldMetaData[node]"                value="{{fieldMetaData[node].fRefFieldVal}}" ng-if="(fieldMetaData[node]['fieldType'] == 'REFERENCE') && (((fieldMetaData[node]['referenceTo'].indexOf('SYSTemplate__c')) > -1 && isTemplateEnabled) || ((fieldMetaData[node]['referenceTo'].indexOf('SYSTemplate__c')) == -1))"                                    ng-init="fieldMetaData[node].fRefFieldVal = node == 'OwnerId' ? rootData['Owner'].Name : rootData[node.replace('__c', '__r')].Name; fieldMetaData[node].fvalue = node == 'OwnerId' ? rootData[node] : rootData[node]" reqd="{{fieldMetaData[node].isRequired}}" readonly="readonly"/>
+                            <!-- DATE-TIME INPUTS -->
+                            <div class="datepicker-wrapper"> <input id="{{node}}" datetime-picker ="datetime-picker" ng-if="fieldMetaData[node]['fieldType'] == 'DATETIME'" class="quick-edit" date-format="{{userLocale}}" defaultDate="{{rootData[node]}}"  year="{{dateValueMap[node].yy}}" month="{{dateValueMap[node].MM}}" day="{{dateValueMap[node].dd}}" hour="{{dateValueMap[node].HH}}" minute="{{dateValueMap[node].mm}}" ng-model="fieldMetaData[node].fvalue"                                                                reqd="{{fieldMetaData[node].isRequired}}"   ng-init="fieldMetaData[node].fvalue = parseDate(rootData[node])" /></div>                
+                             <!-- BOOLEAN INPUTS -->
+							<input ng-if="fieldMetaData[node]['fieldType'] == 'BOOLEAN'" type="checkbox" ng-model="fieldMetaData[node].fvalue" class="quick-edit" style="width:inherit; vertical-align: middle;" 
+                            ng-init="fieldMetaData[node].fvalue = rootData[node]" reqd="{{fieldMetaData[node].isRequired}}"/>
+                            <!-- TEXT AREA INPUTS -->
+                            <textarea ng-if="(fieldMetaData[node]['fieldType'] == 'TEXTAREA') && fieldMetaData[node]['isCalculated'] != true" ng-model="fieldMetaData[node].fvalue" class="quick-edit" style="padding:0px" ng-init="fieldMetaData[node].fvalue = rootData[node]" reqd="{{fieldMetaData[node].isRequired}}"/>
+                            <!-- TEXT INPUTS -->          
+                            <input ng-if="fieldMetaData[node]['fieldType'] == 'STRING'" type="text" ng-model="fieldMetaData[node].fvalue" class="quick-edit smartview-inputs"  ng-init="fieldMetaData[node].fvalue = rootData[node]" reqd="{{fieldMetaData[node].isRequired}}"/>
+                            <!-- NUMBER INPUTS -->  
+                            <input ng-if="fieldMetaData[node]['fieldType'] == 'DOUBLE'" type="number" ng-model="fieldMetaData[node].fvalue" class="quick-edit smartview-inputs"  ng-init="fieldMetaData[node].fvalue = rootData[node]" reqd="{{fieldMetaData[node].isRequired}}"/>
+                            <!-- EMAIL INPUTS -->
+                            <input ng-if="fieldMetaData[node]['fieldType'] == 'EMAIL'" type="email" ng-model="fieldMetaData[node].fvalue" class="quick-edit smartview-inputs"  ng-init="fieldMetaData[node].fvalue = rootData[node]" reqd="{{fieldMetaData[node].isRequired}}"/>
+                            <!--DATE INPUTS -->
+                            <div class="datepicker-wrapper"><input ng-if="fieldMetaData[node]['fieldType'] == 'DATE'" datetime-picker ="datetime-picker" date-only ="true" ng-model="fieldMetaData[node].fvalue" class="quick-edit smartview-inputs" reqd="{{fieldMetaData[node].isRequired}}" date-format="{{userLocaleDateFormat}}" defaultDate="{{rootData[node]}}"  year="{{dateValueMap[node].yy}}" month="{{dateValueMap[node].MM}}" day="{{dateValueMap[node].dd}}" ng-init="fieldMetaData[node].fvalue = parseDateOnly(rootData[node])"/> </div>  
+                            <!-- OTHER fieldtypes -->                                                       
+                            <span ng-if="(fieldMetaData[node]['fieldType'] != 'BOOLEAN') && (fieldMetaData[node]['fieldType'] != 'REF-PICKLIST') && (fieldMetaData[node]['fieldType'] != 'PICKLIST') &&  (fieldMetaData[node]['fieldType'] != 'REFERENCE') && (fieldMetaData[node]['fieldType'] != 'EMAIL') && (fieldMetaData[node]['fieldType'] != 'DATE') && (fieldMetaData[node]['fieldType'] != 'DOUBLE') && ( fieldMetaData[node]['fieldType'] != 'STRING') &&  ( fieldMetaData[node]['fieldType'] != 'DATETIME') &&( fieldMetaData[node]['fieldType'] != 'TEXTAREA' && fieldMetaData[node]['isCalculated'] == true)">{{rootData[node]}}</span>
+                        </span>
+                        <!-- Edit Panel ends -->
+                    </td>
+				</tr>
+            </tbody>
+        </table>    
+    </div>  

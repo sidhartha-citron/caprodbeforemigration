@@ -1,0 +1,297 @@
+<apex:page sidebar="false" showHeader="false" controller="BMCServiceDesk.ChildTemplateHierarchyController" standardStylesheets="false">
+<c:CommonIncludes isExtJS4="true"/>
+<apex:slds />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" />
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css"/>
+<apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'RFAdminExt4Common.css')}" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/Knowledge.css" />
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" /> 
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ReqDefPage.css" />
+<link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css"/>
+<style>
+#OrderComboId{
+font-size: 12px;
+}
+.bmc-message-header-default {
+    padding: 5px; 
+    color: black;
+    background-color: #414042;
+}
+.x-panel-body-noheader{
+	*height: 0px;
+}
+.x-grid3-row-last .x-grid3-cell-last.x-grid3-cell-selected{
+	height:21px;
+}
+.x-border-box .x-grid-editor .x-form-text, .x-border-box .x-grid-row-editor .x-form-text{
+    border: none !important;
+    background-color: white !important;
+    background-image: none !important;
+    font-size: 12px !important;
+    height: 28px !important;
+    font-family: "Salesforce Sans",Arial,sans-serif !important;
+    padding: 0px 8px 0px 15px !important;
+    box-shadow: none !important;
+}
+
+.info-custom {
+    font-size: 13px !important;
+    cursor: pointer;
+}
+
+.infoIconClass {
+    margin-top: 14px;
+    float: right;
+    margin-right: 25px;
+}
+</style>
+  <script>
+var DataStore ;
+var grid ;
+var idSetString ;
+var err = 0;
+var isChecked = "{!chkBoxValue}";
+var reqDefId = '{!JSENCODE(reqDefId)}';
+var tooltip;
+var tooltipContent = '{!JSENCODE($Label.ExecutionOrderTooltip)}';
+    Ext.onReady(function(){		
+        eval('{!orderNum}');
+        OrderNumber = new Ext.data.ArrayStore({
+                        id:'Orderid',
+                        fields:[
+                            {name:'DisplayOrderno'},
+                            {name:'OrderNum'}
+                        ]
+    });
+	if(typeof(parent.isReqDefForm)!= 'undefined' && parent.isReqDefForm){
+            document.getElementById('saveBtn').setAttribute('style','display:none');
+            document.getElementById('ignoreExecutionOrderCB').setAttribute('style','padding-left: 18px;padding-top: 11px;height: 40px;');
+            document.getElementById('div1').setAttribute('style','margin-left:20px');
+           
+    }
+	else{
+        document.getElementById('ignoreExecutionOrderCB').setAttribute('style','padding-left: 20px;padding-top: 11px;height: 40px;');
+        document.getElementById('div1').setAttribute('style','margin-left:11px');
+        document.getElementById('footerDiv').setAttribute('style','display:none');
+    }
+        OrderNumber.loadData(order);            
+  
+          DataStore = new Ext.data.ArrayStore({
+                    id:'DataStore',
+                    fields:[
+                        {name:'Task'},
+                        {name:'Taskval'},
+                        {name:'OrderNumber'}
+                    ]
+                   });               
+           eval('{!JSENCODE(gridstore)}');   
+           DataStore.loadData(gridrecords);
+               var cm = [{ 
+                            header:'{!JSENCODE($ObjectType.Task__c.LabelPlural)}',
+                            sortable: true,
+                            width:420,
+							dataIndex:'Task',
+                            editor:false,
+                            menuDisabled:true
+                        },{
+                           
+                            hidden:true
+                          
+                        },
+                        {
+                            header:'{!JSENCODE($ObjectType.SYSTemplateLink__c.fields.orderNumber__c.Label)}',
+                            width:181,
+                            id:'OrderNo',
+                            readOnly: true,
+                            dataIndex:'OrderNumber',
+                            menuDisabled:true,
+                            editor: new Ext.form.ComboBox({  
+                                id:'OrderComboId',
+                                width:140,
+                                fieldLabel: '',
+                                store:OrderNumber,
+                                valueField:'OrderNum',
+                                displayField:'DisplayOrderno',
+                                typeAhead: false,
+                                queryMode: 'local',
+                                editable:false,
+                                triggerAction: 'all',
+                                forceSelection:true,
+                                selectOnFocus:true,
+                                lazyRender:true
+							})
+						}] ;
+                      var cellEditing = Ext.create('Ext.grid.plugin.CellEditing', {
+                                    clicksToEdit: 1,
+                                    enableLocking: true,
+                                    listeners: {
+                                        edit: function(editor, e, eOpts) {
+                                            
+                                        }
+                                    }
+                                });	
+
+                      grid = new Ext.grid.GridPanel({
+                        store : DataStore, 
+                        id:'Sgrid',
+                        columns : cm,
+                        height:parent.isReqDefForm ? 350 : 460,
+                        width:603,
+                        viewConfig :{
+                            columnLines: false,
+                            stripeRows: false,
+                            markDirty: false
+                        },
+                        autoScroll: true,
+                        renderTo:'div1',
+                       
+                        plugins: [cellEditing]
+                    });        
+                    
+                    
+            tooltip = new Ext.ToolTip({
+                target: 'ExecutionOrderTooltip',
+                floating: false,
+                baseCls: 'slds-popover slds-popover_tooltip slds-nubbin_bottom-left',
+                bodyCls: 'slds-popover__body',
+                defaultAlign:'br-tl',
+                html: tooltipContent,
+                dismissDelay: 0,
+                maxWidth: 300
+            });	
+    }); 
+          
+           function SaveBtnHandler (){
+               validation ();
+           var finalgriddata='';
+           
+	            if (err != 1){
+           for (var i=0; i<DataStore.data.length; i++)
+           { 
+            finalgriddata += Ext.String.format('{0},{1};',DataStore.getAt(i).get('Taskval'),DataStore.getAt(i).get('OrderNumber'));
+           }
+           SavegridData(finalgriddata,isChecked);
+           
+	           }
+	           else{
+					if(typeof(parent.isReqDefForm)!= 'undefined' && parent.isReqDefForm)
+						parent.showLightningPopup('modal','','{!JSENCODE($Label.AppropriateOrdering)}','','OK','SRDForm',''); 
+					else{
+							GetMessageBox('bmc-message').show({
+											title: ' ',
+											width: 250,
+											msg: '{!JSENCODE($Label.AppropriateOrdering)}',
+											buttons:  Ext.Msg.OK
+										});
+						}
+				    err = 0;
+				}
+           }
+           var WinMsg;
+		 	function GetMessageBox( baseCls ) {
+		 		if( WinMsg == null )
+		 			WinMsg = Ext.create('Ext.window.MessageBox');
+		 		WinMsg.baseCls = baseCls;
+				return WinMsg;
+		 	}  
+		
+   function validation (){
+ 		  var orders = new Array ();
+          var highestval = 1;
+          var lowestval = DataStore.data.length ;
+          var newval ;
+          
+           for (var i=0; i<DataStore.data.length; i++)
+          {  
+              newval=parseInt( DataStore.getAt(i).get('OrderNumber'));
+              orders[i]= newval ;
+              if (newval > highestval)
+              highestval = newval ; 
+              else if(newval<lowestval) 
+              lowestval = newval ;
+          }
+          orders.sort(function(a,b){return a-b});
+          if (lowestval!=1){
+           err = 1;
+          }
+          else{
+           for (var i=0; i<highestval; i++)
+           {
+            if (orders[i] != lowestval && orders[i] != ++lowestval){
+             err = 1; 
+             break;
+             }
+           }
+           }
+   }
+    function handleSave(){
+    	if(messagestring != null && messagestring != '')
+    	{  
+		    var icon = Ext.MessageBox.ERROR ;
+			if(typeof(parent.isReqDefForm)!= 'undefined' && parent.isReqDefForm)
+				parent.showLightningPopup('modal','',messagestring,'','OK','SRDForm',''); 
+			else{
+				GetMessageBox('bmc-message').show({
+				title: ' ',
+				width: 300,
+				msg: messagestring,
+				buttons:  Ext.Msg.OK
+			});
+			}
+    	}
+        else
+        {
+        	window.parent.setPopUpVar('done');
+        	if(reqDefId != null && reqDefId != ''){
+        		window.parent.setExecutionOrder(!isChecked);
+        	}
+			if(typeof(parent.isReqDefForm) == 'undefined'){
+				if(window.parent.closePopupRF !=undefined){
+					window.parent.closePopupRF();
+				}
+				else{
+					window.parent.closePopup();
+				}
+			}
+			else
+				parent.rfPopUpClose('rfModalVFPage');
+		}
+    }
+	function setisChecked(ischecked){
+        isChecked = ischecked;
+    }   
+  </script> 
+ <apex:outputPanel id="afterSavePanel">
+ <script>
+ 	var messagestring = '{!JSENCODE(errormessage)}';;
+ </script>
+ </apex:outputPanel> 
+       <apex:form >
+			<div id="saveBtn" class="x-btn x-btn-default-toolbar-medium-icon" style="border-width: 1px; left: 10px;margin: 0px;" onclick="SaveBtnHandler()">
+                <button type="button" class="x-btn-center" hidefocus="true" role="button" autocomplete="off" title="Save" style="height: 24px;">
+                    <span class="x-btn-inner" style="">&nbsp;</span>
+                    <span class="x-btn-icon bmcSave"></span>
+                </button>
+            </div>
+            <span class="slds-checkbox">
+                <label id="ignoreExecutionOrderCB" class="slds-checkbox">
+							<apex:inputcheckbox id="idIgnoreExecutionOrder"  styleclass="slds-input" value="{!chkBoxValue}" onclick="setisChecked(this.checked)"/>
+                            <span class="slds-checkbox--faux"></span>
+                            <span class="slds-form-element__label" style="margin-left:6px;">{!$Label.IgnoreExecutionOrder}</span>
+                </label>
+            </span>
+            <div class="infoIconClass">
+                <span class="info-custom d-icon-info_circle slds-button slds-button_icon" tooltip-placement="bottom" uib-tooltip-html="tooltipContent" id="ExecutionOrderTooltip">
+                </span>
+            </div>
+<div id ="div1" />
+<div class="slds-modal__footer" id="footerDiv">
+    <button class="slds-button slds-button--neutral" onclick="parent.rfPopUpClose('rfModalVFPage');" >{!$Label.Cancel}</button>
+    <span class="slds-button slds-button_brand slds-button--neutral" onclick="SaveBtnHandler();">{!$Label.Save}</span>
+</div>
+ <apex:actionFunction name="SavegridData" rerender="afterSavePanel" action="{!Save}" oncomplete="handleSave()">
+ <apex:param assignTo="{!storegridData}" name="finalgriddata" value=""/>
+ <apex:param assignTo="{!chkBoxValue}" name="isChecked" value="" />
+ </apex:actionFunction>
+        </apex:form>
+</apex:page>

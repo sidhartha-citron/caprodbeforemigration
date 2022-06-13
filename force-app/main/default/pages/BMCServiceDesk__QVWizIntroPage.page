@@ -1,0 +1,182 @@
+<apex:page controller="BMCServiceDesk.QVWizardController" showHeader="false" standardStylesheets="false">
+<c:CommonIncludes />  
+<style>
+.wcmessage1{
+    color:#0070A5;
+    font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+    font-size: 16px;
+    font-weight: bold;
+}
+.wcmessage2{
+    color:#000000;
+    font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+    font-size: 12px;    
+}
+.wcmessage3{
+    color:#606060;
+    font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+</style>
+<script src="{!$Resource.SDEFCommonJS}/QVWizard.js" type="text/javascript" />
+<script>
+ var wikiUrl='{!JSENCODE(wikiUrl)}';
+ var QVintromsgWithoutCalendar ='{!JSENCODE($Label.QVintromsgWithoutCalendar)}';
+ if(window.parent != undefined && window.parent != null && typeof(window.parent.wikiUrl) != undefined)
+	window.parent.wikiUrl = '{!JSENCODE(wikiUrl)}';
+</script>
+<div id="capsule" class="CapsuleDiv1">
+  <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form >
+                  <table cellpadding="0" cellspacing="0" class="clsMainTableQV" >
+                  <tBody>
+                    <tr align="center" >
+                       <td align="center" style="background-color:#eff3f5;" colspan="3">
+                        <!-- Progress bar image -->
+                             <table class="clsBrProgressBar" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td height="15px" colspan="21"></td>
+                                </tr>
+                                <tr>
+                                    <td class="qvStyle15perWidth"></td>
+                                    <td class="qvStyle45Width"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Current.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                     <td id="QVimg2" class="QVStage2"></td>
+                                    <td id="QVimg3" class="QVStage2"></td>
+                                    <td id ="Calview" class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                              		  <td style="width:5%"></td>
+                                    <td style="width:10%"></td>
+									<td style="width:5% ;text-align: center;">
+									 <a onclick="OpenNewHelpPage();return false;" href="#" style="{!IF(isFromConsole ,'display:block','display:none')}" >
+									   <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_console_help.png"/>
+									  </a>
+									</td>
+                                </tr>
+                                <tr>
+                                    <td height="10px" colspan="21"></td>
+                                </tr>
+                                <tr>
+                                    <td class="qvStyle15perWidth"></td>
+                                    <td colspan="3" class="currentStatusTxt" align="center">{!$Label.QVWizPrgBarIntro}</td>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.General}</td>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarQuery}</td>
+                                    <td colspan="3" class="statusTxt" align="center" >{!$Label.QVWizPrgBarTable}</td>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarChart}</td>
+                                   <td colspan="3" id="calLabel" class="statusTxt" align="center">{!$Label.QVWizPrgBarCalendar}</td>
+                                   <td colspan="2"class="qvStyle15perWidth"></td>
+                                </tr>
+                            </table>                                                                 
+                        </td>
+                    </tr>
+                     
+                    <tr style="height:100%">
+                      <td width="15px"></td>
+                      <td class="topAlignTD" style="height:100%">   
+                        <table class="clsBrTable" cellpadding="0" cellspacing="0" width="100%" style="border-top: solid 1px grey; height:100%">
+                          <tbody>   
+                            <tr>
+                              <td>
+                                <table border="0" cellpadding="5" cellspacing="0" height="100%" width="100%">
+                                    <tr height="100px" valign="bottom"><td colspan="3"></td></tr>
+                                    <tr>
+                                        <td width="15%"></td>
+                                        <td width="70%" valign="middle" align="center">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__qvintro1}" styleClass="wcmessage1"/>
+                                        </td>
+                                        <td width="15%"></td>
+                                    </tr>
+                                    <tr><td colspan="3" height="15px"></td></tr>
+                                    <tr>
+                                        <td width="15%"></td>
+                                        <td id="qvintromsg" class="wcmessage2" width="70%" valign="middle" align="center">{!$Label.qvintro2}</td>
+                                        <td width="15%"></td>
+                                    </tr>
+                                    <tr><td colspan="3" height="15px"></td></tr>
+                                    <tr>
+                                        <td width="15%"></td>
+                                        <td width="70%" valign="middle" align="center">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__qvintro3}" styleClass="wcmessage2"/>
+                                        </td>
+                                        <td width="15%"></td>
+                                    </tr>
+                                    <tr><td colspan="3" height="15px"></td></tr>
+                                    <tr>
+                                        <td width="15%"></td>
+                                        <td width="70%" valign="middle" align="center">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__qvintro4}" styleClass="wcmessage3"/>                                        
+                                        </td>
+                                        <td width="15%"></td>
+                                    </tr>
+                                    <tr height="100px" valign="bottom"><td colspan="3"></td></tr>
+                                </table>
+                              </td>                                    
+                            </tr>
+                            <!-- Page contents end here -->
+                                    
+                            <tr>
+                              <td align="right">
+                                <table width="100%">
+                                    <tr>
+                                        <td width="5px"></td>
+                                        <td align="left" valign="bottom" width="2%"><input type="checkbox" name="skipIntro" value="true"/></td>
+                                        <td align="left" valign="middle"><apex:outputLabel value="{!$Label.bmcservicedesk__qvintro5}" styleClass="clsInputLabelTD"/></td>
+                                        <td width="5px"></td>
+                                    </tr>
+                                </table>
+                               </td>
+                            </tr>
+                            <tr>
+			                   <td height="15px"></td>
+			                </tr>
+                            <tr class="clstr">
+                              <td align="right"  style="background-color:#dee0e0;height:30px; width:100%;">
+                                <table >
+                                    <tr>
+                                        <td align="right"><apex:commandButton value="{!$Label.bmcservicedesk__next}" styleClass="QvBtnGrey" action="{!stepGeneral}" /></td>
+                                        <td width="5px"></td>
+                                    </tr>
+                                </table>
+                               </td>
+                            </tr>
+                          </tbody>  
+                        </table>
+                      </td>
+                      <td width="15px"></td>
+                 </tr>
+                 <tr>
+                    <td height="15px" colspan="3"></td>
+                 </tr>
+               </tBody>
+              </table>  
+           </apex:form>
+       </apex:outputPanel>
+</div>  
+<body onload="hideCalendarViewfromIntro();"></body>
+</apex:page>

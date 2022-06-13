@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>53.0</apiVersion>
+    <formulas>
+        <name>dueDate</name>
+        <dataType>Date</dataType>
+        <expression>IF({!$Record.CreatedDate}&lt; {!$Record.LastModifiedDate} , CASE( MOD( DATEVALUE({!$Record.LastModifiedDate}) - DATE(1900, 1, 7), 7), 
+0, TODAY() + 2, 
+1, TODAY() + 1, 
+2, TODAY(), 
+3, TODAY() + 6, 
+4, TODAY() + 5, 
+5, TODAY() + 4, 
+6, TODAY() + 3, 
+TODAY() + 8), 
+CASE( MOD( DATEVALUE({!$Record.LastModifiedDate} ) - DATE(1900, 1, 7), 7), 
+0, TODAY() + 2, 
+1, TODAY() + 1, 
+2, TODAY(), 
+3, TODAY() + 6, 
+4, TODAY() + 5, 
+5, TODAY() + 4, 
+6, TODAY() + 3, TODAY() + 8))</expression>
+    </formulas>
+    <interviewLabel>Call Block Task for Contact {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Call Block Task for Contact</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>FREE_FORM_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordCreates>
+        <name>Create_Task</name>
+        <label>Create Task</label>
+        <locationX>174</locationX>
+        <locationY>340</locationY>
+        <connector>
+            <targetReference>Update_CallBlock_to_false</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value>
+                <elementReference>dueDate</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>$User.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Priority</field>
+            <value>
+                <stringValue>Normal</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Not Started</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Subject</field>
+            <value>
+                <stringValue>Call Block - Make Call</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>TaskSubtype</field>
+            <value>
+                <stringValue>Call</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Type</field>
+            <value>
+                <stringValue>Call Block</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhatId</field>
+            <value>
+                <elementReference>$Record.Account.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhoId</field>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+    <recordUpdates>
+        <name>Update_CallBlock_to_false</name>
+        <label>Update CallBlock to false</label>
+        <locationX>430</locationX>
+        <locationY>332</locationY>
+        <inputAssignments>
+            <field>Add_to_Call_Block__c</field>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>50</locationX>
+        <locationY>50</locationY>
+        <connector>
+            <targetReference>Create_Task</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Add_to_Call_Block__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <object>Contact</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

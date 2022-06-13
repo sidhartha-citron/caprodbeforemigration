@@ -1,0 +1,212 @@
+<apex:page controller="BMCServiceDesk.AdminUserSettingsController" showheader="false" sidebar="false" standardStylesheets="false" > 
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminUserSettings.css"/>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    
+    <script>
+	 var enableWalkthroughFlow =parent.enableWalkthroughFlow;
+     var userLanguage = parent.userLanguage;
+	 var isLightningExperience = '{!isLightningExperience}';
+    var licensedefaulthourvalue = '{!JSENCODE(licensehours)}';  
+    var licensedefaultminvalue = '{!JSENCODE(licenseminutes)}';
+    var startbuttontext='{!JSENCODE($Label.ACStartservice)}';
+    var stopbuttontext='{!JSENCODE($Label.ACStopservice)}';
+    var PackageLicenseAssignmentLabel='{!JSENCODE($Label.RemedyforcePackageLicenseAssignmentSynchronization)}';
+    var RunSynchronizationJobLabel='{!JSENCODE($Label.Runsynchronizationjobin)}';
+    var hourslabel='{!JSENCODE($Label.HoursLabel)}';
+    var minuteslabel='{!JSENCODE($Label.MinutesLabel)}';
+    var buttontext={!jobrunnningflag};
+    var enterTimeLabel='{!JSENCODE($Label.milestoneTimeMandatory)}';
+    </script>
+    <apex:outputPanel id="statusPanel">
+   <script>
+   
+  	jobstatusflag='{!jobstatus}';
+	  	
+  	function onCompleteStart(){
+  		  console.log('Job status flag is'+jobstatusflag);
+	  	  if(jobstatusflag=='false'){
+			Ext.MessageBox.show({ msg:'{!JSENCODE($Label.Scheduled_Job_Exception)}' , buttons: Ext.MessageBox.OK});
+			
+  		  }
+	  Ext.getCmp('licensebutton').setDisabled(false);
+	}
+	
+	function onCompleteStop(){
+		Ext.getCmp('licensebutton').setDisabled(false);
+	}
+  	
+  </script>		 
+  </apex:outputPanel>   
+    <div id="adminUserSettingDiv"></div>
+    <div id="helpDiv" class="clshelpDiv"></div>
+    <div id="ClientDetailGrid"  class="marginleft15"> 
+    	<table>
+    		<tr>
+    			<td width="350px">
+    				<font class="clsInputBoldLabelTDI"> {!JSENCODE($Label.DefaultValuesforClients)}</font>
+    			</td>
+    			<td>
+    				<u  onClick="setDefaultEqualToImports()" class="clsNormalBlueFont">{!JSENCODE($Label.setDefaultEqualsToImpotDefault)}</u>	
+    			</td>
+    		</tr>
+    	</table>
+    	<table id="mainGrigtable" class="gridTable">
+    		<tr class="tableHeader stdWhiteBoldFont">
+    			<th>{!JSENCODE($Label.CMDBAttributeTitle)}</th>
+    			<th ><font class="stdWhiteBoldFont">{!JSENCODE($Label.ImportDefaults)}</font> </th>
+    			<th ><font class="stdWhiteBoldFont">{!JSENCODE($Label.ClientCreationDefaults)}</font></th>
+    		</tr>
+    		<tr class="gridTR">
+    			<td class="tdMargin">{!JSENCODE($Label.Profile)}</td>
+    			<td class="tdMargin"  id="ImportProfile"></td>
+    			<td class="tdMargin" id="DefaultProfile"></td> 
+    		</tr>
+    		<tr class="gridTR BGLightGrey">
+    			<td class="tdMargin" >{!JSENCODE($ObjectType.User.fields.TimeZoneSidKey.label)}</td>
+    			<td class="tdMargin" id="ImportTimeZone"></td>
+    			<td  class="tdMargin" id="DefaultTimezone"></td>
+    		</tr>
+    		<tr class="gridTR">
+    			<td class="tdMargin">{!JSENCODE($ObjectType.User.fields.LocaleSidKey.label)}</td>
+    			<td class="tdMargin" id="ImportLocale"></td>
+    			<td class="tdMargin" id="DefaultLocale"></td>
+    		</tr>
+    		<tr class="gridTR BGLightGrey">
+    			<td class="tdMargin">{!JSENCODE($ObjectType.User.fields.LanguageLocaleKey.label)}</td>
+    			<td class="tdMargin" id="ImportLanguage"></td>
+    			<td class="tdMargin" id="DefaultLanguage"></td>
+    		</tr>
+    		<tr class="gridTR">
+    			<td class="tdMargin">{!JSENCODE($Label.Account)}</td>
+    			<td class="tdMargin" id="ImportAccount"></td>
+    			<td></td>
+    		</tr>
+    		<tr class="gridTR BGLightGrey">
+    			<td  class="tdMargin">{!JSENCODE($Label.DomainName)}</td>
+    			<td class="tdMargin" id="ImportDomain"></td>
+    			<td></td>
+    		</tr>
+    		<tr class="gridTR">
+    			<td  class="tdMargin"> {!JSENCODE($ObjectType.User.fields.EmailEncodingKey.label)}</td>
+    			<td class="tdMargin" id="ImportEncoding"></td>
+    			<td></td>
+    		</tr>
+    	</table>
+    </div>
+    <div id="adminUserSettingDiv2"></div>
+    <div id="LicenseAssignmentTD"></div>
+    
+    <div id="licenseScheduleTD"></div>
+   
+  	
+    	
+	<apex:outputPanel id="successId">
+		<script>
+			function chkIfBatchJobALreadyRunning(){
+		        showMessage('{!JSENCODE(batchJobStatusMessage)}');
+		        var btn = Ext.getCmp('rolePopulationBtn');
+		        if(btn != null){
+		            btn.disabled = false;
+		        }
+		        waitMsg.hide();  
+		    }
+		</script>
+	</apex:outputPanel>	
+	<apex:outputPanel id="setAccountValue">
+	    <script>
+	    var accountLookupValue = Ext.getCmp('AccountLookupId');
+	    if(accountLookupValue!=null && accountLookupValue!='undefined'){
+	        accountLookupValue.setValue('{!selectedAccountName}');
+	    }
+	    </script>
+	</apex:outputPanel>
+	<apex:form >
+		<apex:actionFunction name="populateRoleHierarchy" action="{!populateRoleHierarchy}" onComplete="chkIfBatchJobALreadyRunning();" reRender="successId"/>
+		<apex:actionFunction name="deleteClientImport" action="{!deleteClientImport}" onComplete="chkIfBatchJobALreadyRunning();" reRender="successId"/>
+		<apex:actionFunction name="getAccountName" action="{!getAccountName}" onComplete="" reRender="setAccountValue">
+			<apex:param assignTo="{!assignAccountId}" name="clientAccountid" value=""/>
+		</apex:actionFunction>	
+		<apex:actionFunction name="savemodifiedData" action="{!SaveNewSettings}" onComplete="waitMsg.hide(); var errormsg = '{!JSENCODE(messageString)}';if(errormsg==''){showMessage('{!JSENCODE($Label.bmcservicedesk__savedsuccessfully)}'); }else{ showMessage(errormsg); } " reRender="successId">
+			<apex:param assignTo="{!FormDataString}" name="FormDataString" value=""/>
+			<apex:param assignTo="{!selectedProfileValue}" name="selectedProfileValue" value=""/>
+			<apex:param assignTo="{!strImportSettingFields}" name="importSettingFields" value=""/>
+			<apex:param assignTo="{!clientDefaultTimeZone}" name="selectedDefaultTimeZone" value=""/>
+			<apex:param assignTo="{!clientDefaultLocale}" name="selectedDefaultLocale" value=""/>
+			<apex:param assignTo="{!clientDefaultLanguage}" name="selectedDefaultLanguage" value=""/>
+			<apex:param assignTo="{!licenseIntervalValue}" name="licenseIntervalData" value=""/>
+		</apex:actionFunction>
+		<apex:actionfunction name="ScheduleJob" action="{!scheduleJobhelpermethod}" reRender="statusPanel" oncomplete="onCompleteStart()"/>
+		<apex:actionfunction name="StopJob" action="{!stopJobhelpermethod}" reRender="statusPanel" oncomplete="onCompleteStop()"/> 
+	</apex:form>
+	<script>
+		var wikiUrl = '{!wikiUrl}';
+		var classForCheckbox = 'checkboxClass';
+		var includeLeadforclient = false,userSegrChk=false;
+		var includeContactforclient = false;
+		var sendEmailNotificationChk = false;
+        var createNewClientChk = false;
+		var userSettingStore = {!store};
+		
+		var existingClientProfile = "{!JSENCODE(selectedProfileValue)}";
+		var existingTimeZone = '{!JSENCODE(clientDefaultTimeZone)}';
+		var existingLocale = '{!JSENCODE(clientDefaultlocale)}';
+		var existingLanguage = '{!JSENCODE(clientDefaultLanguage)}';
+		
+		var defaultImportProfileValue = '{!JSENCODE(ImportProfileValue)}';
+		var TimezoneValue = '{!JSENCODE(TimezoneValue)}';
+	    var LocaleValue = '{!JSENCODE(LocaleValue)}';
+	    var LanguageValue = '{!JSENCODE(LanguageValue)}';
+	    var EmailEncodingValue = '{!JSENCODE(EmailEncodingValue)}';
+	    var tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+	    var saveLbl = '{!JSENCODE($Label.Save)}';
+	    var ProfileDesc = new Ext.form.Label({id:'ProfileDesc', text:'{!JSENCODE($Label.ClientProfile)}', cls: 'clsLabel'});
+	    
+		var clientUserInclude = '{!JSENCODE($Label.Client_Users_Include)}';
+		var lblUser = '{!LabelUser}';
+		var lblContact = '{!LabelContact}';
+		var lblLead = '{!LabelLead}';
+		var flgLead = '{!Leadflag}';
+		var lblConfigurationSegregation = '{!JSENCODE($Label.ConfigurationSegregation)}';
+		var lblPopulateRoleHierarchyData = '{!JSENCODE($Label.PopulateRoleHierarchyData)}';
+		var lblSegregateUsers = '{!JSENCODE($Label.SegregateUsers)}';
+		var lblDelete = '{!JSENCODE($Label.Delete)}';	
+		var lbltooltipDeleteImportSetting = '{!JSENCODE($Label.tooltipDeleteImportSetting)}';
+		var lblDomainNameValue = '{!JSENCODE(DomainNameValue)}';
+		var lblClientDefault = '{!JSENCODE($Label.ClientCreationDefaults)}';
+		var lblClientDefaultTooltip = '{!JSENCODE($Label.ClientDefaultsTooltip)}';
+		
+		var DomainNameHelpText = '{!JSENCODE($Label.DomainNameHelpText)}';
+		var EmailEncodelbl = new Ext.form.Label({id: 'EmailEncodelbl',text: '{!JSENCODE($ObjectType.User.fields.EmailEncodingKey.label)}', cls: 'clsLabel'});
+		var TemporaryClientdataLabel = new Ext.form.Label({id: 'TemporaryClientdataLabel',text: '{!JSENCODE($Label.TemporaryClientdata)}', cls: 'clsInputBoldLabelTDI'});
+		
+		var TimeZoneLbl = new Ext.form.Label({id:'DefaultTimeZone',text:'{!JSENCODE($Label.TimeZone)}',	cls: 'clsLabel',margin:'0 60 0 0'});
+		
+		var lbldaccountName = '{!JSENCODE(daccountName)}';
+		var lblUserSettingsTitle = '{!JSENCODE($Label.UserSettings)}';    
+		var lblExtensionError = '{!JSENCODE($Label.ExtensionError)}';
+		var lblInvalidDomainName = '{!JSENCODE($Label.InvalidDomainName)}';
+		
+		var lblSendEmailNotification = '{!JSENCODE($Label.SendEmailNotificationUsers)}';
+		var lblSendEmailNotificationHelpText = '{!JSENCODE($Label.SendEmailNotificationUsersHelpText)}';
+		
+        var lblCreateNewClient = '{!JSENCODE($Label.CreateNewClient)}';
+        var lblCreateNewClientHelpText = '{!JSENCODE($Label.CreateNewClientHelpText)}';
+        
+		var hideSegregateUserValue='{!JSENCODE(hideSegregateUserValue)}';
+		
+ 	    eval('{!ProfileList}');  
+	    eval('{!TimeZoneList}');
+	    eval('{!LanguageList}');
+	    eval('{!EmailEncodeList}');
+	    eval('{!LocaleList}');
+	    
+	    function getSDFStylesResPath(){
+			var resPath = '{!$Resource.SDEFStyles}';
+			return resPath;
+		}
+	</script>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/> 
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminUserSettings.js"/>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+</apex:page>

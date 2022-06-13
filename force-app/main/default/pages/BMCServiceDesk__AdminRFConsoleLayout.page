@@ -1,0 +1,245 @@
+<apex:page standardStylesheets="false" showHeader="false" controller="BMCServiceDesk.AdminRFConsoleLayoutController">
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+     <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminRFConsoleLayout.css" /> 
+
+    
+    <apex:form id="mainPanel" >
+           
+            <apex:inputHidden value="{!AvailbaleFieldset}" id="hiddenAvailableStore" />
+            <apex:inputHidden value="{!SelectedFieldset}" id="hiddenSelectedStore" />
+            <div id="helpDiv" class="clshelpDiv"></div> 
+        <div class="paddingLeft15 ">
+            <div id="LayoutFor" class="margintop30 rf-label-bold ">{!JSENCODE($label.Layout)}: {!objectNameLabel}</div>
+            <table  class="configureTblCls marginTop15" >
+                <tr class="configureTdClas">
+                    <td>
+                        <div class="marginleft10">
+                            <div> <input class="floatLeft5px rf-btn" type="button" value="{!JSENCODE($Label.New)}" id="newButton" onClick="newLayout();" /></div>
+                            <div> <input class="rf-btn" type="button" value="{!JSENCODE($label.Delete)}" id="delButton" onClick="deleteLayout();"/></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td> <div id="layoutListtoolbar" width = "100%" height = "40px"></div></td>
+                </tr>
+            </table>
+            
+            <table class="configureTblCls marginTop15 marginBottom15" >
+                <tr class="configureTdClas">
+                    <td width="100%" valign="middle">
+                        <div class="marginleft10" id="headerId">
+                            <span id="newEditLtHeader" class="rf-label-bold"/>
+                                <apex:outputPanel rendered="{!isMultiLayoutEnabled}" id="headerId">
+                                   <input class="rf-btn"  style="margin-left: 1em;"  disabled="disabled" type="button" value="{!JSENCODE($Label.AssignCategoriestoLayout)}" id="assignCategories" onClick="CategoryPopup()" />
+                                   <input class="rf-btn" type="button" disabled="disabled" value="{!JSENCODE($Label.AssignTemplatestoLayout)}" id="assignTemplates" onClick="TemplatePopup();" />
+                                   <input class="rf-btn" type="button" disabled="disabled" value="{!JSENCODE($Label.AssignStatusToLayout)}" id="assignStatus" onClick="StatusPopup();" />
+                               </apex:outputPanel>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td >
+                        <div id="layoutName" class="marginTop15 marginBottom10"></div>
+                        
+                    </td>
+                </tr>
+                <tr>
+                    <td id="fielsetlabels"  ></td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="editlayout" class="marginleft10 marginTop10 marginBottom10" style="float: left; width: 49%;"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <apex:outputPanel rendered="{!isDynamicRenderingSupported}">
+							<div id="layoutDynamicRendering" style="display: none;" class="marginleft10 marginBottom15">
+								<table>
+									<tr>
+										<td>
+											<input id="enableDynamincRendering" style="margin-right: 10px;" type="checkbox" onclick="enableDisableTheLink(this);"/>
+										</td>
+										<td>
+											<label>{!JSENCODE($Label.EnableDynamicRendering)}</label>
+										</td>
+										<td>
+											<a id="condtionsPageLink" onclick="openConditionsPage(this);" style="padding-left: 10px"> {!JSENCODE($Label.DefineConditions)}  </a>
+										</td>
+									 </tr>
+								</table>
+							</div>
+						</apex:outputPanel>
+                    </td>
+                </tr>
+                <tr>
+                    <td><div id="objectLinkPanelDiv" class="marginleft10" ></div></td>
+                </tr>
+                <tr class="configureTdClas marginTop10 position_IE7">
+                <td style="padding-left:10px;" class="marginTop5 float_Cls">
+                        
+                        <table class="float_Cls">
+                            <tr>
+                                <td >
+                                    <input class="floatLeft5px rf-btn" type="button" value="{!JSENCODE($label.Save)}" onClick="saveLayout()" id="saveButton" /> 
+                                </td>
+                                <td class="configurePadding15">
+                                    
+                                    <input class="rf-btn " type="button" value="{!JSENCODE($Label.Cancel)}" id="cancelButton" onClick="cancelBtnHandler();" /> 
+                                    
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+     <script>
+         var isDynamicRenderingEnabled;
+         var isDynamicRenderingEnabledDB;
+     </script>
+     <apex:outputPanel id="messageStr">
+        <script>
+        errormsg = '{!JSENCODE(messageString)}';    
+        var selectedLayoutName = '{!JSINHTMLENCODE(layOutName)}';          
+       </script>
+     </apex:outputPanel>
+    <apex:outputPanel id="enableAssignButton">
+        <script>
+            var isMultiLayoutEnabled = '{!isMultiLayoutEnabled}';
+            isDynamicRenderingEnabled = {!isDynamicRenderingEnabled};
+            isDynamicRenderingEnabledDB = {!isDynamicRenderingEnabled};
+            selectedlayoutId = '{!JSENCODE(selectedLayoutId)}';   
+            if(isMultiLayoutEnabled && selectedlayoutId != ''){
+                document.getElementById('assignCategories').disabled = false;
+                document.getElementById('assignTemplates').disabled = false;
+                document.getElementById('assignStatus').disabled = false;
+            }          
+       </script>
+     </apex:outputPanel> 
+
+     <apex:actionFunction action="{!reLoadFieldSet}" name="reLoadFieldSet" oncomplete="reloadItemSelector();" rerender="enableAssignButton,hiddenAvailableStore,hiddenSelectedStore, headerId">
+            <apex:param name="selectedLayoutId" assignTo="{!selectedLayoutId}" value="" />
+     </apex:actionFunction>
+     <apex:actionFunction action="{!save}" name="save" oncomplete="enableSaveBtn();ShowLayoutCreateMsg('{!JSENCODE(messageString)}');window.parent.reload();" rerender="enableAssignButton,hiddenAvailableStore,hiddenSelectedStore,ObjectLayoutsData,messageStr,headerId">
+            <apex:param name="layOutName" assignTo="{!layOutName}" value="" />
+            <apex:param name="fieldSetIds" assignTo="{!fieldSetIds}" value="" />
+            <apex:param name="selectedLayoutId" assignTo="{!selectedLayoutId}" value="" />
+            <apex:param name="isDynamicRenderingEnabled" assignTo="{!isDynamicRenderingEnabled}" value="" />
+     </apex:actionFunction>
+     
+    <apex:actionFunction action="{!deleteLayout}" name="layoutDelete" oncomplete="ShowDelLayoutMsg('{!messageString}');newLayout(true);window.parent.reload();" rerender="enableAssignButton,ObjectLayoutsData,messageStr">
+            <apex:param name="selectedLayoutId" assignTo="{!selectedLayoutId}" value="" />
+     </apex:actionFunction>
+     <apex:actionFunction action="{!checkDeleteValidation}" name="checkValidationDelete" rerender="messageStr" oncomplete="showConfirmationBox();">
+            <apex:param name="selectedLayoutId" assignTo="{!selectedLayoutId}" value="" />
+     </apex:actionFunction>
+    </apex:form>
+    
+     
+    <script>
+    var saveLbl = '{!JSENCODE($Label.Save)}';
+    var Conditionslbl ='{!JSENCODE($Label.conditions)}';
+    var tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+    var imagePath ='{!$Resource.SDEFStyles}/SDEFbuttons/';
+    var imgRightArrow = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_R_new.gif';
+    var imgLeftArrow = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_L_disable_custom.gif';
+    var imgDisableRight = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_R_disable_custom.gif';
+    var imgDownArrowLeftNew = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_L_new.gif';
+    var imgDownArrowDNew = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_D_new.gif';
+    var imgDownArrowDisabled = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_U_disable_custom.gif';
+    var imgDownArrowDisableCustom = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_D_disable_custom.gif';
+    var imgDownArrowUNew = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_U_new.gif';
+    var ObjectLayouts = {!ObjectLayouts};
+    var sucessMsg = '{!JSENCODE($label.SavedSuccessfully)}'; 
+    var itemSel,layoutnameStore,selectedlayoutId,LytPnlheader;
+    var IncidentAvailbaleFieldSet = '{!AvailbaleFieldSet}';
+    var lblNew = '{!JSENCODE($Label.New)}'; 
+    var lblDelete = '{!JSENCODE($label.Delete)}'; 
+    var lblLayout = '{!JSENCODE($label.Layout)}';
+    var lblLayoutName = '{!JSENCODE($label.LayoutName)}';
+    var lblAvaliableFieldSet = '{!JSENCODE($label.AvailableFieldSet)}';
+    var lblSelectedFieldSet = '{!JSENCODE($label.SelectedFieldSet)}';
+    var lblAddEditFieldSet = '{!JSENCODE($label.AddEditIncidentfieldsets)}';
+    var lblSelectFieldsetMsg = '{!JSENCODE($label.fieldsetValidation)}';
+    var lblEnterNameMsg = '{!JSENCODE($label.layoutNameValidation)}';
+    var lblNewLayout = '{!JSENCODE($label.NewLayout)}';  
+    var lblEditLayout = '{!JSENCODE($label.EditLayout)}';
+    var lblDeletionValidation = '{!JSENCODE($label.layoutDeletionValidation)}'; 
+    var warninMsgInRFLayoutPage = '{!JSENCODE($Label.warninMsgInRFLayoutPage)}'; 
+    var ValidationErrorMsgOnLayoutFieldSet = '{!JSENCODE($Label.ValidationErrorMsgOnLayoutFieldSet)}';
+    var defaultLayoutTooltipLbl = '{!JSENCODE($Label.DefaultLayoutTooltip)}';
+    var lblConfirmMultiLayoutDelete='{!JSENCODE($Label.DeleteConfirmMessageForLayoutType)}';
+    var defaultCheckLayoutMsg = '{!JSENCODE($Label.defaultCheckLayoutMsg)}';
+    var lblConfirmDelete='{!JSENCODE($Label.DeleteConfirmMessage)}';
+    var dataStore;
+    var hiddenSelectedStore;
+    var itemSel; 
+    var hiddenAvailableStoreId = document.getElementById("{!$Component.mainPanel.hiddenAvailableStore}");
+    var hiddenSelectedStoreId = document.getElementById("{!$Component.mainPanel.hiddenSelectedStore}");
+    var selectedValuesTobeSaved,LayoutListGrid;
+    var isDataChanged = 'false';
+    var selectedIdForCancel = '';
+    var delButton = document.getElementById('delButton');
+    var newButton = document.getElementById('newButton');
+    var defaultLayoutName = '{!defaultLayoutName}';
+    var okLbl = '{!JSENCODE($Label.Ok)}';
+    var yesLbl = '{!JSENCODE($Label.ExtjsMessageYes)}';
+    var noLbl = '{!JSENCODE($Label.ExtjsMessageNo)}'; 
+    var nameLengthValidationLbl = '{!JSENCODE($Label.nameLengthValidation)}';
+    var Objectname = '{!JSENCODE($CurrentPage.parameters.Objectname)}';
+    var assignCategory = "{!JSENCODE($Label.AssignCategoriestoLayout)}"+ ':';
+    var assignTemplates = "{!JSENCODE($Label.AssignTemplatestoLayout)}"+ ':';
+    var assignStatus = "{!JSENCODE($Label.AssignStatustoLayout)}"+ ':';
+    var wikiUrl = '{!wikiUrl}';
+    if(Objectname == 'SelfService')
+    parent.addHelpOnPage(document.getElementById('helpDiv'),'ticket_layouts.htm',wikiUrl); 
+    else
+    parent.addHelpOnPage(document.getElementById('helpDiv'),'manage_layout_console.htm',wikiUrl); 
+    
+    function setAvailableData() {
+        if (hiddenAvailableStoreId != null) {
+            var hiddenAvailableStore = document.getElementById("{!$Component.mainPanel.hiddenAvailableStore}").value;
+            eval(hiddenAvailableStore);
+            dataStore.loadData(availableFieldSetList);
+        }
+    }
+    function setSelectedData() {
+         if (document.getElementById("{!$Component.mainPanel.hiddenSelectedStore}") != null) {
+             hiddenSelectedStore = document.getElementById("{!$Component.mainPanel.hiddenSelectedStore}").value;
+         }
+     }
+    
+    function ShowLayoutCreateMsg(msg){
+        LytPnlheader.setText(lblEditLayout); 
+        if(selectedlayoutId != ''){
+            var indexNo = layoutnameStore.find('id',selectedlayoutId);
+            LayoutListGrid.getSelectionModel().select(indexNo,false);
+            if(selectedlayoutId != defaultLayoutName){
+                delButton.disabled = false;
+                delButton.style.color='black';
+            }
+        }
+        showMessage(msg);
+    }
+    
+    function ShowDelLayoutMsg(msg){
+        delButton.disabled = true;
+        delButton.style.color='grey';
+        showMessage(msg);
+    }
+    </script>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js" />
+     <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/RFConsoleLayoutItemselector.js"></script>
+     <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminRFConsoleLayout.js"></script>
+    <apex:outputPanel id="ObjectLayoutsData">
+        <script>
+            ObjectLayouts = {!ObjectLayouts};
+            if (layoutnameStore != null && ObjectLayouts != null) {
+                layoutnameStore.loadData(ObjectLayouts);
+            }
+        </script>
+     </apex:outputPanel>
+</apex:page>

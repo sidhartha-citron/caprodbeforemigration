@@ -1,0 +1,224 @@
+<apex:page controller="BMCServiceDesk.SmartPracticesDataController" action="{!checkRemoteSiteSetting}" sidebar="false" showheader="false">
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ImportBestPracticesData.css"/>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css"/>       
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />    
+    <style>
+        .custom .x-progress-bar {
+        height: 17px;
+        border: none;
+        border-top: 1px solid #fff;
+        background: url("{!$Resource.SDEFStyles}/SDEFimages/custom-bar.gif") repeat-x scroll 0 0 transparent !important;
+        }
+    </style>
+    
+    <apex:form id="theform" styleClass="fullheight">
+        <apex:actionFunction name="submitFile" action="{!submitFile}"/>
+        <apex:actionregion >
+            <apex:actionFunction name="startScanFunc" action="{!startScan}" oncomplete="doScan();" rerender="msg,variableContainer,othersections,uploadFileSectionSf"/>
+        </apex:actionregion>
+        <div style=" display:{!if(remoteSiteDoesNotExist,"block","none")};" class="remoteSettingsBlock">
+            <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__remotesitemessage)} " /><br/><br/>
+            <apex:outputLabel value="{!$Label.bmcservicedesk__usetheremotesiteurlvalue} "/>
+            <apex:outputLabel value="{!baseUrl}" style="color:blue;text-decoration:underline;"/><br/><br/> 
+            <apex:outputLabel value="{!$Label.bmcservicedesk__pastetheurlintheremotesiteurlfieldat} "/>
+            <a onclick="window.open(window.parent.getSetupMenuUrl('REMOTE_SITE_SETTINGS'));" style="color:blue;text-decoration:underline;cursor:pointer;">{!JSENCODE($Label.SFRemoteSiteSetting)}</a>
+        </div>
+        <div class="fullheight">
+            <div style="display:{!if(remoteSiteDoesNotExist,'none','block')};padding:10px" class="fullheight">
+                <div class="frameBorder" id="frameBorderId">
+                    <div class="displayAreaDiv" id="displayAreaDivId">
+                        <apex:outputPanel styleClass="configureHeader configureTrCls" layout="block">          
+                            {!JSENCODE($Label.ImportBestPracticesDataSubTile)}: <span id="majorStep">{!Step}</span>
+                            <div id="importHistoryDiv" class="linkCls importHistoryLink">
+                                <apex:outputLink value="/{!contentImportObjId}" target="_blank" title="{!JSENCODE($Label.bmcservicedesk__importhistorysubtiledesc)}" styleClass="linkCls">{!JSENCODE($Label.bmcservicedesk__importhistory)}</apex:outputLink>
+                            </div>
+                        </apex:outputPanel>
+                        <div id="helpDiv" class="clshelpDiv"></div>
+                        <div class="msgStyle">
+                        	<apex:pageMessages escape="false" id="msg"/>
+                        </div>
+                        <div class="leftContentPadding">
+                            <apex:outputPanel styleClass="outputPanelStyle topmargin" layout="block" id="downloadBestPracticesTextSf" rendered="{!OR(currentStep == 'FILEUPLOAD')}">
+                                <div id="downloadBestPracticesText">
+                                    {!JSENCODE($Label.DownloadLatestSmartPracticeData)}&nbsp;<u><a href="https://communities.bmc.com/docs/DOC-38678" class="linkCls" target="_blank">{!JSENCODE($Label.bmcservicedesk__clickhere)}</a></u>.
+                                </div>  
+                            </apex:outputPanel>     
+                            <apex:outputPanel id="uploadFileSectionSf">
+                            <div id="uploadFile_Section" class="topMargin">                  
+                                <div id="buttonGrouping" class="topMargin">
+									<table>
+                                    	<tr>
+                                    		<td class="configureUpload">{!JSENCODE($Label.File)}:</td>
+                                    		<td class="configureUpload" id="inputFileContainer" style="color:transparent;display:{!if(sResourceName == '','','none')};">
+		                                        <apex:inputFile styleClass="inputFileEle" accept=".zip" onchange="submitAction(document.getElementById('{!$Component.files}'));return false;" value="{!sResourceBlob}" id="files" fileName="{!sResourceNameWithExt}" filesize="{!filesize}"/>
+                                    		</td>
+                                    		<td style="display:none;" id="loadingStatusDiv">
+		                                        <img src="/img/loading.gif" id="stUploadingImg" class="uploadingFileImg"/>
+		                                        <span id="msgid">{!JSENCODE($Label.UploadingFile)}</span>  
+                                    		</td>
+                                    		<td class="configureUpload boldFnt" style="display:{!if(sResourceName == '','none','')};">
+                                    			{!sResourceName}
+                                    		</td>
+                                    	</tr>
+                                    </table>
+                                    <div class="topMargin" style="display:{!if(sResourceName != '' && SmartPracticeDocUrl != NULL,'','none')};">
+                                        {!JSENCODE($Label.SmartPracticesContentsOfzip)}&nbsp;<a href="{!SmartPracticeDocUrl}" class="linkCls" target="_blank">SmartPractices.docx</a>
+                                    </div> 
+                                </div>   
+                                <hr class="separatorLine topMargin"/> 
+                            </div>  
+                            </apex:outputPanel>
+                            <apex:actionregion >
+                                <apex:actionFunction name="startImportFunc" action="{!startImport}" oncomplete="importFinish();" rerender="variableContainer,msg,othersections,uploadFileSectionSf"/>
+                                <apex:actionFunction name="beforeImportValidationFunc" action="{!beforeImportValidation}" oncomplete="beforeImportValidationFinish();" rerender="variableContainer,msg,othersections,uploadFileSectionSf">
+                                	<apex:param name="reuseServiceParam" value="" assignTo="{!reuseService}"/>
+                                	<apex:param name="reuseCategoryParam" value="" assignTo="{!reuseCategory}"/>
+                                	<apex:param name="reuseTemplateParam" value="" assignTo="{!reuseTemplate}"/>
+                                	<apex:param name="reuseSRDParam" value="" assignTo="{!reuseSRD}"/>
+                                	<apex:param name="reuseSLAParam" value="" assignTo="{!reuseSLA}"/>
+                                </apex:actionFunction>
+                                <!-- SCANNING -->
+                                <div id="Scan_Section" style="display:none;" class="topMargin">
+                                    <div class="outputPanelStyle topMargin">{!JSENCODE($Label.ScanningUploadedFile)}</div>
+                                    <div>
+                                        <div class="topMargin" id="progressBarScan"></div>
+                                            <div class="topMarginSmall">
+                                                <b>{!$Label.Status}: </b> <span id="progress"></span>
+                                            </div>
+                                    </div>
+                                </div>
+                                <apex:outputPanel id="othersections" layout="block">
+
+                                    <div id="Scan_ResultSection" style="display:{!if(currentStep == 'SCANRESULT','block','none')};">
+                                        <apex:outputPanel rendered="{!!conflictFound}" styleClass="ReportBox">
+                                            <div>
+                                                <img src="{!$Resource.SDEFStyles}/SDEFimages/accept.png" class="tickImg"/> &nbsp;&nbsp;<b>{!JSENCODE($Label.ScanningComplete)}:</b>&nbsp;&nbsp;{!JSENCODE($Label.ProceedToImportData)}&nbsp;{!JSENCODE($Label.DownloadScanReport)}&nbsp;<apex:outputLink value="{!scanReportUrl}" styleClass="linkCls">{!JSENCODE($Label.bmcservicedesk__clickhere)}</apex:outputLink>.
+                                            </div>                  
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!conflictFound}">
+                                            <div class="ReportBox" style="border-color:#FFAD00;">
+                                               	<table>
+                                               		<tr>
+                                               			<td><img src="/img/msg_icons/warning16.png"/>&nbsp;&nbsp;</td>
+                                               			<td><b>{!JSENCODE($Label.ScanningComplete)}:</b>&nbsp;{!JSENCODE($Label.ScanWithConflictsFound)}&nbsp;{!JSENCODE($Label.DownloadScanReport)}&nbsp;<apex:outputLink value="{!scanReportUrl}" styleClass="linkCls">{!JSENCODE($Label.bmcservicedesk__clickhere)}</apex:outputLink>.</td>
+                                               		</tr>
+                                               	</table>
+                                            </div>
+                                            
+                                            <div class="topMarginXLarge">
+                                                <div class="BoltFontcls">{!JSENCODE($Label.ConflictsHandling)}</div><br/>
+                                                <table class="conflictTable">
+                                                	<tr>
+                                                		<td class="gridHeaderCell textHeaderCell">{!JSENCODE($Label.CIExpModule)}</td>
+                                                		<td class="gridHeaderCell radioHeaderCell">{!JSENCODE($Label.ReuseExistingRecords)} <br/>({!JSENCODE($Label.Recommended)})</td>
+                                                		<td class="gridHeaderCell radioHeaderCell">{!JSENCODE($Label.CreateNewRecords)}</td>
+                                                	</tr>
+                                                	<tr style="display: {!IF(CONTAINS(conflictInModules, 'BaseElement__c'), 'table-row', 'none')};" >
+                                                		<td class="textCell">{!$ObjectType.BMC_BusinessService__c.labelPlural}</td>
+                                                		<td class="radioCell"><input type="radio" name="radio1" value="true" onclick="disableEnablePrefixField();reuseService='true';" Id="Bso_radioReuse"/></td>
+                                                		<td class="radioCell"><input type="radio" name="radio1" value="false" onclick="disableEnablePrefixField();reuseService='false';" Id="Bso_radioCreateNew"/></td>
+                                                	</tr>  
+                                                	<tr style="display: {!IF(CONTAINS(conflictInModules, 'Category__c'), 'table-row', 'none')};" >>
+                                                		<td class="textCell">{!$ObjectType.Category__c.labelPlural}</td>
+                                                		<td class="radioCell"><input type="radio" name="radio2" value="true" onclick="disableEnablePrefixField();reuseCategory='true';" Id="Cat_radioReuse"/></td>
+                                                		<td class="radioCell"><input type="radio" name="radio2" value="false" onclick="disableEnablePrefixField();reuseCategory='false';" id="Cat_radioCreateNew"/></td>
+                                                	</tr>
+                                                	<tr style="display: {!IF(CONTAINS(conflictInModules, 'SYSTemplate__c'), 'table-row', 'none')};" >
+                                                		<td class="textCell">{!$ObjectType.SYSTemplate__c.labelPlural}</td>
+                                                		<td class="radioCell"><input type="radio" name="radio3" value="true" onclick="disableEnablePrefixField();reuseTemplate='true';" Id="Temp_radioReuse"/></td>
+                                                		<td class="radioCell"><input type="radio" name="radio3" value="false" onclick="disableEnablePrefixField();reuseTemplate='false';" Id="Temp_radioCreateNew"/></td>
+                                                	</tr>
+                                                	<tr style="display: {!IF(CONTAINS(conflictInModules, 'SRM_RequestDefinition__c'), 'table-row', 'none')};" >>
+                                                		<td class="textCell">{!$ObjectType.SRM_RequestDefinition__c.labelPlural}</td>
+                                                		<td class="radioCell"><input type="radio" name="radio4" value="true" onclick="disableEnablePrefixField();reuseSRD='true';" Id="Srd_radioReuse"/></td>
+                                                		<td class="radioCell"><input type="radio" name="radio4" value="false" onclick="disableEnablePrefixField();reuseSRD='false';" Id="Srd_radioCreateNew"/></td>
+                                                	</tr>
+                                                	<tr style="display: {!IF(CONTAINS(conflictInModules, 'ServiceLevelAgreement__c'), 'table-row', 'none')};" >
+                                                		<td class="textCell">{!$ObjectType.ServiceLevelAgreement__c.labelPlural}</td>
+                                                		<td class="radioCell"><input type="radio" name="radio5" value="true" onclick="disableEnablePrefixField();reuseSLA='true';" Id="Sla_radioReuse"/></td>
+                                                		<td class="radioCell"><input type="radio" name="radio5" value="false" onclick="disableEnablePrefixField();reuseSLA='false';" Id="Sla_radioCreateNew"/></td>
+                                                	</tr>                                                	                                                	                                                	                                                	
+                                                </table>
+
+                                            </div>
+                                        </apex:outputPanel> 
+                                        <apex:outputPanel rendered="{!(conflictFound || prefixRequired)}">
+											<div class="prefixInput topMargin">
+											{!JSENCODE($Label.Prefix)}&nbsp;<div id="artistick" class="artistickCls">*</div>
+											<apex:inputText maxlength="8" value="{!prefix}" id="prefixTextBox" title="{!JSENCODE($Label.bmcservicedesk__prefixmandatory)}" styleclass="prefixInputTextBox"/>
+											</div> 											
+                                        </apex:outputPanel>
+	                                    <apex:outputPanel rendered="{!prefixRequired}" styleclass="prefixReqNote" layout="block">    
+	                                        <b>{!JSENCODE($Label.Note)}:</b>&nbsp;{!JSENCODE($Label.RecordAppendedWithPrefix)}
+                                        </apex:outputPanel>
+                                    </div> 
+                                    
+                                    <div id="ImportInProgress_Section" style="display:{!if(currentStep == 'IMPORTING','block','none')};" class="topMargin">
+                                        <img src="/img/loading.gif" id="stUploadingImg"/>&nbsp;{!JSENCODE($Label.ImportingRecords)}
+                                    </div>        
+                                    
+                                    <div id="ImportResult_Section" style="display:{!if(currentStep == 'IMPORTRESULTS','block','none')};" class="topMargin">
+                                        <apex:outputPanel rendered="{!!importSuccessful}" styleClass="importResultBox ReportBox" style="border-color:#CC0000;">
+											<table>
+                                           		<tr>
+                                           			<td><img src="/img/msg_icons/error16.png" class="tickImg"/>&nbsp;&nbsp;</td>
+                                           			<td>&nbsp;&nbsp;<b>{!JSENCODE($Label.ImportOperationFailed)}</b>&nbsp;{!JSENCODE($Label.SeeContentImportRecordOnFailure)}&nbsp;<apex:outputLink value="/{!ContentImportId}" target="_blank" styleClass="linkCls">{!JSENCODE($Label.bmcservicedesk__clickhere)}</apex:outputLink>.</td>
+                                           		</tr>
+                                          	</table>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!(importReportUrl != '' && importReportUrl != null)}" >
+                                            <apex:outputPanel styleClass="importResultBox ReportBox">
+                                                <div>
+                                                    <img src="{!$Resource.SDEFStyles}/SDEFimages/accept.png" class="tickImg"/> &nbsp;&nbsp;&nbsp;{!JSENCODE($Label.SmartPracticesContentImportedSuccessfully)}&nbsp;<apex:outputLink value="{!importReportUrl}" id="importReportUrl" styleClass="linkCls">{!JSENCODE($Label.bmcservicedesk__clickhere)}</apex:outputLink>.
+                                                </div>                  
+                                            </apex:outputPanel>
+                                            <div>
+                                            	<div class="sectionHeaderLabel">{!JSENCODE($Label.NextSteps)}:</div> 
+	                                            <span style="line-height:18px;">1.&nbsp;&nbsp;{!JSENCODE($Label.SeeImportedDataInAdminTab)}</span>
+	                                            <br/>
+	                                            <span style="line-height:18px;">2.&nbsp;&nbsp;{!JSENCODE($Label.SeeContentImportRecordOnSuccess)}&nbsp;<apex:outputLink value="/{!ContentImportId}" target="_blank" styleClass="linkCls">{!JSENCODE($Label.bmcservicedesk__clickhere)}</apex:outputLink>.</span>                                     
+	                                            <br/>
+	                                            <span style="line-height:18px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{!JSENCODE($Label.SeeContentImportRecordOnDeploy)}</span> 
+                                            </div>
+                                        </apex:outputPanel> 
+                                    </div> 
+                                </apex:outputPanel>
+                            </apex:actionregion>
+                        </div>
+                    </div>
+                    <div style="" class="footerDiv" id="footerDivId">
+                        <div id="next" class="buttonContainer" ></div>
+                    </div>
+                </div>
+            </div>  
+        </div>
+    </apex:form>
+    <apex:outputPanel id="variableContainer">
+        <script>
+        var MaxFileSizeinBytes = {!MaxFileSizeinBytes};
+        var MaxFileSizeinMB = {!MaxFileSizeinMB}; 
+        var ImportBestPracticeDataFileSizeError = '{!JSINHTMLENCODE($Label.ImportBestPracticeDataFileSizeError)}'.replace('{}',MaxFileSizeinMB);
+        var ImportBestPracticeDataOnlyZipFile = '{!JSINHTMLENCODE($Label.ImportBestPracticeDataOnlyZipFile)}';     
+        var currentScanSubStep = {!currentScanSubStep};     
+        var currentStep = '{!currentStep}';      
+        var prefixRequired = '{!prefixRequired}';
+        var wikiUrl = '{!wikiUrl}';
+        var importStep = '{!JSENCODE($Label.ImportStep)}';
+        var importBtnLabel = '{!JSENCODE($Label.Import)}';
+        var reuseService = '{!reuseService}';
+        var reuseCategory = '{!reuseCategory}';
+        var reuseTemplate = '{!reuseTemplate}';
+        var reuseSRD = '{!reuseSRD}';
+        var reuseSLA = '{!reuseSLA}';
+        var conflictFound = '{!conflictFound}';
+        var prefixId = '{!$Component.theform.PrefixTextBox}';
+        var inputFileEle = '{!$Component.theform:files}';
+        </script>
+    </apex:outputPanel>  
+    
+    <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js" id="ext-all-js"/> 
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>  
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ImportBestPracticesData.js"/>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+
+</apex:page>

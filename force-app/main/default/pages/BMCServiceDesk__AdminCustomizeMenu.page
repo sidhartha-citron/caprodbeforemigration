@@ -1,0 +1,554 @@
+<apex:page controller="BMCServiceDesk.AdminCustomizeMenuController" id="customizeMenuPage" standardstylesheets="false" showheader="false" >
+<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/ConsoleAdminSetting.css" type="text/css" />
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/AdminHome.css" type="text/css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+
+<script>
+window.onload=function(){
+	document.getElementById("menuOrgLabel").style.fontWeight="bold";
+};
+</script>
+ <apex:form id="customizeMenuForm">
+  <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+ <table width="100%" id="tableCls" height="100%" >
+    <tr>
+        <td colspan="3">
+        <div id="divTB"/>
+        </td>
+    </tr>
+    <tr>
+        <td class="enableConsoleCls">
+        <div class="floatLeft10px stdfont" >
+        <a onclick="ShowHideMenuActionsDiv()" id="menuOrgLabel">
+        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__menuorganization)}" style="align:left; color: #004376;cursor: pointer;"  />
+        </a>|<a onclick="ShowHideCustomActionsDiv()" id="customActionLabel"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__customactionsagenttools)}" style="align:left;color: #004376;cursor: pointer;"  /></a>
+		<div onload="BoldLabel()"></div>
+        </div>     
+        </td>
+         <td>
+              <div id="helpDiv" class="clshelpDiv"></div>
+         </td>
+    </tr>
+    <tr>
+        <td id ="configureConsoleId" style="visibility:visible;padding:15px;"  colspan="3" > 
+            
+            <table  height="100%" width="100%" class="configureTblCls" border='0'>
+               
+                <tr   id ="MenuOrgId" style="visibility:visible;display:block;">
+                    
+                    <td valign="top">
+                        <table class="configureTblCls " style="border: none" id="nestedTable" height="554px">
+                            <tr class="paddingLeft5">
+                                <td valign="top" class="paddingLeft15">
+                                    
+                                    <table>
+                                        <tr> 
+                                            <td class ="paddingTop5 ActionToolHeaderCls BoltFontcls" style="padding-left:2px !important;"> {!JSENCODE($Label.actionsMenu)} </td>
+                                            <td> </td>
+                                            <td class ="paddingTop5 ActionToolHeaderCls BoltFontcls" style="padding-left:27px !important;">{!JSENCODE($Label.agentToolsMenu)} </td>
+                                            <td> </td>
+                                        </tr>
+                                        <tr>
+                                            <td valign="top">
+                                            <!-- <div id = "Seperator buttons" style="margin-left:10px;border:1px;"><button type="button" class="rf-btn" style="padding:0px !important;">Insert Seperator</button><button type="button" class="rf-btn" style="padding:0px !important;">Remove Seperator</button></div> -->
+                                            <div id="actionMenuId"/> </td>
+                                            <td class="padingLeft10" style="padding-left: 10px !important;">
+                                            <input type="button"  id="topButtonId" class="bmcButtonArrowMoveTopDisable" title="{!$Label.TopPanelString}" onclick="scrollActionToTop();" style="margin-bottom: 5px !important;"/> <br/>
+                                            <input type="button"  id="upButtonId" class="bmcButtonArrowUpDisable" title="{!$Label.Up}" onclick="scrollActionUp();" style="margin-bottom: 5px !important"/> <br></br>
+                                            <input type="button"  id="downButtonId" class="bmcButtonArrowDownDisable" title="{!$Label.Down}" onclick="scrollActionDown();" style="margin-bottom: 5px !important;"/> <br></br>
+                                            <input type="button"  id="bottomButtonId" class="bmcButtonArrowMoveBottomDisable" title="{!$Label.Bottom}" onclick="scrollActionToBottom();"/>
+                                            </td>
+
+                                            <td valign="top" style="padding-left:25px !important">
+                                            <div id="agentToolsMenuId"/></td>
+                                            <td class="padingLeft10" style="padding-left: 10px !important;">
+                                            <input type="button"  id="topButtonId1" class="bmcButtonArrowMoveTopDisable" title="{!$Label.TopPanelString}" onclick="scrollAgentToTop();" style="margin-bottom: 5px !important;"/> <br></br>
+                                            <input type="button"  id="upButtonId1" class="bmcButtonArrowUpDisable" title="{!$Label.Up}" onclick="scrollAgentUp();" style="margin-bottom: 5px !important;"/> <br></br>
+                                            <input type="button"  id="downButtonId1" class="bmcButtonArrowDownDisable" title="{!$Label.Down}" onclick="scrollAgentDown();" style="margin-bottom: 5px !important;"/> <br></br>
+                                            <input type="button"  id="bottomButtonId1" class="bmcButtonArrowMoveBottomDisable" title="{!$Label.Bottom}" onclick="scrollAgentToBottom();"/>
+                                            </td>
+                                    	</tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>     
+                    </td>
+                </tr>
+                
+                <tr   id ="trCustomactionId" style="visibility:hidden;display:none;">
+                
+                <td valign="top">
+                		            
+			            <table  height="100%" class="paddingLeft15" border='0'>
+			                <tr>
+                                <td colspan="2" class="configureTdClas" id="ConsoleTd" width="80%">
+			           				<div style="float:left;">
+			           					<div id="RFCLbl" class="floatLeft10px paddingTop4 ">{!$Label.Menu}</div>
+			           					<div id="menuPickList" class=" floatLeft10px"></div>
+			           				</div>
+			           				<div class=" paddingLeft10 floatLeft10px  " >
+			           					<input id="btnNew" type="button" Class="rf-btn"  value="{!$Label.New}" onClick="return callNew();" />
+								    	<input id="btnCopy" type="button" Class="rf-btn" value="{!$Label.Copy}" onClick="return callCopy();" />
+								    	<input id="btnDelete" type="button" Class="rf-btn" value="{!$Label.Delete}" onClick="return callDelete();" /> 
+								   		
+			           				</div>
+			                    </td>
+			                </tr>
+			                <tr>
+			                    <th  width="276px" class="tblHeaderCls  clsInputBoldLabel"> <div id="viewMenuLstLabel" class="verticalTop "></div> </th>
+			                    <th class ="tblHeaderCls  clsInputBoldLabel" ><div id="viewMenuLabel" class="verticalTop  paddingLeft15"></div></th>
+			                    
+			                </tr>
+			                <tr>
+                                <td  class="tdgridCls" width="15%">
+			                    	<div id="left-tab-action"></div>
+			                    </td>
+			                    <td class="tdgridCls configurePadding30" valign="top">
+                                    <table border="1" class="configureTblCls " id="nestedTable" height="100%" width="600px">
+			               				<tr class="paddingLeft5">
+						            		<td valign="top" class="paddingLeft15">
+							            		<div>
+                                                    <div id="viewAcessChk"  class="paddingTop15" style="margin-right:10px;">
+
+			                           <apex:outputPanel id="customactionmain">     
+			                               <table class="clsMainTable" cellspacing="0" >
+			
+			                                    <tr>
+			                                        <td class="LabelTD"> 
+			                          					 <apex:outputLabel styleClass="clsInputLabel" value="{!$Label.bmcservicedesk__name}"/><span class="clsRequiredRed">*</span>
+			                                   		</td>
+			                    					<td>
+			                          					<apex:inputText title="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__ActionName__c.inlineHelpText}" value="{!customAction.BMCServiceDesk__ActionName__c}" id="ActionName__Id" styleclass="clstxtBox200" onchange="setClickedTrue();"/><apex:inputCheckbox id="ActionInactive" value="{!customAction.BMCServiceDesk__inactive__c}" title="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__inactive__c.inlineHelpText}" style="margin-left:15px;vertical-align: text-top;" onclick="setClickedTrue();"/>&nbsp;<apex:outputLabel value="{!$Label.bmcservicedesk__inactive}" style="margin-left:3px; vertical-align:text-top;" /> 
+			                                   		</td>
+			                                    </tr>
+			                                   
+			                                    <tr>
+			                   						<td class="LabelTD"><apex:outputLabel styleClass="clsInputLabel" value="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__Description__c.label}"/>
+			                   						</td>
+			                   						<td>
+			                    						<apex:inputTextarea id="descriptionId" title="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__Description__c.inlineHelpText}" value="{!customAction.BMCServiceDesk__Description__c}"  styleclass="clstxtBox400" onchange="setClickedTrue();"/>
+			                                         </td>
+			                                    </tr>
+			                                    
+			                                    <tr>        
+			                                            <td class="LabelTD"> 
+			                                                <apex:outputLabel styleClass="clsInputLabel"  value="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__LaunchUrl__c.label}"/><span class="clsRequiredRed">*</span>
+			                                            </td>
+								                      <td>
+								                         <apex:inputTextarea title="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__LaunchUrl__c.inlineHelpText}" value="{!customAction.BMCServiceDesk__LaunchUrl__c}" id="URLId"  styleclass="clstxtBox400" onchange="setClickedTrue();" />  
+			                                            </td>
+			                                     </tr>
+												 
+									       </table>
+			                         </apex:outputPanel>
+									<apex:outputpanel id="previewPanel" >
+										<table class="clsMainTable" cellspacing="0" id="prevId" >
+			                                     <tr>       
+                                                     <td class="LabelTD"> 
+                                                        <apex:outputLabel value="{!$Label.bmcservicedesk__url} {!$Label.bmcservicedesk__preview}"/>
+                                                     </td>
+                                                    <td>
+														<textarea id="previewText" rows="2" cols="30" title="{!$Label.PreviewUrl}"  readonly="true" class="clspreviewText"/> 
+                                                    </td>
+                                                  </tr>
+			                                      
+									             </table>
+			                        </apex:outputPanel>
+									<apex:outputpanel id="LaunchInPanel">
+                                            <table cellspacing="0" cellpadding="0" class="clsTable" >
+                                            
+                                             <tr> 
+                                                 <td class="LabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__LaunchIn__c.label}"/>
+                                                  </td>
+													<td  colspan="2" style="padding-top: 20px">
+                                                       <apex:selectRadio value="{!customAction.BMCServiceDesk__LaunchIn__c}" id="LaunchLocation" layout="pageDirection" styleClass="checkLabelTemp" onclick="setClickedTrue();" style="margin-left: 2px" >
+                                                                   <apex:selectOptions value="{!launchLocationItems}" />                                                    
+                                                         </apex:selectRadio>
+                                                   </td>
+                                               </tr>
+											   <tr>
+                                          <td colspan="6">
+                                             <div class="div15pxVspacing"></div>
+											</td>
+											</tr> 
+											  <tr>
+			                                        <td colspan="6"> 
+			                                                <apex:outputLabel styleClass="clsInputBoldLabel" value="{!$Label.bmcservicedesk__launchparameters}"/>
+			                                         </td>
+			                                     </tr>
+									             <tr>
+			                                     <td height="5"/>
+			                                     </tr>
+                                           </table>
+                                       
+                                               </apex:outputpanel>
+                                                <table  class="clsparameterTable" >
+                                        <tr>
+                                        <td colspan="6">
+                                            <div class="div15pxVspacing"></div>
+                                        </td>
+                                     </tr>
+                                     <tr>
+                                         <td width="32%"> 
+                                            <input type="text"  id="paramName"  title="{!$Label.URLParameterName}"  Class="clsTempInputTextBox123"
+                                                    onfocus="if (this.value=='{!$Label.parameterName}'){ this.value = ''; this.style.color='#000000';}isfocus = 1"  value="{!$Label.parameterName}" style="color:#B5B8C8;" onChange="setClickedTrue();"/>
+                                         </td>
+                                         <td width="5%" >
+                                                <apex:outputLabel value="=" styleClass="clsEqualToRadio"/>
+                                         </td>
+                                         <td width="5%">
+                                            <input type="radio" name="colors" id="comboRd" class="clsEqualToRadio" onclick="enableValidation();" checked="true" />
+                                         </td>
+                                         <td width="32%">
+                                            <div id="moduleFldsCombo" title="{!$Label.FormFieldsList}" style="width:93%; margin-left: 3px" styleClass="clsInputLabel" ></div>
+                                         </td>
+                                         <td width="13%">
+                                            <apex:panelGroup id="ButtonPanelGrp">
+                                                <input type="button" Class="bgBtnGrey"  value="{!$Label.Add}"  onClick="addParameter();" id="okButtonId"  style="display:inline;cursor: pointer;" />
+                                                <input type="button" Class="bgBtnGrey"  value="{!$Label.Update}" onClick="updateParameter();"  id="updateButtonId"  style="display:none;cursor: pointer;"  />
+                                            </apex:panelGroup>
+                                         </td>
+										 <td width="13%">
+                                            <apex:panelGroup id="ButtonPanelGrp2">
+                                                <input type="button"  value="{!$Label.Cancel}" Class="bgBtnGrey" id="CancelButtonId"  onClick="CancelUpdate();" style="display:inline;cursor: pointer; margin-left:2px; " />
+                                            </apex:panelGroup>
+                                         </td>
+                                     </tr>
+                                     <tr>
+                                         <td height="4" COLSPAN="6" ></td>
+                                     </tr>
+                                     <tr>
+                                          <td width="32%"></td>
+                                          <td width="5%" ><apex:outputLabel value="" styleClass="clsEqualToRadio"/></td>
+                                          <td width="5%">
+                                                <input type="radio" name="colors" id="txtBoxRd" onclick="enableValidation();" class="clsEqualToRadio" />
+                                          </td>
+                                          <td width="32%">
+                                                <input type="text"  id="paramConstVal"  title="{!$Label.URLConstantParameter}" disabled="true" Class="clsTempInputTextBox123" 
+                                                onfocus="if (this.value=='{!$Label.EnterConstant}'){ this.value = ''; this.style.color='#000000'; }isEnterConst = 1;"  value="{!$Label.EnterConstant}" style="color:#B5B8C8;" onChange="setClickedTrue();"/>
+                                          </td>
+                                           <td width="13%" >
+                                                <apex:panelGroup id="ButtonPanelGrp1">
+                                                    <input type="button" Class="bgBtnGrey"  value="{!$Label.Remove}" onClick="removeParameter();" id="removeButtonId"  disabled="true"  style="display:inline;cursor: pointer;" />
+                                                </apex:panelGroup>
+                                          </td>
+										   <td width="13%"/>
+                                     </tr>
+                                     <tr>
+                                          <td colspan="6">
+                                             <div class="div15pxVspacing"></div>
+                                          </td>
+                                     </tr> 
+									 
+                                        </table>
+										<table>
+										<tr>
+                                                <td colspan="2">
+                                                    <div id="extGridPanel"></div>
+                                                 </td>
+                                               </tr>
+											</table>
+											
+                                           </div>
+                                                     
+                                                </div>
+                                                 
+                                            </td>
+                                        </tr>
+                                    </table>     
+                                </td>
+                            </tr>
+                        </table>
+                         
+                </td>
+                
+                </tr>                
+            </table>
+             
+        </td>
+
+ </tr>
+ </table>           
+     
+ 
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+ 
+  <script>
+   var mainArray;
+   var incidentConsole='{!JSENCODE($Label.Incident_Console)}';
+   var taskConsole ='{!JSENCODE($Label.Task_Console)}';
+   var saveLbl='{!JSENCODE($Label.Save)}';
+   var consoleLbl='{!JSENCODE($Label.console)}';
+   var consoleViewLbl='{!JSENCODE($Label.ConsoleView)}';
+   var createLbl = '{!JSENCODE($Label.CreateEditLayout)}';
+   var refreshLbl = '{!JSENCODE($Label.Refresh)}';    
+   var consoleWarningMessageOnProfileChange = '{!JSENCODE($Label.consoleWarningMessageOnProfileChange)}';
+   var actionGrid,agentGrid,profileGrid,messageString,rightSideTabStore,viewStore,consoleViewCombo,ConsoleLabel, ConsoleViewLabel, coloumCountCombo;
+   var ConsoleViewLabel,ConsoleLabel,layoutPanel,enableRFConsoleChk,consoleView,layouGridPanel,pid;
+   var layoutGrid, layoutStore;
+   var layoutJsonString = {!ObjectLayouts};
+   var refreshCustomLayoutlbl = '{!JSENCODE($Label.RefreshCustomLayoutList)}';
+   var isMenuOrganizationSelected = true; 
+   var saveSuccess ='{!JSENCODE($Label.SavedSuccessfully)}';
+   var selectProfile='{!JSENCODE($Label.SelectProfile)}';
+   var actionslbl='{!JSENCODE($Label.Actions)}';
+   var agentslbl='{!JSENCODE($Label.consoleAdminAgents)}';
+   var ConsoleViewAcesslbl='{!JSENCODE($Label.profileAcessConsoleView)}';
+   var profilelbl='{!JSENCODE($Label.Profile)}: ';
+   var assinLayout = '{!JSENCODE($Label.AssignLayout)}';
+   var layout = '{!JSENCODE($Label.Layout)}';
+   var StandAloneViewStore = [["Incident","{!JSENCODE($Label.Incident_Console)}"],["Task", "{!JSENCODE($Label.Task_Console)}"]]; //["Problem","{!JSENCODE($Label.Problem_Console)}"],["Change","{!JSENCODE($Label.Change_Console)}"],["Release","{!JSENCODE($Label.Release_Console)}"]];
+   var RFViewStore = [["Incident","{!JSENCODE($Label.IncidentAndServiceRequests)}"],["Task", "{!JSENCODE($Label.Navigator_Tasks)}"],["Problem","{!JSENCODE($Label.Navigator_Problems)}"],["Change","{!JSENCODE($Label.ChangeRequests)}"],["Release","{!JSENCODE($Label.Releases)}"]];
+   var coloumCountStoreData = [[1,"1 {!JSENCODE($Label.Column)}"],[2,"2 {!JSENCODE($Label.Column)}"]];
+   var enableConsoleLbl='';
+   var selectedLayout = 'Default';
+   var enablerf = document.getElementById('{!$Component.enableRFViewChk}');
+   var enableStandAloneCon = document.getElementById('{!$Component.EnableIndivisualConsole}');
+   var IncidentSRLbl = '{!JSENCODE($Label.IncidentAndServiceRequests)}';
+   var confirmLbl = '{!JSENCODE($Label.ConfirmHomePage)}';
+   var ConfirmColumnCountlbl = '{!JSENCODE($Label.ConfirmColumnCount)}';
+   var wikiUrl = '{!wikiUrl}';
+    parent.addHelpOnPage(document.getElementById('helpDiv'),'custom_console_actions.htm',wikiUrl); 
+   var isChangeFlag = 'false';
+   var selectedLayout;
+   var okLbl = '{!JSENCODE($Label.Ok)}';
+   var yesLbl = '{!JSENCODE($Label.ExtjsMessageYes)}';
+   var noLbl = '{!JSENCODE($Label.ExtjsMessageNo)}'; 
+   var warningMsg = '{!JSENCODE($Label.SF1NavigationWarningMsg)}'; 
+   var currentSelectedObject='{!JSENCODE(consoleSelected)}';
+   var ConfirmAction = '{!JSENCODE($Label.Confirm_Action)}';
+	var currentSelectedMenu='{!JSENCODE(menuSelected)}';
+	
+	var menuLbl= '{!JSENCODE($Label.Menu)}'; //New
+	var customLbl = '{!JSENCODE($Label.CMDBCustom)}';
+	var ActionLbl = '{!JSENCODE($Label.Action)}';
+	var AgentToolLbl = '{!JSENCODE($Label.AgentTool)}'; //New
+	//var ActionsLbl = '{!JSENCODE($Label.Actions)}';
+	var AgentToolsLbl = '{!JSENCODE($Label.AgentTools)}';
+	var StandAloneMenuStore = [["action",actionslbl],["agent", AgentToolsLbl]];
+
+	var customActionGrid,customActionStore,menuStore,consoleMenuCombo;
+	var selectedCustomActionId,selectedCustomActionCloneId,selectedCustomActionName;
+
+	var copyLbl='{!JSENCODE($Label.Copy)}';
+	var ofLbl='{!JSENCODE($Label.Of)}';
+	var PleaseWait= '{!JSENCODE($Label.PleaseWait)}';  	
+	var newLbl = '{!JSENCODE($Label.New)}'; 
+	var customActionJsonString = {!ActionData};
+	var btnState = ''; 
+
+   
+   var actionsMenuData ={!actionsMenuData};
+   var agentToolsMenuData ={!agentToolsMenuData};
+   var actionMenuGrid,agentToolsMenuGrid;
+var comboFldIndex = -1;
+     var isfocus = 0;
+     var isEnterConst = 0;
+     var selectedRow;
+     var pNameForUpdate;
+     var isException = false;
+     var selectedValues ='';
+     var separator= '-';
+     var SeparatorLabel='{!JSENCODE($Label.Separator)}';
+     var moduleFieldStore;
+     var moduleFieldCombo;
+     var listDataGrid = new Array();
+     var SelectField = '{!JSENCODE($Label.SelectField)}';
+     var ModuleType = '{!JSENCODE($Label.TooltipQuickViewsWizardChartType)}';
+     var parameterNameEmpty = '{!JSENCODE($Label.parameterNameEmpty)}';
+     var parameterNameUnique = '{!JSENCODE($Label.parameterNameUnique)}';
+     var EmptyModuleFieldValue = '{!JSENCODE($Label.EmptyModuleFieldValue)}';
+     var EmptyConstantValue = '{!JSENCODE($Label.EmptyConstantValue)}';
+     var parameterName = '{!JSENCODE($Label.parameterName)}';
+     var EnterConstant = '{!JSENCODE($Label.EnterConstant)}';
+     var Information = '{!JSENCODE($Label.Information)}';
+     var InsertSeparator = '{!JSENCODE($Label.InsertSeparator)}';
+     var RemoveSeparator = '{!JSENCODE($Label.RemoveSeparator)}';
+     var gridData= []; 
+     function  fetchModuleFieldStore(){
+                moduleFieldStore = new Ext.data.ArrayStore({
+                    fields:['lable','apiName'],
+                    data:{!moduleFldsNames}
+               });
+        }
+    function showTable(){
+     tableStore = new Ext.data.ArrayStore({
+            id :'tableStore',
+            fields: ['field','constValue','apiName','isDynamic'],
+            data : gridData
+        });
+       function renderTooltip(value, metaData, record, rowIndex, colIndex, tableStore) { 
+           
+            return value;     
+        }  
+        var grid = new Ext.grid.GridPanel({
+              renderTo:'extGridPanel',
+              id:'grid',
+              border:true,
+              store: tableStore,
+              columns: [{
+                  id:'FieldLabel',
+                  header: '{!JSENCODE($Label.parameterName)}', 
+                  flex:1,
+                  sortable: true,
+                  hidden: false,                  
+                  dataIndex: 'field'
+              },{
+                  header: '{!JSENCODE($Label.parameterValue)}', 
+                  renderer: renderTooltip, 
+                  id:'ValueField',
+                  flex:1,
+                  sortable: true, 
+                  hidden: false,
+                  dataIndex: 'constValue'
+              },{
+                  header: '{!JSENCODE($Label.LocalValue)}', 
+                  renderer: renderTooltip,
+                  id:'apiNameFld',
+                  flex:1 , 
+                  sortable: true,
+                  hidden: true, 
+                  dataIndex: 'apiName'
+              },{
+                  header: '{!JSENCODE($Label.LocalValue)}', 
+                  renderer: renderTooltip,
+                  id:'isDynamicFld',
+                  flex:1,
+                  sortable: true,
+                  hidden: true, 
+                  dataIndex: 'isDynamic'
+              }],
+			stripeRows: true,
+            autoExpandColumn: 'FieldLabel',
+            height:220,
+            width:580,
+            autoScroll:false,
+            columnLines:true,
+            stripeRows:true,
+			listeners: {
+                 
+                  select: function(selModel, record, index, options){
+                            var record =  Ext.getCmp('grid').store.getAt(index);
+                            field=record.get('field');
+                            value=record.get('constValue');
+                           // field=listDataGrid[index][0];
+                            //value=listDataGrid[index][1];
+                            //locValue=listDataGrid[index][2];
+                            locValue=record.get('apiName');
+                            selectedRow = index;
+                            onRowClkofParamGrid(record);
+                    }
+              } 
+      });   
+    }
+       
+Ext.ns("customizeMenuPage");
+  customizeMenuPage.ComponentVars = {
+         	URLIdforPreview: '{!$Component.customizeMenuForm.URLId}'
+         		
+         }
+ </script>
+  <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+  <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminCustomizeMenu.js"></script> 
+  <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"></script>
+  
+
+ <apex:actionFunction name="reloadCustomActionMenu" action="{!BindCustomActionMenu}" onComplete="hideWaitbox();showError();setData();EmptyParamTextbox();enableRdTxtPanel();" rerender="msgString,validationComponent,CustomActionData,CustomActionDataVar,customactionmain,dataPanel,LaunchInPanel,ParaneterRadioPanel,ButtonPanelGrp,previewPanel"  >
+    <apex:param name="currentSelectedObject" assignTo="{!consoleSelected}" value="" />
+    <apex:param name="currentSelectedMenu" assignTo="{!menuSelected}" value="" />
+ </apex:actionFunction>
+ 
+  <apex:actionFunction name="getActionForSelectedAction" action="{!BindCustomAction}" onComplete="hideWaitbox();showError();setData();EmptyParamTextbox();enableRdTxtPanel();loadPreview();" rerender="msgString,validationComponent,CustomActionDataVar,customactionmain,previewPanel,dataPanel,LaunchInPanel,ParaneterRadioPanel,ButtonPanelGrp" >
+    <apex:param name="currentSelectedObject" assignTo="{!consoleSelected}" value="" />
+    <apex:param name="currentSelectedMenu" assignTo="{!menuSelected}" value="" />
+    <apex:param name="selectedCustomActionId" assignTo="{!customActionId}" value="" />
+    <apex:param name="selectedCustomActionCloneId" assignTo="{!customActionCloneId}" value="" />
+</apex:actionFunction>
+<apex:actionFunction name="getActionForCopy" action="{!BindCustomAction}" onComplete="hideWaitbox();showError();setData();setClickedTrue();" rerender="msgString,validationComponent,CustomActionData,CustomActionDataVar,customactionmain,extGridPanel,LaunchInPanel,ParaneterRadioPanel" >
+    <apex:param name="currentSelectedObject" assignTo="{!consoleSelected}" value="" />
+    <apex:param name="currentSelectedMenu" assignTo="{!menuSelected}" value="" />
+    <apex:param name="selectedCustomActionId" assignTo="{!customActionId}" value="" />
+    <apex:param name="selectedCustomActionCloneId" assignTo="{!customActionCloneId}" value="" />
+</apex:actionFunction>
+ <apex:actionFunction name="newAction" action="{!NewCustomAction}" onComplete="hideWaitbox();showError();setData();EmptyParamTextbox();enableRdTxtPanel();" rerender="msgString,validationComponent,customactionmain,previewPanel,dataPanel,LaunchInPanel,ParaneterRadioPanel,ButtonPanelGrp" >
+    <apex:param name="currentSelectedObject" assignTo="{!consoleSelected}" value="" />
+    <apex:param name="currentSelectedMenu" assignTo="{!menuSelected}" value="" />
+    <apex:param name="selectedCustomActionId" assignTo="{!customActionId}" value="" />
+    <apex:param name="selectedCustomActionCloneId" assignTo="{!customActionCloneId}" value="" />
+ </apex:actionFunction>
+  <apex:actionFunction name="deleteAction" action="{!DeleteCustomAction}"  onComplete="setData();hideWaitbox();showError();completeDelete();EmptyParamTextbox();enableRdTxtPanel();" rerender="msgString,validationComponent,extGridPanel,CustomActionData,CustomActionDataVar,dataPanel,customactionmain,ParaneterRadioPanel,ButtonPanelGrp,previewPanel"/>
+  <apex:actionFunction name="saveAction" action="{!SaveCustomAction}" onComplete="hideWaitbox();showError();completeSave();EmptyParamTextbox();generatePreviewUrl();"  reRender="msgString,validationComponent,CustomActionData,CustomActionDataVar">
+  <apex:param assignTo="{!paramList}" name="paramList" value=""/>
+  </apex:actionFunction> 
+<apex:actionFunction name="SaveReorderAction" action="{!SaveReorderAction}" onComplete="hideWaitbox();showError();"  reRender="msgString,validationComponent">
+  	<apex:param assignTo="{!reorderedMenus}" name="customSet" value=""/>
+  </apex:actionFunction>    
+
+<apex:outputPanel id="dataPanel">
+  <script>
+			 var preview = '{!JSENCODE(previewOfURL)}';
+			 
+            listDataGrid = new Array();
+            var i=0; 
+			
+            <apex:repeat value="{!listData}" var="gridRowobj" >   
+				listDataGrid[i] = new Array(4);
+                listDataGrid[i][0]=urldecode('{!JSENCODE(gridRowobj.paramName)}');
+                listDataGrid[i][1]=urldecode('{!JSENCODE(gridRowobj.paramConstVal)}');
+                listDataGrid[i][2]='{!JSENCODE(gridRowobj.paramApiName)}';
+                listDataGrid[i][3]='{!JSENCODE(gridRowobj.paramisDynamic)}';
+                i++;
+            </apex:repeat>
+            function setData(){
+				tableStore.removeAll();
+                Ext.getCmp('grid').getView().refresh();
+                tableStore.loadData(listDataGrid);
+                Ext.getCmp('grid').getView().refresh();
+            }                     
+		function loadPreview(){
+		
+                document.getElementById('previewText').value = preview;
+               
+            }
+                               
+        </script>
+</apex:outputPanel>
+<apex:outputPanel id="ParaneterRadioPanel">
+	<script>
+ 		document.getElementById('comboRd').checked = true;
+		 document.getElementById('txtBoxRd').checked = false;
+	</script>
+</apex:outputPanel>
+
+<apex:outputPanel id="msgString">
+<script>
+	messageString='{!JSENCODE(messageString)}';
+</script>
+</apex:outputPanel>
+
+<apex:outputpanel id="CustomActionData">
+	<script>
+		customActionJsonString = {!ActionData};
+		if (customActionStore != null && customActionJsonString != null) {
+			customActionStore.loadData(customActionJsonString);
+		}
+	</script>
+</apex:outputpanel>
+
+<apex:outputpanel id="CustomActionDataVar">
+	<script>
+		selectedCustomActionId = '{!JSENCODE(customAction.Id)}'; 
+		selectedCustomActionName = '{!JSENCODE(customAction.ActionName__c)}'; 
+     	isRecDeleted = {!isRecDeleted};
+
+		chkButtons();
+	</script>
+</apex:outputpanel>
+<apex:outputPanel id="errorMsgPanel"> <!-- Page body in this panel -->
+        <div id="testPanelDiv" style="display:none;">
+        <apex:messages /> 
+        </div>
+     </apex:outputPanel>  
+</apex:form>
+</apex:page>

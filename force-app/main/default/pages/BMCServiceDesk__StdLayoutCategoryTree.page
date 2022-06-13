@@ -1,0 +1,107 @@
+<apex:page cache="true" showHeader="false" controller="BMCServiceDesk.StdCategoryTreeController" standardStylesheets="false">
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CategorySearchStyle.css"/>
+<apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__RemedyforceAdministration, 'styles/remedyforce-administration.css')}" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" />
+
+ <script>
+    var popupId = '{!JSENCODE($CurrentPage.parameters.popupId)}';
+    var recordId = '{!JSENCODE($CurrentPage.parameters.recordId)}';
+    var stdForm = '{!JSENCODE($CurrentPage.parameters.stdForm)}';
+    var state = '{!JSENCODE($CurrentPage.parameters.state)}';
+	var categoryFilter='{!JSENCODE($CurrentPage.parameters.filter)}';
+    var isServiceRequest = '{!JSENCODE($CurrentPage.parameters.serviceRequest)}';
+    var idValStr = '{!JSENCODE($CurrentPage.parameters.idValStr)}';
+    var layoutId = '{!JSENCODE($CurrentPage.parameters.recType)}';
+	var isCalledFromConsole = '{!JSENCODE($CurrentPage.parameters.isCalledFromConsole)}';
+    var isLightningUI = '{!JSENCODE($CurrentPage.parameters.lightningUI)}';
+    var MultiPageLayoutEnabled = '{!JSENCODE($CurrentPage.parameters.MultiPageLayoutEnabled)}';
+    var isCalledFromRD = '{!JSENCODE($CurrentPage.parameters.isCalledFromRD)}';
+    var modalType = '{!JSENCODE($CurrentPage.parameters.modalType)}';
+    if('{!JSENCODE($CurrentPage.parameters.frm)}' == 'closepage' && window.parent && !window.parent.isServiceRequest && window.parent.MultiPageLayoutEnabled == 'true'){
+    	layoutId = window.parent.layoutId;
+    	MultiPageLayoutEnabled = window.parent.MultiPageLayoutEnabled;
+    }
+    //fix for defect#69931 and #70213
+    idValStr = encodeURIComponent(idValStr);
+    var page_CMDBJsonGenerator = '{!$Page.CMDBJsonGenerator}';
+    var labelClear = '{!JSENCODE($Label.Clear)}';
+    var labelCatByDesc = '{!JSENCODE($Label.CategoriesByDesc)}';
+    var labelSearch = '{!JSENCODE($Label.Search)}';
+    var labelSelCategory =  '{!JSENCODE($Label.SelectFromCategories)}';
+    var incidentCategories = '{!JSENCODE($Label.Incident_Categories)}';
+    var serviceRequestCategories = '{!JSENCODE($Label.Service_Request_Categories)}';
+    var applyLabel = '{!JSENCODE($Label.Apply)}';
+    var allCategoriesLabel = '{!JSENCODE($Label.AllCategories)}';
+    var minCharsForSearchlabel = '{!JSENCODE($Label.GsErrorMsg)}';
+    var warningTitleSearchLabel = '{!JSENCODE($Label.Warning)}';
+    var selectCategoryLabel = '{!JSENCODE($Label.SelectCategoryCategorySearchPage)}';
+    var incidentClosedLabel = '{!JSENCODE($Label.Incident_is_closed)}';
+	var taskClosedLabel = '{!JSENCODE($Label.Task_is_Closed)}';
+	var changeRequestClosedLabel = '{!JSENCODE($Label.CRClosed)}';
+	var problemClosedLabel = '{!JSENCODE($Label.ProblemClosed)}';
+	var releaseClosedLabel = '{!JSENCODE($Label.ReleaseClosed)}';
+	var broadcastClosedLabel = '{!JSENCODE($Label.BroadcastClosed)}'; 
+	var forSR = '{!JSENCODE($CurrentPage.parameters.forSR)}';
+	var FormTag = '{!JSENCODE(FormTag)}'; 
+	var TextBox = '{!JSENCODE(TextBox)}';
+    var _RemoteActionGetCatDesc = '{!$RemoteAction.StdCategoryTreeController.fetchCategoryDesc}';
+	var loadingImgSrc = '{!$Resource.SDEFStyles}/SDEFimages/loading.gif';
+    var loadingText = '{!JSENCODE($Label.SSLoading)}...';
+    var searchText = '{!JSENCODE($CurrentPage.parameters.searchLookUpStr)}';
+
+</script>
+    <apex:form id="CategorySearchForm">
+        <table class="clsMainTableC" cellpadding="5" cellspacing="0" height="100%;">
+            <tr>
+                <td><div id="btntoolbar" class="{!IF($CurrentPage.parameters.lightningUI=='true','rf-toolbar','')}"/></td>
+            </tr>
+			<tr>
+			<apex:outputPanel rendered="{!isOptionalFilter}" >
+				<td  class="LookupFilterTD" >
+					<span id="showall" >
+						{!$Label.ShowAllResultsMsg}
+						<a style="padding-left:10px;"  href="javascript:toggleFilter(true)">{!$Label.ShowAllResultsLink}</a>
+					</span>
+					<span id="showfilter" style="display:none;">
+					{!$Label.ReapplyCriteriaMsg}
+					<a style="padding-left:10px;" href="javascript:toggleFilter(false)">{!$Label.ReapplyCriteriaLink}</a>
+					</span>
+				</td>	
+           </apex:outputPanel>	
+			</tr>
+            <tr>
+                <td>
+                    <div id="categoryTreeView" style="overflow:auto;"/>
+                </td>
+            </tr>   
+            <tr id="buttonpanel" >
+                <td align="left" class="rf-lightning-toolbar {!IF($CurrentPage.parameters.lightningUI=='true','','tbarStyle')}">
+                    <table style="width:0px; margin-left: 10px;">
+                        <tr>
+                            <td colspan="5"></td>
+                            <td align="right">
+                                <input tabindex="1" type="button" id="okButton" style="margin-right: 5px;height: 100%;" onclick="validateRecordState()" value="{!$Label.Ok}" class="rf-slds-button rf-slds-button_neutral"/>  
+                            </td>
+                            <td align="right">
+                                <input tabindex="1" type="button" id="cancelButton" style="height: 100%;" onclick="closeWindow()" value="{!$Label.Cancel}" class="rf-slds-button rf-slds-button_neutral"/>
+                            </td>
+                            <td width="5px"></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <apex:outputPanel id="errorMsgPanel">
+            <script>
+                errorMsg = '{!JSENCODE(errorMessage)}';
+            </script>
+        </apex:outputPanel>
+        <apex:actionFunction name="saveSelectedCategory" action="{!saveSelectedCategory}" reRender="errorMsgPanel" onComplete="closeWindowAfterSave();">
+            <apex:param assignTo="{!selectedCategory}" name="selectedCategory" value=""/>
+        </apex:actionFunction>
+        <input id="hiddenTxtFld" style="display:none;"/><!-- prevents form submission when enter key is pressed on search text box -->
+    </apex:form>    
+    <c:CommonIncludes />                       
+    <script type="text/javascript" src="{!$Resource.BMCRFCommonJS}/StdLayoutCategoryTree.js"/>
+    <script type="text/javascript" src="{!$Resource.BMCRFCommonJS}/StdLayoutCommon.js"></script>
+</apex:page>

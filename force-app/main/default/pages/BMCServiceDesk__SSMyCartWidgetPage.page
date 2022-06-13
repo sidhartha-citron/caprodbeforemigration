@@ -1,0 +1,49 @@
+<apex:page Controller="BMCServiceDesk.SSRightSidebarController"  showheader="false" sidebar="false" standardStylesheets="false">
+    
+    <div id="ssCartDiv" style="margin:0px"></div>
+    <script>
+		SDF.incidentPage ='{!JSENCODE($Page.SSIncidentCustom)}';
+        	SDF.PagingToolbar.superclass.afterPageText = '{!JSENCODE($Label.Of)} {0}';  
+        	SDF.PagingToolbar.superclass.beforePageText = '{!JSENCODE($Label.page)}';	
+        	SDF.PagingToolbar.superclass.firstText = '{!JSENCODE($Label.SSFirstPage)}';
+        	SDF.PagingToolbar.superclass.prevText = '{!JSENCODE($Label.SSPreviousPage)}';
+        	SDF.PagingToolbar.superclass.lastText= '{!JSENCODE($Label.SSLastPage)}';
+        	SDF.PagingToolbar.superclass.nextText = '{!JSENCODE($Label.SSNextPage)}';
+			SDF.incidentStatusPage ='{!JSENCODE($Page.SSIncidentStatus)}';
+			var deleteConfirmationMsg='{!JSENCODE($Label.SSCartItemDeleteConfirmationMsg)}';
+			var deleteConfirmationTitle='{!JSENCODE($Label.SSCartItemDeleteTitle)}';
+			var thereIsAnIssue='{!JSENCODE($Label.ThereIsAnIssue)}';
+   </script>
+    <apex:outputPanel id="cartDataPanel">
+        <script type="text/javascript">
+            Ext.ns('SDF.data');
+            SDF.data.cartData =[{!cartGridData}]; 
+        	SDF.data.cartDataLen = '{!cartDataLen}';
+            SDF.cartMessage='';
+            SDF.data.goToHomeFlag= {!goToHome};
+            incidentId = '{!incidentId}';
+            incName ='{!JSENCODE(incName)}';
+            cartMessage ='{!errorMsg}';
+        
+        </script>
+    </apex:outputPanel>    
+	<style>
+	.x-toolbar-ct{
+		background-color:transparent;
+	}
+	.x-tool-close{
+		width:20px;
+		height:20px;
+	  }
+</style>
+
+    <c:ValidationComponent errorMsgList="{!cartMessage}" id="validationCompId"></c:ValidationComponent>
+    <apex:form >
+
+        <apex:actionFunction action="{!checkOutAction}" name="checkoutJSAction" rerender="cartDataPanel,validationCompId" oncomplete="showCartMessage();loadCartData();showError();initHelpRequestData();">
+          <apex:param name="reqDetailId" assignTo="{!reqDetailId}" value=""/>
+        </apex:actionFunction>
+         <!-- <apex:actionFunction name="refreshPanel" rerender="cartDataPanel" oncomplete="loadCartData();"> 
+        </apex:actionFunction> -->
+</apex:form>
+</apex:page>

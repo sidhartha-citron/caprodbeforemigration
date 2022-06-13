@@ -1,0 +1,263 @@
+﻿
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta name="GENERATOR" content="Quadralay WebWorks Publisher 2003 for FrameMaker 8.6.6587.0" />
+    <meta name="TEMPLATEBASE" content="BMC_WebWorksHelp_52407" />
+    <meta name="LASTUPDATED" content="06/11/14 13:56:16" />
+    <title>電子メールの会話の設定</title>
+    <link rel="StyleSheet" href="Remedy.css" type="text/css" />
+    <link rel="StyleSheet" href="catalog.css" type="text/css" />
+<script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/context.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/towwhdir.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/wwhpagef.js"></script>
+
+  <script type="text/javascript" language="JavaScript1.2">
+   <!--
+    // Set reference to top level help frame
+    //
+    var  WWHFrame = WWHGetWWHFrame("");
+   // -->
+  </script>
+
+    <script type="text/javascript" language="JavaScript1.2" src="scripts/expand.js"></script>
+  </head>
+
+  <body onLoad="WWHUpdate();" onUnload="WWHUnload();" onKeyDown="WWHHandleKeyDown((document.all||document.getElementById||document.layers)?event:null);" onKeyPress="WWHHandleKeyPress((document.all||document.getElementById||document.layers)?event:null);" onKeyUp="WWHHandleKeyUp((document.all||document.getElementById||document.layers)?event:null);">
+
+    
+    
+
+    <blockquote>
+<script type="text/javascript" language="JavaScript1.2">
+   WWHFrame.WWHHelp.mRemedyTitle = "電子メールの会話の設定";
+   WWHFrame.WWHHelp.fRemedyShowTitle();
+</script><a name="wp2048627"> </a><p class="pBody">スタッフメンバーが、インシデントについてクライアントとやり取りできるようにするには、BMC Remedyforceで電子メールの会話を設定する必要があります。電子メールの会話は、変更リクエスト、問題、タスクからも可能です。次の手順では、電子メールの会話を設定する方法の概要を示します。</p>
+<a name="wp2207678"> </a><p class="pOverviewStep">
+<br />手順1<br />電子メールサービスを作成します。
+</p>
+<a name="wp2207679"> </a><p class="pOverviewStep">
+<br />手順2<br />定義済みのEmailListener Apexクラスを電子メールサービスに追加します。
+</p>
+<a name="wp2048633"> </a><p class="pOverviewStep">
+<br />手順3<br />電子メールサービス用の電子メールアドレスを作成します。
+</p>
+<a name="wp2048634"> </a><p class="pOverviewStep">
+<br />手順4<br />組織のアウトバウンド電子メールアドレスを作成します。
+</p>
+<a name="wp2048635"> </a><p class="pOverviewStep">
+<br />手順5<br />組織のアウトバウンド電子メールアドレスから送信されたすべての電子メールを、電子メールサービス用に作成した電子メールアドレスに転送するように、電子メールサーバーを設定します。
+</p>
+<a name="wp2048636"> </a><p class="pOverviewStep">
+<br />手順6<br />［アプリケーションの設定］の<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">送信者の電子メールアドレス</b><span style="font-weight: normal">］</span>ドロップダウンリストが、アウトバウンド電子メールアドレスを使用するように設定します。
+</p>
+<a name="wp2048637"> </a><p style="color: #00418C; font-family: Arial, Verdana, Helvetica, sans-serif; font-size: 12px; font-style: normal; font-variant: normal; font-weight: bold; text-decoration: none; text-transform: none">
+電子メールの会話を設定するには
+</p>
+<div class="pSmartList1"><ol type="1" class="pSmartList1">
+<a name="wp2048638"> </a><div class="pSmartList1"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Remedyforce管理</b><span style="font-weight: normal">］</span>タブをクリックします。</li></div>
+<a name="wp2048639"> </a><div class="pSmartList1"><li>［ホーム］ページで、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">電子メールの設定</b><span style="font-weight: normal">］</span>タイルをクリックし、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">電子メールサービス</b><span style="font-weight: normal">］</span>を選択します。</li></div>
+<a name="wp2048640"> </a><div class="pSmartList1"><li>［<b class="cBold">新規電子メールサービス</b>］をクリックします。</li></div>
+<a name="wp2048642"> </a><div class="pSmartList1"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">電子メールサービス名</b><span style="font-weight: normal">］</span>フィールドに、電子メールサービスの名前を入力します。</li></div>
+<a name="wp2048643"> </a><p class="pIndented1">
+たとえば、電子メールサービスの名前として「<code class="cUserType">BMCROF_EmailConversationService</code>」と入力します。
+</p>
+<hr size="2" class="NoteRule"/><a name="wp2048644"> </a><p class="pNote"><span style="color: #003366"> 注意: </span> BMC Remedyforceの電子メールサービスを他の電子メールサービスと区別するため、電子メールサービス名の最初に「BMCROF」を付けることをお勧めします。</p><hr size="2" class="NoteRule"/><a name="wp2207719"> </a><div class="pSmartList1"><li>［<b class="cBold">Apexクラス</b>］ルックアップをクリックします。</li></div>
+<a name="wp2207720"> </a><div class="pSmartList1"><li>［ルックアップ］ウィンドウで、<b class="cBold">EmailListener</b> Apexクラスをクリックします。</li></div>
+<a name="wp2207721"> </a><div class="pSmartList1"><li>［<b class="cBold">添付ファイルを許可</b>］ドロップダウンリストから、［<b class="cBold">すべて</b>］を選択します。</li></div>
+<a name="wp2048651"> </a><div class="pSmartList1"><li>添付ファイルが失われたり、電子メールから削除されたりしないように、［<b class="cBold">テキスト添付ファイルをバイナリ添付ファイルに変換</b>］チェックボックスをオンにします。</li></div>
+<a name="wp2048652"> </a><div class="pSmartList1"><li>電子メールサービスを有効にするには、［<b class="cBold">アクティブ</b>］チェックボックスをオンにします。</li></div>
+<a name="wp2048653"> </a><div class="pSmartList1"><li>組織の要件に応じて、その他のフィールドを設定します。</li></div>
+<a name="wp2048655"> </a><p class="pIndented1">
+詳細は、 <a href="https://na11.salesforce.com/help/doc/user_ed.jsp?section=help&amp;target=code_email_services_editing.htm&amp;loc=help&amp;hash=topic-title" target="_window">https://na11.salesforce.com/help/doc/user_ed.jsp?section=help&amp;target=code_email_services_editing.htm&amp;loc=help&amp;hash=topic-title</a>を参照してください。
+</p>
+<a name="wp2048656"> </a><div class="pSmartList1"><li>電子メールサービスを保存し、この電子メールサービスの電子メールアドレスを設定するには、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">保存および新規電子メールアドレス</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp2048658"> </a><div class="pSmartList1"><li>［電子メールサービスのアドレス］ページの<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">電子メールアドレス情報</b><span style="font-weight: normal">］</span>セクションで、電子メールアドレスのユーザー名を<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">電子メールアドレス</b><span style="font-weight: normal">］</span>フィールドに入力します。</li></div>
+<a name="wp2048659"> </a><p class="pIndented1">
+Salesforce.comによって固有のドメイン名が作成され、電子メールアドレスに割り当てられます。
+</p>
+<a name="wp2048660"> </a><p class="pIndented1">
+たとえば、電子メールアドレスのユーザー名として「<code class="cUserType">servicedesk</code>」と入力したとします。Salesforce.comによって、この電子メールアドレスに固有なドメイン（<b class="cBold">servicedesk@w-16m7yz3cj78e5esxxntd47ttf.in.salesforce.com</b>など）が生成されます。
+</p>
+<a name="wp2048662"> </a><p class="pIndented1">
+詳細は、 <a href="https://na11.salesforce.com/help/doc/user_ed.jsp?section=help&amp;target=code_email_service_address.htm&amp;loc=help&amp;hash=topic-title" target="_window">https://na11.salesforce.com/help/doc/user_ed.jsp?section=help&amp;target=code_email_service_address.htm&amp;loc=help&amp;hash=topic-title</a>を参照してください。
+</p>
+<a name="wp2048663"> </a><div class="pSmartList1"><li>電子メールアドレスを有効にするには、［<b class="cBold">アクティブ</b>］チェックボックスをオンにします。</li></div>
+<a name="wp2048664"> </a><div class="pSmartList1"><li>［<b class="cBold">コンテキストユーザー</b>］ルックアップをクリックします。</li></div>
+<a name="wp2048665"> </a><div class="pSmartList1"><li>［ルックアップ］ウィンドウで、必要なユーザーをクリックします。</li></div>
+<a name="wp2048666"> </a><div class="pSmartList1"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">受け入れる電子メールアドレスの送信元</b><span style="font-weight: normal">］</span>フィールドが空欄であることを確認します。</li></div>
+<a name="wp2048667"> </a><p class="pIndented1">
+この設定は、送信した問題についてインシデントレコードが作成された旨を通知する電子メールメッセージをクライアントユーザーに送信できるようにするために必要な設定の1つです。レコードが更新されたときも、そのような通知が送信されます。
+</p>
+<a name="wp2048668"> </a><div class="pSmartList1"><li><span style="font-style: normal; font-weight: normal">（オプション）</span><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">次の送信者の電子メールを許可</b><span style="font-weight: normal">］</span>フィールドに、有効な電子メールアドレスを入力します。</li></div>
+<a name="wp2048669"> </a><p class="pIndented1">
+電子メールサービスは、これらの電子メールアドレスから送信された電子メールだけを受け入れます。
+</p>
+<a name="wp2048670"> </a><div class="pSmartList1"><li>［<b class="cBold">保存</b>］をクリックします。</li></div>
+<a name="wp2048671"> </a><div class="pSmartList1"><li>組織のアウトバウンド電子メールアドレスを作成するには、次のアクションを実行します。</li></div>
+<a name="wp2048672"> </a><p class="pIndented1">
+組織全体の電子メールアドレスは、組織から送信されるすべてのアウトバウンド電子メールに使用できます。電子メールアドレスの表示名には、「<b class="cBold">サービスデスク[servicedesk@bmc.com]</b>」のように、部署名を表示するように設定できます。スタッフメンバーがインシデントのクライアントに電子メールを送信すると、その電子メールは、この電子メールアドレスから送信されます。また、インシデントの作成時または終了時に、この電子メールアドレスを使用してクライアントに通知電子メールを送信するように通知ワークフローを設定することができます。
+</p>
+<hr size="2" class="NoteRule"/><a name="wp2048673"> </a><p class="pNote"><span style="color: #003366"> 注意: </span> 表示名は、スタッフメンバーからクライアントに電子メールを送信したとき、その電子メールの送信者名として表示されるため、わかりやすい名前を付けるようにしてください。</p><hr size="2" class="NoteRule"/><a name="wp2048677"> </a><p class="pIndented1">
+詳細は、 <a href="https://na7.salesforce.com/help/doc/user_ed.jsp?loc=help&amp;target=orgwide_email.htm&amp;section=Email_Admin" target="_window">https://na7.salesforce.com/help/doc/user_ed.jsp?loc=help&amp;target=orgwide_email.htm&amp;section=Email_Admin</a>を参照してください。
+</p>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp2048679"> </a><div class="pSmartList2"><li>［ホーム］ページで、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">電子メールの設定</b><span style="font-weight: normal">］</span>タイルをクリックし、メニューから<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">組織全体のアドレス</b><span style="font-weight: normal">］</span>を選択します。</li></div>
+<a name="wp2048680"> </a><div class="pSmartList2"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">追加</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp2048681"> </a><div class="pSmartList2"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">名前の表示</b><span style="font-weight: normal">］</span>フィールドに、組織全体の電子メールアドレスで使用する表示名を入力します。</li></div>
+<a name="wp2048683"> </a><p class="pIndented1">
+詳細は、 <a href="https://na11.salesforce.com/help/doc/user_ed.jsp?section=help&amp;target=orgwide_emailedit.htm&amp;loc=help&amp;hash=topic-title" target="_window">https://na11.salesforce.com/help/doc/user_ed.jsp?section=help&amp;target=orgwide_emailedit.htm&amp;loc=help&amp;hash=topic-title</a>を参照してください。
+</p>
+<hr size="2" class="NoteRule"/><a name="wp2048684"> </a><p class="pNote"><span style="color: #003366"> 注意: </span> 表示名の前には、「<b class="cBold">no-reply@salesforce.com; on behalf of:</b>」が自動的に付加されます。この付加文字列は、無効にすることができます。詳細は、<a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'configure_email_conversationhva.htm#wp2048694');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'configure_email_conversationhva.htm#wp2048694', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">手順20</a>を参照してください。</p><hr size="2" class="NoteRule"/><a name="wp2048688"> </a><div class="pSmartList2"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">電子メールアドレス</b><span style="font-weight: normal">］</span>フィールドに、すべてのアウトバウンド電子メールで使用する組織全体の電子メールアドレスを入力します。</li></div>
+<a name="wp2048689"> </a><div class="pSmartList2"><li>スタッフメンバーから送信されるすべてのアウトバウンド電子メールでこの電子メールアドレスを使用するには、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">すべてのプロファイルに対してこの送信元アドレスの使用を許可する</b><span style="font-weight: normal">］</span>を選択します。</li></div>
+<a name="wp2048690"> </a><div class="pSmartList2"><li>［<b class="cBold">保存</b>］をクリックします。</li></div>
+<a name="wp2048691"> </a><p class="pIndented1">
+Salesforce.comから、［<b class="cBold">電子メールアドレス</b>］フィールドで指定した電子メールアドレスに、確認の電子メールが送信されます。
+</p>
+<a name="wp2048692"> </a><div class="pSmartList2"><li>確認の電子メールに記載されている確認用のリンクをクリックし、組織全体の電子メールアドレスの有効性を確認します。これにより、この電子メールアドレスをアウトバウンド電子メールで使用できるようになります。</li></div>
+<a name="wp2048693"> </a><p class="pIndented1">
+確認が実行されていない場合、スタッフメンバーは、その電子メールアドレスを使用して、クライアントに電子メールを送信することはできません。
+</p>
+</ol></div>
+<a name="wp2048694"> </a><div class="pSmartList1"><li>表示名の前に付加される「<b class="cBold">no-reply@salesforce.com; on behalf of:</b>」という文字列を削除するには、次の操作を実行します。</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp2048696"> </a><div class="pSmartList2"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">設定</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">電子メールの管理</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">配達到達品質</b><span style="font-weight: normal">］</span>の順に選択します。</li></div>
+<a name="wp2048697"> </a><div class="pSmartList2"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">電子メールセキュリティの遵守</b><span style="font-weight: normal">］</span>セクションで、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">送信者IDの遵守を有効にする</b><span style="font-weight: normal">］</span>チェックボックスをオフにします。</li></div>
+<a name="wp2048698"> </a><div class="pSmartList2"><li>［<b class="cBold">保存</b>］をクリックします。</li></div>
+</ol></div>
+<a name="wp2048702"> </a><div class="pSmartList1"><li>BMC Remedyforceで、［アプリケーションの設定］の<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">一般</b><span style="font-weight: normal">］</span>タブにある<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">電子メールの会話</b><span style="font-weight: normal">］</span>セクションで、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">送信者の電子メールアドレス</b><span style="font-weight: normal">］</span>ドロップダウンリストを設定して、組織のアウトバウンド電子メールアドレスを使用するようにします。</li></div>
+<a name="wp2048703"> </a><p class="pIndented1">
+たとえば、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">送信者の電子メールアドレス</b><span style="font-weight: normal">］</span>ドロップダウンリストから「<b class="cBold">servicedesk@bmc.com</b>」を選択します。
+</p>
+<a name="wp2048708"> </a><div class="pSmartList1"><li>組織のアウトバウンド電子メールアドレスから送信されたすべての電子メールを、電子メールサービス用に作成した電子メールアドレスに転送するには、電子メールサーバーを設定します。</li></div>
+<a name="wp2048709"> </a><p class="pIndented1">
+スタッフメンバーがクライアントに電子メールを送信すると、その電子メールは<b class="cBold">servicedesk@bmc.com</b>電子メールアドレスから送信されます。クライアントがその電子メールに返信すると、返信メールは<b class="cBold">servicedesk@bmc.com</b>で表されるメールボックスに入れられます。返信の電子メールをクライアントのインシデントに関連付けるには、電子メールに対する返信を、電子メールサービス用に設定した電子メールアドレスに転送するように設定する必要があります。たとえば、電子メールに対する返信が、の<b class="cBold">BMCROF_EmailConversationService</b>電子メールサービス用に設定した<b class="cBold">servicedesk@w-16m7yz3cj78e5esxxntd47ttf.in.salesforce.com</b>に転送されるように設定する必要があります（<a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'configure_email_conversationhva.htm#wp2048658');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'configure_email_conversationhva.htm#wp2048658', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">手順12</a>を参照）。電子メールサービスが返信を受信すると、その電子メールは、適切なインシデントに関連付けられます。
+</p>
+<a name="wp2393251"> </a><p class="pIndented1">
+次の表は、電子メールの会話を追跡するために電子メールメッセージの件名に常に含めるテキストを示しています。
+</p>
+<a name="wp2393273"> </a><p class="pBodyRelative"><div align="left">
+<table border="1" cellpadding="3" id="wp2393254table2393252">
+  <caption></caption>
+  <tr align="left" valign="top">    <th><a name="wp2393254"> </a><div class="pCellHeading">
+オブジェクト&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;
+</div>
+</th>
+    <th><a name="wp2393256"> </a><div class="pCellHeading">
+テキスト
+</div>
+</th>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp2393258"> </a><div class="pCellBody">
+変更リクエスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp2393260"> </a><div class="pCellBody">
+Ref:CR:&lt;変更リクエスト番号&gt;
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp2393262"> </a><div class="pCellBody">
+インシデント
+</div>
+</td>
+    <td 
+ 
+><a name="wp2393264"> </a><div class="pCellBody">
+Ref:IN:&lt;インシデント番号&gt;
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp2393266"> </a><div class="pCellBody">
+問題
+</div>
+</td>
+    <td 
+ 
+><a name="wp2393268"> </a><div class="pCellBody">
+Ref:PR:&lt;問題番号&gt;
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp2393270"> </a><div class="pCellBody">
+タスク
+</div>
+</td>
+    <td 
+ 
+><a name="wp2393272"> </a><div class="pCellBody">
+Ref:TA:&lt;タスク番号&gt;
+</div>
+</td>
+</tr>
+</table>
+</div>
+</p>
+
+<a name="wp2393309"> </a><p class="pIndented1">
+電子メールリスナーは電子メールメッセージの件名または本文でREF:#キーワードを検索し、次の点を考慮して、メッセージを解釈します。
+</p>
+<div class="pSmartList2"><ul class="pSmartList2">
+<a name="wp2393310"> </a><div class="pSmartList2"><li>電子メールメッセージの件名と本文でキーワードが同じか異なる場合、電子メールメッセージの件名に指定された情報が使われます。</li></div>
+<a name="wp2393292"> </a><div class="pSmartList2"><li>電子メールメッセージの件名または本文のいずれかにのみキーワードが存在する場合、電子メールメッセージの件名または本文に指定された情報がそれぞれ使われます。</li></div>
+<hr size="2" class="NoteRule"/><a name="wp2048713"> </a><p class="pNote"><span style="color: #003366"> 注意: </span> 電子メールの管理グループと協力して、アウトバウンド電子メールアドレス（<b class="cBold">servicedesk@bmc.com</b>）に送信されたすべての電子メールを転送する規則を設定してください。このような電子メールは、電子メールサービスの電子メールアドレス（<b class="cBold">servicedesk@w-16m7yz3cj78e5esxxntd47ttf.in.salesforce.com</b>）に転送される必要があります。</p><hr size="2" class="NoteRule"/><a name="wp2366484"> </a><p class="pIndented1">
+電子メールサーバーの設定についての詳細は、使用している電子メールサーバーのマニュアルを参照してください。
+</p>
+</ul></div>
+</ol></div>
+
+
+
+  <script type="text/javascript" language="JavaScript1.2">
+   <!--
+    // Clear related topics
+    //
+    WWHClearRelatedTopics();
+
+   // -->
+  </script>
+    </blockquote>
+
+    
+<hr class="REM"/>
+
+<table align="center" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="577" align="center"><p class="copyright">
+
+ &#169; Copyright  2010-2014
+ BMC Software, Inc. All rights reserved.<br/>
+
+サポートが必要な場合は、BMC Remedyforce管理者にお問い合わせください。 
+ドキュメントに関するご質問またはコメントについては、<a href="mailto:doc_feedback@bmc.com">doc_feedback@bmc.com</a>までメールをお願いいたします。 
+
+    </p></td>
+  </tr>
+</table>
+
+
+
+<script type="text/javascript" language="JavaScript1.2">
+   <!--
+    document.write(WWHRelatedTopicsDivTag() + WWHPopupDivTag() + WWHALinksDivTag());
+   // -->
+  </script>
+
+  </body>
+</html>

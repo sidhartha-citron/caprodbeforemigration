@@ -1,0 +1,539 @@
+<apex:page showheader="false" sidebar="false" standardStylesheets="false" 
+	action="{!toLoadData}" controller="BMCServiceDesk.AdminHome" extensions="BMCServiceDesk.AdminHomeTileSearchhelper,BMCServiceDesk.RFLiveAgentController">
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/>	
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminHome.css"/>
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+	<script src="{!$Resource.CustomerExperience}/js/CustExpPopupWindow.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+	<apex:form id="theform">  
+   
+	    <apex:actionFunction name="installpanell" action="{!callInstallHelper}"   rerender="" onComplete="waitMsg.close();"/> 
+	    <apex:actionFunction name="updateRefIds" action="{!updateReferenceIds}"   rerender="" onComplete=""/>
+	    <apex:actionFunction name="createLiveAgentServiceUrlRemoteSettingCopy"  action="{!createLiveAgentServiceUrlRemoteSettingCopy}"   rerender="None">
+	    	<apex:param name="liveAgentServiceUrlRemoteSettingCopyURL" value="" assignTo="{!liveAgentServiceUrlRemoteSettingCopyURL}"></apex:param>
+	    </apex:actionFunction> 
+		<apex:actionFunction name="dismissCompile" action="{!dismissCompileMessagefromAdmin}"   rerender="" onComplete="hideMessage()"/>
+		<apex:actionFunction name="startJob" action="{!startJob}" rerender="startPanel" oncomplete="hideMsg();" />
+		<apex:actionFunction name="updateLastAddedDashOrgUrlSetting"  action="{!updateLastAddedDashOrgUrlSetting}"  rerender="None">
+	    	<apex:param name="lastAddedDashOrgUrl" value="" assignTo="{!lastAddedDashOrgUrl}"></apex:param>
+	    </apex:actionFunction>		
+	</apex:form>
+<div id="adminHomeContainer" ></div>
+<div id="agentAvailable"></div>
+<div id="agentNotAvailable"></div>
+
+	<style>
+    	.bmcRefresh { filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{!$Resource.SDEFStyles}/SDEFbuttons/b_clear_search.png',sizingMethod='scale'); }
+	 .smartsync-btn {
+            display: inline-block; float: left; margin-right: 2px; position: relative;border: none; cursor: pointer; background-color:#f86e00; padding: 4px; color: white; border-radius: 4px;
+     }
+    </style>
+    <script> 
+	    String.prototype.format = function() {
+			a = this;
+			for (k in arguments) {
+			a = a.replace("{" + k + "}", arguments[k])
+			}
+			return a;
+		}		     
+      var enableWalkthroughFlow =parent.enableWalkthroughFlow;
+      // Replace first /apex/ with blank string from survey setting page url
+      var surveySettingsPageURL = '{!$Page.SurveySettingsPage}'.replace('/apex/', '');
+      // Replace first /apex/ with blank string from AdminManageObjects page url
+      var adminManageObjectsURL = '{!$Page.AdminManageObjects}'.replace('/apex/', '');
+      var stdDashboardPageURL = '{!$Page.StdDashboardPage}';
+      var userLanguage = parent.userLanguage;
+	  var userLastName = '{!JSENCODE($User.LastName)}';
+      var wikiUrls = '{!wikiUrls}';
+      var wikiHelpUrlList = [];
+      var SurveyRateYourExperience = '{!JSENCODE($Label.PSATRateYourExperience)}';
+      var SurveyRateYourExperienceTooltip = '{!JSENCODE($Label.PSATRateYourExperienceNewWindow)}';
+      var surveyImgUrl = '{!$Resource.CustomerExperience}';
+	  var readinessTooltip = '{!JSENCODE($Label.RR_RemedyforceReadinessTooltip)}';
+      var readinessImgUrl = '{!$Resource.SDEFStyles}';
+      var RemedyforceReadiness = '{!JSENCODE($Label.RR_RemedyforceReadiness)}';
+      var __UpgradeLabels = {"RFUpdated":"{!JSENCODE($Label.RFUpdated)} ",
+          "clickHere":"{!JSENCODE($Label.ClickingHere)}",
+          "dontShowAgain":"{!JSENCODE($Label.DontShowAgain)}"};
+      var isUpgraded = parent.isUpgraded;
+      var restartScheduleJob = "{!JSENCODE($Label.ACRestartJob)}";
+	  
+        <apex:repeat value="{!wikiUrlForLink}" var="urlValue">
+              wikiHelpUrlList.push('{!JSENCODE(urlValue)}');
+        </apex:repeat>
+     _RemotingActions={}
+     _RemotingActions.getTileIndexs="{!$RemoteAction.AdminHomeTileSearchhelper.getTileIndexs}";
+     _RemotingActions.checkKPIsAndBenchmarksPermission="{!$RemoteAction.AdminHomeTileSearchhelper.hasKPIsAndBenchmarksAccess}";
+        function getSDFStylesResPath(){
+          return '{!$Resource.SDEFStyles}';
+       }
+       function getStdFormHelpPath(){
+	       	var userLanguage = '{!userLanguage}';
+	       	var showJapaneseHelp = '{!showJapaneseHelp}';
+	       	var resource;
+	        if (userLanguage == 'ja' && showJapaneseHelp.toLowerCase() == 'true'){
+	            resource = '{!$Resource.StdFormHelp_JA}';
+	        }else{
+	            resource = '{!$Resource.StdFormHelp}';
+	        }
+	        return resource;
+       }
+    	var licenseReportID='{!LicenseReportID}';
+        var datatobeLoaded ='{!datatobeLoaded}';      
+        var switchedToFlattenedCmdb = '{!switchedToFlattenedCmdb}';   
+        var hideUpgradeTab='{!hideUpgradeTab}'//Check when user clicks on the button
+		var mainPanel;		
+		var resPath = '{!$Resource.SDEFStyles}';
+		var menuContentEval;
+		var clickOnMenu = false;
+		var callarray = new Array(); 
+		var showSelectedDataforProfile = new Array();
+        var functionArray = new Array();
+        var profid = '';
+        var profName = '';
+        var SelectedConsoleChoice = 'Incident';
+		var ConsoleTabChangeFlag = false;
+		var ConsoleTabLocalChangeFlag = false;
+		var mainArray;
+		var userMenu;
+		var labelArray = new Array(200);
+		var tileIdMap = {};
+		var tabsOpened = new Array(); 
+		var orgId = '{!orgId}';
+    	var isImportContentPermitted = '{!IsImportContentPermitted}';
+        var closeWindow = '{!JSENCODE($Label.CloseWindow)}';
+        var ValidateMinimumCharsSearchPage = '{!JSENCODE($Label.GsErrorMsg)}';
+        var NoRecordsFound = '{!JSENCODE($Label.NoRecordsFound)}';
+		var Reset = "{!JSENCODE($Label.Clear)}";
+		var Search_Settings = '{!JSENCODE($Label.Search_Settings)}';
+        var SearchSettingTooltip = '{!JSENCODE($Label.SearchSettingTooltip)}';
+		var closeWindowLabel = '{!JSINHTMLENCODE($Label.closeWindowLabel)}';
+		var navNodes = '{!JSENCODE(navNodesEval)}';
+		var adminHomeTabLabel = '{!JSINHTMLENCODE($Label.adminHomeTabLabel)}';
+		var spChar = '¬';
+		var chatterSettings = '{!JSINHTMLENCODE($Label.chatterSettings)}';
+		var lblSuggestedOwner = '{!JSINHTMLENCODE($Label.SuggestedOwnersAndQueueAutoAssignment)}';
+		var nodePageReferences = new Array();
+		var lblNewBrowsertab = '{!JSINHTMLENCODE($Label.NewBrowsertab)}';
+		var clientLabel = '{!JSINHTMLENCODE($Label.ClientWindowHeaderSearchPage)}';
+		var accountLabel = '{!JSINHTMLENCODE($ObjectType.Account.Label)}'; 
+        var helpResouces = getStdFormHelpPath();
+		var switchedToNewSSUI = '{!switchToNewSSUI}';
+		var AdminContextHelpText = '{!JSENCODE($Label.AdminContextHelpText)}';
+		var AdminContextHelpTooltip = '{!JSENCODE($Label.AdminContextHelpTooltip)}';
+		var template = '{!JSINHTMLENCODE($Label.Navigator_Templates)}';
+		var consoles = '{!JSINHTMLENCODE($Label.Consoles)}';
+        var consolestooltip ='{!JSINHTMLENCODE($Label.adminConsoleSettingTooltip)}';
+		var restore ='{!JSINHTMLENCODE($Label.TooltipRestore)}';
+        var maximize ='{!JSINHTMLENCODE($Label.TooltipMaximize)}';
+        var NormalizationRule='{!JSINHTMLENCODE($Label.Normalization_Rules)}';
+		var NormalizationException='{!JSINHTMLENCODE($Label.Normalization_Exceptions)}';
+		var Reconciliation='{!JSINHTMLENCODE($Label.Reconciliation)}';
+		var LocationsTitle='{!JSINHTMLENCODE($Label.Locations)}';
+		var formAssignment = '{!JSENCODE(formAssignment)}';
+		var consoleLabel = '{!JSINHTMLENCODE($Label.Console)}';
+		var CMDBLabel = 'CMDB';
+		var _labels = {"lblInformation":"{!JSINHTMLENCODE($Label.Information)}", 
+        			   "ClickAndDragToReorder":"{!JSINHTMLENCODE($Label.ClickAndDragToReorder)}",
+        			   "here":"{!JSINHTMLENCODE($Label.here)}"
+        			   };
+		var waitMsg;
+		var tabOutImg = '{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif';
+			var isCategoryOpen ;
+		if(typeof(window.parent) != 'undefined' && window.parent != ''){
+			isCategoryOpen = window.parent.openCategory;
+		}else{
+			isCategoryOpen = 'false';
+		}
+		var openSSGeneralVal = window.parent.isOpenSSGeneral;
+		var chatterEnabled = {!isChatterEnabled}?'TRUE':'FALSE';	
+		var isChatterEnabledSF = {!IsChatterEnabledSF}?'TRUE':'FALSE';
+		var isEnhancedProfileView = {!isEnhancedProfileView} ? 'TRUE' : 'FALSE';
+		var isModelEnable = {!isModelEnable} ? 'TRUE' : 'FALSE';
+		var SwappedisBCMEnable = {!isBCMEnable} ? 'FALSE' : 'TRUE';
+		var SwappedisCMDBDiscoveryEnable = {!isCMDBDiscoveryEnable} ? 'FALSE' : 'TRUE';
+		var showSelfHelp = parent.showSelfHelp;
+		var isScheduledJobRunning = {!isScheduledJobRunning};
+	 	var isMobileSettingsForFreshOrg = {!isMobileSettingsForFreshOrg} ? 'TRUE' : 'FALSE'; 
+	 	var isSS2Enabled = {!isSS2Enabled} ? 'TRUE':'FALSE' ;
+	 	var isSS2Configured = {!isSS2Configured} ? 'TRUE':'FALSE' ; 
+	 	var isLightningExperience = {!IF(isLightningExperience,true,false)};
+	 	var namespacePrefix = 'BMCServiceDesk__';
+	 	var showKPIsAndBenchmarking ={!IF(showKPIsAndBenchmarking,true,false)};
+	 	var lastAddedDashOrgUrl = '{!JSENCODE(lastAddedDashOrgUrl)}';
+	 	var dashOrgUrl = '{!JSENCODE(dashOrgUrl)}';
+	 	var sfhost = '{!JSENCODE(sfhost)}';
+	 	var sessionId = '{!$Api.Session_ID}';
+		var showIncidentTracking = '{!JSENCODE(showIncidentTracking)}' === 'true' ? true :false;
+		var SmartSync = '{!JSENCODE($Label.SmartSync)}';
+           
+	 //defect: 71319 fixed
+		eval(navNodes);
+		function get(k) {
+			return navNodesMap[k];
+		}	
+		
+		Ext.require([
+	        'Ext.panel.Panel',
+	        'Ext.tip.QuickTip',	        
+	    ]);
+		
+		function initLabels(){
+			labelArray[1] = ['{!JSINHTMLENCODE($Label.ConfigureApplication)}', '{!JSINHTMLENCODE($Label.ConfigureApplicationDesc)}', '100'];
+			labelArray[2] = ['{!JSINHTMLENCODE($Label.ManageUsers)}', '{!JSINHTMLENCODE($Label.ManageUsersDescription)}', '200'];
+			labelArray[3] = ['{!JSINHTMLENCODE($Label.ApplicationSettingsTitle)}', '{!JSINHTMLENCODE($Label.ApplicationSettingDescription)}','300' ];
+			labelArray[4] = ['{!JSINHTMLENCODE($Label.CreateDashboardAndReports)}', '{!JSINHTMLENCODE($Label.CreateDashboardAndReportsDesc)}', '400'];
+			labelArray[5] = ['{!JSINHTMLENCODE($Label.ConfigureSelfService)}', '{!JSINHTMLENCODE($Label.ConfigureSelfServiceDesc)}', '500'];
+			labelArray[6] = ['{!JSINHTMLENCODE($Label.ManageData)}', '{!JSINHTMLENCODE($Label.ManageDataDesc)}','600'];
+			labelArray[7] = ['{!JSINHTMLENCODE($Label.ConfigureEmail)}', '{!JSINHTMLENCODE($Label.ConfigureEmailDescription)}','700'];
+			labelArray[8] = ['{!JSINHTMLENCODE($Label.MonitorSystemHealth)}', '{!JSINHTMLENCODE($Label.MonitorSystemHealthDescription)}','800' ];
+			labelArray[9] = ['{!JSINHTMLENCODE($Label.ManageWorkflowsandApprovals)}', '{!JSINHTMLENCODE($Label.ManageWorkflowsandApprovalsDesc)}', 900];
+			labelArray[10] = ['{!JSINHTMLENCODE($Label.ManageObjects)}', '{!JSINHTMLENCODE($Label.ManageObjectsDesc)}', '1000'];
+			labelArray[11] = ['{!JSINHTMLENCODE($Label.CMDBConfiguration)}', '{!JSINHTMLENCODE($Label.CMDBConfigurationDesc)}', '1100'];
+			labelArray[12] = ['{!JSINHTMLENCODE($Label.ContentManagementTile)}', '{!JSINHTMLENCODE($Label.ContentManagementTileDesc)}', '1200'];			
+			
+			labelArray[191] = ['{!JSINHTMLENCODE($Label.Action)}','{!JSINHTMLENCODE($Label.ActionDescription)}','19001'];
+			labelArray[192] = ['{!JSINHTMLENCODE($ObjectType.Chatter_Listener__c.LabelPlural)}','{!JSINHTMLENCODE($Label.ChatterListenerDescription)}','19002'];
+			labelArray[193] = ['{!JSINHTMLENCODE($ObjectType.Impact__c.Label)}','{!JSINHTMLENCODE($Label.ImpactDescription)}','19003'];
+			labelArray[194] = ['{!JSINHTMLENCODE($ObjectType.Urgency__c.Label)}','{!JSINHTMLENCODE($Label.UrgencyDescription)}','19004'];
+			labelArray[195] = ['{!JSINHTMLENCODE($ObjectType.Status__c.Label)}','{!JSINHTMLENCODE($Label.statusDescriptionTT)}','19005'];
+			labelArray[196] = ['{!JSINHTMLENCODE($ObjectType.Category__c.Label)}','{!JSINHTMLENCODE($Label.categoryDescriptionTT)}','19006'];
+			labelArray[197] = ['{!JSINHTMLENCODE($ObjectType.CategoryTypes__c.LabelPlural)}','{!JSINHTMLENCODE($Label.categoryTypesDescriptionTT)}','19007'];
+			labelArray[198] = ['{!JSINHTMLENCODE($ObjectType.Priority__c.Label)}','{!JSINHTMLENCODE($Label.PriorityDescriptionTT)}','19008'];
+			labelArray[199] = ['{!JSINHTMLENCODE($ObjectType.StandardDescription__c.Label)}','{!JSINHTMLENCODE($Label.stdDescTT)}','19009'];
+			labelArray[200] = ['{!JSINHTMLENCODE($Label.Navigator_Templates)}','{!JSINHTMLENCODE($Label.ManageTemplatesDescription)}','19010'];
+			labelArray[201] = ['{!JSINHTMLENCODE($Label.ManageRequestDefinitions)}','{!JSINHTMLENCODE($Label.ManageRequestDefinitionsDescription)}','19011'];
+			
+			labelArray[21] = ['{!JSINHTMLENCODE($Label.Accounts)}', '{!JSINHTMLENCODE($Label.AccountsDesc)}', '2001'];
+			labelArray[22] = ['{!JSINHTMLENCODE($Label.Clients)}', '{!JSINHTMLENCODE($Label.ClientsDesc)}', '2002'];
+			labelArray[23] = ['{!JSINHTMLENCODE($Label.ImportUsers)}', '{!JSINHTMLENCODE($Label.ImportUsersDesc)}', '2003'];
+			labelArray[24] = ['{!JSINHTMLENCODE($Label.UserSettings)}','{!JSINHTMLENCODE($Label.UserSettingsDesc)}', '2004'];
+			labelArray[25] = ['{!JSINHTMLENCODE($Label.AddEditUsers)}', '{!JSINHTMLENCODE($Label.AddEditUsersDescription)}', '2005'];
+			labelArray[26] = ['{!JSINHTMLENCODE($Label.EditPermissionSets)}', '{!JSINHTMLENCODE($Label.EditPermissionSetsDesc)}', '2006'];
+			labelArray[27] = ['{!JSINHTMLENCODE($Label.ManageQueues)}', '{!JSINHTMLENCODE($Label.ManageQueuesDesc)}', '2007'];
+			labelArray[28] = ['{!JSINHTMLENCODE($Label.ManageRemedyforceLicense)}', '{!JSINHTMLENCODE($Label.ManageRemedyforceLicenseDesc)}', '2008'];
+			labelArray[29] = ['{!JSINHTMLENCODE($Label.ViewLoginHistory)}', '{!JSINHTMLENCODE($Label.ViewLoginHistoryDesc)}', '2009'];	
+		    labelArray[30] = ['{!JSINHTMLENCODE($Label.ManageRoles)}', '{!JSINHTMLENCODE($Label.ManageRolesDescription)}', '2010'];
+			labelArray[121] = ['{!JSINHTMLENCODE($Label.ManageProfiles)}', '{!JSINHTMLENCODE($Label.ManageProfilesDescription)}', '2011'];
+			labelArray[31] = ['{!JSINHTMLENCODE($Label.GlobalSearchChatter)}','{!JSINHTMLENCODE($Label.chatterSettingsDescription)}','3001'];
+			labelArray[32] = ['{!JSINHTMLENCODE($Label.GeneralApplicationSetting)}','{!JSINHTMLENCODE($Label.GeneralSettingsDescription)}','3002'];
+			labelArray[33] = ['{!JSINHTMLENCODE($Label.GlobalSearch)}','{!JSINHTMLENCODE($Label.GlobalSearchSettingDescription)}','3003'];	
+			labelArray[35] = ['{!JSINHTMLENCODE($Label.RecordAssignment)}','{!JSINHTMLENCODE($Label.RecordAssignmentDescription)}','3005'];
+			labelArray[36] = ['{!JSINHTMLENCODE($Label.SLM_Service_Target_Warnings)}','{!JSINHTMLENCODE($Label.serviceTargetDescription)}','3006'];	
+			labelArray[37] = [lblSuggestedOwner, '{!JSINHTMLENCODE($Label.SuggestedOwnersAndQueueAutoAssignmentTooltip)}', 3007];
+			labelArray[38] = ['{!JSINHTMLENCODE($Label.ApplicationSetting_FormAssignment)}','{!JSINHTMLENCODE($Label.FormAssignmentDescription)}','3008'];
+			labelArray[39] = ['{!JSINHTMLENCODE($Label.serviceRequestPortletHeader)}','{!JSINHTMLENCODE($Label.Service_RequestsDesc)}','3009'];	
+			labelArray[131] = ['{!JSINHTMLENCODE($Label.CustomSettings)}', '{!JSINHTMLENCODE($Label.CustomSettingsDesc)}','3031' ];
+			labelArray[132] = ['{!JSINHTMLENCODE($Label.UrgencyOrder)}', '{!JSINHTMLENCODE($Label.UrgencyAssignmentDescription)}','3032' ];
+			labelArray[133] = ['{!JSINHTMLENCODE($ObjectType.Survey__c.LabelPlural)}', '{!JSINHTMLENCODE($Label.SurveyDescriptionTT)}','3033' ];
+            labelArray[134] = ['{!JSINHTMLENCODE($Label.LookupFilters)}'.format(consoleLabel), '{!JSINHTMLENCODE($Label.LookupFiltersDesc)}'.format(consoleLabel),'3034' ];
+            labelArray[136] = ['{!JSINHTMLENCODE($Label.ServiceHealthSettings)}','{!JSINHTMLENCODE($Label.ServiceHealthSettingsDescription)}','3045'];
+            labelArray[137] = ['{!JSINHTMLENCODE($Label.ConsoleMetricBar)}', '{!JSINHTMLENCODE($Label.ConsoleMetricCardsDesc)}','3047'];
+			
+            labelArray[41] = ['{!JSINHTMLENCODE($Label.Dashboards_Saleforce)}','{!JSINHTMLENCODE($Label.Dashboards_SaleforceDesc)}','4001'];
+            labelArray[42] = ['{!JSINHTMLENCODE($Label.Dashboards_QuickViews)}','{!JSINHTMLENCODE($Label.Dashboards_RemedyforceDesc)}','4002'];
+            labelArray[43] = ['{!JSINHTMLENCODE($Label.ReportTypes)}','{!JSINHTMLENCODE($Label.ReportTypesDesc)}','4003'];
+			if(showIncidentTracking){
+				labelArray[46] = ['{!JSINHTMLENCODE($Label.IncidentTimeTrack)}','{!JSINHTMLENCODE($Label.IncidentTimeTrack)}','4006'];	
+			}else{
+				labelArray[46] = ['{!JSINHTMLENCODE($Label.QueueTimeTracking)}','{!JSINHTMLENCODE($Label.IncidentTimeTrackingTileDescription)}','4006'];
+			}            
+			labelArray[47] = ['{!JSINHTMLENCODE($Label.RR_RemedyforceReadiness)}','{!JSINHTMLENCODE($Label.RR_RemedyforceReadinessDescription)}','4007'];
+            if(showKPIsAndBenchmarking){
+            	labelArray[48] = ['{!JSINHTMLENCODE($Label.AdminKPIsAndBenchmarks)}','{!JSINHTMLENCODE($Label.AdminKPIsAndBenchmarksDescription)}','4008'];
+            }
+            
+            labelArray[44] = [consoles,consolestooltip,'4004'];
+			labelArray[51] = ['{!JSINHTMLENCODE($Label.SSContactUs)}','{!JSINHTMLENCODE($Label.AdminContactUsDesc)}','5001'];
+			labelArray[52] = ['{!JSINHTMLENCODE($Label.CommonRequests)}','{!JSINHTMLENCODE($Label.TopRequestsDescription)}','5002'];
+			labelArray[53] = ['{!JSINHTMLENCODE($Label.AdminCategory)}','{!JSINHTMLENCODE($Label.categoryDescriptionForSSTT)}','5003'];
+			labelArray[54] = ['{!JSINHTMLENCODE($Label.SSSearch)}','{!JSINHTMLENCODE($Label.AdminSearchDesc)}','5004'];
+			labelArray[55] = ['{!JSINHTMLENCODE($Label.Navigator_Incidents)}','{!JSINHTMLENCODE($Label.SSIncidentDescription)}','5005'];
+			labelArray[56] = ['{!JSINHTMLENCODE($Label.QuickLinkSettings)}','{!JSINHTMLENCODE($Label.AdminQuickLinkDesc)}','5006'];
+			labelArray[57] = ['{!JSINHTMLENCODE($Label.SSMyHelpRequests)}','{!JSINHTMLENCODE($Label.SSServiceRequestDescription)}','5007'];
+			labelArray[58] = ['{!JSINHTMLENCODE($Label.AdminBanner)}','{!JSINHTMLENCODE($Label.AdminBannerDesc)}','5008'];
+			labelArray[59] = ['{!JSINHTMLENCODE($Label.SStileOrdering)}','{!JSINHTMLENCODE($Label.SStileOrderingDescription)}','5009'];	
+			labelArray[60] = ['{!JSINHTMLENCODE($Label.AdminMobile)} ({!JSINHTMLENCODE($Label.Deprecated)})','{!JSINHTMLENCODE($Label.AdminMobileDesc)}','5010'];
+			labelArray[151] = ['{!JSINHTMLENCODE($Label.Branding)}','{!JSINHTMLENCODE($Label.BrandingDescription)}','5011'];
+			labelArray[152] = ['{!JSINHTMLENCODE($Label.GeneralSelfServiceSettings)}','{!JSINHTMLENCODE($Label.GeneralSSDescription)}','5012'];
+			labelArray[153] = ['{!JSINHTMLENCODE($Label.TicketLayout)}','{!JSINHTMLENCODE($Label.TicketLayout)}','5013'];
+			labelArray[154] = ['{!JSINHTMLENCODE($Label.SelfServiceVersion)}','{!JSINHTMLENCODE($Label.SelfServiceVersion)}','5014'];
+			
+			
+			labelArray[61] = ['{!JSINHTMLENCODE($Label.BMCFootprintIntegration)}', '{!JSINHTMLENCODE($Label.BMCFootprintIntegrationDesc)}','6001' ];
+			labelArray[62] = ['{!JSINHTMLENCODE($Label.DellKaceIntegration)}','{!JSINHTMLENCODE($Label.DellKaceIntegrationDesc)}','6003'];
+			labelArray[63] = ['{!JSINHTMLENCODE($Label.HelpBMCAtriumDiscovery)}', '{!JSINHTMLENCODE($Label.HelpBMCAtriumDiscoveryDesc)}','6003' ];
+			labelArray[65] = ['{!JSINHTMLENCODE($Label.HelpBMCFootPrintsAssetCore)}', '{!JSINHTMLENCODE($Label.HelpBMCFootPrintsAssetCoreDesc)}','6005' ];
+			labelArray[66] = ['{!JSINHTMLENCODE($Label.HelpDellKACE)}','{!JSINHTMLENCODE($Label.HelpDellKACEDesc)}','6006'];
+			labelArray[67] = ['{!JSINHTMLENCODE($Label.HelpLDAPServer)}', '{!JSINHTMLENCODE($Label.HelpLDAPServerDesc)}','6007' ];
+			labelArray[68] = ['{!JSINHTMLENCODE($Label.HelpSCCM)}','{!JSINHTMLENCODE($Label.HelpSCCMDesc)}','6008'];
+			labelArray[69] = ['{!JSINHTMLENCODE($Label.HelpBMCRealEndUserExperienceManagement)}', '{!JSINHTMLENCODE($Label.HelpBMCRealEndUserExperienceManagementDesc)}','6009' ];
+			labelArray[70] = ['{!JSINHTMLENCODE($Label.HelpCTIAdapter)}','{!JSINHTMLENCODE($Label.HelpCTIAdapterDesc)}','6010'];
+            labelArray[161] = ['{!JSINHTMLENCODE($Label.HelpBMCServerAutomation)}', '{!JSINHTMLENCODE($Label.HelpBMCServerAutomationDesc)}','6011' ];
+            labelArray[162] = ['{!JSINHTMLENCODE($Label.HelpBMCProactiveNetPerformanceManagement)}','{!JSINHTMLENCODE($Label.HelpBMCProactiveNetPerformanceManagementDesc)}','6012'];
+            labelArray[164] = ['{!JSINHTMLENCODE($Label.WebAPIConfiguration)}', '{!JSINHTMLENCODE($Label.WebAPIConfiguration)}','6014' ];
+			labelArray[165] = ['{!JSINHTMLENCODE($Label.HelpRemedyforceRestApi)}','{!JSINHTMLENCODE($Label.HelpRemedyforceRestApiDesc)}' ,'6015' ];
+			
+			
+			
+			labelArray[71] = ['{!JSINHTMLENCODE($Label.EmailService)}', '{!JSINHTMLENCODE($Label.EmailServiceDescription)}', '7001'];
+			labelArray[72] = ['{!JSINHTMLENCODE($Label.EmailTemplates)}', '{!JSINHTMLENCODE($Label.EmailTemplateDescription)}', '7002'];
+			labelArray[73] = ['{!JSINHTMLENCODE($Label.EmailConversationSetting)}', '{!JSINHTMLENCODE($Label.EmailConversationSettingDescription)}', '7003'];
+			labelArray[74] = ['{!JSINHTMLENCODE($Label.IncidentEmailSettings)}', '{!JSINHTMLENCODE($Label.IncidentEmailSettingDescription)}', '7004'];
+			labelArray[75] = ['{!JSINHTMLENCODE($Label.OrgWideAddress)}', '{!JSINHTMLENCODE($Label.OrgWideAddressDescription)}', '7005'];
+			
+			labelArray[81] = ['{!JSINHTMLENCODE($Label.RemedyforceLicenseUsage)}', '{!JSINHTMLENCODE($Label.RemedyforceLicenseUsageDescription)}','8001' ];
+			labelArray[82] = ['{!JSINHTMLENCODE($Label.SalesforceLicenseUsage)}', '{!JSINHTMLENCODE($Label.SalesforceLicenseUsageDescription)}','8002' ];
+			labelArray[83] = ['{!JSINHTMLENCODE($Label.StorageUsage)}','{!JSINHTMLENCODE($Label.StorageUsageDescription)}','8003'];
+			labelArray[84] = ['{!JSINHTMLENCODE($Label.LicenseMetricsReport)}', '{!JSINHTMLENCODE($Label.LicenseMetricsReport)}','8004' ];
+
+			labelArray[91] = ['{!JSINHTMLENCODE($Label.ApprovalProcesses)}', '{!JSINHTMLENCODE($Label.ApprovalProcessesDesc)}', '9001'];
+			labelArray[92] = ['{!JSINHTMLENCODE($Label.EmailAlerts)}', '{!JSINHTMLENCODE($Label.EmailAlertsDesc)}', '9002'];
+			labelArray[93] = ['{!JSINHTMLENCODE($Label.FieldUpdates)}', '{!JSINHTMLENCODE($Label.FieldUpdatesDesc)}', '9003'];
+			labelArray[94] = ['{!JSINHTMLENCODE($Label.WorkflowRules)}', '{!JSINHTMLENCODE($Label.WorkflowRulesDesc)}', '9004'];
+			labelArray[95] = ['{!JSINHTMLENCODE($Label.Navigator_ChangeSchedule)}', '{!JSINHTMLENCODE($Label.ManageChangeScheduleDescription)}', '9005'];
+			labelArray[96] = ['{!JSINHTMLENCODE($Label.Navigator_ProjectedServiceOutage)}', '{!JSINHTMLENCODE($Label.ManageProjectedServiceOutageDescription)}', '9006'];
+			labelArray[97] = ['{!JSINHTMLENCODE($Label.Navigator_SLA)}', '{!JSINHTMLENCODE($Label.ManageAgreementsDescription)}','9007' ];
+			labelArray[98] = ['{!JSINHTMLENCODE($Label.RemedyforceUsage)}', '{!JSINHTMLENCODE($Label.RemedyforceUsage)}','9008' ];
+
+			labelArray[101] = ['{!JSINHTMLENCODE($Label.CreateandEditObjects)}', '{!JSINHTMLENCODE($Label.CreateandManageObjects)}','10001' ];
+			labelArray[102] = ['{!JSINHTMLENCODE($Label.ManageQueueAvailability)}', '{!JSINHTMLENCODE($Label.ManageQueueAvailability)}','10002' ];
+			
+			labelArray[34] = ['{!JSINHTMLENCODE($Label.CMDBListViewCustomization)}','{!JSINHTMLENCODE($Label.CMDBListViewCustomizatioDesc)}','3004'];
+			labelArray[40] = ['{!JSINHTMLENCODE($Label.CMDBCustomAttributes)}', '{!JSINHTMLENCODE($Label.CMDBCustomizationDesc)}','6002' ];
+			labelArray[45] = ['{!JSINHTMLENCODE($Label.CMDBUpgradeTabTitle)}','{!JSINHTMLENCODE($Label.CMDBUpgradeTooltip)}','4005'];
+			labelArray[135] = ['{!JSINHTMLENCODE($Label.ManageClasses)}', '{!JSINHTMLENCODE($Label.ManageCMDBClasses)}','3035' ];
+			labelArray[171] = ['{!JSINHTMLENCODE($Label.CMDBAudit)}', '{!JSINHTMLENCODE($Label.CMDBAuditDesc)}','7011' ];
+			labelArray[172] = ['{!JSINHTMLENCODE($Label.CMDBGeneralSettings)}', '{!JSINHTMLENCODE($Label.GeneralCMDBDescription)}','7012' ];
+			labelArray[173] = ['{!JSINHTMLENCODE($Label.Models)}', '{!JSINHTMLENCODE($Label.ModelsDesc)}','7013' ];			
+			labelArray[174] = ['{!JSINHTMLENCODE($Label.Locations)}', '{!JSINHTMLENCODE($Label.LocationDesc)}','7014' ];
+			labelArray[175] = ['{!JSINHTMLENCODE($Label.Normalization_Rules)}', '{!JSINHTMLENCODE($Label.NormalizationRulesDescription)}','7015' ];
+			labelArray[176] = ['{!JSINHTMLENCODE($Label.Normalization_Exceptions)}', '{!JSINHTMLENCODE($Label.NormalizationExceptionsDescription)}','7016' ];
+			labelArray[177] = ['{!JSINHTMLENCODE($Label.ManageDiscovery)}', '{!JSINHTMLENCODE($Label.ManageDiscoveryDesc)}', '7017'];
+			labelArray[178] = ['{!JSINHTMLENCODE($Label.Reconciliation)}', '{!JSINHTMLENCODE($Label.ReconciliationDesc)}', '7018'];
+			labelArray[179] = ['{!JSINHTMLENCODE($Label.FieldSourcePriorityTitle)}', '{!JSINHTMLENCODE($Label.FieldSourcePriorityDesc)}', '7019'];
+			labelArray[181] = ['{!JSINHTMLENCODE($Label.ClassPermissions)}', '{!JSINHTMLENCODE($Label.ClassPermissions)}','7021'];
+			
+			labelArray[141] = ['{!JSINHTMLENCODE($Label.ImportBestPracticesDataSubTile)}', '{!JSINHTMLENCODE($Label.ImportBestPracticesDataSubTile)}','1401' ];
+			labelArray[142] = ['{!JSINHTMLENCODE($Label.ConfigSetHeader)}', '{!JSINHTMLENCODE($Label.ConfigurationSetBetaDescription)}','1402' ];
+			labelArray[143] = ['{!JSINHTMLENCODE($Label.LookupFilters)}'.format(CMDBLabel), '{!JSINHTMLENCODE($Label.LookupFiltersDesc)}'.format(CMDBLabel),'1403' ];
+			
+
+		}
+		var isSandbox = {!isSandbox};
+		var isDataLoadingSmartSync = {!datatobeLoaded};
+		
+        window.addHelpOnPage= function(element,fileName,URl){ 
+            RemedyForceHTMLProcessor.clearHTML(element);
+            var divWrap = document.createElement("div");
+            divWrap.setAttribute("class", "helpDivcls");
+            var aWrap = document.createElement("a");
+            aWrap.setAttribute("class", "clsHelpAnchorStyle");
+            aWrap.setAttribute("href", "#");
+            aWrap.setAttribute("title", AdminContextHelpTooltip);
+            aWrap.onclick = function(){
+                if(URl != '' && isNewContextpage()){
+                    window.open(URl,false, "width="+screen.width+",height="+screen.height+",resizable=1,scrollbars=yes,status=1,top=0,left=0",false)
+                }else{
+                    window.open(getStdFormHelpPath()+"/"+fileName,false,"width="+screen.width+",height="+screen.height+",resizable = 1,scrollbars=no,status=1,top=0,left=0",false)
+                }
+            }
+            var spanWrap = document.createElement("span");
+            spanWrap.setAttribute("class", "helpLinkCls");
+            var imgWrap = document.createElement("img");
+            imgWrap.setAttribute("id", "helpIcon");
+            imgWrap.setAttribute("src", "{!$Resource.SDEFStyles}/SDEFicons/help_icon.png");
+            imgWrap.setAttribute("class", "helpIconCls");
+            imgWrap.setAttribute("width", "21px");
+            spanWrap.appendChild( document.createTextNode(AdminContextHelpText) );
+            aWrap.appendChild(spanWrap);
+            aWrap.appendChild(imgWrap);
+            divWrap.appendChild(aWrap);
+            element.appendChild(divWrap);
+        }
+		
+        		
+
+        function openURL(url){
+            var win = window.open(url, '_blank');
+            win.focus();
+        }
+        function hideMessage(){
+            document.getElementById("compileClsPanel").remove();
+        }
+    </script>   
+    <!-- Live Agent Code -->
+    <script type='text/javascript'>
+    	var liveAgentActivated= {!liveAgentActivated} ? 'TRUE' : 'FALSE';
+    	var validateLiveAgentServiceUrlRemoteSetting = {!validateLiveAgentServiceUrlRemoteSetting} ? 'TRUE' : 'FALSE';
+    	var contactServiceUrl='{!JSENCODE(liveAgentValidateContactServiceUrl)}';   
+		function openCompileClassUrl(){
+				if(isLightningExperience == true) 
+					openURL('/one/one.app#/setup/ApexClasses/home'); 
+				else 
+					openURL('/01p');
+			}	
+    </script>
+    
+    <apex:outputPanel rendered="{!liveAgentActivated}">
+	    
+	    <script type='text/javascript' src='{!JSENCODE(liveAgentServiceUrl)}'></script>
+	    
+	    
+	    
+	    <apex:outputPanel rendered="{!NOT(validateLiveAgentServiceUrlRemoteSetting)}">
+	    	<script type='text/javascript'>
+	    		function createRemoteSite() 
+		        {	          
+		          var binding = new XMLHttpRequest();	          
+		            var request =
+		                '<?xml version="1.0" encoding="utf-8"?>' +
+		                '<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'+
+		                    '<env:Header>' +
+		                        '<urn:SessionHeader xmlns:urn="http://soap.sforce.com/2006/04/metadata">' +
+		                            '<urn:sessionId>{!$Api.Session_ID}</urn:sessionId>' +
+		                        '</urn:SessionHeader>' +
+		                    '</env:Header>' +
+		                      '<env:Body>' +
+	                            '<upsertMetadata xmlns="http://soap.sforce.com/2006/04/metadata">' +
+		                            '<metadata xsi:type="RemoteSiteSetting">' +
+		                                '<fullName>RFLiveAgentValidateContactService</fullName>' +
+		                                '<description>Metadata API Remote Site Setting for Validating Logged In User\'s Mail</description>' +
+		                                '<disableProtocolSecurity>false</disableProtocolSecurity>' +
+		                                '<isActive>true</isActive>' +
+				                        '<url>'+contactServiceUrl+'</url>' +
+		                            '</metadata>' +
+	                            '</upsertMetadata>' +
+		                    '</env:Body>' +
+		                '</env:Envelope>';
+		            binding.open('POST', 'https://{!sfHost}/services/Soap/m/31.0');
+		            binding.setRequestHeader('SOAPAction','""');
+		            binding.setRequestHeader('Content-Type', 'text/xml');
+				            try{
+				            	var result = binding.send(request);
+				            }
+				            catch(err){
+				            	console.log(err.message);
+				            }
+	                	binding.onreadystatechange = function() {
+					        if (this.readyState == 4 && this.status == 200) {
+					           parent.location.reload();
+					       }
+				    	};
+		        }
+	        	createRemoteSite();
+	        	</script>
+	    </apex:outputPanel>
+	    
+	    <script type='text/javascript'>
+	    	
+	    	
+	    	
+	    	
+	    
+	        liveagent.addCustomDetail('First Name','{!JSENCODE($User.FirstName)}');
+	        liveagent.addCustomDetail('Last Name','{!JSENCODE($User.LastName)}');
+	        liveagent.addCustomDetail('Email','{!JSENCODE($User.Email)}');
+	        liveagent.addCustomDetail('Company','{!JSENCODE($User.CompanyName)}');
+	        
+	        liveagent.addCustomDetail('Product Name','{!JSENCODE(liveAgentProductName)}');
+	        liveagent.addCustomDetail('Product Version','{!JSENCODE(liveAgentProductVersion)}');
+	        
+	        liveagent.setChatWindowHeight(700); <!--680-->
+	        liveagent.setChatWindowWidth(800); <!--565-->
+	        liveagent.setName('{!JSENCODE($User.FirstName)}');
+	    	liveagent.init('{!JSENCODE(liveAgentDeploymentUrl)}','{!JSENCODE(liveAgentDeploymentId)}','{!JSENCODE(liveAgentDeploymentOrgId)}');
+	    	var isContactValid= {!fetchContactFromBMCBusinessOrg} ? 'TRUE' : 'FALSE';
+	    	var liveAgentAvailableLabel = '{!JSENCODE($Label.LiveAgentAvailableLabel)}';
+	    	var liveAgentUnAvailableLabel = '{!JSENCODE($Label.LiveAgentUnAvailableLabel)}';
+	    	var liveAgentNotSubscribedLabel = '{!JSENCODE($Label.LiveAgentNotSubscribedLabel)}';
+	    	var liveAgentAvailableLabelTooltip = '{!JSENCODE($Label.LiveAgentAvailableLabelToolTip)}';
+	    	var liveAgentUnAvailableLabelTooltip = '{!JSENCODE($Label.LiveAgentUnAvailableLabelToolTip)}';
+	    	var liveAgentRegistrationUrl= '{!JSENCODE(liveAgentRegistrationUrl)}';
+	    	var liveAgentChatInstanceId= '{!JSENCODE(liveAgentChatInstanceId)}';
+				if (!window._laq) { window._laq = []; }
+	        
+	        window._laq.push(function(){
+	            liveagent.showWhenOnline(liveAgentChatInstanceId, document.getElementById('agentAvailable'));
+	            liveagent.showWhenOffline(liveAgentChatInstanceId, document.getElementById('agentNotAvailable'));
+	        });		
+	        // method to check if the element is hidden
+		    function isHidden(el) {
+		       return (el.offsetParent === null)
+		    }		
+	   		if(isSandbox == false){
+		   		window.onload = function(){
+		   			showLiveAgentLink(isContactValid);
+		   		}
+    		}
+     
+            
+            function showLiveAgentLink(isContactValid){
+           		var isMsIE11 = window.location.hash = !!window.MSInputMethodContext; 
+           		
+           		if(Ext.isIE || isMsIE11){
+	           		setTimeout(function(){
+		              showChatLabels(isContactValid);  
+	                }, 500);
+                }
+                else{
+                	showChatLabels(isContactValid);               	
+               	}
+            }
+            function showChatLabels(isContactValid){
+            	if(typeof isContactValid != "undefined"  && isContactValid=='TRUE'){
+			   			var isAgentOnline = !isHidden(document.getElementById('agentAvailable'));
+			   			if(isAgentOnline){
+	                        document.getElementById('rfLiveAgentOnlineLink').style.display='inline-block';
+			   			}
+			   			else{
+	                        document.getElementById('rfLiveAgentofflineLink').style.display='inline-block';
+			   			}
+		   			}
+		   		}
+            
+			   
+            
+    </script>
+    <apex:outputPanel rendered="{!NOT(validateLiveAgentServiceUrlRemoteSetting)}">
+         <script type='text/javascript'>
+            if({!isCalloutSuccess}){
+                    createLiveAgentServiceUrlRemoteSettingCopy(contactServiceUrl);                
+            }
+         </script>
+    </apex:outputPanel>
+    </apex:outputPanel>
+
+
+    
+    
+    
+    <!-- Live Agent Code -->
+    
+    
+	<body> 
+    <apex:outputPanel id="startPanel">
+        <script>
+		isScheduledJobRunning = {!isScheduledJobRunning};
+        </script>
+    </apex:outputPanel>
+
+	<apex:outputPanel rendered="{!datatobeLoaded}">
+	
+      <script>
+      installpanell();
+      </script>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!AND(NOT(datatobeLoaded),isUpdateRefIds)}">
+      <script>
+      updateRefIds();
+      </script>
+    </apex:outputPanel>
+    </body>  
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+     <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminHome.js"/>
+	 <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+	 <script>
+		createRemoteSiteSetting('SalesforceBaseUrl', "{!JSENCODE(baseUrl)}", "Remote site created by BMC Helix Remedyforce", "{!JSENCODE($Api.Session_ID)}", "{!sfHost}");
+	 </script>	
+</apex:page>

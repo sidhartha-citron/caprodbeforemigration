@@ -1,0 +1,73 @@
+<div ng-hide="(!data.isVisible)">
+	<srd-question-header question-data="data" ></srd-question-header>	
+	<div class="srd-question-on-behalf-search fullwidth" ng-readonly="(!data.isUpdateable && !data.isSRInput)">
+		<div>
+			<input aria-labelledby="{{data.id || data.Id}}"  class="srd-question-on-behalf-search-field fullwidth srd-question-input" role="combobox"  aria-expanded="{{editMode}}" aria-autocomplete="list" aria-haspopup="true" type="text" ng-model="searchText"   ng-focus="enableEditAndLoadData()" ng-disabled="!data.isUpdateable && !data.isSRInput"
+			  ng-required="data.IsRequired && data.isVisible" title="{{data.InlineHelp}}"  id="{{data.id || data.Id}}__input" arrow-selector aria-activedescendant ng-blur="clearData('lookupblur')"/>
+			<input type="text" aria-hidden="true" ng-model="data.Value" name="formField" 
+				id="{{ data.isSRInput? data.Id : data.apiName}}"
+				ng-required="data.IsRequired && data.isVisible" ng-hide="true" 
+			/>  
+			<div aria-label="{{ $root.selfServiceLabels.Clear }}" aria-describedby="{{data.id || data.Id}}__input" id="{{data.id || data.Id}}__crossButton" aria-tabindex="0" class="search-remove-btn-input search-remove-btn-dpl" ng-show="editMode" ng-mouseover ="fireBlurEvent = false;" ng-mouseleave="fireBlurEvent = true;" ng-click="cancelSelection(true);">
+        		<span class="d-icon-cross"/>
+			</div>
+		</div>	
+		<div class="srd-question-reference__dropdown" ng-mouseover ="fireBlurEvent = false;" ng-mouseleave="fireBlurEvent = true;" ng-show="editMode" arrow-selector>							
+			<div  aria-hidden="false" role="listbox" style="max-height: 250px;overflow-y: scroll;" class="srd-question-reference-container" tabindex="-1" ng-blur="clearData('lookupblur')" >
+				<div  set-modal-scrolltop-for-lookup aria-label="{{optionVal.itemName}}"  aria-describedby="extraInfo-{{optionVal.itemId}}" dataid="{{data.id || data.Id}}__outerDiv-{{$index}}" aria-tabindex="-1" role="option"  ng-repeat="optionVal in searchResults"  ng-click="selectOptionVal(optionVal);" ng-attr-id="outerDiv-{{$index}}" ng-mouseover = "selectRow(searchResults.indexOf(optionVal));" class="lookupDataItem">
+					<div ng-if="optionVal.itemId == 'toggleButton'">
+						<div class="srd-question-reference__result-item_filterToggleText">
+							<span ng-bind-html="optionVal.itemName">
+							</span>
+							<a ng-click="toggleFilter(optionVal)" class="srd-question-on-behalf-search__result-item_filterToggleLink" ng-bind-html="optionVal.extraInfo"></a>
+						</div>
+					</div>
+		
+					<div ng-if="optionVal.itemId != 'toggleButton'" 
+					ng-class="{'selected': (searchResults.indexOf(optionVal) == selectedRow)}">
+						<div ng-class="(optionVal.photoURL != '')?'rfDPL-user-blade':'rfDPL-other-blade'" style="overflow: hidden;">
+							<div class="rfDPL-user-img-container" ng-show="optionVal.photoURL != ''">
+                                <img src="{{optionVal.photoURL}}" class="rfDPL-user-image" height="30" width="30" aria-hidden="true" />
+							</div>
+							<div class="rfDPL-name-col" ng-class="(optionVal.photoURL != '')?'lookup-user-data':'lookup-other-data'">
+								<p class="rfDPL-user-fullname" title="{{decodeText(optionVal.itemName)}}" ng-class="optionVal.defaultSize != 0?'rfDPL-user-fullname-bold':''" >{{decodeText(optionVal.itemName)}}
+								</p>
+								<p class="rfDPL-user-fullname block-with-text-2-lines lookupData" ng-show="optionVal.extraInfo != ''">{{decodeText(optionVal.extraInfo)}}
+								</p>
+								<div ng-attr-id="defaultInfo-{{optionVal.itemId}}" ng-show="!optionVal.isShowMoreAvailable || optionVal.showMore">
+									<p ng-repeat="(key, value) in optionVal.defaultInfoList" class="lookupData">
+										<span class="lookupDataLabel block-with-text-2-lines" ng-show="showLabelsInDefaultLookupView">{{decodeText(key)}}</span>
+										<span class="lookupDataValue block-with-text-2-lines">{{decodeText(value)}}</span>
+									</p>
+									<p ng-repeat="i in getNumber(optionVal.emptyDefaultDataSize) track by $index" class="lookupData">
+										<span class="lookupDataLabel block-with-text-2-lines"></span>
+										<span class="lookupDataValue block-with-text-2-lines"></span>
+									</p>
+								</div>
+								<div ng-attr-id="extraInfo-{{optionVal.itemId}}" ng-show="isAccessibilityMode || !optionVal.showMore " ng-init="isAccessibilityMode ? expandLookupData(optionVal,searchResults.indexOf(optionVal)) : ''">
+									<p ng-repeat="field in optionVal.extraInfoList" class="lookupData" >
+										<span class="lookupDataLabel block-with-text-2-lines" ng-show="field.showLabel">{{decodeText(field.label)}}</span>
+										<span class="lookupDataValue block-with-text-2-lines">{{decodeText(field.value)}}</span>
+									</p>
+								</div>
+							</div>
+							<div class="lookup-data-icon d-icon-plus" ng-show="optionVal.showMore" ng-click="$event.stopPropagation(); expandLookupData(optionVal,searchResults.indexOf(optionVal));"/>
+							<div class="lookup-data-spinner" ng-if="optionVal.resultsAreLoading">
+								<loading-spinner if="true" inline="true"></loading-spinner>
+							</div>
+							<div class="lookup-data-icon d-icon-minus" ng-show="optionVal.isShowMoreAvailable && !optionVal.showMore" ng-attr-id="expand-{{optionVal.itemId}}" data-index="{{searchResults.indexOf(optionVal)}}" ng-click="$event.stopPropagation();  collapseLookupData(optionVal.itemId,searchResults.indexOf(optionVal));"/>
+						</div>
+					</div>
+				</div>
+			</div>						
+			<div class="srd-question-on-behalf-search__message"  ng-if="searchResultsAreLoading">
+				<loading-spinner if="true" inline="true"></loading-spinner>
+				{{$root.selfServiceLabels.searching}}
+			</div>
+			<div class="srd-question-on-behalf-search__message" aria-live="polite" aria-hidden="{{(searchResultsAreLoading && searchResults.length == 0)}}" ng-if="!searchResultsAreLoading && (searchResults.length == 0)">
+				{{$root.selfServiceLabels.noResults}}
+			</div>			
+		</div>
+	</div>
+	
+</div>	

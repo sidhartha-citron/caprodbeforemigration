@@ -1,0 +1,806 @@
+<apex:page standardStylesheets="false" sidebar="false" controller="BMCServiceDesk.selfServiceMyITUICtrl" 
+    applyBodyTag="false" applyHtmlTag="false" showHeader="false" docType="html-5.0"
+    extensions="BMCServiceDesk.ServiceHealthDashboardController,BMCServiceDesk.JSRemoteActions,BMCServiceDesk.SmartSuggestions" tabStyle="Remedyforce_Self_Service__tab" >
+
+    <html>
+        <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=11"/>
+        <meta http-equiv="pragma" content="no-cache" />
+        <meta http-equiv="cache-control" content="must-revalidate" />
+        <meta http-equiv="cache-control" content="post-check=0" />
+        <meta http-equiv="cache-control" content="pre-check=0" />
+        <meta http-equiv="cache-control" content="no-cache" />
+        <meta http-equiv="expires" content="-1" />
+        <meta http-equiv="pragma" content="no-cache" />   
+        <title>{!JSENCODE($Label.Remedyforce_Self_Service)}</title>
+        
+        <script type="text/javascript">
+			Visualforce.remoting.timeout = 120000;
+			var isSwitchToEnhancedUI = {!isSwitchToEnhancedUI};
+			var FileUploadFailed = '{!JSENCODE($Label.FileUploadFailed)}';
+            var UploadValidFile = '{!JSENCODE($Label.UploadValidFile)}';
+            var MaxSizeError = '{!JSINHTMLENCODE($Label.ImportBestPracticeDataFileSizeError)}'.replace('{}','2.8');
+            var isRTLRequired ={!isRTLRequired};
+            var isOnPopover = false;
+            var showCategoryDescription = {!showCategoryDescription};
+            var __sfdcSessionId = '{!GETSESSIONID()}';    
+            var logoutLinkLabel="{!JSENCODE($Label.SSLogOut)}";
+            var helpURL = '{!JSENCODE(helpURL)}';
+            var logoUrl;
+            var namespace = 'BMCServiceDesk__';
+            var templateApiName='{!$ObjectType.incident__c.fields.FKtemplate__c.Name}';
+            var baseElementApiName='{!$ObjectType.incident__c.fields.FKBMC_BaseElement__c.Name}';
+            if('{!logoUrl}') {
+                logoUrl='{!(IF(ISNULL(logoUrl), '', URLFOR($Action.Attachment.Download,logoUrl,[retURL=''])))}';
+            }
+            else
+                logoUrl='{!URLFOR($Resource.SSThemes,staticResource+'/SDEFimages/BMCHelix-Remedyforce_Logo.png')}';
+                
+            var logoTip='{!JSENCODE(logoTip)}';
+            var companyUrl='{!JSENCODE(companyUrl)}';
+            var helpLink = JSON.parse(helpURL).defaultURL;
+            var dateNow=new Date();
+            var namespaceprefix = '{!JSENCODE(namespaceprefix)}';
+            function resetHelpLink(){
+                helpLink = JSON.parse(helpURL).defaultURL;
+            }
+            var showState = Boolean('{!JSENCODE(IF(showState,"true", ""))}');
+            var showStatus = Boolean('{!JSENCODE(IF(showStatus,"true", ""))}');
+            var statusVsStateJSON = '{!JSENCODE(statusVsStateValues)}';
+            var isSiteUser = '{!JSENCODE($CurrentPage.parameters.fromSiteUrl)}' == 'true'?true:false;
+            var showReturnUrl = Boolean('{!JSENCODE(IF(showReturnUrl,"true", ""))}');
+            var hasAPIEnabledPermission = Boolean('{!JSENCODE(IF(hasAPIEnabledPermission,"true", ""))}');
+            var isLightningThemeDisplayed = {!IF($User.UIThemeDisplayed=='Theme4d',true,false)};
+            var showLabelsInDefaultLookupView = Boolean('{!JSENCODE(IF(showLabelsInDefaultLookupView,"true", ""))}');
+            var showLabelsInExpandedLookupView = Boolean('{!JSENCODE(IF(showLabelsInExpandedLookupView,"true", ""))}');
+            var EnableCategoriesForArticles = {!(IF(EnableCategoriesForArticles ,true, false))};
+            var showMyProfile =  {!(IF(showMyProfile ,true, false))};
+            var lightningModule = '{!JSENCODE(lightningModule)}';
+            var cmpId = '{!JSENCODE(cmpId)}';
+            var templateId = '{!JSENCODE(templateId)}';
+            var instanceURL = '{!JSENCODE(instanceURL)}';
+            var lexOpenerURL = '{!JSENCODE(lexOpenerURL)}';
+			var isUserInLightningMode = false;
+            var showApprovalHistory = Boolean('{!JSENCODE(IF(showApprovalHistory,"true", ""))}');
+            var showRecordDetail = Boolean('{!JSENCODE(IF(showRecordDetail,"true", ""))}');
+            var enableSaveAsDraft = Boolean('{!JSENCODE(IF(enableSaveAsDraft,"true", ""))}');
+            var draftsLimit = {!srDraftsLimit};
+            var srColumnLayoutForSS3Val = lightningModule ? 1 : {!srColumnLayoutForSS3Val};  
+            var defaultCategoryIconFromStaticResource = "{!URLFOR($Resource.SelfServiceMyITUI,'SelfService/styles/img/default_category_icon.svg')}";
+            var isAccessibilityMode = {!isAccessibilityMode};
+            var SDEFStylesURL = "{!URLFOR($Resource.SDEFStyles)}";
+           
+        </script>
+            
+        <apex:outputPanel rendered="{!OR(lightningModule=='createInc',lightningModule=='createSR')}">
+            <style>
+                .modal-dialog{
+                    margin-top:0px !important;
+                    margin-bottom:0px !important;
+                }
+                .modal-backdrop{
+                    display:none !important;
+                }
+            </style>
+        </apex:outputPanel>        
+        <style>
+            .modal-dialog-default{
+                width: {!JSENCODE(defaultModalWidth)} !important;
+                min-width: 600px !important;
+            }                        
+            .Branding-Title_bar-Top_border_color {
+                border-top: 1px solid {!JSENCODE(brandingTokens['token11'])};
+                }
+            .Branding-Title_bar-background_color {
+                background: {!JSENCODE(brandingTokens['token12'])};
+                }
+             .Branding-Title_bar-broadcast_text_color {
+                color: {!JSENCODE(brandingTokens['token13'])};
+                }
+             .Branding-Left_Panel-background {
+                background: {!JSENCODE(brandingTokens['token21'])};
+                }
+             .support-menu__item-link_selected, .support-menu__item-link:hover, .support-menu__item-link_selected:hover {
+                background-color: {!JSENCODE(brandingTokens['token22'])};
+                border: 1px solid #D9D9D9;
+                }
+             .Branding-Right_Panel-hyperlink {
+                color: {!JSENCODE(brandingTokens['token31'])};
+                }
+            .Branding-Right_Panel-hyperlink:hover {
+                color: {!JSENCODE(brandingTokens['token31'])};
+                }
+             .Branding-Right_Panel-button_outline, .Branding-Right_Panel-button_outline:hover {
+                border: 1px solid {!JSENCODE(brandingTokens['token32'])};
+                }
+             .Branding-Right_Panel-separator {
+                border-bottom: 0.5px solid {!JSENCODE(brandingTokens['token32'])};
+                }
+             .Branding-Right_Panel-activity {
+                background-color: {!JSENCODE(brandingTokens['token33'])} !important;
+                }
+             .Branding-Right_Panel-default_button {
+                background-color: {!JSENCODE(brandingTokens['token34'])};
+                }
+             .Branding-tab_Panel-active-border{
+                border-bottom: 2px solid {!JSENCODE(brandingTokens['token34'])};
+              }
+             .Branding-Right_Panel-default_button:hover {
+                background-color: {!JSENCODE(brandingTokens['token35'])};
+                }
+            .support-request__description-maxheight {
+                      max-height: {!JSENCODE(TEXT(serviceRequestRTFDesc_MaxHeight))}px; 
+                }
+                [disabled].Branding-Right_Panel-default_button {
+                      background-color: {!JSENCODE(brandingTokens['token34'])};
+                      opacity: 0.5;
+                }
+                [disabled].Branding-Right_Panel-button_outline {
+                      border: 1px solid {!JSENCODE(brandingTokens['token32'])};
+                      opacity: 0.5;
+                }
+        </style>
+        <script>
+            var isFileEnabled = {!IF(isFileEnabled, true, false)};
+            var attachmentLimit = '{!attachmentLimit}';
+            var fileLimit = '{!fileLimit}';
+            function getRootPathResource(urlVal){
+                var rootPathResource=$("a[id*='selfServiceResourcesUrl']").attr('href');
+                return rootPathResource+urlVal;
+            }
+            var resourceUrl=$("a[id*='selfServiceResourcesUrl']").attr('href');
+            
+            var __sfdcSessionId = '{!GETSESSIONID()}';
+            var baseURL = '{!JSENCODE(baseURL)}';
+            _RemotingActions={};
+            _RemotingActions.getUserProfileInfo="{!$RemoteAction.selfServiceMyITUICtrl.getUserProfileInfo}";
+            _RemotingActions.getChatBotUrl="{!$RemoteAction.selfServiceMyITUICtrl.createChatBotUrl}";
+            _RemotingActions.deleteAttachment="{!$RemoteAction.selfServiceMyITUICtrl.deleteAttachment}";
+            _RemotingActions.deleteDraft="{!$RemoteAction.selfServiceMyITUICtrl.deleteDraft}";
+            _RemotingActions.getTicketsAndSRs="{!$RemoteAction.selfServiceMyITUICtrl.getTicketsAndSRs}";
+            _RemotingActions.getTicketDetails="{!$RemoteAction.selfServiceMyITUICtrl.getTicketDetails}";
+            _RemotingActions.updateSR="{!$RemoteAction.selfServiceMyITUICtrl.updateSR}";
+            _RemotingActions.fetchIncidentFormField="{!$RemoteAction.selfServiceMyITUICtrl.fetchIncidentFormField}";
+            _RemotingActions.createIncident="{!$RemoteAction.selfServiceMyITUICtrl.createIncident}";
+            _RemotingActions.getSearchResults="{!$RemoteAction.selfServiceMyITUICtrl.getSearchResultsMap}";
+            _RemotingActions.fetchSRD="{!$RemoteAction.selfServiceMyITUICtrl.fetchSRD}";
+            _RemotingActions.uploadImage="{!$RemoteAction.selfServiceMyITUICtrl.uploadImage}";
+            _RemotingActions.getSRDCategories="{!$RemoteAction.selfServiceMyITUICtrl.getSRDCategories}";
+            _RemotingActions.getUsers="{!$RemoteAction.selfServiceMyITUICtrl.getUsers}";
+            _RemotingActions.save="{!$RemoteAction.selfServiceMyITUICtrl.save}";
+            _RemotingActions.getKnowledgeArticles="{!$RemoteAction.selfServiceMyITUICtrl.getKnowledgeArticles}";
+            _RemotingActions.manageApprovals="{!$RemoteAction.selfServiceMyITUICtrl.manageApprovals}"; 
+            _RemotingActions.getSelectedApproval="{!$RemoteAction.selfServiceMyITUICtrl.getSelectedApproval}";
+            _RemotingActions.getCommonResults="{!$RemoteAction.selfServiceMyITUICtrl.getCommonResults}";
+            _RemotingActions.getLoggedInUserId="{!$RemoteAction.selfServiceMyITUICtrl.getLoggedInUserId}";
+            _RemotingActions.getReferenceFieldData="{!$RemoteAction.selfServiceMyITUICtrl.getReferenceFieldData}";
+            _RemotingActions.getObjectName="{!$RemoteAction.selfServiceMyITUICtrl.getObjectName}";
+            _RemotingActions.getLogs="{!$RemoteAction.selfServiceMyITUICtrl.getLogs}";
+            _RemotingActions.getActionHistory="{!$RemoteAction.selfServiceMyITUICtrl.getActionHistory}";
+            _RemotingActions.createClientNote="{!$RemoteAction.selfServiceMyITUICtrl.createClientNote}";
+            _RemotingActions.fecthOtherSRandIncident="{!$RemoteAction.selfServiceMyITUICtrl.fecthOtherSRandIncident}";
+            _RemotingActions.fetchDrafts="{!$RemoteAction.selfServiceMyITUICtrl.fetchDrafts}";
+            _RemotingActions.getCategoryServiceRequestDefinationMap="{!$RemoteAction.selfServiceMyITUICtrl.getCategoryServiceRequestDefinationMap}";
+            _RemotingActions.getAttachmentlist="{!$RemoteAction.selfServiceMyITUICtrl.getAttachmentlistForSS3}";
+            _RemotingActions.getBroadcastMsgsList="{!$RemoteAction.selfServiceMyITUICtrl.getBroadcastMsgsList}";
+            _RemotingActions.getSSSections="{!$RemoteAction.selfServiceMyITUICtrl.getSSSections}";
+            _RemotingActions.callReassignRecord="{!$RemoteAction.selfServiceMyITUICtrl.callReassignRecord}";  
+        //  _RemotingActions.getTilesData="{!$RemoteAction.selfServiceMyITUICtrl.getTilesData}" ;
+            _RemotingActions.getTilesData="{!$RemoteAction.selfServiceMyITUICtrl.getTilesDataOrder}" ; 
+                  
+            _RemotingActions.getNewSRDDetails="{!$RemoteAction.selfServiceMyITUICtrl.fetchRD}" ;
+            _RemotingActions.getSRInputDefaultValues="{!$RemoteAction.selfServiceMyITUICtrl.getSRInputDefaultValues}" ;
+
+            _RemotingActions.saveSRDData="{!$RemoteAction.selfServiceMyITUICtrl.saveSRDData}";
+            _RemotingActions.getApprovalDetails = "{!$RemoteAction.selfServiceMyITUICtrl.getSRApprovals}";
+            _RemotingActions.getTaskDetails = "{!$RemoteAction.selfServiceMyITUICtrl.getTaskDetails}";
+            _RemotingActions.copyIncident = "{!$RemoteAction.selfServiceMyITUICtrl.copyIncident}";
+            
+            _RemotingActions.getTileDataForServices = '{!$RemoteAction.ServiceHealthDashboardController.getTileDataForServices}';
+            _RemotingActions.getServiceOutageDetails = '{!$RemoteAction.ServiceHealthDashboardController.getServiceOutageDetails}';
+            _RemotingActions.getServiceOutageHistory = '{!$RemoteAction.ServiceHealthDashboardController.getServiceOutageHistory}';
+            _RemotingActions.changeSubscription = '{!$RemoteAction.ServiceHealthDashboardController.changeSubscription}';
+            _RemotingActions.getCustomChildrenTilesData = '{!$RemoteAction.selfServiceMyITUICtrl.getCustomChildrenTilesData}';
+            _RemotingActions.incidentDetails ="{!$RemoteAction.JSRemoteActions.incidentDetail}";
+            _RemotingActions.fetchKACategories="{!$RemoteAction.selfServiceMyITUICtrl.fetchKACategories}";
+            _RemotingActions.getTemplateIdFromIncident ="{!$RemoteAction.selfServiceMyITUICtrl.getTemplateIdFromIncident}";
+            _RemotingActions.getKAForCategory="{!$RemoteAction.selfServiceMyITUICtrl.getKAForCategory}";
+            _RemotingActions.getMyProfile="{!$RemoteAction.selfServiceMyITUICtrl.getMyProfile}";
+            _RemotingActions.saveMyProfile="{!$RemoteAction.selfServiceMyITUICtrl.saveMyProfile}";
+            _RemotingActions.uploadUserProfilePhoto ="{!$RemoteAction.selfServiceMyITUICtrl.uploadUserProfilePhoto }";
+            _RemotingActions.performAttachmentActions="{!$RemoteAction.selfServiceMyITUICtrl.performAttachmentActions}";
+            _RemotingActions.getSS3Categories ="{!$RemoteAction.selfServiceMyITUICtrl.getSS3Categories}"; 
+            _RemotingActions.ValidateDirectLink = "{!$RemoteAction.JSRemoteActions.validateDirectLink}";
+            
+            _RemotingActions.getCMDBData ="{!$RemoteAction.selfServiceMyITUICtrl.fetchCMDBData}";
+            _RemotingActions.getCMDBDetails ="{!$RemoteAction.selfServiceMyITUICtrl.getCMDBDetails}";
+           
+            _RemotingActions.getBroadcastById="{!$RemoteAction.selfServiceMyITUICtrl.getBroadcastById}";
+            _RemotingActions.getSmartSuggestions="{!$RemoteAction.SmartSuggestions.getSelfServiceSmartSuggestions}" ;
+            _RemotingActions.isActiveSRD="{!$RemoteAction.selfServiceMyITUICtrl.isActiveSRD}";
+            _RemotingActions.getApprovalHistory = "{!$RemoteAction.selfServiceMyITUICtrl.getApprovalHistory}";
+            _RemotingActions.performMassApproveReject = "{!$RemoteAction.selfServiceMyITUICtrl.performMassApproveReject}";
+           
+            _RemotingActions.createAttachment = "{!$RemoteAction.selfServiceMyITUICtrl.createAttachment}";
+            _RemotingActions.reassignForMultipleRequests = "{!$RemoteAction.selfServiceMyITUICtrl.reassignForMultipleRequests}";
+           
+            _RemotingActions.getDraftAttachmentlist="{!$RemoteAction.selfServiceMyITUICtrl.getDraftAttachmentlist}";
+            _RemotingActions.getNoteRecord = "{!$RemoteAction.selfServiceMyITUICtrl.getNoteRecord}";
+            _RemotingActions.fetchCategoryDescription = "{!$RemoteAction.selfServiceMyITUICtrl.fetchCategoryDescription}";
+            _RemotingActions.getCategoryInfo = "{!$RemoteAction.selfServiceMyITUICtrl.getCategoryInfo}";
+            _RemotingActions.createSearchHistory = "{!$RemoteAction.selfServiceMyITUICtrl.createSearchHistory}";
+
+            var isCalledFromSS = false;
+            
+            var wikiUrl = '';
+            var statusValues ={!statusValues};
+            
+           var userId = '{!$User.Id}';
+
+            
+            var logoutURL='{!$Site.Prefix}/secur/logout.jsp';
+            var sfHomeURL='{!$Site.Prefix}/home/home.jsp';
+            var userTimeZone='{!userTimeZone}';
+            var todayDateVal='{!todayVal}';
+            var CKPluginLabels={
+                "Insert": "{!JSENCODE($Label.BrandingSettingsLabelImage)}", 
+                "Upload": "{!JSENCODE($Label.Upload)}", 
+                "Web": "{!JSENCODE($Label.Web)}",
+                "FileUploadFailed": "{!JSENCODE($Label.FileUploadFailed)}",
+                "ChooseFile": "{!JSENCODE($Label.ChooseFile)}", 
+                "PluginMaxFileSize": "{!JSENCODE($Label.PluginMaxFileSize)}" ,
+                "SelectImage" :  "{!JSENCODE($Label.SelectImage)}",
+                "ChooseFile" :  "{!JSENCODE($Label.ChooseFile)}" ,
+                "InsertImage" :  "{!JSENCODE($Label.InsertImage)}" ,
+                "PluginDialogMessage" : "{!JSENCODE($Label.PluginDialogMessage)}" ,
+                "PluginInvalidFileType" : "{!JSENCODE($Label.PluginInvalidFileType)}" 
+            };
+         var selfServiceLabels={
+            "home": "{!JSENCODE($Label.SSHome)}",   
+            "help": "{!JSENCODE($Label.SSHelp)}",   
+            "ok": "{!JSENCODE($Label.OK)}",
+            "days": "{!JSENCODE($Label.Days)}",
+            "hours": "{!JSENCODE($Label.Hours)}",
+            "add": "{!JSENCODE($Label.Add)}",
+            "cancel": "{!JSENCODE($Label.Cancel)}",
+            "close": "{!JSENCODE($Label.Close)}",
+            "maximize": "{!JSENCODE($Label.TooltipMaximize)}",
+            "minimize": "{!JSENCODE($Label.TooltipMinimize)}",
+            "no": "{!JSENCODE($Label.ExtjsMessageNo)}",
+            "remove": "{!JSENCODE($Label.Remove)}",
+            "save": "{!JSENCODE($Label.Save)}",
+            "change": "{!JSENCODE($Label.CMDBEdit)}",
+            "submit": "{!JSENCODE($Label.SSSubmit)}",
+            "reset": "{!JSENCODE($Label.Reset)}",
+            "yes": "{!JSENCODE($Label.ExtjsMessageYes)}",
+            "edit": "{!JSENCODE($Label.CMDBEdit)}",
+            "search": "{!JSENCODE($Label.SSSearch)}",
+            "required": "{!JSENCODE($Label.Required)}",
+            "all": "{!JSENCODE($Label.All)}",
+            "self": "{!JSENCODE($Label.SSSelf)}",
+            "others": "{!JSENCODE($Label.Others)}",
+            "ErrorMsgSaveSRDraft":"{!JSENCODE($Label.ErrorMsgSaveSRDraft)}",
+            "back": "{!JSENCODE($Label.ssBack)}",   
+            "status": "{!JSENCODE($Label.SSApprovalStatus)}", 
+            "submittedDate": "{!JSENCODE($Label.Change_Approval_Submitted_Date)}",
+            "details": "{!JSENCODE($Label.Details)}",
+            "incident": "{!JSENCODE($Label.SSTicket)}",
+            "serviceRequest": "{!JSENCODE($Label.SSHelpRequest)}",
+            "submitATicket": "{!JSENCODE($Label.SS_IncidentHome)}",
+            "relatedTickets": "{!JSENCODE($Label.SF1SS_RelatedTickets)}",
+            "manageApprovals":"{!JSENCODE($Label.SS_ApprovalsHome)}",
+            "PendingApproval":"{!JSENCODE($Label.PendingApprovals)}",
+            "Name":"{!JSENCODE($Label.Name)}",
+            "RequestedBy":"{!JSENCODE($Label.RequestedBy)}",
+            "AssignedDate":"{!JSENCODE($Label.AssignedDate)}",
+            "SSApprovalStatus":"{!JSENCODE($Label.SSApprovalStatus)}",
+            "Approve":"{!JSENCODE($Label.Approve)}",
+            "Reject":"{!JSENCODE($Label.Reject)}",
+            "AssignTo":"{!JSENCODE($Label.AssignTo)}",
+            "SaveDraft":"{!JSENCODE($Label.SS3SaveDraft)}",
+            "Reassign":"{!JSENCODE($Label.Reassign)}",
+            "DelDraftMsg":"{!JSENCODE($Label.SSDeleteAttachmentMsg)}",
+            "ServiceRequestOrTicketClosedMessage":"{!JSENCODE($Label.SSRecordClosed)}",
+            "RequestApprovedSuccess":"{!JSENCODE($Label.RequestApprovedSuccess)}",
+            "ApprovalRequest":"{!JSENCODE($Label.ApprovalRequest)}",
+            "RequestRejectedSuccess":"{!JSENCODE($Label.RequestRejectedSuccess)}",
+            "SSApprovalListColumnHeaderType":"{!JSENCODE($Label.SSApprovalListColumnHeaderType)}",
+            "SSApprovalListColumnHeaderAssignedTo":"{!JSENCODE($Label.SSApprovalListColumnHeaderAssignedTo)}",
+            "SSApprovalListColumnHeaderSubmitter":"{!JSENCODE($Label.SSApprovalListColumnHeaderSubmitter)}",
+            "SSApprovalListColumnHeaderDateSubmitted":"{!JSENCODE($Label.SSApprovalListColumnHeaderDateSubmitted)}",
+            "SSApprovalListColumnHeaderRelatedTo":"{!JSENCODE($Label.SSApprovalListColumnHeaderRelatedTo)}",
+            "ShowLess":"{!JSENCODE($Label.ShowLess)}",
+            "ShowMore":"{!JSENCODE($Label.ShowMore)}",
+            "requestAService": "{!JSENCODE($Label.SSRequestService)}",
+            "viewSelfKA": "{!JSENCODE($Label.SS_KnowledgeArticlesHome)}",
+            "commonKA": "{!JSENCODE($Label.SS_PopularFAQsHome)}",
+            "commonRequests": "{!JSENCODE($Label.SS_CommonServiceRequestsHome)}",
+            "commonTickets": "{!JSENCODE($Label.SS_CommonTicketsHome)}",
+            "ssKATitle": "{!JSENCODE($Label.SS_Article)}", 
+            "today":"{!JSENCODE($Label.DatePickerTodayText)}",
+            "newCommentPlaceholder": "{!JSENCODE($Label.Message1)}",
+            "charactersoverlimit": "{!JSENCODE($Label.charactersoverlimit)}",
+            "searchPlaceholder": "{!JSENCODE($Label.Search)}",
+            "existingAppointmentsAndRequests": "{!JSENCODE($Label.LookingForExistingAppointmentsAndRequests)}",
+            "viewActivity": "{!JSENCODE($Label.ViewInMyActivity)}",
+            "searchTitle": "{!JSENCODE($Label.searchResult)}",
+            "srdResultsTitle": "{!JSENCODE($Label.SSMyHelpRequests)}",
+            "rkmResultsTitle": "{!JSENCODE($Label.MobKnowledgeArticles)}",
+            "noResults": "{!JSENCODE($Label.SS_NoResultsFound)}",
+            "srdTtle": "{!JSENCODE($Label.SSHelpRequest)}",
+            "Drafts":"{!JSENCODE($Label.SS3Drafts)}",
+            "kaTitle": "{!JSENCODE($Label.knowledgeArticle)}",
+            "serverError": "{!JSENCODE($Label.MsgSaveError)}",
+            "attachmentUploadError": "{!JSENCODE($Label.SSAddAttachment)} : {!JSENCODE($Label.MsgSaveError)}",
+            "recordError": "{!JSENCODE($Label.MsgSaveError)}",
+            "required": "{!JSENCODE($Label.RequiredAllFieldBRActionPage)}",
+            "range": "{!JSENCODE($Label.SS_OutOfRange)}",
+            "date": "{!JSENCODE($Label.Date)}",
+            "time": "{!JSENCODE($Label.Time)}",
+            "answer": "{!JSENCODE($Label.CorrectValueErrorMsg)}"+"{!JSENCODE($Label.SSAnswer)}",
+            "submit": "{!JSENCODE($Label.SSContactUsSubmit)}",
+            "expectedCompletion": "{!JSENCODE($Label.reqDefExpectedCompletion)}",
+            "required": "{!JSENCODE($Label.Required)}",
+            "add": "{!JSENCODE($Label.SSAddAttachment)}",
+            "attach": "{!JSENCODE($Label.AttachFileAttachmentPage)}",  
+            "remove": "{!JSENCODE($Label.Remove)}",
+            "onbehalfTitle": "{!JSENCODE($Label.SS3OnBehalfOf)}",
+            "searching": "{!JSENCODE($Label.Searching)}",
+            "logout":"{!JSENCODE($Label.SDEHomeLogout)}",
+            "attachmentsSizeMessage" :"",
+            "example":"{!JSENCODE($Label.Example)}",
+            "requiredError":"{!JSENCODE($Label.mandatoryFieldValueValidationMsg)}",
+            "requestAgain":"{!JSENCODE($Label.Copy)}",
+            "success":"{!JSENCODE($Label.ACActionsSuccess)}",
+            "requestedBy":"{!JSENCODE($Label.RequestedBy)}",
+            "loading":"{!JSENCODE($Label.SSLoading)}",
+			"loadingDone":"{!JSENCODE($Label.SSLoadingDone)}",
+            "closeMessage":"{!JSENCODE($Label.SS_CloseTicketMessage)}",
+            "closeRequestMessage":"{!JSENCODE($Label.SS_CloseRequestMessage)}",
+            "srdBannerTitle":"{!JSENCODE($Label.SS_CommonServiceRequestsHome)}",
+            "kaBannerTitle":"{!JSENCODE($Label.SS_PopularFAQsHome)}",
+            "templateBannerTitle":"{!JSENCODE($Label.SS_CommonTicketsHome)}",
+            "reopen":"{!JSENCODE($Label.SSReopenTicket)}",
+            "Next":"{!JSENCODE($Label.Next)}",
+            "Previous":"{!JSENCODE($Label.Previous)}",
+            "Page":"{!JSENCODE($Label.Page)}",
+            "closeIncident":"{!JSENCODE($Label.CloseTicket)}",
+            "closeServiceRequest":"{!JSENCODE($Label.CloseServiceRequest)}",
+            "SSTicketSubmitted":"{!JSENCODE($Label.SSTicketSubmitted)}",
+            "SSServiceRequestSubmitted":"{!JSENCODE($Label.SSServiceRequestSubmitted)}",
+            "resolution":"{!JSENCODE($ObjectType.incident__c.fields.incidentResolution__c.label)}",
+            "resolutionRequires":"{!JSENCODE($Label.errorMsgResolutionReqd)}",
+            "SSKnowledgeArticles":"{!JSENCODE($Label.SSKnowledgeArticles)}",
+            "attachmentLimit":"{!JSENCODE($Label.SS_AttachmentLimit)}",
+            "fileLimit":"{!JSENCODE($Label.FileLimit)}",
+            "deleteAttachment":"{!JSENCODE($Label.SSDeleteAttachment)}",
+            "SSDeleteDraft":"{!JSENCODE($Label.SSDeleteDraft)}",
+            "deleteAttachmentMsg":"{!JSENCODE($Label.SSDeleteAttachmentMsg)}",
+            "addNotesComments":"{!JSENCODE($Label.AddNotesComments)}",
+            "fileNameLengthValidationMsg":"{!JSENCODE($Label.FileNameLengthValidationMsg)}",
+            "SSBeta_maxAttachmentLimit":"{!JSENCODE($Label.SSBeta_MultiAttachmentLimit)}",
+            "ShowDetails":"{!JSENCODE($Label.ShowDetails)}",
+            "HideDetails":"{!JSENCODE($Label.HideDetails)}",
+            "reassignSuccessful":"{!JSENCODE($Label.reassignSuccessful)}",
+            "Comment":"{!JSENCODE($Label.Comment)}",
+            "CommentLimit":"{!JSENCODE($Label.CommentLimit)}",
+            "solution" : "{!JSENCODE($Label.SSSolution)}",
+            "problem" : "{!JSENCODE($Label.Problem)}",
+            "InvalidLength" : "{!JSENCODE($Label.SS_InvalidLength)}",
+            "MinimumLength" : "{!JSENCODE($Label.SS_MinimumLength)}",
+            "reqDefTotalPrice" : "{!JSENCODE($Label.reqDefTotalPrice)}",
+            "DefaultUSDCurrency" : "{!JSENCODE($Label.DefaultUSDCurrency)}",
+            "EnterValue" : "{!JSENCODE($Label.EnterValue)}",
+            "InvalidNumber" : "{!JSENCODE($Label.SSNumericMsg)}",
+            "MobNewRequest" : "{!JSENCODE($Label.MobNewRequest)}",
+            "NavigationWarning" : "{!JSENCODE($Label.SF1NavigationWarningMsg)}",
+            "DetailsSectionHeader" : "{!JSENCODE($Label.Details)}",
+            "AttachmentSectionHeader" : "{!JSENCODE($Label.Attachments)}",
+            "NotesSectionHeader" : "{!JSENCODE($Label.Notes)}",
+            "TasksSectionHeader" : "{!JSENCODE($Label.Navigator_Tasks)}",
+            "ApprovalSectionHeader" : "{!JSENCODE($Label.SSApprovals)}",
+            "CategoryLbl" : "{!JSENCODE($Label.SSCategory)}",
+            "CustomRequiredStr" : "{!JSENCODE($Label.CustomRequiredStr)}",
+            "ValidationMsg" : "{!JSENCODE($Label.SS_ValidationMsg)}",
+             "InvalidEmailAddress" : "{!JSENCODE($Label.InvalidEmailAddress)}",
+             "InvalidURL" : "{!JSENCODE($Label.invalidURL)}",
+            "noServiceFoundLbl":"{!JSENCODE($Label.NoServicesFound)}",
+            "hideHistoryLbl":'{!JSENCODE($Label.SRHideInputHistory)}',
+            "showHistoryLbl":'{!JSENCODE($Label.SRShowInputHistory)}',
+            "current":'{!JSENCODE($Label.Current_Color)}',
+            "future":'{!JSENCODE($Label.Future)}',
+            "FilterByAccount":'{!JSENCODE($Label.FilterByAccount)}',
+            "FilterByStatus":'{!JSENCODE($Label.FilterByStatus)}',            
+            "Approver":'{!JSENCODE($Label.Change_Approval_Approver)}',
+            "Justification":'{!JSENCODE($Label.SSApprovalJustification)}',
+            "outageStartDate":'{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Start_Date__c.label)}',
+            "outageEndDate":'{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.End_Date__c.label)}',
+            "outageDescription":'{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Description__c.label)}',
+            "outageRootCause":'{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Root_Cause__c.label)}',
+            "updatesLbl":'{!JSENCODE($Label.Updates)}',
+            "actionHistoryDate":'{!JSENCODE($ObjectType.Unavailability_Action_History__c.fields.date__c.label)}',
+            "actionHistoryAction":'{!JSENCODE($ObjectType.Unavailability_Action_History__c.fields.FKAction__c.label)}',
+            "actionHistoryNote":'{!JSENCODE($ObjectType.Unavailability_Action_History__c.fields.note__c.label)}',
+            "subscribeforupdateLbl":'{!JSENCODE($Label.Subscribeforupdate)}',
+             "MinimumValue":'{!JSENCODE($Label.SS_MinimumValue)}',
+             "MaximumValue":'{!JSENCODE($Label.SS_MaximumValue)}',
+             "Maximum":'{!JSENCODE($Label.Maximum)}',
+             "ExpectedRange":'{!JSENCODE($Label.SS_ExpectedRange)}',
+             "MinimumSelections":'{!JSENCODE($Label.SS_MinimumSelections)}',
+             "InvalidSelection":'{!JSENCODE($Label.SS_InvalidSelection)}',
+            "serviceLbl":'{!JSENCODE($Label.ACService)}',
+            "attachmentRequired" :'{!JSENCODE($Label.attachmentRequired)}',
+             "oneAttachmentRequired" : '{!JSENCODE($Label.SS_oneAttachmentRequired)}',
+             "warning" : '{!JSENCODE($Label.warning)}',
+             "Error": '{!JSENCODE($Label.Error)}',
+             "ShowAllResultsMsg": '{!JSENCODE($Label.ShowAllResultsMsg)}',
+             "ReapplyCriteriaMsg": '{!JSENCODE($Label.ReapplyCriteriaMsg)}',
+             "ShowAllResultsLink": '{!JSENCODE($Label.ShowAllResultsLink)}',
+             "ServiceRequests": '{!JSENCODE($Label.SSMyHelpRequests)}',
+             "Tickets": '{!JSENCODE($Label.SS_Tickets)}',
+             "ReapplyCriteriaLink": '{!JSENCODE($Label.ReapplyCriteriaLink)}',
+             "InvalidDate": '{!JSENCODE($Label.SS_InvalidDate)}',
+             "Categories": '{!JSENCODE($Label.Categories)}',
+             "Min2Characters": '{!JSENCODE($Label.Min2Characters)}',
+             "SSAction": '{!JSENCODE($Label.SSAction)}',
+             "GoBackToSalesforce": '{!JSENCODE($Label.GoBackToSalesforce)}',
+             "StdInsufficentOperationPrivilege": '{!JSENCODE($Label.StdInsufficentOperationPrivilege)}',
+             "ErrorLoadingFeedbackForm": '{!JSENCODE($Label.ErrorLoadingFeedbackForm)}',
+             "Opened": '{!JSENCODE($Label.Opened)}',
+             "Closed": '{!JSENCODE($Label.Closed)}',
+             "State": '{!JSENCODE($Label.State)}',
+             "Records": '{!JSENCODE($Label.Records)}',
+             "Apply": '{!JSENCODE($Label.Apply)}',
+             "lackOfPerm": '{!JSENCODE($Label.MsgNoAccessPerm)}',
+             "FilterActivities": '{!JSENCODE($Label.FilterActivities)}',             
+             "SortOrder": '{!JSENCODE($Label.SortBy)}',
+             "Popular": '{!JSENCODE($Label.Popularity)}',
+             "none" : '{!JSENCODE($Label.None1)}',
+             "ServiceTargetTitle": '{!JSENCODE($Label.ServiceTargetTitle)}',
+             "SSMyProfile": '{!JSENCODE($Label.SSMyProfile)}',
+             "SS_Articles": '{!JSENCODE($Label.SS_Articles)}',
+             "NoFieldsToDisplay": '{!JSENCODE($Label.NoFieldsToDisplay)}',
+             "SSApprovalListColumnHeaderRecordNumber": '{!JSENCODE($Label.SSApprovalListColumnHeaderRecordNumber)}',
+             "SelectChildCategory":'{!JSENCODE($Label.SelectChildCategory)}',
+             "AddPhoto": '{!JSENCODE($Label.Add)}',
+             "Update": '{!JSENCODE($Label.Update)}',
+             "UploadProfilePhoto": '{!JSENCODE($Label.UploadProfilePhoto)}',
+             "SavedSuccessfully": '{!JSENCODE($Label.SavedSuccessfully)}',
+             "UserProfileImage": '{!JSENCODE($Label.UserProfileImage)}',
+             "ReqDefImageSelect": '{!JSENCODE($Label.ReqDefImageSelect)}',
+             "kaDirectLinkErrorMsg": '{!JSENCODE($Label.DirectLinkKAErrorMessage)}',
+             "srDirectLinkErrorMsg": '{!JSENCODE($Label.DirectLinkSRErrorMessage)}',
+             "templateDirectLinkErrorMsg": '{!JSENCODE($Label.DirectLinkTemplateErrorMessage)}',
+             "ViewCIsAssets": '{!JSENCODE($Label.SF1SS_CIsandAssetsHome)}',
+             "CommentLimitExceeded": '{!JSENCODE($Label.CommentLimitExceeded)}',
+             "InsufficientPrivilegeContactAdministrator": '{!JSENCODE($Label.InsufficientPrivilegeContactAdministrator)}',
+             "AllCategories":'{!JSENCODE($Label.AllCategories)}',
+             "Number":'{!JSENCODE($Label.SSHomeMyRequestsColumnHeaderNumber)}',
+             "ClientName":'{!JSENCODE($Label.ClientName)}',
+             "ExportCSV" : '{!JSENCODE($Label.ExportCSV)}',
+             "SSDescribeYourIssue":'{!JSENCODE($Label.SSDescribeYourIssue)}',
+             "Broadcasts":'{!JSENCODE($Label.Broadcast1)}',
+             "Broadcasted":'{!JSENCODE($Label.PostedDate)}',
+             "submitARequest" : '{!JSENCODE($Label.SS_SubmitRequest)}',
+             "submitMessage" : '{!JSENCODE($Label.CannotFindWhatYouNeed)}',
+             "SSRightSidebarBroadcastsTitle":'{!JSENCODE($Label.SSRightSidebarBroadcastsTitle)}',
+             "SelfServiceSmartSuggestions":'{!JSENCODE($Label.SmartSuggestionsTooltip)}',
+             "ServiceRequestErrorMessage" : '{!JSENCODE($Label.ServiceRequestErrorMessage)}',
+             "OperationFailed" : '{!JSENCODE($Label.OperationFailed)}',
+             "CharacterExceeded" : '{!JSENCODE($Label.TextAreaOverflow)}',
+             "ApprovalHistory" : '{!JSENCODE($Label.ApprovalHistory)}',
+             "Status" : '{!JSENCODE($Label.Status)}',
+             "Pending" : "{!JSENCODE($Label.Pending)}",
+             "Submitted" : "{!JSENCODE($Label.SSHomeMyRequestsColumnHeaderSubmitted)}",
+             "Recalled" : "{!JSENCODE($Label.Recalled)}",
+             "Rejected" : "{!JSENCODE($Label.Rejected)}",
+             "Approved" : "{!JSENCODE($Label.Approved)}",
+             "Comments" : "{!JSENCODE($Label.Comments)}",
+             "MsgNoRecordFound" : "{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}",
+             "ShowRecord" : "{!JSENCODE($Label.ShowRecord)}",
+             "First" : "{!JSENCODE($Label.First)}",
+             "Last" : "{!JSENCODE($Label.Last)}",
+             "Of" : "{!JSENCODE($Label.Of)}",
+             "viewAllBroadcasts" : '{!JSENCODE($Label.viewAllBroadcasts)}',
+             "SelectAll" : "{!JSENCODE($Label.SelectAll)}",
+             "ClearAll" : "{!JSENCODE($Label.ClearAll)}",
+             "MultiApproveInsufficientPrev" : "{!JSENCODE($Label.MultiApproveInsufficientPrev)}",
+             "NoteNextApprover" : "{!JSENCODE($Label.NoteNextApprover)}",
+             "NextApprover" : "{!JSENCODE($Label.NextApprover)}",
+             "ErrorMsgNextApprover" : "{!JSENCODE($Label.ErrorMsgNextApprover)}",
+             "RequestFor" : "{!JSENCODE($Label.RequestFor)}",
+             "LastModifiedDate" : "{!JSENCODE($Label.LastModifiedDate)}",
+             "FilesUploaded" : "{!JSENCODE($Label.FilesUploaded)}",
+             "AddAttachments" : "{!JSENCODE($Label.AddAttachments)}",
+             "FileLengthZeroKB" : "{!JSENCODE($Label.FileLengthZeroKB)}",
+             "ServiceRequestLabel" : "{!JSENCODE($Label.ServiceRequestLabel)}",
+             "IncidentLabel" : "{!JSENCODE($Label.Incident)}",
+			 "ClearSearch" : "{!JSENCODE($Label.ClearSearch)}",
+            "TooltipMinimize" : "{!JSENCODE($Label.TooltipMinimize)}",
+            "TooltipMaximize" : "{!JSENCODE($Label.TooltipMaximize)}",
+            "deleteInfo" : "{!JSENCODE($Label.DeleteInfo)}",
+            "Clear":"{!JSENCODE($Label.Clear)}",
+			"userProfileInfo" : "{!JSENCODE($Label.UserProfileLinkAction)}",
+			"SFKnowldgeArticles" : "{!JSENCODE($Label.SFSearch)}",
+            "SSBrowseCategories" : "{!JSENCODE($Label.SSBrowseCategories)}",
+			"SSExpandCollapseCategory" : "{!JSENCODE($Label.SSExpandCollapseCategory)}",
+            "SSServiceRequestNotFound" : "{!JSENCODE($Label.SSServiceRequestNotFound)}",
+            "SSSubmitTicketDescription" : "{!JSENCODE($Label.SS_IncidentDescHome)}",
+            "SSSubmitSRDescription" : "{!JSENCODE($Label.SS_ServiceRequestDescHome)}",
+            "SSKADescription" : "{!JSENCODE($Label.SS_KnowledgeArticlesDescHome)}",
+            "SSApprovalDescription" : "{!JSENCODE($Label.SS_ApprovalsDescHome)}",
+            "SSSHDDescription" : "{!JSENCODE($Label.ServiceHealthTileShortDescription)}",
+            "SSCMDBDescription" : "{!JSENCODE($Label.SS_CIsandAssetsDescription)}"
+            };
+        var allowResolutionBeforeClose={!resolutionRequired};
+        var isSmartSuggestionsEnabled = {!enableSmartSuggestions};
+        var isCategoryHierarchyNavEnabled = {!isCategoryHierarchyNavEnabled};
+        var ssMetadata = {!smartsuggestionsMetadata};
+        var isKAFirst = {!isKAfirst};
+        var isIncSRTogether = {!isIncSRTogether};
+        var allowRFSearch = {!isRFKnowledgeEnabled};
+        var allowSFSearch = {!showSFKnowldgeArticles};
+        var chatForSS3 = true;
+        var enableSSSearchHistoryTracking = {!enableSSSearchHistoryTracking};
+        var SSSearchGroupDuration = {!SSSearchGroupDuration};
+        var _ObjectPermissions = {}
+            _ObjectPermissions.isIncidentCreateable = {!$ObjectType.BMCServiceDesk__Incident__c.createable};
+            _ObjectPermissions.isIncidentUpdateable = {!$ObjectType.BMCServiceDesk__Incident__c.updateable};
+        </script>
+        <style>
+            .startChatContainer, .chatThemeHeader {
+                  border-radius: 10px 10px 0 0;
+            }  
+            .startChatContainer {
+                  right: 15px;
+                  color: white;
+                  height: 40px;
+                  font: bold 13px Arial;
+                  text-align: center;
+                  bottom: 0px;
+                  position: fixed;
+                  padding: 10px 20px;
+                  cursor: pointer;
+            } 
+        </style>
+        <script src="/soap/ajax/40.0/connection.js" type="text/javascript"></script>   
+    </head>
+    <script type="text/javascript" src="{!$Resource.DeepView}/js/forcetk.js"></script>
+    <script>
+        var client = new forcetk.Client();
+        client.setSessionToken('{!$Api.Session_ID}');           
+    </script> 
+    <body >
+        <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/vendor/bootstrap/bootstrap.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/scss/_modals.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/scss/_buttons.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/css/icons.min.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/scss/_main.scss')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/scss/myit.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" />
+                <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/vendor/angular-plugins/angularjs-datetime-picker.css')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'TypeAhead.css')}" />
+        <apex:outputPanel layout="none" rendered="{!isAccessibilityMode}">
+		    <link rel="stylesheet" href="{!$Resource.SelfServiceMyITUI}/SelfService/styles/scss/AccessibilityMode.css" type="text/css" />
+			<span id="loadingSpinner" aria-live="polite" class="screen_reader-only"></span>
+        </apex:outputPanel>
+        <a href="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/')}" id="selfServiceResourcesUrl"/>        
+		<apex:outputPanel rendered="{!isSwitchToEnhancedUI}">
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/scss/myit_enhanced.css')}" />
+        </apex:outputPanel>
+		
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery-plugins/jquery-browser.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery-plugins/jquery.cookie.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery-plugins/jquery.iframe-transport.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-plugins/angularjs-datetime-picker.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-ui-grid.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-animate.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-cookies.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-resource.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-plugins/angular-local-storage.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-sanitize.js')}"/>        
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-plugins/ui-router-0.3.2.js')}"/>
+        <!-- <apex:includeScript value="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-plugins/ui-router-1.0.20.js')}"/>         -->
+        <!-- <apex:includeScript value="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-1.7.5/angular-plugins/angular-route.min.js')}"/> -->
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-plugins/ui-map.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-plugins/ui-event.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-plugins/ui-bootstrap-custom-tpls-2.5.0.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-plugins/ng-infinite-scroll.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/bootstrap/popper.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/bootstrap/bootstrap.min.js')}"/>        
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-strap/angular-strap.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular-strap/angular-strap.tpl.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/ckeditor/ckeditor.js')}"/>
+        
+         <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-i18n/'+localeAngularJS)}"/>
+        <!-- Google Maps plugin are configured in /scripts/vendor/google-maps-depended-scripts_app-full.json file -->
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/moment/moment.2.19.3.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/moment/moment-timezone-with-data.min.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/underscore/underscore.min.js')}"/>
+        <!-- Base compontents -->
+        <apex:outputPanel rendered="{!AND(lightningModule!='createInc',lightningModule!='createSR')}">
+            <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/app.js')}"/>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!lightningModule=='createInc'}"> 
+            <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/lightning-createInc-app.js')}"/>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!lightningModule=='createSR'}"> 
+            <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/lightning-createSR-app.js')}"/>
+        </apex:outputPanel>
+        <div  ng-controller="MainController" class="full-height" style="{!IF(OR(lightningModule=='createInc',lightningModule=='createSR'),'display:none','display:block')}">
+            <div  ng-include="'{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/views/main.html')}'" class="full-height"></div>
+        </div>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/main-controller.js')}"/>    
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/loading-spinner-directive.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/filters.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/global-search-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/global-search-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/page-breadcrumbs-directive.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/page-breadcrumbs-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/error-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/error-panel-directive.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/thumbnail-img-directive.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/attachment-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/thumbnail-cache.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/phone-number-validator-directive.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/confirmation-dialog-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/error-message-service.js')}"/>
+		<apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/enhancedui-icon-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/user-context-info-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/focus-element-directive.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/profile-status-directive.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/placeholder-polyfill-directive.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/url-sanitizer-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/user/user-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/user/user-model.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/user/user-details-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-how-to-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-manage-approvals-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-manageApprovals-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/manage-approvals-service.js')}"/>        
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-how-to-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-all-srds-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/srd-details-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-question-directives.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-srd-question-filters.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-search-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-search-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/sr-details-modal-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/sr-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/srd-create-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/sr-details-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/rkm-details-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/contact-it-modal-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/incident-create-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/incident-details-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-viewServiceHealth-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-viewServiceHealth-model.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-customlink-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-customlink-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-viewCMDB-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-viewCMDB-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/view-CMDB-service.js')}"/>  
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/profile/profile-model.js')}"/>   
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/profile/profile-controller.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/profile/profile-services.js')}"/>       
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/social/activity-stream-model.js')}"/>   
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/social/activity-stream-directives.js')}"/>  
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/unified-catalog/unified-catalog-root-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/unified-catalog/unified-catalog-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/unified-catalog/unified-catalog-item-directive.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/unified-catalog/unified-catalog-banners-directive.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/unified-catalog/unified-catalog-section-controller.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/unified-catalog/unified-catalog-service.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/unified-catalog/unified-catalog-model.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/app-bootstrap.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-broadcast-detail-service.js')}"/>  
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/common/decode-response-model.js')}"/> 
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/custom-cookie.js')}"/>   
+        <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/app/support/support-drafts-controller.js')}"/> 
+            <apex:outputPanel id="chatPanel" layout="block" rendered="{!AND(lightningModule!='createInc',lightningModule!='createSR')}">
+                <apex:outputpanel rendered="{!showChat}">
+                    <c:ChatComponent />
+                </apex:outputpanel>
+                <apex:outputPanel rendered="{!showChatbot}">
+                    <c:ChatbotComponent />
+                </apex:outputPanel>
+                <script>       
+                    var remedyforceChat = '{!JSENCODE($Label.bmcservicedesk__chat_header)}';
+                    function closeChatWindow(){
+                        document.getElementById('chatWindow').style.display = 'none';
+                        stopPolling();
+                        if(chatInstanceId!=''){ 
+                            sendMessage(chatEndedMsg);    //chat ended
+                            ChatActionClient_Remote(chatInstanceId);
+                            hasChatStarted = false;
+                        }else{    
+                            displayChatHeader(true);
+                            removeAllChildOfChatWindow();
+                        }
+                        document.getElementById('chatCloseConfirm').style.display = 'none';
+                    }
+                    function cancelChatWindow(){
+                        document.getElementById('chatCloseConfirm').style.display = 'none';
+                    }
+                    function showConfirmBox(){
+                        if(hasChatStarted)
+                            document.getElementById('chatCloseConfirm').style.display = 'block';
+                        else
+                            closeChatWindow();
+                    }
+                </script> 
+                <div id="chatCloseConfirm" style="display:none;top:100;">
+                <div class="modal fade in" style="z-index: 1050; display: block;height:inherit;width:inherit;background-color:#282828 ;opacity:0.7;"></div>
+                    <div class="modal-dialog" style="z-index: 1100; display: block;position: absolute;left: 355px; top: 150px;">
+                        <div class="modal-header support-modal-header">
+                            <h1 class="modal-header__title support-modal-header__title">
+                                {!JSENCODE($Label.Close)}
+                            </h1>
+                        </div>
+                        <div class="support-modal__srd-header-container" style="height:125px;">
+                            {!JSENCODE($Label.ChatWindowCloseConfirmation)}
+                        </div>        
+                        <div class="support-modal__srd-questions-container">
+                            <div class="modal-footer">
+                                <div class="modal-footer__btn-container">
+                                    <button type="button" class="btn" onClick="closeChatWindow();">
+                                        {!JSENCODE($Label.ExtjsMessageYes)}
+                                    </button>
+                                    <button class="btn btn-primary Branding-Right_Panel-default_button Branding-Right_Panel-button_outline" onClick="cancelChatWindow();" >
+                                       {!JSENCODE($Label.ExtjsMessageNo)}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <style>
+                    @media screen and (min-width: 768px) {
+                        .modal-dialog {
+                            width:600px;
+                            margin: 30px auto;
+                        }
+                        .modal-content {
+                            -webkit-box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+                            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+                        }
+                    }
+                </style>
+                <apex:outputpanel rendered="{!showChat}">
+                    <div id="startChat" class="rf-ticker-div Branding-Title_bar-background_color Branding-Title_bar-Top_border_color startChatContainer"  onclick="chat(remedyforceChat ,true,false);">
+                        <apex:outputText value="{!JSENCODE($Label.bmcservicedesk__chat_header)}" styleClass="chatText"/>
+                    </div>
+                </apex:outputpanel>
+            </apex:outputPanel>
+            <script>
+                if (/*@cc_on!@*/false) { document.body.className += ' ie10'; }
+                if (navigator.userAgent.match(/Trident.*rv:11\./)) { document.body.className += ' ie11'; }
+				var dummyDocumentId = '015000000000000000';
+                var relativeServletURL  = '/servlet/servlet.FileDownload?file=';
+                var baseImageURL        = "{!URLFOR($Action.Document.Download, '015000000000000000', [retURL=''])}";
+                if(baseImageURL && baseImageURL.indexOf(relativeServletURL) > -1) {
+                    baseImageURL = baseImageURL.split(relativeServletURL)[0] + relativeServletURL + dummyDocumentId;
+                }
+                var categoryIdFromURL;
+                function init()
+                {
+                    categoryIdFromURL = "{!JSENCODE($CurrentPage.parameters.categoryId)}";
+                }
+                window.onload = init;
+            </script>
+        </body>
+		<!-- Below div popupContainer is used for displaying popup image from RTF field when clicked. -->
+        <div id="popupContainer" class="popupContainerCls">
+            <span id="closeImage" onclick="this.parentElement.style.display='none'" class="closeImageCls">&times;</span>
+            <img id="popupImage" class="popupImageCls"/>
+        </div>
+    </html>
+     
+</apex:page>

@@ -1,0 +1,115 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.SSCategorySearchController" standardStylesheets="false">
+<c:CommonIncludes />
+<c:SelfServiceCommonIncludes />
+ <script>
+        var categoryId='';
+        var categoryName='';
+        var showCategoryList = false;
+	var validateMinimumCharsLabel = '{!JSENCODE($Label.GsErrorMsg)}';
+	var warningSearchLabel ='{!JSENCODE($Label.Warning)}';
+	var txtSrchFieldElementId = "{!$Component.CategorySearchForm.txtSrchField}";
+ 	var warningCategorySearchLabel = '{!JSENCODE($Label.Warning)}';
+	var selectCategorySearchLabel = '{!JSENCODE($Label.selectCategoryCategorySearchPage)}';
+	var ssAllCategoriesLabel = '{!JSENCODE($Label.AllCategories)}';
+	var incidentCategoriesLabel = '{!JSENCODE($Label.Incident_Categories)}';
+    var serviceRequestCategoriesLabel ='{!JSENCODE($Label.Service_Request_Categories)}';
+    var applyLabel ='{!JSENCODE($Label.Apply)}'; 
+    var ssSearchLabel ='{!JSENCODE($Label.SSSearch)}';
+    var searchLabel ='{!JSENCODE($Label.search)}';  
+    var refreshLabel ='{!JSENCODE($Label.refresh)}'                                                                       
+    var categoriesByDescLabel = '{!JSENCODE($Label.CategoriesByDesc)}';
+	var comboBoxStore = [{!listData}];
+    <apex:outputText value="CRUDFLSCHECK# Both CRUD & FLS check are not required ( Category__c is a metadata object)" rendered="false"/> 
+	var categories = <apex:outputText value="{!categories}"/>;
+    
+     function getshowCategoryList(){
+            return {!showCategoryList};
+        }   
+        
+    var textFld = '{!JSENCODE($CurrentPage.parameters.text)}';
+    var frmFld = '{!JSENCODE($CurrentPage.parameters.frm)}';
+    var isStdPage = '{!JSENCODE($CurrentPage.parameters.isStdForm)}';
+     
+     if(!isStdPage)   
+     window.parent.SDF.incident.categoryPopup.setTitle('{!JSENCODE($Label.selectFrom)}'+' '+'{!objPluralType}');
+      
+    </script>
+
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CategorySearchStyle.css"/>
+ <script type="text/javascript" src="{!$Resource.SSjs}/src/SSCategorySearchPage.js"></script>
+<style>
+img, body, html {
+border:0 none;
+            } 
+</style>
+            
+                    
+     <apex:outputPanel id="xyz">
+    <script>
+    var objcategorytree = Ext.getCmp('categoryTree');
+      if (objcategorytree != null) {        
+        //objcategorytree.view.refresh();
+        var root = new Ext.tree.AsyncTreeNode({
+                            text :'{!JSENCODE($Label.CategoriesByDesc)}', 
+                            expanded: true,
+                            children: <apex:outputText value="{!categories}"/>
+        });     
+        objcategorytree.setRootNode(root);
+        
+         objcategorytree.render();
+		 objcategorytree.getRootNode().expand();
+    }
+    </script>
+    </apex:outputPanel>   
+    <apex:outputPanel >
+    <apex:form id="CategorySearchForm">
+   <input type="hidden" id="selectedCategory" name="selectedCategory" value="{!selectedCategory}"  /> 
+    
+     <apex:outputPanel >
+      <apex:actionFunction name="pgRefresh" action="{!research}" reRender="xyz"/>
+    <apex:actionFunction name="renderTree" action="{!renderTree}" reRender="xyz" >
+                 <apex:param assignTo="{!selectedCategory}" id="selectedCategory"  name="idSetString" value=""/>
+     </apex:actionFunction> 
+      
+     <table class="clsMainTableC" cellpadding="5" cellspacing="0">
+     	<tr>
+     		<td>
+     			<div id="btntoolbar"/>
+     		</td>
+     	</tr>
+     	<tr>
+     		<td>
+     			<div id="tenpxSixaDiv" class="div10pxVspacing"/>
+     		</td>
+     	</tr>
+     	<tr>
+     		<td  style='height:270px;vertical-align:top;'>
+     		 	<div id="categoryListPage" style='height:470px;'></div>
+     		 	<div id="categoryPageTree" class="clsLeftPadding10"/>
+     		</td>
+     	</tr>	
+     	<tr style="background-color:#dee0e0;height:35px; width:100%;">
+     		<td align="right" style="padding-bottom:5px;padding-top:5px; padding-right:5px;" colspan="3">
+     			<table>
+     				<tr>
+     	 				<td>
+     	 					<apex:commandButton style="background-color:#dee0e0" value="{!$Label.bmcservicedesk__ok}" onClick="saveCategory();" styleclass="clsButtonStyle clsPrvBtn bgBtnGrey" rerender="dummyPanel"/>
+     					 </td>
+     					 <td>
+     	 					<apex:commandButton style="background-color:#dee0e0" onclick="javascript: window.parent.SDF.incident.categoryPopup.hide();" value="{!$Label.bmcservicedesk__sscancel}" styleclass="clsButtonStyle clsPrvBtn bgBtnGrey" rerender="dummyPanel"/>
+     	 				</td>
+     				</tr>
+     		</table>
+     	</td>
+     </tr>
+     </table>
+    
+    </apex:outputPanel> 
+
+           <apex:inputhidden id="txtSrchField" value="{!txtSrchField}" />   
+                        
+    </apex:form>                           
+ 	<apex:outputPanel id="dummyPanel">
+ 	</apex:outputPanel>
+ </apex:outputPanel>
+</apex:page>

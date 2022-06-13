@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>Damaged_Missing_or_Stolen_Products_Consumed_Alert</fullName>
+        <description>Damaged, Missing, or Stolen Products Consumed Alert</description>
+        <protected>false</protected>
+        <recipients>
+            <field>ContactId</field>
+            <type>contactLookup</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>unfiled$public/Damaged_Missing_or_Stolen_Products_Consumed_Template</template>
+    </alerts>
+    <alerts>
+        <fullName>Notification_customer_installation_has_just_been_completed</fullName>
+        <description>Notification customer installation has just been completed</description>
+        <protected>false</protected>
+        <recipients>
+            <type>accountOwner</type>
+        </recipients>
+        <recipients>
+            <recipient>ewang@citronhygiene.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>sgurung@citronhygiene.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>unfiled$public/Notification_Your_recent_customer_installation_has_just_been_completed</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>Flag_Work_Order_to_Reset_SAs</fullName>
+        <field>Is_Work_Order_Valid_for_Reset_SAs__c</field>
+        <literalValue>1</literalValue>
+        <name>Flag Work Order to Reset SAs</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Set_Create_PO_Number_Case</fullName>
+        <field>Create_PO_Number_Case__c</field>
+        <literalValue>1</literalValue>
+        <name>Set Create PO Number Case</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Set_Work_Order_Status_to_New</fullName>
+        <field>Status</field>
+        <literalValue>New</literalValue>
+        <name>Set Work Order Status to New</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Complete_Date</fullName>
+        <field>Completed_Date__c</field>
+        <formula>TODAY()</formula>
+        <name>Update Complete Date</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_CompletedDate</fullName>
+        <field>Completed_Date__c</field>
+        <formula>TODAY()</formula>
+        <name>Update  CompletedDate</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <rules>
+        <fullName>Create Case for No PO Number</fullName>
+        <actions>
+            <name>Set_Create_PO_Number_Case</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <formula>AND (   TEXT(Line_of_Business__c) = $Setup.Field_Service_Settings__c.Pest_LOB__c,   TEXT(Account.PO_Required_for_Orders__c) = $Setup.Field_Service_Settings__c.PO_Required_Before_Label__c,   Emergency__c,   NOT(Order__r.Is_PO_Provided_by_Customer__c) )</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Damaged%2FStolen Product Alert</fullName>
+        <actions>
+            <name>Damaged_Missing_or_Stolen_Products_Consumed_Alert</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>WorkOrder.StatusCategory</field>
+            <operation>equals</operation>
+            <value>Completed,Cannot Complete</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>WorkOrder.Damage_Stolen_Products__c</field>
+            <operation>greaterThan</operation>
+            <value>0</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>WorkOrder.Account_Reporting_Details__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Install WO Complete Notification</fullName>
+        <actions>
+            <name>Notification_customer_installation_has_just_been_completed</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <description>An email to be sent when the WO is marked with Install complete. See the below requirement checklist. a notification will be sent to Account Owners where the WOs related order has an order create date that is within 3 month timeframe</description>
+        <formula>AND 
+  ( 
+  ISPICKVAL(Status ,&apos;Completed&apos;),
+  ISPICKVAL(Type__c, &apos;Installation&apos;),
+  (TODAY()  -  DATEVALUE(Order__r.CreatedDate) &lt;= 90 ),
+   Account.Owner.ID_Casesafe__c  &lt;&gt; &apos;005j000000AxZduAAF&apos;)</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Move Service Appointments to Status of New</fullName>
+        <active>true</active>
+        <formula>AND(  TEXT(Account.PO_Required_for_Orders__c) = $Setup.Field_Service_Settings__c.PO_Required_Before_Label__c,  NOT(Order__r.Is_PO_Provided_by_Customer__c), IF( INCLUDES( Order__r.Line_of_Businesses__c , &apos;Pest Control&apos;), true, false), Order__r.Emergency__c  )</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+        <workflowTimeTriggers>
+            <actions>
+                <name>Flag_Work_Order_to_Reset_SAs</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <actions>
+                <name>Set_Work_Order_Status_to_New</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <offsetFromField>WorkOrder.StartDate</offsetFromField>
+            <timeLength>-72</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+    </rules>
+</Workflow>

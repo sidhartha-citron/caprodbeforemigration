@@ -1,0 +1,37 @@
+<apex:page doctype="html-5.0" showHeader="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false">
+	<link href="{!$Resource.Salesforce1}/SelfService/css/SF1SSSuperbox.css" rel="stylesheet" />
+	<div class="rf-headercls" ng-init="submitTicket = '{!JSENCODE($Label.SubmitTicket)}'; submitaTicket = '{!JSENCODE($Label.SS_IncidentHome)}'">
+		<rf-header   actionlabel="{{allowSuperboxSubmit ? submitTicket: submitaTicket}}" actioncss="headerlabelcls" disable-action="disableSubmitButton()"  hidebackbutton='false' backurl="/Home" action="quickSubmit()"></rf-header>
+	</div>
+	
+	<div class="scrollable">
+		<div class="superboxtile">
+	
+		   <superbox-input
+		   			behalf-of="isOnBehalfOf"
+					input-text="description"
+					input-text-html="superboxhtml"
+					selected-clientid="selectedClientID"
+					superbox-search="performSearch($event)"></superbox-input>
+		</div> 
+			<input id="dummyInput" style="width:0; height:0; opacity:0" type="text" />
+		<div ng-swipe-left="swipeEffect('left')" ng-swipe-right="swipeEffect('right')" style="width:100%; height:100%;display: inline;" ng-show="showSearchResults" >
+			<loading-spinner show-if="Moduleloader" overlay="true" style="top: 220px !important;z-index: 0 !important;"></loading-spinner> 
+			<ul class="d-button-group swipeUl" > 
+				<li ng-click="changeModule(obj.name)" ng-repeat="obj in objList track by $index" class="swipeLi"
+					ng-class="{'active': object == obj.name}" style="width:"> 
+					<span style="width:100%;"> {{obj.label}} </span>
+				</li>
+			</ul>
+			<div ng-show="isShowResults">
+				<div ng-repeat="record in records" ng-click="navigateToDetailView(record)" class="sb-cardDiv">
+					<genericlist  obj="record" fieldmetadata="fieldMetadata" object="object" ></genericlist>
+				</div>
+				<div ng-show="records.length == 0" style="text-align:center; padding-top: 10px;"> {!$Label.SSSearchNoRecordsFound} </div>
+			</div>
+			<div class="loadMore" ng-click="loadMore()" ng-show="isLoadMore">
+				<label>{!$Label.ShowMore}</label>
+			</div>		
+		</div>
+	</div>
+</apex:page>

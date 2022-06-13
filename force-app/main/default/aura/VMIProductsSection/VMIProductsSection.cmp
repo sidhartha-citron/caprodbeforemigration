@@ -1,0 +1,48 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="SiteSurveyVMIController">
+    <aura:attribute name="columns" type="SiteSurveyVMIController.ColumnRecord[]"/>
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="isEdit" type="Boolean" default="false"/>
+    <aura:attribute name="newVMIProduct" type="VMI_Product__c"/>
+    <aura:attribute name="existingVMIProducts" type="VMI_Product__c[]"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!-- Event to notify the Site Survey Skill Requirement Component that a Skill is selected by the user -->
+    <aura:registerEvent name="skillSavedEvent" type="c:SkillSaved"/>
+    
+    <aura:method name="setRecordDetails" action="{!c.setEditRecord}" description="Method to facilitate edit of existing skill">
+        <aura:attribute name="VMIProduct" type="VMI_Product__c" default="{'sobjectType':'VMI_Product__c'}"/>
+        <aura:attribute name="isEdit" type="Boolean" default="false"/>
+    </aura:method>
+    
+    <div class="slds-hide" aura:id="theModal">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-theme--info">
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Site_Survey_Edit}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <div class="slds-form-element">
+                        <label class="slds-form-element__label slds-no-flex">{!v.columns[0].label}</label>
+                    <br/>
+                        <ui:outputText value="{!v.newVMIProduct.Product__r.Name}"></ui:outputText>
+                    </div>
+                    <br/>
+                    <div class="slds-form-element">
+                        <lightning:input variant="label-hidden" type="number" label="{!v.columns[1].label}" min="1" value="{!v.newVMIProduct.Par_Level__c}"/>
+                    </div>
+                    <br/>
+                    <div class="slds-form-element">
+                        <lightning:input variant="label-hidden" type="text" label="{!v.columns[2].label}" value="{!v.newVMIProduct.Notes__c}"/>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <!-- <button class="slds-button slds-button_neutral">Close</button> -->
+                    <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeModal}"/>
+                    <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Submit}" onclick="{!c.saveProduct}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+</aura:component>

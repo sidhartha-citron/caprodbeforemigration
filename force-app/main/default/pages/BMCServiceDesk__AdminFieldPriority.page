@@ -1,0 +1,123 @@
+<apex:page id="AdminFieldPriority" controller="BMCServiceDesk.AdminFieldPriorityController" standardstylesheets="false" showheader="false" >
+	<html>
+        <head>   
+            <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+            <meta http-equiv="pragma" content="no-cache" />
+            <meta http-equiv="cache-control" content="must-revalidate" />
+            <meta http-equiv="cache-control" content="post-check=0" />
+            <meta http-equiv="cache-control" content="pre-check=0" />
+            <meta http-equiv="cache-control" content="no-cache" />
+            <meta http-equiv="expires" content="-1" />
+            <meta http-equiv="pragma" content="no-cache" />   
+            <title>{!JSENCODE($Label.fieldsourceprioritytitle)}</title>
+            
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/vendor/bootstrap/bootstrap.min.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/scss/myit.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" />
+            <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'RFAdminExt4Common.css')}" />
+            
+            <apex:outputPanel rendered="{!IF( userLanguage=='iw', false, true )}">
+    			<apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'AdminFieldPriority.css')}"/> 
+			</apex:outputPanel>
+            <apex:outputPanel rendered="{!IF( userLanguage=='iw', true, false )}">
+    			<apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'AdminFieldPriority-RTL.css')}"/> 
+			</apex:outputPanel>
+               
+            
+    		<link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/DPLFramework/css/bmc-all.css')}"/>
+            <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/css/rfmodal.css')}"/>
+            
+        </head>
+    	<script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}" />
+     	<script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/jquery-ui.min.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular.min.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-sanitize.js')}"/>
+        
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'FieldLevelPrioritization/script/field-level-prioritization-controller.js')}"/>
+       	<script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'FieldLevelPrioritization/script/field-level-prioritization-service.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'js/rfmodal.js')}"/>
+           
+        <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-ui-grid.min.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'CIAssetSlideIn/script/rf-angular-tooltip.js')}"/>    
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/ui-sortable.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/ui.sortable.multiselection.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'FieldLevelPrioritization/script/ui.grid.selection.js')}"/>
+        <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/Sidebar.css')}"/>     
+        <script type="text/javascript" src="{!$Resource.DeepView}/js/sidebar.js"/>        
+        <script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/angular-plugins/ui-bootstrap-custom-tpls-0.6.0.js"/>
+           
+        <script>
+        	var ciTooltipTemplateUrl = "{!URLFOR($Resource.Deepview,'CIAssetSlideIn/html/rf-ng-tooltip-template.html')}";
+        	var staticResource = '{!$Resource.DeepView}' + '/FieldLevelPrioritization/style';
+        	var resourceUrl = "{!URLFOR($Resource.DeepView, '/')}";
+        	var CITab = '{!JSENCODE($Label.CMDB_TAB_CIs)}';
+        	var assetTab = '{!JSENCODE($Label.CMDB_TAB_Assets)}';
+        	var CIAndAsset = '{!JSENCODE($Label.CIAndAsset)}';
+            var cmdbClassTypes = new Array();
+        	cmdbClassTypes = [ {fieldValue:'CI', fieldName:CITab},  {fieldValue:'Asset', fieldName:assetTab}];
+        	
+        	var strSourcePicklistValues = '{!JSENCODE(strSourcePicklistValues)}';
+        	var strClassNameValues = '{!JSENCODE(strClassNameValues)}';
+        	var strClassFieldValues = '{!JSENCODE(strClassFieldValues)}';
+        	var strBaseElementLabel = '{!JSENCODE(strBaseElementLabel)}';
+        	var userLanguage = '{!JSENCODE(userLanguage)}';
+        	var wikiURL = '{!wikiUrl}';
+       
+        	var _RemotingActions = {
+                "getCMDBClassNames" : "{!$RemoteAction.AdminFieldPriorityController.getCMDBClassNames}",
+                "getCMDBClassFields" : "{!$RemoteAction.AdminFieldPriorityController.getCMDBClassFields}",
+                "getFieldSourcePriorities" : "{!$RemoteAction.AdminFieldPriorityController.getFieldSourcePriorities}",
+                "deleteFieldSourcePriority" : "{!$RemoteAction.AdminFieldPriorityController.deleteFieldSourcePriority}",
+                "save":"{!$RemoteAction.AdminFieldPriorityController.save}",
+                "validateRulesExist":"{!$RemoteAction.AdminFieldPriorityController.validateRulesExist}"
+                }
+            
+            var _Labels={
+                "ActiveItems" : "{!JSENCODE($Label.ActiveItems)}",
+                "InactiveItems" : "{!JSENCODE($Label.InactiveItems)}",
+                "Search" : "{!JSENCODE($Label.Search)}",
+                "Clear" : "{!JSENCODE($Label.Clear)}",
+                "New" : "{!JSENCODE($Label.New)}",
+                "FieldName" : "{!JSENCODE($Label.FieldName)}",
+                "AllandClassNames" : "{!JSENCODE($Label.AllandClassNames)}",
+                "FieldSourceOrder" : "{!JSENCODE($Label.FieldSourceOrder)}",
+                "DefineAttributefor" : "{!JSENCODE($Label.DefineAttributefor)}",
+                "ClassType" : "{!JSENCODE($Label.ClassType)}",
+                "CMDBClassName" : "{!JSENCODE($Label.CMDBClassName)}",
+                "AvailableFields" : "{!JSENCODE($Label.AvailableFields)}",
+                "SelectedFields" : "{!JSENCODE($Label.SelectedFields)}",
+                "Source" : "{!JSENCODE($Label.FieldSourceOrder)}",
+                "Inactive" : "{!JSENCODE($Label.Inactive)}",
+                "ApplyAllClasses" : "{!JSENCODE($Label.ApplyAllClasses)}",
+                "Save" : "{!JSENCODE($Label.Save)}",
+                "RecordDeleted" : "{!JSENCODE($Label.RecordDeleted)}",
+                "RecordSaved" : "{!JSENCODE($Label.MultiRecordsSave)}",
+                "SelectFieldValidation" : "{!JSENCODE($Label.PleaseSelectProcessVariable)}",
+                "Yes":"{!JSENCODE($Label.ExtjsMessageYes)}",
+    			"No": "{!JSENCODE($Label.ExtjsMessageNo)}",
+                "All":"{!JSENCODE($Label.All)}",
+                "DeleteConfirmMessage":"{!JSENCODE($Label.DeleteConfirmMessage)}",
+                "RulesAlreadyExistWarning":"{!JSENCODE($Label.RulesAlreadyExistWarning)}",
+				"Delete":"{!JSENCODE($Label.Delete)}",
+				"Warning":"{!JSENCODE($Label.Warning)}"
+                
+            }
+            
+            function openHelpPage() {
+            	window.open(wikiURL );
+            }
+        </script>
+		<body ng-app="fieldPrioritizationModule" class="container" style="margin: 0px;">
+            <div id="tbar" style="height:30px;">
+                <apex:outputLabel styleClass="outputlabel" value="{!JSENCODE($Label.bmcservicedesk__fieldsourceprioritytitle)}"></apex:outputLabel>
+                <span class=" d-icon-question_circle helpIconCls float_help_icon" onclick="openHelpPage();"></span>
+            </div>
+            <div id="fieldPrioritizationController"  ng-controller="fieldPrioritizationController" class="full-height" style="margin:20px;">
+                <div width="100%" ng-include="'{!URLFOR($Resource.Deepview,'FieldLevelPrioritization/html/field-level-prioritization-template.html')}'" 
+                class="full-height">
+                    </div> 
+                </div>
+        </body>
+    </html>
+</apex:page>

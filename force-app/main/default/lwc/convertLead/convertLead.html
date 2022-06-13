@@ -1,0 +1,121 @@
+<template>
+    <template if:true={isLoaded}>
+        <template if:false={largedevice}>
+            <lightning-spinner alternative-text="Loading" size="large" variant="brand" class="spins"
+                style="top:6.5rem; bottom:11rem">
+            </lightning-spinner>
+        </template>
+        <template if:true={largedevice}>
+            <div class="spinnerContainer">
+                <span class="spinnerGif"><img
+                        src="https://cdn.dribbble.com/users/82578/screenshots/2338455/media/08f7815930f40eaac799e37c56f9cdb5.gif"
+                        width="180" height="180" /></span>
+            </div>
+        </template>
+    </template>
+        <lightning-card class="slds-text-align_left">
+            <slot name="title" class="slds-text-body_small">
+                {convertMessage}
+            </slot>
+        </lightning-card>
+    <template if:true={dupeEncountered}>
+        <template if:true={coldata}>
+            <template if:true={largedevice}>
+                <lightning-datatable key-field="Id" data={coldata} columns={columns}
+                    onrowselection={handleRowSelection}>
+                </lightning-datatable>
+            </template>
+            <template if:false={largedevice}>
+                <template for:each={coldata} for:item="row" for:index="index">
+                    <article class="slds-tile" key={row.Id}>
+                        <div class="slds-grid slds-grid_align-spread slds-has-flexi-truncate">
+                            <h3 class="slds-tile__title slds-truncate" title={row.Name}>
+                                <a href="#">{row.Name}</a>
+                            </h3>
+                            <div class="slds-shrink-none">
+                                <lightning-input value={index} type="checkbox" name={row.Id} label=" "
+                                    onchange={getaccrowid}>
+                                </lightning-input>
+                            </div>
+                        </div>
+                        <div class="slds-tile__detail slds-text-color_weak">
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate" title="First Label">
+                                    Shipping Address:
+                                </dt>
+                                <dd class="slds-text-color_weak slds-item_detail slds-truncate"
+                                    title={row.Shipping_Address__c}>{row.Shipping_Address__c}
+                                </dd>
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Second Label">
+                                    Industry:</dt>
+                                <dd class="slds-item_detail slds-cell-wrap" title="Description for second label">
+                                    {row.Industry}
+                                </dd>
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Second Label">
+                                    Phone:</dt>
+                                <dd class="slds-item_detail" title="Description for second label">
+                                    <lightning-formatted-phone value={row.Phone}>
+                                    </lightning-formatted-phone>
+                                </dd>
+                            </dl>
+                        </div>
+                    </article>
+                </template>
+            </template>
+        </template>
+    </template>
+    <template if:true={accId}>
+        <lightning-layout multiple-rows="true"
+            style="background-color:var(--lwc-colorBackgroundStencil,rgb(243, 242, 242))">
+            <lightning-layout-item size="12" padding="around-small" large-device-size="12" small-device-size="12">
+                <p class="slds-text-body_medium slds-text-align_center"
+                    style="font-family: Verdana, Arial, Helvetica, sans-serif;font-size:1.825rem">
+                    <lightning-formatted-text value="Lead has been converted" title="Lead has been converted ">
+                    </lightning-formatted-text>
+                </p>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small" large-device-size="12" small-device-size="12">
+                <div style="text-align:center;background-color:var(--lwc-colorBackgroundStencil,rgb(243, 242, 242))">
+                    <span data-aura-rendered-by="38:2681;a" class="uiImage" data-aura-class="uiImage"><img
+                            data-aura-rendered-by="36:2681;a" style="height:9rem;"
+                            src="https://mytaskcom-dev-ed.lightning.force.com/projRes/ui-lead-runtime-components/images/lead_convert_celebration@2x.gif"
+                            class="subtitle-image" alt=""></span>
+                </div>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small" large-device-size="4" small-device-size="12">
+                <lightning-card variant="Narrow" title="Account" icon-name="standard:account">
+                    <p class="slds-p-horizontal_small"><a href={accId} target="_blank">{accOppname}</a></p>
+                    <p class="slds-p-horizontal_small">Phone : <a href={accId} target="_blank">{accOppname}</a></p>
+                </lightning-card>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small" large-device-size="4" small-device-size="12">
+                <lightning-card variant="Narrow" title="Contact" icon-name="standard:contact">
+                    <p class="slds-p-horizontal_small"><a href={conId} target="_blank">{conName}</a></p>
+                    <p class="slds-p-horizontal_small">Account : <a href={accId} target="_blank">{accOppname}</a></p>
+                </lightning-card>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small" large-device-size="4" small-device-size="12">
+                <lightning-card variant="Narrow" title="Opportunity" icon-name="standard:opportunity">
+                    <p class="slds-p-horizontal_small"><a href={oppId} target="_blank">{accOppname}</a></p>
+                    <p class="slds-p-horizontal_small">Account : <a href={accId} target="_blank">{accOppname}</a></p>
+                </lightning-card>
+            </lightning-layout-item>
+        </lightning-layout>
+    </template>
+    <template if:false={largedevice}>
+        <div class="slds-docked-form-footer">
+            <template if:true={dupeEncountered}>
+                <div class="slds-float_right">
+                    <lightning-button style="margin-left:17rem" label="Convert" variant="brand" onclick={callConvert}>
+                    </lightning-button>
+                </div>
+            </template>
+            <template if:true={accId}>
+                <div class="slds-float_right">
+                    <lightning-button label="Go to Call Block" variant="brand" onclick={gotoCallBlock}>
+                    </lightning-button>
+                </div>
+            </template>
+        </div>
+    </template>
+</template>

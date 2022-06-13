@@ -1,0 +1,615 @@
+<apex:page controller="BMCServiceDesk.SuggestionPageController" showHeader="false" sidebar="false"> 
+    <head>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.BMCRFSDEFStyles}/Images" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.BMCRFSDEFStyles}/SuggestionPage.css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" /> 
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />        
+    <style>
+        
+        
+         
+    </style>
+    </head>                      
+    <body onresize="setResultListHeightJS();" style="min-width: 900px;">
+        <div id="rfDPLReferenceDiv" >  
+ 
+
+        <apex:form id="suggestObjectForm"> 
+            <apex:actionFunction action="{!showAllRecords}" name="showAllRecords" rerender="genPgBlock,messagePanel,renderPageVar,pageMessageVF" oncomplete="onLoad();setResultListHeightJS();" status="waitMsg"/>                        
+            <apex:actionFunction action="{!reApplyLKFilter}" name="reApplyLKFilter" rerender="genPgBlock,messagePanel,renderPageVar,pageMessageVF" oncomplete="onLoad();setResultListHeightJS();" status="waitMsg" />
+            <apex:actionFunction action="{!first}" name="firstPage"  rerender="{!IF(queueMemResultSize<=0 && staffResultSize >0,'genPgBlock,messagePanel','queueMemPanel, paginationbarDivForQM')},pageMessageVF" oncomplete="queueMemResultSize='{!queueMemResultSize}'; queueId='{!queueId}'; selectedQueueName='{!JSENCODE(selectedQueueName)}'; {!IF(queueMemResultSize<=0 && staffResultSize >0,'onLoad();setResultListHeightJS();','renderMemPanel()')}" status="waitMsg" />
+            <apex:actionFunction action="{!previous}" name="previousPage"  rerender="{!IF(queueMemResultSize<=0 && staffResultSize >0,'genPgBlock,messagePanel','queueMemPanel, paginationbarDivForQM')},pageMessageVF" oncomplete="queueMemResultSize='{!queueMemResultSize}'; queueId='{!queueId}'; selectedQueueName='{!JSENCODE(selectedQueueName)}'; {!IF(queueMemResultSize<=0 && staffResultSize >0,'onLoad();setResultListHeightJS();','renderMemPanel()')}" status="waitMsg"/>
+           
+            <apex:actionFunction action="{!next}" name="nextPage"  rerender="{!IF(queueMemResultSize<=0 && staffResultSize >0,'genPgBlock,messagePanel','queueMemPanel, paginationbarDivForQM')},pageMessageVF" oncomplete="queueMemResultSize='{!queueMemResultSize}'; queueId='{!queueId}'; selectedQueueName='{!JSENCODE(selectedQueueName)}'; {!IF(queueMemResultSize<=0 && staffResultSize >0,'onLoad(); setResultListHeightJS();','renderMemPanel();')}" status="waitMsg">
+            </apex:actionFunction>  
+            <apex:actionFunction action="{!last}" name="lastPage"  rerender="{!IF(queueMemResultSize<=0 && staffResultSize >0,'genPgBlock,messagePanel','queueMemPanel, paginationbarDivForQM')},pageMessageVF" oncomplete="queueMemResultSize='{!queueMemResultSize}'; queueId='{!queueId}'; selectedQueueName='{!JSENCODE(selectedQueueName)}';{!IF(queueMemResultSize<=0 && staffResultSize >0,'onLoad();setResultListHeightJS();','renderMemPanel()')}" status="waitMsg"  />
+            <apex:actionFunction action="{!fetchPage}" name="fetchPage" rerender="{!IF(queueMemResultSize<=0 && staffResultSize >0,'genPgBlock,messagePanel','queueMemPanel, paginationbarDivForQM')},pageMessageVF" oncomplete="queueMemResultSize='{!queueMemResultSize}'; queueId='{!queueId}'; selectedQueueName='{!JSENCODE(selectedQueueName)}';{!IF(queueMemResultSize<=0 && staffResultSize >0,'onLoad();setResultListHeightJS();','renderMemPanel()')}" status="waitMsg">
+                <apex:param assignTo="{!pageSize}" name="pageSize" value=""/> 
+                <apex:param assignTo="{!pageSizeForQM}" name="pageSizeForQM" value=""/>
+            </apex:actionFunction>
+            <apex:actionFunction action="{!goToPage}" name="goToPageJS" rerender="{!IF(queueMemResultSize<=0 && staffResultSize >0,'genPgBlock,messagePanel','queueMemPanel, paginationbarDivForQM')},pageMessageVF" oncomplete="queueMemResultSize='{!queueMemResultSize}'; queueId='{!queueId}'; selectedQueueName='{!JSENCODE(selectedQueueName)}';{!IF(queueMemResultSize<=0 && staffResultSize >0,'onLoad();setResultListHeightJS();','renderMemPanel()')}" status="waitMsg">
+                <apex:param assignTo="{!currPage}" name="currPage" value=""/>              
+            </apex:actionFunction>
+            <apex:actionFunction action="{!searchStaffs}" name="searchStaffsJS" rerender="genPgBlock,messagePanel,pageMessageVF" oncomplete=" exceptionOccured='{!exceptionOccured}'; staffResultSize = '{!staffResultSize}';onLoad();setResultListHeightJS();" status="waitMsg">            
+                <apex:param assignTo="{!searchString}" name="searchString" value=""/>
+                <apex:param assignTo="{!pageSize}" name="pageSize" value=""/>    
+            </apex:actionFunction>
+            <apex:actionFunction action="{!searchQueueAndQueueMembers}" name="searchQueue" reRender="queueOutPanel,messagePanel,sizeQueueList,pageMessageVF" oncomplete=" exceptionOccured='{!exceptionOccured}'; isNoRecordFound = '{!isNoRecordFound}'; queueResultSize = '{!queueResultSize}'; onRenderPanel('QUEUE','{!queueResultSize}','','');" status="waitMsg">
+                <apex:param assignTo="{!searchStrForQueue}" name="searchStrForQueue" value=""/>
+                <apex:param assignTo="{!searchFor}" name="searchFor" value=""/>  
+            </apex:actionFunction>
+            <apex:actionFunction action="{!searchQueueAndQueueMembers}" name="searchQueueMembers" reRender="queueMemPanel,messagePanel, paginationbarDivForQM,pageMessageVF" oncomplete="exceptionOccured='{!exceptionOccured}'; isNoRecordFound = '{!isNoRecordFound}'; queueMemResultSize = '{!queueMemResultSize}';  onRenderPanel('QUEUE_MEMBER','{!queueMemResultSize}','{!queueId}','{!JSENCODE(selectedQueueName)}');" status="waitMsg">
+                <apex:param assignTo="{!searchStrForQM}" name="searchStrForQM" value=""/>
+                <apex:param assignTo="{!searchFor}" name="searchFor" value=""/> 
+            </apex:actionFunction>
+            <apex:actionFunction action="{!displayQueueMembers}" name="displayQueueMembers" reRender="queueMemPanel, paginationbarDivForQM,pageMessageVF,renderPageVar" immediate="true" onComplete="exceptionOccured='{!exceptionOccured}'; isNoRecordFound = '{!isNoRecordFound}'; onRenderPanel('QUEUE_MEMBER','{!queueMemResultSize}','{!queueId}','{!JSENCODE(selectedQueueName)}');" status="waitMsg">
+                <apex:param name="qId" value="" assignTo="{!queueId}"/>
+                <apex:param name="qName" value="" assignTo="{!selectedQueueName}"/>
+            </apex:actionFunction>
+            <apex:actionFunction action="{!sortData}" name="sortData" rerender="genPgBlock,messagePanel,renderPageVar,pageMessageVF,queueMemPanel,queueOutPanel,sizeQueueList,paginationbarDivForQM,tableOutputpanel" oncomplete="queueId='{!queueId}'; selectedQueueName='{!JSENCODE(selectedQueueName)}';callOnCompleteSort();" status="waitMsg">            
+                <apex:param assignTo="{!searchString}" name="searchString" value=""/>
+                <apex:param assignTo="{!pageSize}" name="pageSize" value=""/>
+                <apex:param assignTo="{!selectedOwnerType}" name="selectedOwnerType" value=""/> 			
+            </apex:actionFunction>  
+            <apex:actionFunction action="{!resetStaffPage}" name="resetStaffPage" rerender="genPgBlock,messagePanel,renderPageVar,pageMessageVF" oncomplete="onLoad();setResultListHeightJS();" />            
+            
+            
+            <apex:actionstatus id="waitMsg">
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv" id="el_loading" > 
+                        <div class="waitingHolder">
+                            <ul class="d-loading">
+                                <li class="d-loading__stick d-loading__stick_1"></li>
+                                <li class="d-loading__stick d-loading__stick_2"></li>
+                                <li class="d-loading__stick d-loading__stick_3"></li>
+                                <li class="d-loading__stick d-loading__stick_4"></li>
+                                <li class="d-loading__stick d-loading__stick_5"></li>
+                                <li class="d-loading__stick d-loading__stick_6"></li>
+                                <li class="d-loading__stick d-loading__stick_7"></li>
+                                <li class="d-loading__stick d-loading__stick_8"></li>
+                                <li class="d-loading__stick d-loading__stick_9"></li>
+                                <li class="d-loading__stick d-loading__stick_10"></li>
+                                <li class="d-loading__stick d-loading__stick_11"></li>
+                                <li class="d-loading__stick d-loading__stick_12"></li>
+                            </ul>
+                            <div class="waitingDescription">{!JSENCODE($Label.PleaseWait)}</div>
+                        </div>
+                    </div>
+                </apex:facet>
+            </apex:actionstatus>
+                        
+            <apex:outputPanel id="messagePanel" style="display: none;" >            
+                <div class="d-notification d-notification_warning d-notification_content" id="pageMessage"> 
+                    <div class="d-notification__icon d-icon-left-exclamation_circle">
+                    </div>
+                    <div class="d-notification__supporting-text maxWidthNone">
+                        <p class="d-notification__item">
+                            <span><apex:outputLabel value="{!$Label.bmcservicedesk__msgnorecordfoundsearchpage}"/></span>
+                        </p>
+                    </div>
+                </div> 
+            </apex:outputPanel>
+            <div class="d-notification d-notification_error d-notification_content" id="minTwoChar" style="display: none;"> 
+                    <div class="d-notification__icon d-icon-left-exclamation_triangle">
+                    </div>
+                    <div class="d-notification__supporting-text maxWidthNone">
+                        <p class="d-notification__item">
+                            <span><apex:outputLabel value="{!$Label.bmcservicedesk__gserrormsg}"/></span>
+                        </p>
+                    </div>
+            </div>
+			<apex:outputPanel style="display: none;">
+                <apex:pageMessages id="pageMessageVF" />
+            </apex:outputPanel>
+            <div id="jsscripterrorId" style="display:none">
+                <div class="d-notification d-notification_error d-notification_content">
+                    <div class="d-notification__icon d-icon-left-exclamation_triangle"></div>
+                    <div class="d-notification__supporting-text maxWidthNone">
+                        <p class="d-notification__item" id="errorDescId" ></p>
+                    </div>
+                </div>
+            </div> 			
+            <div id='topdiv'>
+                <table style="margin-top: 3px;height: 47px;"  width="100%">  
+                    <tr>
+                        <td id="suggestedLabel">
+                               <apex:outputLabel id="suggestedLbl" value="{!$Label.bmcservicedesk__suggested}" styleClass="suggestedLabelClass" style="display: none;" for="selectOwnerType"></apex:outputLabel>
+                               <apex:outputPanel id="infoValueQueue" rendered="{!IF(ownerType=='QUEUE' || ownerType=='STAFF' ,true,false)}"> 
+                                    <apex:outputLabel value="{!pageTitle}" id="pageBlockTitle" styleclass="pageTitle"></apex:outputLabel> 
+                                    <apex:outputLink id="infoIcon" value="#" title="{!$Label.bmcservicedesk__lblintegrateduiinfo}" style="display:none;" styleClass="Informationclass"><img height="17" width="17" src="{!$Resource.BMCRFSDEFStyles}/Images/shape@2x.png" style="vertical-align:middle;margin-left: 10px;    margin-top: -2px;"/></apex:outputLink> 
+                               </apex:outputPanel>
+                                
+                        </td>
+                        <td id="separatorTd">
+                            <apex:outputPanel rendered="{!IF(suggestObjectName == 'Suggested_Owner_Mapping__c',true,false)}">
+                                <div id="separatorDiv" style="display: none;"> 
+                                    <a class="divider"> </a>
+                                </div>
+                            </apex:outputPanel>
+                        </td>
+                        <td >
+                            <apex:outputPanel rendered="{!IF(ownerType=='STAFF'|| ownerType=='QUEUE' ,false,true)}">
+                                <div id="radioButtonDiv" style="display: none;">
+                                    <div style="float:left;padding-left: 10px;" >
+                                        <label class="rf-filter-radio">{!$Label.IncidentsStaff}
+                                          <input type="radio" id="staffRdBtn" value="STAFF" onclick="hideAllErrorMessage();displayPanels('STAFF','');setResultListHeightJS();"  name="selectOwnerType"></input>
+                                          <span class="rf-radio" ></span>
+                                        </label>
+                                    </div>
+                                    <div style="float:left;padding-left: 23px;" >
+                                         <label class="rf-filter-radio">{!$Label.Queue}
+                                          <input type="radio" id="queueRdBtn"  value="QUEUE" name="selectOwnerType" onclick="hideAllErrorMessage();displayPanels('QUEUE','');setResultListHeightJS();" ></input>
+                                          <span class="rf-radio" ></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                       
+                        </td>
+                        <td id="staffnqueueText" >
+                                <div id="staffDiv" style="display:{!if (ownerType=='STAFF' ,'block','none')};margin-left: 7px;float: right;margin-right: 8px;}">
+                                    <span class="searchtext-input-wrapper">
+                                        <a title="Search" class="rf-icon-search" onclick="searchStaff();" ></a> 
+                                        <input type="text" id="searchField" value="{!searchString}" class="searchText" autocomplete="off" size="20" placeholder="{!JSENCODE($Label.SSSearch)}" style="border: 0px;" onkeyup="return searchOnKeyPress(event,'STAFF',this)" />
+                                        <a title="Clear" id="clearLink" class="rf-icon-cross"  onclick="clearText('STAFF');"></a>
+                                    </span>
+                                    <span class="divider"></span>
+                                    <input type="button" id="goBtn" value="{!$Label.GO}" Class="bmc-btn-primary" onclick="searchStaff();" style="margin-left: 10px;" />
+                                </div>
+                                <div id="queueDiv" style="display: none;margin-left: 7px;float: right;margin-right: 8px;">
+                                    <span class="searchtext-input-wrapper">
+                                        <a title="goQueueBtn" class="rf-icon-search" onclick="searchQueueAndQueueMembersJS('QUEUE');" ></a> 
+                                        <input type="text" id="searchQueueTxtField" value="{!searchStrForQueue}" class="searchText" autocomplete="off" size="20" placeholder="{!JSENCODE($Label.searchqueue)}" style="border: 0px;" onkeyup="return searchOnKeyPress(event,'QUEUE',this)" />
+                                        <a title="Clear" id="clearQueueLink" class="rf-icon-cross"  onclick="clearText('QUEUE');"></a>
+                                    </span>
+                                    <span class="divider"></span>
+                                    <input type="button" id="goBtnQueu" value="{!$Label.GO}" Class="bmc-btn-primary" onclick="searchQueueAndQueueMembersJS('QUEUE');" style="margin-left: 10px;" />
+                                </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <apex:pageBlock id="genPgBlock">
+                <apex:outputPanel id="lookupFilterId" rendered="{!isOptionalFilter}" >
+                    <table  width="100%" >
+                     <tr>
+                        <td  class="LookupFilterTD">
+                            <apex:outputPanel rendered="{!showAllRecordsLink}">
+                                {!$Label.ShowAllResultsMsg}
+                                <a style="padding-left:10px;" href="javascript:toggleFilter(true)">{!$Label.ShowAllResultsLink}</a>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(showAllRecordsLink)}">
+                            {!$Label.ReapplyCriteriaMsg}
+                            <a style="padding-left:10px;" href="javascript:toggleFilter(false)">{!$Label.ReapplyCriteriaLink}</a>
+                            </apex:outputPanel>
+                        </td>   
+                     </tr>  
+                    </table>
+               </apex:outputPanel>  
+               <apex:outputPanel rendered="{!IF(ownerType=='QUEUE' || ownerType=='STAFF' ,false,true)}">
+                    <div id="seperateDiv" class="fullDivider" style="display: none;"></div>
+                    <apex:outputLabel value="{!pageTitle}" id="pageBlockTitle" styleclass="pageTitle"></apex:outputLabel>
+                </apex:outputPanel>
+                <apex:outputPanel id="tableOutputpanel" layout="block" styleclass="container" style="overflow:auto;display:none;background: white;">
+                   <apex:pageBlockTable id="thepageBlockTable" value="{!suggestedList}" var="s" width="100%">                        
+                        <apex:column width="25%" >
+                            <apex:facet name="header"> 
+                                <apex:commandLink onclick="sortDataJSFunc('TEMPLATE');" value="{!firstColumnName}" id="templateSort" oncomplete="null" styleClass="headerRow" > 
+                                        <apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpression=='Name' && sortDirection=='ASC'}">&#9650;</apex:outputPanel>
+                                        <apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpression=='Name' && sortDirection!='ASC'}">&#9660;</apex:outputPanel>
+                                </apex:commandLink>
+                            </apex:facet>                       
+                            <a class="" onclick="updateParentObject2('{!s.sObj.Id}')" href="#">{!s.sName}</a>
+                        </apex:column>
+                        <apex:repeat value="{!dynamicFields}" var="f">                  
+                            <apex:column value="{!s.sObj[f]}" />  
+                        </apex:repeat>    
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                
+                <apex:outputPanel id="genOutPanel" layout="block" style="overflow:auto;display:none;background: white;">
+                    <apex:pageBlockTable id="genBlockTable" value="{!suggestedList}" var="s">
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:commandLink onclick="sortDataJSFunc('STAFF');" value="{!firstUserColumnName}" id="staffSort" oncomplete="null" styleClass="headerRow" > 
+                                        <apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpression=='Name' && sortDirection=='ASC'}">&#9650;</apex:outputPanel>
+                                        <apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpression=='Name' && sortDirection!='ASC'}">&#9660;</apex:outputPanel>
+                                </apex:commandLink>                    
+                            </apex:facet>
+                            <a class="" onclick="assignSuggestedOwnerJS('STAFF','{!s.sObj.Id}','{!JSENCODE(s.sName)}',{!s.isOutOfOffice})" href="#">{!s.sName}</a>
+
+                        </apex:column>
+                        <apex:repeat value="{!dynamicUserFields}" var="f">
+
+                            <apex:column value="{!s.sObj[f]}" ondblclick="assignSuggestedOwnerJS('STAFF','{!s.sObj.Id}','{!JSENCODE(s.sName)}',{!s.isOutOfOffice})" rendered="{!$ObjectType.User.fields[f].accessible}"></apex:column> 
+                        </apex:repeat>    
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                <apex:outputPanel id="queueOutPanel" layout="block" style="overflow:auto;display:none;background: white;">
+                    <apex:pageBlockTable id="queueBlockTable" value="{!queueList}" var="queueRec" width="100%">
+                        <apex:actionSupport event="onRowClick" action="{!displayQueueMembers}" reRender="queueMemPanel" immediate="true" onsubmit="highlightSelectedQueue(this,true);" onComplete="exceptionOccured='{!exceptionOccured}'; isNoRecordFound = '{!isNoRecordFound}'; onRenderPanel('QUEUE_MEMBER','{!queueMemResultSize}','{!queueId}','{!JSENCODE(selectedQueueName)}');" status="waitMsg">
+                            <apex:param name="qId" value="{!queueRec.QueueId}" assignTo="{!queueId}"/>
+                            <apex:param name="qName" value="{!JSENCODE(queueRec['Queue.Name'])}" assignTo="{!selectedQueueName}"/>
+                        </apex:actionSupport>
+                        <apex:column onclick="disableRadioBtns(true);" width="45%">
+                            <apex:facet name="header"> 
+								<apex:commandLink onclick="sortDataJSFunc('QUEUE');" value="{!queueFirstColumnName}" id="queueSort" oncomplete="null" styleClass="headerRow" > 
+                                        <apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpressionQueue=='Name' && sortDirectionQueue=='ASC'}">&#9650;</apex:outputPanel>
+                                        <apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpressionQueue=='Name' && sortDirectionQueue!='ASC'}">&#9660;</apex:outputPanel>
+                                </apex:commandLink>
+                            </apex:facet>
+                            <a class="" onclick="handleQueueSelection(event);assignSuggestedOwnerJS('QUEUE','{!queueRec.QueueId}','{!JSENCODE(queueRec['Queue.Name'])}')" href="#">{!queueRec['Queue.Name']}</a>
+                        </apex:column>
+                        <apex:column headerValue="{!viewLable+' '+queueLastColumnName}" headerClass="searchClass" width="20%">
+                            
+                            <a href="#" onclick="highlightSelectedQueue(this,false); displayQueueMembers('{!queueRec.QueueId}', '{!JSENCODE(queueRec['Queue.Name'])}');clearText('VIEW_QM')"><img src="{!$Resource.BMCRFSDEFStyles}/Images/staff_icon_24.png" height="17" width="17" title="{!viewLable}"></img></a>
+                        </apex:column>
+                        <apex:column value="{!queueRec['Queue.Email']}"  width="35%" ondblclick="assignSuggestedOwnerJS('QUEUE', '{!queueRec['QueueId']}','{!JSENCODE(queueRec['Queue.Name'])}')" ></apex:column>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                 &nbsp;&nbsp;  
+                <apex:outputPanel id="queueMemHeaderPanel" style="margin-top:25px;margin-bottom: 20px;display:none;">
+                    <apex:outputLabel id="queueMemHeader" value="" ></apex:outputLabel>
+                    <apex:outputPanel id="searchQMPanel" style="float:right; margin-top:-10px">
+                        <table id='searchQMBlock'>
+                            <tr>
+                                <td style="padding-left:15px; display:{!if (ownerType=='OWNER','block','none')}">
+                                </td>
+                                <td>
+                                    <div style="margin-left: 10px;">
+                                        <span class="searchtext-input-wrapper">
+                                            <a title="goQueueBtn" class="rf-icon-search" onclick="searchQueueAndQueueMembersJS('QUEUE_MEMBER');" ></a> 
+                                            <input type="text" id="searchQMTxtField" value="{!searchStrForQM}" class="searchText" autocomplete="off" size="20" placeholder="{!JSENCODE($Label.searchmember)}" style="border: 0px;" onkeyup="return searchOnKeyPress(event,'QUEUE_MEMBER',this)" />
+                                            <a title="Clear" id="clearQMLink" class="rf-icon-cross"  onclick="clearText('QUEUE_MEMBER');"></a>
+                                        </span>
+                                        <span class="divider"></span>
+                                        <input type="button" id="goBtnQueMem" value="{!$Label.GO}" Class="bmc-btn-primary" onclick="searchQueueAndQueueMembersJS('QUEUE_MEMBER');" style="margin-left: 10px;" />
+                                    </div>
+                                </td>   
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                    <apex:outputPanel id="queueMemMsgPanel" style="display:none;">
+                        <div class="d-notification d-notification_warning d-notification_content" id="pageMessageQM" > 
+                            <div class="d-notification__icon d-icon-left-exclamation_circle">
+                            </div>
+                            <div class="d-notification__supporting-text maxWidthNone">
+                                <p class="d-notification__item">
+                                    <span><apex:outputLabel value="{!$Label.bmcservicedesk__msgnorecordfoundsearchpage}"/></span>
+                                </p>
+                            </div>
+                        </div>  
+                    </apex:outputPanel>
+                    <div class="d-notification d-notification_error d-notification_content" id="minTwoCharQM" style="display: none;"> 
+                        <div class="d-notification__icon d-icon-left-exclamation_triangle">
+                        </div>
+                        <div class="d-notification__supporting-text maxWidthNone">
+                            <p class="d-notification__item">
+                                <span><apex:outputLabel value="{!$Label.bmcservicedesk__gserrormsg}"/></span>
+                            </p>
+                        </div>
+                    </div>
+                </apex:outputPanel>
+                <apex:outputPanel id="queueMemPanel" layout="block" style="overflow:auto; display:none;border-width: 1px;"> 
+                    <apex:pageBlockTable id="queueMemBlockTable" value="{!queueMemList}" var="qMemRec" >
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:commandLink onclick="sortDataJSFunc('QUEUEMEMBER');" value="{!firstUserColumnName}" id="queueMemSort" oncomplete="null" styleClass="headerRow" > 
+                                        <apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpressionQM=='Name' && sortDirectionQM=='ASC'}">&#9650;</apex:outputPanel>
+                                        <apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpressionQM=='Name' && sortDirectionQM!='ASC'}">&#9660;</apex:outputPanel>
+                                </apex:commandLink>
+                            </apex:facet>                       
+                            <a class="" onclick="assignSuggestedOwnerJS('STAFF','{!qMemRec.sObj.Id}','{!JSENCODE(qMemRec.sName)}',{!qMemRec.isOutOfOffice})" href="#">{!qMemRec.sName}</a>
+                        </apex:column>
+                        <apex:repeat value="{!dynamicUserFields}" var="f">                  
+                            <apex:column value="{!qMemRec.sObj[f]}" ondblclick="assignSuggestedOwnerJS('STAFF','{!qMemRec.sObj.Id}','{!JSENCODE(qMemRec.sName)}',{!qMemRec.isOutOfOffice})" rendered="{!$ObjectType.User.fields[f].accessible}"></apex:column>  
+                        </apex:repeat>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                
+                &nbsp;&nbsp;
+                
+                    
+                <apex:outputPanel id="paginationbarDivForQM" style="display:{!if (queueMemResultSize == 0,'none','block')}">
+                        <div id="innertoolbar1"  class="padding5px border1px" >  
+                            <div id="paginationBar">
+                                <span >
+                                    <apex:outputPanel rendered="{!IF(hasPrevious == true,true,false)}">
+                                    <span class="d-icon-angles_left firstPageEnableClass" title="{!$Label.FirstPage}" onClick="first();"/>&nbsp; 
+                                        <span class="d-icon-angle_left previousPageEnableClass" title="{!$Label.PreviousPage}" onClick="return previous();"/>&nbsp;&nbsp;&nbsp;&nbsp; 
+                                        <span class="paginationSeperator"/>&nbsp;&nbsp; 
+                                    </apex:outputPanel>
+                                    
+                                    <apex:outputPanel rendered="{!IF(hasPrevious == false,true,false)}">
+                                            <span class="d-icon-angles_left firstPageDisableClass" title="{!$Label.FirstPage}"/>&nbsp; 
+                                                    <span class="d-icon-angle_left previousPageDisableClass" title="{!$Label.PreviousPage}"/>&nbsp;&nbsp;&nbsp;&nbsp; 
+                                                    <span class="paginationSeperator"/>&nbsp;&nbsp;                                                                                              
+                                    </apex:outputPanel>
+                                </span >
+                            
+                                 &nbsp;&nbsp;         
+                                 <span  >                
+                                     {!$Label.Page} &nbsp; <input id="currpageForQM" type="text" name="currentpageForQM" value="{!currentpageForQM}" maxlength="4" size="1" class="left2pxPadding" onkeypress="return goOnKeyPress(event,this.value)"/> &nbsp; {!$Label.Of} &nbsp; {!totalNumberOfPagesForQM}
+                                 </span >    
+                                &nbsp;&nbsp;                    
+                            
+                                <span>
+                                      <apex:outputPanel rendered="{!IF(hasNext == true,true,false)}">
+                                               &nbsp;&nbsp;<span class="paginationSeperator"/>&nbsp;&nbsp;&nbsp;&nbsp;                                                                                                                                                                 
+                                              <span class="d-icon-angle_right nextPageEnableClass" title="{!$Label.NextPage}" onClick="return next();"/>&nbsp;
+                                              <span class="d-icon-angles_right lastPageEnableClass" title="{!$Label.LastPage}"   onClick="last();"/>&nbsp;&nbsp;  
+                                      </apex:outputPanel>                  
+                                      
+                                      <apex:outputPanel rendered="{!IF(hasNext == false,true,false)}">
+                                              &nbsp;&nbsp;<span class="paginationSeperator"/>&nbsp;&nbsp;&nbsp;&nbsp;
+                                              <span class="d-icon-angle_right nextPageDisableClass" title="{!$Label.NextPage}" />&nbsp;
+                                              <span class="d-icon-angles_right lastPageDisableClass" title="{!$Label.LastPage}" />&nbsp;&nbsp;
+                                      </apex:outputPanel>
+                                </span> 
+                            </div>
+                            
+                            <div id="recordCount">    
+                                <apex:outputPanel rendered="{!IF(queueMemResultSize > 0 && hasPrevious == false &&  hasNext == true ,true,false)}">             
+                                            <span >
+                                       {!$Label.records} 1 - {!pageSizeForQM} {!$Label.of} {!totalqueueMemResultSize}                                       
+                                       </span>
+                                 </apex:outputPanel>
+
+                                 <apex:outputPanel rendered="{!IF(queueMemResultSize > 0 && hasPrevious == false &&  hasNext == false,true,false)}">               
+                                            <span >
+                                       {!$Label.records} 1 - {!totalqueueMemResultSize} {!$Label.of} {!totalqueueMemResultSize}                                       
+                                       </span>
+                                 </apex:outputPanel>
+                                
+                                <apex:outputPanel rendered="{!IF(queueMemResultSize > 0 && hasNext == true && hasPrevious == true,true,false)}">            
+                                            <span >
+                                       {!$Label.records} {!((currentpageForQM-1) * pageSizeForQM)+1} - {!(currentpageForQM * pageSizeForQM)} {!$Label.of} {!totalqueueMemResultSize}                                       
+                                       </span>
+                                 </apex:outputPanel>
+                                 <apex:outputPanel rendered="{!IF(queueMemResultSize > 0 && hasNext == false && hasPrevious == true,true,false)}">               
+                                            <span >
+                                        {!$Label.records} {!((currentpageForQM-1) * pageSizeForQM)+1} - {!totalqueueMemResultSize} {!$Label.of} {!totalqueueMemResultSize}                                       
+                                       </span>
+                                 </apex:outputPanel>
+                                 <!-- <apex:outputPanel rendered="{!IF(queueMemResultSize == 0,true,false)}">           
+                                            <span >
+                                       {!$Label.cmdblistviewcustnorecordsfound}                           
+                                       </span>
+                                 </apex:outputPanel> -->
+                            </div>  
+                                 
+                            <div id="recordPerPage">
+                                {!$Label.records_per_page}&nbsp;
+                                <apex:selectList id="choosePageSizeForQM" value="{!pageSizeForQM}" size="1" onchange="fetchPageJS(0,this.value)" >
+                                    <apex:selectOptions value="{!availablePageSizes}"/>
+                                </apex:selectList>                    
+                            </div>
+                        </div>
+                </apex:outputPanel>
+					<apex:outputPanel rendered="{!IF(ownerType != 'QUEUE',true,false)}">
+						<div style="display:{!if (staffResultSize == 0,'none','block')};">
+	                        <div id="innertoolbar"  class="padding5px border1px" style="display: none;">  
+	                            <div id="paginationBar" style="float: left;">
+	                                <span >
+	                                    <apex:outputPanel rendered="{!IF(hasPrevious == true,true,false)}">
+	                                    <span class="d-icon-angles_left firstPageEnableClass" title="{!$Label.FirstPage}" onClick="first();"/>&nbsp; 
+	                                        <span class="d-icon-angle_left previousPageEnableClass" title="{!$Label.PreviousPage}" onClick="return previous();"/>&nbsp;&nbsp;&nbsp;&nbsp; 
+	                                        <span class="paginationSeperator"/>&nbsp;&nbsp; 
+	                                    </apex:outputPanel>
+										
+										<apex:outputPanel rendered="{!IF(hasPrevious == false,true,false)}">
+	                                            <span class="d-icon-angles_left firstPageDisableClass" title="{!$Label.FirstPage}"/>&nbsp; 
+	                                                    <span class="d-icon-angle_left previousPageDisableClass" title="{!$Label.PreviousPage}"/>&nbsp;&nbsp;&nbsp;&nbsp; 
+	                                                    <span class="paginationSeperator"/>&nbsp;&nbsp;                                                                                              
+	                                    </apex:outputPanel>
+	                                </span >
+	                            
+	                                 &nbsp;&nbsp;         
+	                                 <span  >                
+	                                     {!$Label.Page} &nbsp; <input id="currPage" type="text" name="currentpage" value="{!currentpage}" maxlength="4" size="1" class="left2pxPadding" onkeypress="return goOnKeyPress(event,this.value)"/> &nbsp; {!$Label.Of} &nbsp; {!totalNumberOfPages}
+	                                 </span >    
+	                                &nbsp;&nbsp;                    
+	                            
+	                              <span>
+	                                  <apex:outputPanel rendered="{!IF(hasNext == true,true,false)}">
+	                                           &nbsp;&nbsp;<span class="paginationSeperator"/>&nbsp;&nbsp;&nbsp;&nbsp;                                                                                                                                                                 
+	                                          <span class="d-icon-angle_right nextPageEnableClass" title="{!$Label.NextPage}" onClick="return next();"/>&nbsp;
+	                                          <span class="d-icon-angles_right lastPageEnableClass" title="{!$Label.LastPage}"   onClick="last();"/>&nbsp;&nbsp;  
+	                                  </apex:outputPanel>                  
+	                                  
+	                                  <apex:outputPanel rendered="{!IF(hasNext == false,true,false)}">
+	                                          &nbsp;&nbsp;<span class="paginationSeperator"/>&nbsp;&nbsp;&nbsp;&nbsp;
+	                                          <span class="d-icon-angle_right nextPageDisableClass" title="{!$Label.NextPage}" />&nbsp;
+	                                          <span class="d-icon-angles_right lastPageDisableClass" title="{!$Label.LastPage}" />&nbsp;&nbsp;
+	                                  </apex:outputPanel>
+	                                  
+	                              </span> 
+	                            </div>
+	                            
+		                            <div id="recordCount" style="float: left;">    
+		                                <apex:outputPanel rendered="{!IF(staffResultSize > 0 && hasPrevious == false &&  hasNext == true ,true,false)}">             
+		                                            <span >
+		                                       {!$Label.records} 1 - {!pageSize} {!$Label.of} {!totalstaffResultSize}                                       
+		                                       </span>
+		                                 </apex:outputPanel>
+		
+		                                 <apex:outputPanel rendered="{!IF(staffResultSize > 0 && hasPrevious == false &&  hasNext == false,true,false)}">               
+		                                            <span >
+		                                       {!$Label.records} 1 - {!totalstaffResultSize} {!$Label.of} {!totalstaffResultSize}                                       
+		                                       </span>
+		                                 </apex:outputPanel>
+		                                
+		                                <apex:outputPanel rendered="{!IF(staffResultSize > 0 && hasNext == true && hasPrevious == true,true,false)}">            
+		                                            <span >
+		                                       {!$Label.records} {!((currentpage-1) * pageSize)+1} - {!(currentpage * pageSize)} {!$Label.of} {!totalstaffResultSize}                                       
+		                                       </span>
+		                                 </apex:outputPanel>
+		                                 <apex:outputPanel rendered="{!IF(staffResultSize > 0 && hasNext == false && hasPrevious == true,true,false)}">               
+		                                            <span >
+		                                        {!$Label.records} {!((currentpage-1) * pageSize)+1} - {!totalstaffResultSize} {!$Label.of} {!totalstaffResultSize}                                       
+		                                       </span>
+		                                 </apex:outputPanel>
+		                                 <!-- <apex:outputPanel rendered="{!IF(staffResultSize == 0,true,false)}">           
+		                                            <span >
+		                                       {!$Label.cmdblistviewcustnorecordsfound}                           
+		                                       </span>
+		                                 </apex:outputPanel> -->
+		                            </div>  
+	                                  
+	                            <div id="recordPerPage" style="float: right;">
+	                                {!$Label.records_per_page}&nbsp;
+	                                <apex:selectList id="choosePageSize" value="{!pageSize}" size="1" onchange="fetchPageJS(this.value,0)" >
+	                                    <apex:selectOptions value="{!availablePageSizes}"/>
+	                                </apex:selectList>                    
+	                            </div>
+	                        </div>
+							</div>
+	                </apex:outputPanel>
+					</apex:pageBlock>
+			</apex:form>
+        </div>
+    </body>
+     <apex:outputPanel id="renderPageVar">
+     <script>
+     var staffResultSize = '{!staffResultSize}';
+     var resultSetSize = '{!resultSetSize}';
+     var queueMemPagination = '{!queueMemPagination}';
+     </script>
+     </apex:outputPanel>
+    <script>
+        var queueSelected = false;
+        var parentHandlerPrevented = false;
+        window.document.title = '{!JSENCODE(windowTitle)}';
+        var parentObjectId = '{!JSENCODE(parentObjectId)}';   
+        var parentObjectName = '{!JSENCODE(parentObjectName)}';
+        var suggestObjectName = '{!JSENCODE(suggestObjectName)}';
+        var param = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.tableOutputpanel)}';
+        var isCalledfromConsole='{!JSENCODE($CurrentPage.parameters.iscalledFromConsole)}';
+        var isMultiEdit='{!JSENCODE($CurrentPage.parameters.isMultiEdit)}';
+        var isForFilterComponent='{!JSENCODE($CurrentPage.parameters.isFilterCmp)}';
+        function updateParentObject2(resultRowId){                        
+            Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.SuggestionPageController.updateParentObject}',resultRowId,parentObjectId,parentObjectName,suggestObjectName,closeWindow);
+        }          
+        var fromInciOwnerLkup = '{!fromInciOwnerLkup}';
+        var titleId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.pageBlockTitle)}';
+        var titleIdQueue = '{!JSENCODE($Component.suggestObjectForm.pageBlockTitle)}';
+        var infoIcon = '{!JSENCODE($Component.suggestObjectForm.infoIcon)}';
+        var genPanelId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.genOutPanel)}';
+        var queuePanelId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.queueOutPanel)}';
+        var queueMemPanelId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.queueMemPanel)}';
+        var mainPageBlockId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock)}';
+        var queueResultSize = '{!queueResultSize}';
+        var queueMemResultSize = '{!queueMemResultSize}';
+        var queueId = '{!queueId}';
+        var selectedQueueName = '{!JSENCODE(selectedQueueName)}';
+        var isNoRecordFound = '{!isNoRecordFound}';
+        var queueMemberLabel = '{!JSENCODE(queueLastColumnName)}';
+
+        var btnPanelId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.buttonPanel)}';
+        var searchResultLabel = '{!JSENCODE($Label.searchResult)}';
+        var noRecsFoundMsg = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+        
+        var messagePanelId = '{!JSENCODE($Component.suggestObjectForm.messagePanel)}';
+        var suggestedLblId = '{!JSENCODE($Component.suggestObjectForm.suggestedLbl)}';
+        var searchFldId = '{!JSENCODE('searchField')}';
+        var pageSizeId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.choosePageSize)}';  
+        var pageSizeQMId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.choosePageSizeForQM)}';  
+        var queuMemMsgPanelId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.queueMemMsgPanel)}';
+        var queuMemMsgId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.queueMemMsg)}';
+        var queueMemHeaderPanelId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.queueMemHeaderPanel)}';
+        var queueMemHeaderId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.queueMemHeader)}';
+        var lookupFilterId= '{!JSENCODE($Component.suggestObjectForm.genPgBlock.lookupFilterId)}'; 
+        var searchQueuePanelId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.searchQueuePanel)}';
+        var paginationbarDivForQMId = '{!JSENCODE($Component.suggestObjectForm.genPgBlock.paginationbarDivForQM)}';
+        var searchQueueTxtId = '{!JSENCODE('searchQueueTxtField')}';
+        var searchQMTxtId = '{!JSENCODE('searchQMTxtField')}';
+        var queueDivID = '{!JSENCODE('queueDiv')}';
+        var staffDivID = '{!JSENCODE('staffDiv')}';
+        var staffLabel = '{!JSENCODE($Label.IncidentsStaff)}';
+        var queueLabel = '{!JSENCODE($Label.Queue)}';      
+        var ownerType = '{!JSENCODE(ownerType)}';
+        var noQMemMsg = '{!JSENCODE($Label.OWNER_NoMemberError)}';
+        var memsOfQueueMsg = '{!JSENCODE($Label.OWNER_QueueMember)}';
+        var exceptionOccured = 'false';
+        var pageMessageId='{!JSENCODE($Component.suggestObjectForm.pageMessageVF)}';
+        var lblNoRecordMsg = '{!JSENCODE($Label.Msgnorecordfoundsearchpage)}';
+        
+        
+        if(suggestObjectName == 'Suggested_Owner_Mapping__c' || ownerType == 'STAFF' || ownerType == 'OWNER' || ownerType == 'QUEUE'){
+            var msgPanel = document.getElementById(messagePanelId);
+            if(typeof(msgPanel) != 'undefined' && msgPanel != null)
+                msgPanel.style.display = 'none'; 
+        }
+        function handleQueueSelection(eventObj){
+            try{
+                if (!eventObj) var eventObj = window.event;
+                eventObj.cancelBubble = true;
+                if(eventObj.stopPropagation) eventObj.stopPropagation();
+                parentHandlerPrevented = true;
+            }
+            catch(e){}  
+        }
+        function renderMemPanel(){
+            onRenderPanel('QUEUE_MEMBER', queueMemResultSize, queueId, selectedQueueName);
+        }
+        
+        function assignSuggestedOwnerJS(ownerType, resultRowId, staffName, isOutOfOffice){
+            if(isOutOfOffice){
+                var conf = confirm('{!JSENCODE($Label.OutOfOfficeConfirmationMsg)}');
+                if(!conf)
+                    return;
+            }
+            if(typeof(fromInciOwnerLkup) != 'undefined' && fromInciOwnerLkup != null && fromInciOwnerLkup == 'true' 
+                && typeof(ownerType) != 'undefined' && ownerType != null && ownerType != ''){
+                if(resultRowId !=''){
+                    captureStaffQueueId(ownerType, resultRowId, staffName);
+                }
+                if(isForFilterComponent == 'true'){
+                    window.opener.assignOwnerfieldsForFilter(suggestedQueueId, suggestedQueueName, suggestedStaffId, suggestedStaffName);
+                    window.close();
+                }else{
+                    var opener = window.dialogArguments; 
+                    if(opener != null && typeof(opener) != 'undefined') 
+                          opener.assignOwnerfields(suggestedQueueId, suggestedQueueName, suggestedStaffId, suggestedStaffName);
+                    else if(isMultiEdit == 'true'){
+                        if(typeof(window.parent) != 'undefined' && window.parent != null){
+                             window.parent.assignOwnerfields(suggestedQueueId, suggestedQueueName, suggestedStaffId, suggestedStaffName);
+                             window.parent.closePopup();
+                        }
+                    }
+                    else
+                    window.opener.assignOwnerfields(suggestedQueueId, suggestedQueueName, suggestedStaffId, suggestedStaffName);
+                    if(ownerType!='QUEUE' || parentHandlerPrevented){
+                        window.close();
+                    }
+                }
+                queueSelected = true;
+            }
+            else{
+                captureStaffQueueId(ownerType, resultRowId, '');
+                Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.SuggestionPageController.assignSuggestedOwner}', suggestedStaffId, suggestedQueueId, parentObjectId,ownerType,
+                function(result, event){
+                    if (event.status) {
+                        closeWindow();
+                    } else if (event.type === 'exception') {
+                        alert(event.message);
+                    }
+                });
+            }
+        }
+    </script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+    <style type="text/css">
+        .headerRow{
+            font-size: 12px !important;
+            font-family: 'Salesforce Sans',Arial,sans-serif !important;
+            color: #333333 !important;
+            height: 20px !important;
+            background-color: #f2f2f2 !important;
+        }
+
+    </style>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/SuggestionPage.js"/>                 
+</apex:page>

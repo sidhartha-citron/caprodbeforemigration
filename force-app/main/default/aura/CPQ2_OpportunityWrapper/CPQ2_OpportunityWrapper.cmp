@@ -1,0 +1,42 @@
+<aura:component extends="c:US2_BaseForm"
+                controller="CPQ2_OpportunityWrapperController"
+                implements="force:appHostable,lightning:actionOverride,flexipage:availableForRecordHome,force:lightningQuickActionWithoutHeader,lightning:isUrlAddressable,force:hasRecordId,lightning:hasPageReference,force:hasSObjectName"
+                description="CPQ2_OpportunityWrapper">
+
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+    <aura:handler name="change" value="{!v.pageReference}" action="{!c.reInit}" />
+    <aura:attribute name="sObjectName" type="String" />
+    <aura:attribute name="targetRecordId" type="Id" default="" />
+    <aura:attribute name="isQuoteSyncCheckFailed" type="Boolean" default="false" />
+    <!-- <c:cpq_searchproduct recordId="{!v.recordId}" fromQuickAction="true" onquickactionclose="{!c.handleClose}"></c:visitationReport> -->
+
+    <aura:if isTrue="{!and(not(empty(v.targetRecordId)), not(v.isQuoteSyncCheckFailed))}">
+        <c:cpq2OpportunityScreen recordId="{!v.targetRecordId}" returnRecordId="{!v.recordId}"></c:cpq2OpportunityScreen>
+        <!-- <aura:set attribute="else">
+            <lightning:card>
+                <div class="slds-m-bottom_small slds-align_absolute-center">
+                    You must first Sync the Quote in order to edit line items.
+                </div>
+    
+                <div class="slds-m-bottom_small slds-align_absolute-center">
+                    <lightning:button value="Back" label="Back" class="slds-button slds-button_neutral" onclick="{!c.handleBack}"/>
+                </div>
+            </lightning:card>
+        </aura:set> -->
+    </aura:if>
+
+    <aura:if isTrue="{!and(not(empty(v.targetRecordId)), v.isQuoteSyncCheckFailed)}">
+        <lightning:card>
+            <div class="slds-m-bottom_small slds-align_absolute-center">
+                You must first Sync the Quote in order to edit line items.
+            </div>
+
+            <div class="slds-m-bottom_small slds-align_absolute-center">
+                <lightning:button value="Back" label="Back" class="slds-button slds-button_neutral" onclick="{!c.handleBack}"/>
+            </div>
+        </lightning:card>
+    </aura:if>
+    <!-- <aura:if isTrue="{!and(not(empty(v.targetRecordId)), v.isQuoteSynced == true)}">
+        <c:cpq2OpportunityScreen recordId="{!v.targetRecordId}" returnRecordId="{!v.recordId}"></c:cpq2OpportunityScreen>
+    </aura:if> -->
+</aura:component>

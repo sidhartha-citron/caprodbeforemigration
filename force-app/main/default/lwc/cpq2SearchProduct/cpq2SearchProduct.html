@@ -1,0 +1,193 @@
+<template>
+    <div if:true={isLoading}>
+        <lightning-spinner alternative-text={spinnerMessage}></lightning-spinner>
+    </div>
+
+    <div class="slds-grid slds-wrap">
+<!--        <div class="slds-col slds-size_1-of-3 slds-p-top_small">-->
+<!--            <c-soql-picklist -->
+<!--                first-value="All"-->
+<!--                default-value={typeFilter}-->
+<!--                picklist-name="typeFilter"-->
+<!--                object-name="Product_Type__mdt" -->
+<!--                field-label="Type"-->
+<!--                value-field="MasterLabel"-->
+<!--                onfilterchange={customEventHandler}>-->
+<!--            </c-soql-picklist>-->
+<!--        </div>-->
+<!--        <div class="slds-col slds-size_1-of-3 slds-p-horizontal_small slds-p-top_small">-->
+<!--            <c-metadata-pick-list-->
+<!--                first-value="All"-->
+<!--                default-value={categoryFilter}-->
+<!--                picklist-name="categoryFilter"-->
+<!--                object-name="Product2"-->
+<!--                field-name="Product_Category__c"-->
+<!--                onfilterchange={customEventHandler}>-->
+<!--            </c-metadata-pick-list>-->
+<!--        </div>-->
+<!--        <div class="slds-col slds-size_1-of-3 slds-p-top_small">-->
+<!--            <c-metadata-pick-list-->
+<!--                first-value="All"-->
+<!--                default-value={lobFilter}-->
+<!--                picklist-name="lobFilter"-->
+<!--                object-name="Product2"-->
+<!--                field-name="Family"-->
+<!--                onfilterchange={customEventHandler}>-->
+<!--            </c-metadata-pick-list>-->
+<!--        </div>-->
+<!--        <div class="slds-col slds-size_1-of-3 slds-p-top_small">-->
+
+<!--        </div>-->
+        <div class="slds-col slds-size_3-of-3 slds-p-vertical_small">
+            <lightning-layout>
+                <template if:true={showQuantity}>
+                    <lightning-layout-item flexibility="auto, no-grow">
+                        <div class="slds-truncate">
+                            <lightning-input
+                                type="number"
+                                name="quantity"
+                                label="Quantity"
+                                value={quantity}
+                                required
+                                min="1"
+                                onchange={genericOnChange}
+                                variant="label-inline"></lightning-input>
+                        </div> 
+                    </lightning-layout-item>                               
+                </template>
+                <lightning-layout-item flexibility="auto">
+                    <div onkeyup={handleKeyUp}>
+                        <lightning-input
+                            name="searchString"
+                            variant="label-hidden"
+                            label="Product Name"
+                            type="search"
+                            onchange={genericOnChange}
+                        ></lightning-input>
+                    </div>
+                </lightning-layout-item>
+                <lightning-layout-item flexibility="auto, no-grow">
+                    <lightning-button-icon
+                        icon-name="utility:search"
+                        alternative-text="search"
+                        variant="brand"
+                        onclick={handleSearch}
+                    ></lightning-button-icon>
+                </lightning-layout-item>
+            </lightning-layout>
+        </div>
+    </div>
+    <template if:true={resultSubsetList}>
+        
+        
+        <table style="max-width:100%;" class="slds-table slds-no-row-hover slds-table_bordered">
+            <thead>
+                <tr class="slds-text-title_caps">
+                    <th>
+                        <div class="slds-truncate"></div>
+                    </th>
+                    <th>
+                        <div class="slds-truncate">
+                            
+                        </div>
+                    </th>
+                    <th>
+                        <div class="slds-truncate">Product (Item #)</div>
+                    </th>
+<!--                    <th>-->
+<!--                        <div class="slds-truncate">Type</div>-->
+<!--                    </th>-->
+                    <th>
+                        <div class="slds-truncate">List Pr.</div>
+                    </th>
+                    <th>
+                        <div class="slds-truncate">Core List Pr.</div>
+                    </th>
+                    <!--template if:true={showEquipment}>
+                        <th>
+                            <div class="slds-truncate">Qty Avail.</div>
+                        </th>
+                    </template-->
+                    <th>
+                        <div class="slds-truncate">LOB</div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <template for:each={resultSubsetList} for:item="sr">
+                    <tr key={sr.priceBookEntry.Product2Id} class="slds-hint-parent">
+                        <td>
+                            <lightning-button-icon
+                                icon-name="utility:add"
+                                alternative-text="add"
+                                variant="bare"
+                                value={sr.priceBookEntry.Product2Id}
+                                onclick={handleAddProduct}
+                            ></lightning-button-icon>                                                       
+                        </td>
+                        <th>
+                            <img class="search-image" src={sr.priceBookEntry.Product2.Product_Image_URL__c}  alt="Product Image"/>
+                        </th>
+                        <td>
+                            <div class="slds-text-title slds-text-color_default">
+                                <span class="slds-truncate">
+                                    {sr.priceBookEntry.Product2.Name}
+                                </span>
+                                <br />
+                                ({sr.priceBookEntry.Product2.ProductCode})
+                            </div>
+                        </td>
+<!--                        <td>-->
+<!--                            <div class="slds-text-title slds-text-color_default">-->
+<!--                                {sr.priceBookEntry.Product2.Item_Type__c}-->
+<!--                            </div>-->
+<!--                        </td> -->
+                        <td>
+                            <div class="slds-text-title slds-text-color_default">
+                                <lightning-formatted-number
+                                    value={sr.priceBookEntry.UnitPrice}
+                                    format-style="currency"
+                                    currency-code={isoCode}
+                                ></lightning-formatted-number>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="slds-text-title slds-text-color_default">
+                                <template if:true={sr.contractPriceSummary}>
+                                    <lightning-formatted-number
+                                        value={sr.contractPriceSummary.lowestApplicablePrice}
+                                        format-style="currency"
+                                        currency-code={isoCode}
+                                    ></lightning-formatted-number>
+                                </template>
+                            </div>
+                        </td>
+                        <!--template if:true={showEquipment}>
+                            <td>
+                                <template if:true={sr.productItem}>
+                                    <div class="slds-text-title slds-text-color_default">
+                                        {sr.productItem.Quantity_Available__c}
+                                    </div>
+                                </template>
+                            </td>
+                        </template-->
+                        <td>
+                            <div class="slds-text-title slds-text-color_default">
+                                {sr.priceBookEntry.Product2.Family}
+                            </div>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </template>
+    <template if:true={searchResults}>
+        <c-basic-pagination            
+            result={searchResults}
+            onsubsetchanged={handleSubsetChanged}
+            page-size={pageSize}          
+        ></c-basic-pagination>
+    </template>
+
+
+</template>

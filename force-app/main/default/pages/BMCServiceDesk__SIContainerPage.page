@@ -1,0 +1,37 @@
+<apex:page showHeader="false" standardStylesheets="false" controller="BMCServiceDesk.SIPageController">
+<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js" />
+    <apex:form rendered="{!(!isModernUI)}">
+        <c:SupportInformationComponent_v2 objectName="{!JSENCODE(objecttype)}" fKeyValue="{!JSENCODE(objectid)}"  filterClause="{!strFilterClause}" urlForStaticResource="{!$Resource.BMCServiceDesk__SDEFStyles}" instanceID="{!JSENCODE(instanceID)}" siHeight="{!JSENCODE(siHeight)}"/> 
+    </apex:form>
+    <apex:form rendered="{!isModernUI}">
+        <c:SupportInformationComponent_v3 objectName="{!JSENCODE(objecttype)}" fKeyValue="{!JSENCODE(objectid)}"  filterClause="{!strFilterClause}" urlForStaticResource="{!$Resource.BMCServiceDesk__SDEFStyles}" instanceID="{!JSENCODE(instanceID)}" siHeight="{!JSENCODE(siHeight)}" isModernUI="{!isModernUI}"/> 
+     </apex:form>
+	 <style>
+     	.ext-ie .x-menu-item-icon {
+	     	width:65px !important;
+	    }
+     </style>
+     <script>
+	 var StdWorkspacesPage = '{!$Page.StdWorkspacesPage}';
+     function getState(){return {!JSENCODE($CurrentPage.parameters.stateofIncident)};}
+     function getIsInactive(){
+        var paramval = '{!JSENCODE($CurrentPage.parameters.isInactive)}';
+        paramval = paramval.toLowerCase() == 'true' ? true : false;  
+        return paramval; 
+     }
+     function getIsCreatable(){ return {!JSENCODE($CurrentPage.parameters.isChangeCreatable)};}
+        var errormsg = '{!JSENCODE($CurrentPage.parameters.iserror)}';
+        var primaryClientLabel = '{!JSENCODE($Label.PrimaryClient)}';
+        var v = getState();
+        var isInactive =getIsInactive();
+        if((v != null && !v) || (isInactive != null && isInactive)){
+       		if(errormsg =='false' || errormsg ==''){
+           		disableAll();
+           	}
+        }
+		var isChangeCreatable = getIsCreatable();
+        if(isChangeCreatable !=null && !isChangeCreatable){
+            setBoolVar(isChangeCreatable);
+        }
+    </script>
+</apex:page>

@@ -1,0 +1,33 @@
+<div class="support-request-container">
+	<loading-spinner centered="true" if="unifiedCatalogCtrlState.sectionsLoading"></loading-spinner>
+
+	<div  ng-class="{ 'catalog-section': !section.isBanner }"
+		 ng-repeat="section in unifiedCatalogCtrlState.sections" ng-if="section.totalItemCount > 0">
+
+		<div ng-if="!section.isBanner">
+			<header class="catalog-section__header clearfix">
+				<span class="catalog-section__name bold-text" tabindex="0">{{section.title}}</span>
+				<span class="catalog-section__item-count" ng-if="section.totalItemCount">{{section.totalItemCount}}</span>
+				<a class="catalog-section__all-link Branding-Right_Panel-hyperlink " 
+				   ng-if="section.totalItemCount > unifiedCatalogCtrlState.itemsPerSection" 
+				   ng-click="goToState(section.id)" tabindex="0" aria-label="{{selfServiceLabels.all}}">
+					{{ selfServiceLabels.all }} &#10095;
+				</a>
+			</header>
+			<div ng-if="section.totalItemCount==0">
+				{{$root.selfServiceLabels.noResults}}
+			</div>
+			<ul aria-listnavigation id="{{'sectionID' + $index}}" class="catalog-section__items" ng-if="section.totalItemCount" tabindex="0" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'sectionID'+$index)" role="listbox">
+				<unified-catalog-item selectable ng-focus="item.selected = true" ng-blur="item.selected = false" aria-selected="false" tabindex="-1" ng-repeat="item in section.items | limitTo: unifiedCatalogCtrlState.itemsPerSection"
+									  data="item" noc="unifiedCatalogCtrlState.numberOfColumns"
+									  display-style="catalog" role="option">
+				</unified-catalog-item>
+			</ul>
+		</div>
+
+		<unified-catalog-banners ng-if="section.isBanner && section.items.length"
+								 data="section">
+		</unified-catalog-banners>
+
+	</div>
+</div>

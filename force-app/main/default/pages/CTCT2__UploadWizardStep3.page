@@ -1,0 +1,49 @@
+<apex:page sidebar="false" controller="CTCT2.UploadWizardController" tabstyle="Uploads__tab">
+
+    <style>
+		.message {margin-bottom: 10px;} /* Add some space after the pageMessages component. */
+    </style>
+
+    <apex:sectionHeader title="Constant Contact for Salesforce"  subtitle="Upload {!uploadType}s" />
+
+	<apex:pageMessages />
+
+    <apex:form >
+        <apex:pageBlock title="Step 3 of 3">
+            <p>
+                <b>Review and Confirm</b><br/>
+                Review the settings you have chosen before uploading. Click the BACK button to correct any mistakes. Click on the error link to view the error details. 
+            </p>
+
+            <apex:outputPanel layout="block" style="padding: 10px 20px;">
+                <p>
+                    <b>Upload Details</b><br/>
+                    <b>{!recordsCount}</b> {!uploadType}(s) selected<br/>
+                    <b>{!recordsMissingEmailCount}</b> {!uploadType}(s) lacked an email address<br/>
+                    <b>{!recordsOptedOutCount}</b> {!uploadType}(s) have the Salesforce "Email Opt Out" field set<br/>
+                    <b>{!recordsToUploadCount}</b> {!uploadType}(s) will be uploaded
+                </p>
+                <p>
+                    Existing contacts will be updated<br/>
+                    New contacts will be created
+                </p>
+            </apex:outputPanel>
+
+	        <apex:facet name="footer">
+				<apex:panelGroup >
+					<table width="100%">
+						<tr>
+							<td width="25%"><apex:commandButton action="{!cancel}" value="Cancel"/></td>
+							<td width="50%" align="center" class="pbButtonb">
+								<apex:commandButton action="{!step3Back}" value="< Back"/>
+								<apex:commandButton action="{!finish}" value="Finish" disabled="{!recordsToUploadCount < 1}"/>
+							</td>
+							<td width="25%">&nbsp;</td>
+						</tr>
+					</table>
+				</apex:panelGroup>
+			</apex:facet>
+        </apex:pageBlock>
+    </apex:form>
+
+</apex:page>

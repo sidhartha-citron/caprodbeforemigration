@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>X30_Days_Contract_Expiry_Notification</fullName>
+        <description>30 Days Contract Expiry Notification</description>
+        <protected>false</protected>
+        <recipients>
+            <type>accountOwner</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>Contract_Expiring_Notification/X30_Day_Contract_Expiry_Notification</template>
+    </alerts>
+    <alerts>
+        <fullName>X60_Days_Contract_Expiry_Notification</fullName>
+        <description>60 Days Contract Expiry Notification</description>
+        <protected>false</protected>
+        <recipients>
+            <type>accountOwner</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>Contract_Expiring_Notification/X60_Day_Contract_Expiry_Notification</template>
+    </alerts>
+    <rules>
+        <fullName>Contract Expiring Notification</fullName>
+        <active>false</active>
+        <criteriaItems>
+            <field>Contract.EndDate</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <description>This workflow is a time-based workflow that sends notification to the Account Owner 60 days and 30 days before the Contract expires.</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+        <workflowTimeTriggers>
+            <actions>
+                <name>X60_Days_Contract_Expiry_Notification</name>
+                <type>Alert</type>
+            </actions>
+            <offsetFromField>Contract.EndDate</offsetFromField>
+            <timeLength>-60</timeLength>
+            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+        <workflowTimeTriggers>
+            <actions>
+                <name>X30_Days_Contract_Expiry_Notification</name>
+                <type>Alert</type>
+            </actions>
+            <offsetFromField>Contract.EndDate</offsetFromField>
+            <timeLength>-30</timeLength>
+            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+    </rules>
+</Workflow>

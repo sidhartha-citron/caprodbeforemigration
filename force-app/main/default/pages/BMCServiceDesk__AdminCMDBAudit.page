@@ -1,0 +1,168 @@
+<apex:page controller="BMCServiceDesk.AdminCMDBAuditing" id="AdminCMDBAudit" standardstylesheets="false" showheader="false" >
+<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/AdminCMDBAudit.css" type="text/css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+<script>
+	var orgNamespace = 'BMCServiceDesk__';
+    var lblSave = '{!JSENCODE($Label.Save)}';
+    var lblNone = '--{!JSENCODE($Label.None)}--';
+    var lblCIClass = '{!JSENCODE($Label.CIClasses)}';
+    var lblAssetClass = '{!JSENCODE($Label.AssetClasses)}';
+    var lblRefresh = '{!JSENCODE($Label.Refresh)}';
+    var lblHelpText = '{!JSENCODE($Label.CMDBAuditing_Helptext)}';
+    var msg = '{!JSENCODE($Label.SavedSuccessfully)}';
+    var msgHeader = '{!JSENCODE($Label.CMDBAudit)}';
+    var ClassSelection = '';
+    var commaSepfieldsArray;  
+    var Lastcollection;
+    var commaSepfields;
+    var fieldstoHighlight;
+    
+    var serCIclass ='{!serCIclass}';
+    var serAssetclass = '{!serAssetclass}';
+    var Loading = '{!JSENCODE($Label.SSLoading)}...';
+    var Saving = '{!JSENCODE($Label.MobSaving)}';
+    var ExceptionMessage = '{!JSENCODE($Label.ExceptionMessage)}';
+    var msgStr = '';
+    var msgStrlbl = '';
+</script>
+<apex:form id="mainform">
+    <apex:actionFunction name="save" action="{!save}" rerender="msgStringPanel" oncomplete="hideMask();showMsg()" >
+    </apex:actionFunction>
+    <apex:actionFunction name="resetAuditConfiguration" action="{!reset}" rerender="mainPanel" oncomplete="prepareDropdownOnLoad();hideMask();" >
+    </apex:actionFunction>
+    <apex:actionFunction name="fetchFieldstoHighlight" action="{!highlightFieldsByClass}" oncomplete="highlightSelection(commaSepfieldsArray);" rerender="filteredClass">
+        <apex:param assignTo="{!selectedClass}" name="ClassSelection" value=""/>
+        <apex:param assignTo="{!isAsset}" name="isAsset" value=""/>
+    </apex:actionFunction>
+    <table width="100%" id="tableCls" height="100%" >
+        <tr>
+            <td colspan="4">
+        		<div id="stickytoolbar">
+                <div id="divToolbar"/>
+                <div id="SaveMessageDiv" class="msgCls message" style="display:none">
+					<table class="messageTable" cellspacing="0" cellpadding="0" border="0" style="padding: 0px; margin: 4px 2px 4px 2px;">
+						<tr valign="top">
+							<td>
+								<apex:image styleClass="SaveSuccessIcon" title="{!$Label.bmcservicedesk__savedsuccessfully}" value="/s.gif" alt="{!$Label.bmcservicedesk__savedsuccessfully}" />
+							</td>
+							<td>
+								<div id="SaveMessage"  style="margin-left: 6px;" ><apex:outputText value="{!$Label.bmcservicedesk__savedsuccessfully}" /></div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				</div>
+			</td>
+        </tr>
+        <tr>
+        	<td colspan="4" class="enableAuditingCls">
+				<apex:outputPanel id="mainPanel">
+                	<table width="100%" border="0" cellspacing="0" cellpadding="0" id="mainTable">
+                    <tr>
+                        <td colspan="4">
+                        	<div class="clshelpDiv" style="margin-top: 0px;" id="helpDiv" />
+                            	<apex:inputCheckbox value="{!isCMDBAuditEnabled}" id="enableCMDBAuditing" onclick="enableDisableAudtingSection('{!$Component.enableCMDBAuditing}');" style="margin-top:1px;" styleclass="floatLeft10px"/>
+                            <div class="floatLeft10px stdfont" ><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__enablecmdbauditing)}" style="align:left;" /></div>
+                        </td>
+                    </tr>
+                    <tr>
+                    	<td colspan="4">
+                        	<hr />
+                     	</td>
+                    </tr>
+                        <tr class="beHeadertr">
+                            <td colspan="4" class="beHeadertd">
+                            	<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__cmdbauditpageheader)}"/>
+                            </td>
+                        </tr>
+                    <tr>
+                    	<td colspan="4" >&nbsp;</td>
+                   	</tr>
+                    <tr>
+                    	<td colspan="4">
+                        	<apex:outputLabel value="{!lblCMDBAuditPageDesc}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                    	<td colspan="4" >&nbsp;</td>
+                   	</tr>
+                    <tr>
+                    	<td width="12%">
+                        	<div id="SelectFieldsLabel" style="font-weight: bold;">
+                          		<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__cmdbauditing_highlightfieldsfrom)}" />
+                            </div>
+                        </td>
+                        <td width="18%">
+                            <div id="divSelectFieldsCombo" style="margin-left: 0px" ></div>
+                        </td>
+                        <td width="18%">
+                            <div id="divClassCombo" style="margin-left: 10px"></div>
+                        </td>
+                        <td width="50%">
+                        	<div id="errorDiv" class="errormsg">{!JSENCODE($Label.invalidLookupString)}</div>
+                        </td>
+                    </tr>
+                    <tr>
+                    	<td colspan="4" class="">&nbsp;
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="">
+                            <apex:pageBlock >
+                                <apex:pageBlockSection id="pageSectionId" title="" columns="3" >
+                                    <apex:repeat value="{!lstFieldsWrapper}" var="field">
+                                        <apex:pageblockSectionItem >
+                                            <apex:outputPanel >
+                                                <table width="100%" cellpadding="0" cellspacing="0">
+                                                    <tr style="vertical-align: inherit;" id="trdiv_{!field.fieldName}">
+                                                        <td width="2%">
+                                                            <apex:inputCheckbox selected="{!field.fieldValue}" styleClass="checkboxDivCls">
+                                                            </apex:inputCheckbox>
+                                                        </td>
+                                                        <td width="97%" class="labelAllignCls">
+                                                            <apex:outputLabel value="{!field.fieldLabel}" />
+                                                        </td>
+                                                            <td width="1%"/>
+                                                    </tr>
+                                                </table>
+                                            </apex:outputPanel>
+                                        </apex:pageblockSectionItem>
+                                    </apex:repeat>
+                                </apex:pageBlockSection>
+                            </apex:pageBlock>
+                        </td>
+                    </tr>
+                </table>
+    <script>
+        var isAuditingEnableCheckonLoad = '{!$Component.enableCMDBAuditing}';
+        var isAssetMgmtEnabled = {!isAssetManagementEnabled};        
+    	var isCIMgmtEnabled = {!isCIManagementEnabled};
+        var wikiUrl = '{!wikiUrl}';
+		parent.addHelpOnPage(document.getElementById('helpDiv'),'auditing_cmdb.htm',wikiUrl);    
+    </script>
+                </apex:outputPanel>
+            </td>
+        </tr>
+    </table>
+    <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminCMDBAudit.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminJSCommon.js"></script>
+<apex:outputPanel id="msgStringPanel">
+	<script>
+	    msgStr = '{!msgString}';
+	    msgStrlbl = '{!msgStringlbl}';
+	</script>
+</apex:outputPanel>
+<apex:outputPanel id="filteredClass">
+<script>
+    fieldstoHighlight = '{!Selectedclsfields}';
+    commaSepfields=fieldstoHighlight.replace('[', '');
+    commaSepfields=commaSepfields.replace(']', '');
+    commaSepfields=commaSepfields.replace(/[\s,]+/g, ',');
+    commaSepfieldsArray = commaSepfields.split(',');
+</script>
+</apex:outputPanel>
+</apex:form>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js" />
+</apex:page>

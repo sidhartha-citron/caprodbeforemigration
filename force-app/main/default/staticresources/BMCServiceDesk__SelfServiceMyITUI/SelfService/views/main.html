@@ -1,0 +1,98 @@
+<div class="page full-height">
+	<header class="page-header" ng-style="isLightningView() ? {'min-height':'0px'}:{}">
+		<div ng-if="!isLightningView()" class="layout-width row">
+			<div class="page-header__logo-layout pull-left">
+				<h1 class="myit-logo">
+					<a id="bmcLink" ng-if="companyUrl" href="{{companyUrl}}" target="_blank" style="cursor:pointer" tabindex="0" Title="{{logoTip}}" data-ng-init="onLoadLogoFocusAccessibilityMode();">
+						<img ng-src="{{logoUrl}}" style="height: 55px; width: 165px;" alt="{{logoTip}}"/>
+             		</a>
+					 <img ng-src="{{logoUrl}}" ng-if="!companyUrl" style="height: 55px; width: 165px;" alt="{{logoTip}}"/>
+				</h1>
+			</div>
+
+			<div class="user-nav pull-right clearfix">
+				<div loading-spinner if="profileModel.loadingFlags[userModel.userId]" centered="true" inline="true"></div>
+
+				<div ng-if="!profileModel.loadingFlags[userModel.userId] && profileModel.profileCache[userModel.userId]">
+					<div class="user-nav__top-layout">
+						<div class="user-nav__top-layout-inner">
+							<span class="user-nav__user-link">
+								<img class="user-nav__user-link-avatar" src="{{profileModel.profileCache[userModel.userId].image}}" data-toggle="dropdown" data-display="static" placeholder="user" ng-if="profileModel.profileCache[userModel.userId].image"/>
+								<span id="userName" aria-listnavigation class="user-nav__user-link-name" title="{{decodeText(profileModel.user.displayName)}}" ng-bind-html="profileModel.user.displayName" data-toggle="dropdown" data-display="static" role="listbox" tabindex="0"
+								ng-keydown="supportServiceModel.setFocusToFirstElement($event,'userOption');">
+								</span>
+								<div class="user-profile-dropdown-arrow-div" data-toggle="dropdown" data-display="static">
+									<ins class="timeline-toolbar-filter__dropdown-arrow user-profile-dropdown-arrow i-timeline-toolbar-dropdown-arrow"></ins>
+								</div>
+								<ul aria-listnavigation id="userOption" class="dropdown-menu user-nav-dropdown" >
+									
+									<!--<li class="user-nav-dropdown-item nowrap-line" >
+										<ins class="user-nav-dropdown-icon i-user-nav-profile"></ins>
+										{{ 'common.navigation.myProfile' | i18n }}
+									</li>
+									<li class="user-nav-dropdown-item nowrap-line modules-nav-item_settings" ui-sref="settings">
+										<ins class="user-nav-dropdown-icon i-user-nav-settings"></ins>
+										{{ 'common.navigationTabs.settings' | i18n }}
+									</li>-->
+									<li selectable ng-focus="menuItem.selected = true" ng-blur="menuItem.selected = false" aria-selected="false" tabindex="-1" class="user-nav-dropdown-item nowrap-line" ng-click="openHelp()" ng-if="false" role="option">
+										<ins class="user-nav-dropdown-icon d-icon-question_circle" style="line-height = 33px;"></ins>
+										{{selfServiceLabels.help}}
+									</li>
+									<li selectable ng-focus="menuItem.selected = true" ng-blur="menuItem.selected = false" aria-selected="false" tabindex="-1" title="{{selfServiceLabels.SSMyProfile}}" class="user-nav-dropdown-item" ng-click="openClientForm('userName')" ng-show="showMyProfile" role="option">
+										<ins class="user-nav-dropdown-icon d-icon-user"></ins>
+										{{selfServiceLabels.SSMyProfile}}
+									</li>
+									<li selectable ng-focus="menuItem.selected = true" ng-blur="menuItem.selected = false" aria-selected="false" tabindex="-1" title="{{selfServiceLabels.GoBackToSalesforce}}" class="user-nav-dropdown-item " ng-click="goBackToSalesforce()" ng-show="showReturnUrl && !isSiteUser" role="option">
+										<ins class="user-nav-dropdown-icon d-icon-undo i-user-undo-icon"></ins>
+										{{selfServiceLabels.GoBackToSalesforce}}
+									</li>
+									<li selectable ng-focus="menuItem.selected = true" ng-blur="menuItem.selected = false" aria-selected="false" tabindex="-1" title="{{selfServiceLabels.logout}}" class="user-nav-dropdown-item nowrap-line" ng-click="logOut()" role="option">
+										<ins class="user-nav-dropdown-icon i-user-nav-logout"></ins>
+										{{selfServiceLabels.logout}}
+									</li>
+								</ul>
+							</span>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+		<div id="headerId" class="Branding-Title_bar-Top_border_color" >
+			<div class="page-header__nav-wrapper Branding-Title_bar-background_color Branding-Title_bar-broadcast_text_color">
+			<!--<nav class="layout-width">
+				<ul class="modules-nav">
+					<li class="{{navigationTabClass(navItem)}} modules-nav__item"
+						ng-repeat="navItem in navigationTabs">
+						<a class="modules-nav__item-link" ui-sref="{{navItem.state}}">{{ navItem.name}}</a>					
+					</li>					
+				</ul>
+			</nav>-->
+			<div ng-if="isBroadcast_MessageScrollEnabled == true" ng-init="setBroadcastMsgWidthonLoad()" style="height:43px;">
+				<div class="d-icon-speaker broadcast_icon"/>
+				<div class="broadcast_ticker" ng-if="AllScollingBroadcastSize > 0 && !isRTLRequired">{{currentBroadcast}} {{selfServiceLabels.Of}} {{AllScollingBroadcastSize}}</div>
+				<div class="broadcast_ticker" ng-if="AllScollingBroadcastSize > 0 && isRTLRequired">{{AllScollingBroadcastSize}} {{selfServiceLabels.Of}} {{currentBroadcast}}</div>
+								
+					<div id ="ScrollMsgId" class="{{AllScollingBroadcastSize != 1 && AllScollingBroadcastSize != 0? 'broadcast_ticker_msg' : 'broadcast_ticker_msg_1'}}" style="{{AllScollingBroadcastSize == 0? 'width : 92.5%' : ''}}" ng-bind="AllScrollingBroadcasts[currentBroadcast-1].BroadcastMessage" ng-click="showBroadcastPopup(AllScrollingBroadcasts[currentBroadcast-1].id)"/>
+					<div class="{{AllScollingBroadcastSize != 1 && AllScollingBroadcastSize != 0 ? 'right-side' : 'right-side_1'}}">
+						<div class="{{AllScollingBroadcastSize != 1 && AllScollingBroadcastSize != 0? 'show-all-div' : 'show_all_top_margin'}}">
+							<div aria-button class="{{AllScollingBroadcastSize != 1 && AllScollingBroadcastSize != 0 ? 'show_all' : 'show_all_1'}}"  ng-if="BroadcastSize != 0" ng-click="showBroadcastPopup(AllScrollingBroadcasts[currentBroadcast-1].id)" title="{{selfServiceLabels.viewAllBroadcasts}}"/>
+					</div>	
+						<div class="Rectangle-left" ng-if="AllScollingBroadcastSize != 1 && AllScollingBroadcastSize != 0" ng-click="showPreviousBroadcast(currentBroadcast)">
+						<div class="d-icon-triangle_left left_icon"  />
+					</div>						
+						<div class="d-icon-triangle_right right_icon next-icon-padding"  ng-if="AllScollingBroadcastSize != 1 && AllScollingBroadcastSize != 0" ng-click="showNextBroadcast(currentBroadcast)"/>
+				</div>
+			</div>
+			<div ng-if="isBroadcast_MessageScrollEnabled == false">
+				<div class="d-icon-speaker broadcast-ticker"/>
+				<div class="message-container" >
+					<marquee id="broadcast-ticker" onBounce="onBounceHandler(this);" direction="left" behavior="scroll" scrollamount="{{broadcast.TickerSpeed}}"  ng-bind="message"></marquee>	
+				</div>	
+				<div aria-button class="show_all_scroll" ng-if="BroadcastSize != 0" ng-click="showBroadcastPopup(allBroadcasts[0].id)" title="{{selfServiceLabels.viewAllBroadcasts}}"/>
+			</div>
+			</div>
+		</div>
+	</header>
+	<ui-view autoscroll="false"></ui-view>
+</div>

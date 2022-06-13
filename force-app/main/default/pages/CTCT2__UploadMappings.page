@@ -1,0 +1,71 @@
+<apex:page sidebar="false" controller="CTCT2.UploadMappingsController" tabstyle="Setup__tab">
+
+<script>
+	function confirmRestoreDefaults() {
+		var answer = confirm('Please confirm that you want to Restore Defaults. This will overwrite any mappings you have saved.');
+		return answer;
+	}
+</script>
+
+<apex:sectionHeader title="Constant Contact for Salesforce"  subtitle="Upload Mappings" />
+
+<apex:form >
+<apex:pageBlock title="{!mappingType} Mappings" helpTitle="Help for this page" helpUrl="{!helpURL.helpurlUploadMappings}">
+	<table>
+		<tr valign="top">
+			<td>
+				<table>
+					<tr>
+						<td><b>Salesforce Field</b></td>
+						<td></td>
+						<td><b>Constant Contact Field</b></td>
+					</tr>
+					<apex:repeat value="{!standardMappings}" var="mapping">
+						<tr>
+							<td>
+								<apex:selectList value="{!mapping.CTCT2__SF_Field_Name__c}" size="1" disabled="{!mapping.CTCT2__CTCT_Field_Name__c == 'Email Address'}">
+									<apex:selectOption itemValue="" itemLabel=""/>
+									<apex:selectOptions value="{!SalesforceFieldOptions}"/>
+								</apex:selectList>
+							</td>
+							<td width="50" align="center"><font size="+1">&rarr;</font></td>
+							<td>{!mapping.CTCT2__CTCT_Field_Name__c}</td>
+						</tr>
+					</apex:repeat>
+				</table>
+			</td>
+			<td width="100"><br/></td>
+			<td>
+				<table>
+					<tr>
+						<td><b>Salesforce Field</b></td>
+						<td></td>
+						<td><b>Constant Contact Field</b></td>
+					</tr>
+					<apex:repeat value="{!customMappings}" var="mapping">
+						<tr>
+							<td>
+								<apex:selectList value="{!mapping.CTCT2__SF_Field_Name__c}" size="1">
+									<apex:selectOption itemValue="" itemLabel=""/>
+									<apex:selectOptions value="{!SalesforceFieldOptions}"/>
+								</apex:selectList>
+							</td>
+							<td width="50" align="center"><font size="+1">&rarr;</font></td>
+							<td>{!mapping.CTCT2__CTCT_Field_Name__c}</td>
+						</tr>
+					</apex:repeat>
+				</table>
+			</td>
+		</tr>
+	</table>
+
+	<apex:pageBlockButtons location="bottom">
+		<apex:commandButton value="Save" action="{!save}"/>
+		<apex:commandButton value="Restore Defaults" onclick="return confirmRestoreDefaults();" action="{!restoreDefaults}"/>
+		<apex:commandButton value="Cancel" action="{!cancel}"/>
+	</apex:pageBlockButtons>
+</apex:pageBlock>
+
+</apex:form>
+
+</apex:page>

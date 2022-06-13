@@ -1,0 +1,313 @@
+<apex:page controller="BMCServiceDesk.AdminAutoCatConfigController" sidebar="false" docType="html-5.0">
+
+<apex:outputText value="{!JSENCODE($Label.bmcservicedesk__noaccesserrormessage)}"></apex:outputText>
+
+<apex:outputPanel rendered="false">
+  <head>
+            <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+            <link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" />            
+            <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" />
+            <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+            <script src="{!$Resource.SDEFCommonJS}/forcetk.js"  type="text/javascript" ></script>
+            <script type="text/javascript">var __sfdcSessionId = '{!GETSESSIONID()}';</script>
+            <script src="/soap/ajax/40.0/connection.js" type="text/javascript"></script>
+            <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+            <link rel="stylesheet" href="{!$Resource.SDEFStyles}/AdminAutoCatConfig.css" type="text/css" />
+            <script src="{!$Resource.SDEFCommonJS}/AdminAutoCatConfig.js" type="text/javascript"></script>
+            <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+            
+    </head>
+        
+    <apex:form id="AdminAutoCatConfigForm">
+            <apex:actionFunction action="{!rerenderConfigPanel}" name="rerenderConfigPanel" reRender="ConfigDetailPanel">
+                <apex:param assignTo="{!isAutoCategorizationEnable}" name="firstParam" value=""/>
+            </apex:actionFunction>
+            
+            <apex:actionFunction action="{!Save}" name="save" rerender="ConfigDetailPanel,uploadTrainingData,autoCatJobPanel" onComplete="ShowInlineSaveMessage({!isError},'{!JSENCODE(errorMsg)}');setDataSplitValue();">
+            	<apex:param name="firstParam" assignTo="{!isAutoCategorizationEnable}" value=""/>
+                <apex:param name="secondParam" assignTo="{!autoClassificationConfidenceScoreForCategory}" value="" />
+                <apex:param name="thirdParam" assignTo="{!autoClassificationSuggestedScoreForCategory}" value="" />
+            </apex:actionFunction>
+        
+        	<apex:actionFunction name="refreshTrainingStatus" action="{!refreshTrainingStatus}" reRender="uploadedTrainingData,autoCatJobPanel" onComplete="displayStatus('{!JSENCODE(trainingStatus)}');">
+        		<apex:param name="firstParam" assignTo="{!isNewUpload}" value=""/>
+        	</apex:actionFunction>
+        	
+            <apex:actionFunction action="{!saveContentDocumentId}" name="saveContentDocumentId" rerender="" onComplete="refreshTrainingStatus(true);">
+	            <apex:param name="firstParam" assignTo="{!lastUploadedFileCatId}" value="" />
+	        </apex:actionFunction>
+	        
+	        <apex:actionFunction name="startAutoCategorizationScheduler" action="{!startAutoCategorizationScheduler}" reRender="autoCatJobPanel" onComplete=""/>
+	        <apex:actionFunction name="stopAutoCategorizationScheduler" action="{!stopAutoCategorizationScheduler}" reRender="autoCatJobPanel" onComplete=""/>
+	        
+	        <apex:actionFunction action="{!saveTrainingDataConfig}" name="saveTrainingDataConfig" rerender="" onComplete="">
+                <apex:param name="firstParam" assignTo="{!selectedLocale}" value="" />
+                <apex:param name="secondParam" assignTo="{!trainDataPercent}" value="" />
+            </apex:actionFunction>
+	        
+       <div class="adminHeaderContainer">
+            <span class="adminHeaderText">{!$Label.AutoCategorizationSettings}</span>
+            <span title="Help" id="helpId" class="d-icon-question_circle" onclick="openHelpPage();"></span>
+       </div>
+       
+        <apex:outputPanel id="tableOutputpanel" layout="block" style="overflow:none;height:100%;width:100%">  
+                  <apex:outputPanel id="messagePanel" styleClass="messageContainer">            
+                    <div id="jsscripterrorId" style="display:none">
+                        <div class="d-notification d-notification_error d-notification_content">
+                            <div class="d-notification__icon d-icon-left-exclamation_triangle"></div>
+                            <div class="d-notification__supporting-text">
+                                <h3 class="d-notification__title">{!JSENCODE($Label.Error)}</h3>
+                                <p class="d-notification__item" id="errorDescId" ></p>
+                            </div>
+                        </div>
+                    </div> 
+                    </apex:outputPanel>
+        </apex:outputPanel>
+                    
+        <div id="SaveMessageDiv" class="d-notification d-notification_success d-notification_content" style="visibility:hidden; display: none;">
+            <div class="d-notification__icon d-icon-left-check"></div>
+            <div class="d-notification__supporting-text">
+                <h3 class="d-notification__item"><apex:outputText value="{!$Label.bmcservicedesk__savedsuccessfully}" /></h3>
+            </div>
+        </div>
+        
+        
+		<!--  Enable/ Disable section start -->
+
+		<div class="paddingTop5px"/>
+		<div class="paddingTopLeft10px">
+		<input class="d-button_primary" style="" type="button" id="enableDisableCategorisationBtn" onClick="toggleButton(this);"/>
+		</div>
+		<div class="paddingTop15px"/>
+
+       
+        
+        <!--  Enable/ Disable section end -->
+        
+        
+        
+        
+        <!--  Innovation Suite Config Details Section Start -->
+<div id="ConfigDetailDiv">        
+            <apex:outputPanel id="ConfigDetailPanel">
+            <div class="rfDPL-section-underline"/>
+		            <div class="paddingTop15px"/>
+            <div class="sectionHeader">{!$Label.Step1} : {!$Label.ProvideInnovationSuiteDetails}</div>
+		             <div class="paddingTop5px"/>
+		             <div class="paddingTopLeft10px">
+	                <span  class="adminLabel">{!$Label.ChatbotInnovationSuiteURL} <label class="requiredField">({!$Label.Required})</label></span>
+            	</div>
+		             <div class="paddingTopLeft10px">
+                	<span><apex:input disabled="{!NOT(isAutoCategorizationEnable)}" value="{!autoClassificationInnovationSuiteURL}" id="autoClassificationInnovationSuiteURL" styleClass="innovationSuiteUrl"/></span>
+            	</div>
+            
+		             <div class="paddingTop10px"/>
+
+		             <div class="paddingTopLeft10px">
+                 <span class="adminLabel">{!$Label.tenantadminusername} <label class="requiredField">({!$Label.required})</label></span>
+            	</div>
+		             <div class="paddingTopLeft10px">
+                	<span><apex:input disabled="{!NOT(isAutoCategorizationEnable)}" value="{!autoClassificationTenantAdminUsername}" id="autoClassificationUsername" styleClass="innovationSuiteUrl"/></span>
+            	</div>
+            
+		             <div class="paddingTop10px"/>
+
+		             <div class="paddingTopLeft10px">
+	                <span class="adminLabel">{!$Label.tenantadminpassword} <label class="requiredField">({!$Label.required})</label></span>
+            	</div>
+		             <div class="paddingTopLeft10px">
+                <!-- redisplay="true" -->
+                <span><apex:inputSecret redisplay="true" disabled="{!NOT(isAutoCategorizationEnable)}" value="{!autoClassificationTenantPassword}" id="autoClassificationPassword" styleClass="innovationSuiteUrl"/></span>
+            </div>
+            <script>
+            	isAutoCategorizationEnable = {!isAutoCategorizationEnable};
+                errorMsg ='{!JSENCODE(errorMsg)}';
+            </script>
+		</apex:outputPanel>
+		        <div class="paddingTop10px"/>
+
+		        <div class="paddingTopLeft10px">
+            <span class="adminLabel">{!$Label.AutofillConfidenceScoreCriteria}:&nbsp;</span><span id="autofillScoreValue" class="adminLabel"></span><span class="adminLabel">%</span>
+        </div>
+		        
+		        <div class="paddingTopLeft10px">
+			        <span class="slidecontainer">
+            <input type="range" min="0" max="100" value="{!autoClassificationConfidenceScoreForCategory}" class="slider" id="autofillScoreSlider" onInput="setAutofillScore(this);" onChange="setAutofillScoreIE(this);"/>
+			        </span>
+        </div>
+		        
+		        <div class="paddingTop10px"/>
+		        
+		        <div class="paddingTopLeft10px">            
+             <span class="adminLabel">{!$Label.SuggestedConfidenceScoreCriteria}:&nbsp;</span><span class="adminLabel" id="suggestedScoreValue" ></span><span class="adminLabel">%</span>
+        </div>
+		        <div class="paddingTopLeft10px"> 
+			        <span class="slidecontainer">
+            <input type="range" min="0" max="100" value="{!autoClassificationSuggestedScoreForCategory}" class="slider" id="suggestedScoreSlider" onInput="setSuggestedScore(this);" onChange="setSuggestedScoreIE(this);"/>
+			        </span>
+            </div>
+		        <div class="paddingTop15px"/>
+		        <div class="paddingTopLeft10px" style="padding-left:18px;">
+            <input class="d-button_primary" id="savebtnId" type="button" value="{!$Label.Save}" onClick="saveConfiguration();"/>
+                &nbsp;     
+                
+            </div>
+            
+ </div>
+        <div class="paddingTop15px"/>
+            <!--  Innovation Suite Config Details Section end -->
+            
+<div id="uploadTrainingFileDiv">            
+            <!--  File Upload Section Starts -->
+            <apex:outputPanel id="uploadTrainingData">
+            <apex:outputpanel rendered="{!IF(isISConfigInfoAvbl,true,false)}">
+            <div class="rfDPL-section-underline"/>
+		            <div class="paddingTop15px"/>
+            <div class="sectionHeader">{!$Label.Step2} : {!$Label.UploadTrainingData}</div>
+		            <div class="paddingTop5px"/>
+		            <div class="paddingTopLeft10px">
+<!--                 <span class="adminLabel">{!$Label.UploadCsvForTrainAndTest}<label class="requiredField">({!$Label.required})</label></span> -->
+                
+<!-- 		                <div class="paddingTop10px"> -->
+                    		<span class="adminLabel">{!$Label.UploadCsvForTrainAndTest}<label class="requiredField">({!$Label.required})</label></span>
+		                        <div class="paddingTop10pxLeft5px">
+                        <input type="file" accept=".csv" id="inputFileHtml" style="min-height:/*\**/20px\9; vertical-align: middle;" size="40" onChange="toggleUploadBtn();"></input>                    
+                        </div> 
+		                        
+		                        <div class="paddingTop15px">
+		                        	<span class="adminLabel">{!$Label.Locale}</span>
+		                        </div>
+		                        <div class="paddingTop10pxLeft5px">		                            
+		                            <apex:selectList id="localeSelector" value="{!selectedLocale}" size="1">
+            							<apex:selectOptions value="{!locale}"/>
+        							</apex:selectList><p/>		                            
+		                        </div> 
+		                        <div class="paddingTop10px">
+                        			<div class="adminLabel">{!$Label.DataSplit}</div>
+		                        </div>
+		                        <div class="paddingTop10px">
+                        			<div class="slidecontainer">
+										<span class="hyperLabel" style="margin-left:0px;font-weight: normal;">
+										<span style="float:left;">{!$Label.TrainingData}:&nbsp;</span><span style="float:left;" id="TrainingData"/><span style="float:left;">%</span>
+										<span style="float:right;">%</span><span style="float:right;" id="TestData"/><span style="float:right;">{!$Label.TestData}:&nbsp;</span>
+										</span>
+			                        	<input type="range" min="10" max="90" value="{!trainDataPercent}" class="slider" id="dataSplitId" onInput="changeDataSplit(this);" onChange="changeDataSplitIE(this);"/>
+									</div>
+			                    </div>
+		                        
+		                        <div class="paddingTop10px">
+                        			<div class="adminLabel">{!$Label.TrainAndTestData}<label class="requiredField">({!$Label.required})</label></div>               
+		                        </div>
+		                        
+		                        <div class="paddingTop10pxLeft5px">
+                        			<input class="d-button_primary d-button_primary_disabled" id="uploadbtnId" type="button" value="{!$Label.TrainAndTest}" onClick="AddAttachment();"/>            
+		                        	<span class="fileUpload"/>
+                    				<span id="fileStatusSpan" style="font-size:14px; visibility:hidden;" class=""/>
+		                        	<div id="trainStatusMsgId" class="paddingTop5px" style="display:none;">
+		                        		<span class="trainStatusMsg">{!$Label.TrainingStatusWaitMessage}<a class="d-icon-restart refreshIcon" onClick="refreshTrainingStatus(true);" target="_blank"/></span>
+		                        	</div>
+		                         </div>
+                    
+<!--                 </div> -->
+            </div>
+            </apex:outputpanel>
+            </apex:outputPanel>
+		            <div class="paddingTop15px"/>
+            <apex:outputpanel id="uploadedTrainingData">
+                <apex:outputpanel rendered="{!IF(autoClassificationUploadedFileIdCat.BMCServiceDesk__Value__c != '',true,false)}">
+		                    <div class="paddingTopLeft10px">
+		                        <span class="adminLabel">{!$Label.LastUploadedFile} : </span><span><a class="hyperlink" onClick="openAttchment(lastUploadedFileCatId)">{!fileName}</a><span class="hyperLabel">&nbsp;{!fileSize} | {!ownerName} | {!fileModifiedDate}</span></span>
+            </div>
+		                    <div class="paddingTop15px"/>
+		                    <div class="paddingTopLeft10px">
+	                <span class="adminLabel">{!$Label.TestResults} : </span>
+		                <u><p onClick="javascript:downloadISDataFiles('trainingdata')" class="hyperlink">{!JSENCODE($Label.TrainingData)}&nbsp;</p></u>&nbsp;|
+		                &nbsp;<u><p onClick="javascript:downloadISDataFiles('testdata')" class="hyperlink" target="_blank">{!JSENCODE($Label.TestData)}&nbsp;</p></u>&nbsp;|
+		                &nbsp;<u><p onClick="javascript:downloadISDataFiles('resultdata')" class="hyperlink" target="_blank">{!JSENCODE($Label.TestResultData)}&nbsp;</p></u>
+            </div>
+	        </apex:outputpanel>
+            <script>
+                lastUploadedFileCatId = '{!JSENCODE(fileId)}';
+            </script>
+            
+            </apex:outputpanel>
+            <!--  File Upload Section end -->
+</div>            
+            
+<div id="autoCatJobDiv">    
+            <!-- Auto Categorization batch Job section start -->
+            <apex:outputPanel id="autoCatJobPanel">
+                <apex:outputPanel rendered="{!IF(autoClassificationUploadedFileIdCat.BMCServiceDesk__Value__c != '',true,false)}">
+		                    <div class="paddingTop15px"/>
+            <div class="rfDPL-section-underline"></div>
+		                    <div class="paddingTop15px"/>
+                    <div class="sectionHeader">{!$Label.Step3} : {!$Label.StartAutoCategorizationService}</div>
+		                    <div class="paddingTop5px"/>
+		                    <div class="paddingTopLeft10px">
+                        <span class="adminLabel">{!$Label.AutomaticallyAssignCategoryStartJob}</span>
+		                <div class="paddingTop15px" style="padding-left:5px;">
+                        	<apex:outputpanel rendered="{!IF(isAutoCategorizationRunning,false,true)}">
+                            	<input class="d-button_primary" type="button" id="startBtnId" value="{!$Label.ACStartservice}" onClick="startAutoCategorizationScheduler();"/>
+                			</apex:outputpanel>
+                        	<apex:outputpanel rendered="{!IF(isAutoCategorizationRunning,true,false)}">
+                            	<input class="d-button_primary" type="button" id="stopBtnId" value="{!$Label.ACStopservice}" onClick="stopAutoCategorizationScheduler();"/>
+                			</apex:outputpanel>
+            			</div>
+                    </div>
+                    <div class="paddingTop15px"/>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <!-- Auto Categorization batch Job section end -->
+</div>       
+    </apex:form>
+
+    <script>
+		var sessionId = '{!$Api.Session_ID}';
+		var sfHost = '{!sfHost}';
+        var client = new forcetk.Client();
+        client.setSessionToken(sessionId);
+        _RemotingActions={};
+        _RemotingActions.getFileBodyToDownload="{!$RemoteAction.AdminAutoCatConfigController.getFileBodyToDownload}";
+        var SSRequiredMsg = '{!JSENCODE($Label.ssrequiredmsg)}';
+        var fileUploadFailed = '{!JSENCODE($Label.fileuploadfailed)}';
+        var requiredFieldMsg = '{!JSENCODE($Label.requiredfieldmsg)}'
+        var EnableAutoCategorizationLbl = '{!JSENCODE($Label.enableautocategorization)}';
+        var DisableAutoCategorizationLbl = '{!JSENCODE($Label.disableautocategorisation)}';
+        var DisableAutoCategorizationConfirmationLbl = '{!JSENCODE($Label.DisableAutoCategorizationConfirmation)}';
+        var Error = '{!JSENCODE($Label.Error)}';
+        var UploadValidFile = '{!JSENCODE($Label.UploadValidFile)}';
+		var TrainingLbl = '{!JSENCODE($Label.Training)}';
+        var CompletedLbl = '{!JSENCODE($Label.CompletedScan)}';
+		var FailedLbl = '{!JSENCODE($Label.ACActionsFailure)}';
+		var ValidInnovationSuiteURL='{!JSENCODE($Label.ValidInnovationSuiteURL)}';
+		
+        var autoClassificationISURL ='{!JSENCODE($Component.AdminAutoCatConfigForm.autoClassificationInnovationSuiteURL)}';
+        var autoClassificationISUsername = '{!JSENCODE($Component.AdminAutoCatConfigForm.autoClassificationUsername)}';
+        var autoClassificationISPassword = '{!JSENCODE($Component.AdminAutoCatConfigForm.autoClassificationPassword)}';  
+        var localeSelector = '{!JSENCODE($Component.AdminAutoCatConfigForm.localeSelector)}';  
+		var wikiUrl = '{!JSENCODE(wikiUrl)}';
+		var errorMsg ='{!JSENCODE(errorMsg)}';
+        
+        var isAutoCategorizationEnable;        
+        
+        var autofillScoreSlider = document.getElementById("autofillScoreSlider");
+        var autofillScoreValue = document.getElementById("autofillScoreValue");
+        if(autofillScoreSlider && autofillScoreValue)
+        	autofillScoreValue.innerText = autofillScoreSlider.value;       
+        
+        var suggestedScoreSlider = document.getElementById("suggestedScoreSlider");
+        var suggestedScoreValue = document.getElementById("suggestedScoreValue");
+        if(suggestedScoreSlider && suggestedScoreValue)
+        	suggestedScoreValue.innerText = suggestedScoreSlider.value;        
+               
+        
+        var enableDisableBtn = document.getElementById('enableDisableCategorisationBtn');
+        
+        if(isAutoCategorizationEnable)
+            enableDisableBtn.value = DisableAutoCategorizationLbl;
+        else
+            enableDisableBtn.value = EnableAutoCategorizationLbl;
+        
+    </script>   
+    </apex:outputPanel> 
+</apex:page>

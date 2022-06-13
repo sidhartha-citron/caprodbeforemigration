@@ -1,0 +1,68 @@
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="SiteSurveySettingsController">
+    
+    <aura:attribute name="siteSurveyId" type="String"/>
+    <aura:attribute name="records" type="SiteSurveySettingsController.SkillRecord[]"/>
+    <aura:attribute name="securityRecord" type="SiteSurveySettingsController.FieldSecurity"/>
+    <aura:attribute name="notSavedRecords" type="String"/>
+    <aura:attribute name="columnAPINames" type="String[]" default="['SiteSurvey_RequiredSkills__c.Name','SiteSurvey_RequiredSkills__c.Skill_Level__c','SiteSurvey_RequiredSkills__c.Line_of_Business__c']"/>
+    <aura:attribute name="columns" type="SiteSurveySettingsController.ColumnRecord[]"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    
+    <aura:handler name="promptEvent" event="c:SiteSurveyPromptEvent" action="{!c.handlePromptEvent}"/>
+    
+    <c:SiteSurveyPrompt aura:id="promptComponent" />
+    
+    <div class="slds-scrollable">
+        <table class="slds-table slds-table_bordered  slds-table--cell-buffer">
+            <thead>
+                <tr class="slds-text-title--caps">
+                    <th scope="col" class="slds-text-align_right slds-text-title_caps" style="width: 3.25rem;"></th>
+                    <aura:iteration items="{!v.columns}" var="s" indexVar="i">
+                        <th scope="col">
+                            <div class="slds-truncate" title="{!s.label}">{!s.label}</div>
+                        </th>
+                    </aura:iteration>
+                </tr>
+            </thead>
+            <tbody>
+                <aura:iteration items="{!v.records}" var="p">
+                    <tr class="slds-hint-parent">
+                        <td role="gridcell" class="slds-text-align_right">
+                            <aura:if isTrue="{!p.skillExists}">
+                                <lightning:buttonIcon iconName="utility:check" variant="brand" name="{!p}" onclick="{!c.removeSkill}"/>
+                                <aura:set attribute="else">
+                                    <lightning:buttonIcon iconName="utility:add" variant="border-filled" onclick="{!c.addSkill}" name="{!p}"/>
+                                </aura:set>
+                            </aura:if>
+                        </td>
+                        <td class="slds-cell-wrap" role="gridcell">
+                            {!p.skillName}
+                        </td>
+                        <td class="slds-cell-wrap" role="gridcell">
+                            <!-- label="Enter Skill Level" -->
+                            <lightning:input variant="label-hidden" type="number" name="{!p}" min="1" value="{!p.skillLevel}" placeholder="Skill Level" 
+                                             disabled="{! or(!p.skillExists, !v.securityRecord.canEditSkillLevel)}" onblur="{!c.updateSkillLevel}"/>
+                        </td>
+                        <td class="slds-cell-wrap" role="gridcell">
+                            <lightning:buttonGroup>
+                                <aura:iteration items="{!p.lineOfBusinesses}" var="l">
+                                    <aura:if isTrue="{!l.isChosen}">
+                                        <lightning:button label="{!l.label}" variant="brand" disabled="{! !p.skillExists}" name="{!p}" onclick="{!c.updatelob}" value="{!l}"/>
+                                        <aura:set attribute="else">
+                                            <lightning:button label="{!l.label}" disabled="{! !p.skillExists}" name="{!p}" onclick="{!c.updatelob}" value="{!l}"/>
+                                        </aura:set>
+                                    </aura:if>
+                                </aura:iteration>
+                            </lightning:buttonGroup>
+                        </td>
+                    </tr>
+                </aura:iteration>
+            </tbody>
+        </table>
+    </div>
+    
+    
+    <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Submit}" onclick="{!c.handleSave}" class="slds-m-top_large slds-float_right"/>&nbsp;
+    
+</aura:component>

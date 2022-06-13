@@ -1,0 +1,41 @@
+<!--
+- @FileName: TechCapacityTechnicianList
+- @Description: Component to display list of active technicians
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       10/18/2019      Created
+*************************************************************
+-->
+
+<aura:component description="TechCapacityTechnicianList"
+                controller="TechCapacityCtrl"
+                implements="flexipage:availableForAllPageTypes">
+    <ltng:require scripts="{!$Resource.LightningUtils}" afterScriptsLoaded="{!c.doInit}" />
+
+    <aura:attribute name="lookupFilter" type="Map" />
+    <aura:attribute name="queryFilter" type="String" />
+    <aura:attribute name="comparisonField" type="String" />
+    <aura:attribute name="displayFields" type="List" />
+    <aura:attribute name="selectedId" type="String" default="" />
+
+    <aura:handler name="change" value="{!v.selectedId}" action="{!c.selectTechnician}" />
+    <aura:registerEvent name="selectTechnician" type="c:TechCapacityTechnicianSelectEvt" />
+
+    <div class="{!v.spinner ? 'slds-hide' : 'slds-card slds-p-around_medium'}">
+        <h1 class="slds-text-heading_small slds-m-bottom_medium">
+            <strong>Active Technicians</strong>
+        </h1>
+
+        <c:Util_LightningLookup aura:id="lookupField"
+                                label="{!$Label.c.Search_Label}"
+                                filtersByObject="{!v.lookupFilter}"
+                                queryFilters="{!v.queryFilter}"
+                                comparisonField="{!v.comparisonField}"
+                                displayFields="{!v.displayFields}"
+                                resultLimit="10"
+                                searchSOQL="true"
+                                selectedResultId="{!v.selectedId}" />
+    </div>
+</aura:component>

@@ -1,0 +1,148 @@
+<apex:page Controller="BMCServiceDesk.GroupWidgetController" showheader="false" cache="true" sidebar="false">
+   <c:CommonIncludes /> 
+   <apex:form >            
+     <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Portal.css" />
+    <style>
+    .Widgetcls .x-grid3-row, .x-panel-body ,.x-grid3-row td ,.x-grid3-cell-inner, .x-grid3-hd-inner  { 
+     border-color:#FFFFFF;
+     border-style:none ;
+         padding-left:1.75px;
+         margin-top:2px; 
+         margin-bottom:-2px; 
+         width: 100% !important;
+   }
+   .clsGridPanelAc {
+        padding-top: 2px;
+        padding-left: 10px;  
+        font: 11px Tahoma, MS Sans Serif;  
+        width: 100px;
+        float: left;
+    }
+	.clsImageStyle{
+       margin-top:1px;
+   		height:16px;
+   		width: 16px;
+        vertical-align: middle;
+        float: left;
+}
+
+	.clsImageStyle1 {
+		margin-top:1px;
+       	margin-bottom:-4px;
+   		height:16px;
+   		width: 16px;
+   		padding-left:1.25px;
+        vertical-align: middle;
+        float: left;
+    }
+    .incidentMargin,
+    .taskMargin,
+    .broadcastMargin{
+        float: right;
+        text-align: right;
+    }
+    .titleclass{
+        float: left;
+        width: 60px;    
+    }  
+   /*Defect: 57057 Added by Usha Juge*/
+	.x-grid3-row-selected {
+	 	background-color: #E0EE70  !important;
+	}
+    .Widgetcls .x-grid3-body, .x-grid3-row-table{
+		width: 100% !important; 
+	}  
+    </style>
+    
+    <script>
+        var grid;
+        var listData=[];
+             
+    Ext.onReady(function(){
+            Ext.QuickTips.init(); 
+            
+             showTable();       
+            setData(); 
+            });
+            
+         function callListPage(pName,pId){
+         	//alert(pName);
+         	//alert(pId);
+           	//window.parent.addNewTab("GroupFeedPage",pName,"NavigatorPage?title=" + pName + "&target=GroupFeedPage?groupId=" +pId +"?popupId=GroupFeed%26view=list" , 'true');    
+           	window.parent.addGroupFeedTab("GroupFeedPage",pName,pId);
+        }
+        function setData(){
+ 
+         listData=[{!listData}];
+             
+
+            store.loadData(listData);
+            Ext.getCmp('grid').getView().refresh();
+        }
+    
+          function renderIcon(value, metaData, record, rowIndex, colIndex, store) { 
+            var name= record.data.Name;
+            
+            var displayFiled=name;
+            var image='';
+            var className='';
+          	 image = record.data.Image;
+          	
+                  var icon=('<img src="' + image + '" class="clsImageStyle" />');
+                  className = 'incidentMargin';
+                 
+           var displayFiled='<div class="titleclass">' + name + '</div><div class="'+className+ '">' + '</div>';
+           return icon+'<div class="clsGridPanelAc">'+displayFiled+ '</div>';     
+     } 
+
+       function showTable(){
+            store = new Ext.data.ArrayStore({
+                fields: ['Image','Name','Id'],  
+                data : listData
+            });
+              
+            grid = new Ext.grid.GridPanel({
+                cls:'Widgetcls',
+                renderTo:'actionContents',
+                id:'grid',
+           
+                store: store,
+                              
+                columns: [{
+                    
+                    renderer: renderIcon , 
+                   dataIndex: 'Name'
+                }],
+                stripeRows: false,
+              
+                
+                layout: 'fit',
+                stateful: true,
+                //height:Ext.isIE7 ? 190 : Ext.isIE8 ? 180 : 225,
+                height: 77,
+                stateId: 'grid',
+                autoScroll:false,
+                viewConfig:{
+                    forceFit:true 
+                },
+                autoFitColumns: true,
+                    listeners: {
+                        rowClick :function(grid,a,b){
+                            var record = grid.store.getAt(a);
+                            var field=record.get('Name');
+                            var groupId=record.get('Id');
+                            callListPage(field,groupId);
+                                        },
+                        render: function(grid) {
+                            grid.getView().el.select('.x-grid3-header').setStyle('display', 'none');               
+                                                grid.getView().el.select('x-panel-body x-panel-body-noheader').setStyle('display', 'none')
+                                  }   
+                    }        
+            });
+        }
+        
+    </script>   
+    
+   <div id="actionContents" /> 
+</apex:form>  
+</apex:page>

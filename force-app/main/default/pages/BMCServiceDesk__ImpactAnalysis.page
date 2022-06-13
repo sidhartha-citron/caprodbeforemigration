@@ -1,0 +1,191 @@
+<apex:page showHeader="false" sidebar="false" controller="BMCServiceDesk.ImpactAnalysisController" action="{!getLinkedCiList}">
+    <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"/>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ImpactAnalysis.css" />
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+	<!--[if IE 8]>
+      <style>    
+      .x-btn-default-toolbar-small { margin-right : 5px !important;}  
+      .x-btn button
+      {
+        border: 1px solid !important;
+        border-color: #CCCCCC #666666 #666666 #CCCCCC !important;
+        width: auto !important;
+      }
+      .x-btn
+      { 
+        background: rgba(0, 0, 0, 0) right repeat-x scroll !important; 
+        background-position-y: top !important;
+      } 
+      </style>
+    <![endif]-->
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js" />
+	<script>
+		var isFromCILauncher = {!isFromCILauncher};
+		var ciName =  '{!JSENCODE($CurrentPage.parameters.sourceCIElem)}'; 
+	    var wikiUrl = '{!wikiUrl}';
+	    var linkedCi = JSON.parse('{!JSENCODE(linkedCi)}');
+	    var namespace ='{!namespace}';
+	    var recordId='{!JSENCODE(changeRecordId)}';
+	    var impactAnalysis="{!JSENCODE($Label.ImpactAnalysis)}";
+	    document.title=impactAnalysis;
+	    var labels = {};
+	    var flag = 0;
+		labels.AnalyzeImpact="{!JSENCODE($Label.AnalyzeImpact)}";
+		labels.CMDBLaunchCIExplorer="{!JSENCODE($Label.LaunchCIExplorer)}";
+		labels.BusinessServicesOnly="{!JSENCODE($Label.BusinessServicesOnly)}";
+		labels.CIsAndAssets="{!JSENCODE($Label.CIsAndAssets)}";
+		labels.NoRecordFoundMsg="{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}";
+		labels.AttachimpactedCIstochangerequest="{!JSENCODE($Label.AttachimpactedCIstochangerequest)}";
+		labels.ImpactedCIsAttachmentMessage="{!JSENCODE($Label.ImpactedCIsAttachmentMessage)}";
+		labels.Show="{!JSENCODE($Label.Show)}";	
+		labels.Help="{!JSENCODE($Label.TooltipHelp)}";
+		labels.Page="{!JSENCODE($Label.Page)}";	
+		labels.Of="{!JSENCODE($Label.Of)} {0}";	
+		labels.LabelOf = "{!JSENCODE($Label.Of)}";
+        labels.Records = "{!JSENCODE($Label.Records)}";
+    	       
+        labels.PageFirst = "{!JSENCODE($Label.FirstPage)}"
+        labels.PageNext = "{!JSENCODE($Label.Next)}"
+        labels.PageRefresh = "{!JSENCODE($Label.Refresh)}"
+        labels.PageLast = "{!JSENCODE($Label.LastPage)}"
+        labels.PagePrevious = "{!JSENCODE($Label.Previous)}"
+        labels.RecordsPerPage = "{!JSENCODE($Label.Records_per_page)}";
+        
+		var helpResource;
+        var installversion = {!installversion};
+        userLanguage = '{!userLanguage}';
+        var showJapaneseHelp = '{!showJapaneseHelp}';
+        if (userLanguage == 'ja' && showJapaneseHelp.toLowerCase() == 'true'){
+			helpResource = '{!$Resource.StdFormHelp_JA}';
+	    }else{
+	        helpResource = '{!$Resource.StdFormHelp}';
+        }
+		var filename="impact_analysis";
+		var InitColumns = new Array();
+		InitColumns = {!returnMap};
+		var ColumnsOrderedList = new Array();
+		ColumnsOrderedList = {!ColumnsList};
+		var imageHelp='{!$Resource.SDEFStyles}';
+		var ExtUserDateFormat='{!ExtUserDateFormat}';
+		var offset = {!localOffset};
+		var fields = [];
+		var columns = [];
+		function fetchImpactedCIs(){
+			if(isFromCILauncher){
+				getImpactedCIs(ciName);
+			}else{
+				renderTopGrid();
+			}
+		
+		}
+	</script>
+    <body>
+    <apex:form >
+	    <apex:actionFunction action="{!getImpactedCIs}" name="getImpactedCIs" rerender="outerPanel"  oncomplete="Impacted();">
+	    	<apex:param name="sourceCi" value=""/>
+	    	<apex:param name="sourceCIID" value=""/>
+	    </apex:actionFunction>
+	    <apex:actionFunction action="{!getImpactedCIs}" name="Impacted" rendered="{!isRepeat}" rerender="outerPanel"   oncomplete="if('{!isRepeat}' == true ){Impacted();}"/>
+	    <apex:actionFunction action="{!cipanelNext}" name="cipanelnext" rerender="ciPanel" oncomplete="loadDataGrid1();"/>
+	    <apex:actionFunction action="{!cipanelPrevious}" name="cipanelprevious" rerender="ciPanel" oncomplete="loadDataGrid1();"/>
+        <apex:actionFunction action="{!cipanelfirst}" name="cipanelfirst" rerender="ciPanel" oncomplete="loadDataGrid1();" />
+        <apex:actionFunction action="{!cipanelLast}" name="cipanellast" rerender="ciPanel" oncomplete="loadDataGrid1();"/>
+		<apex:actionFunction action="{!cipanelsetCurrentPage}" name="cipanelsetCurrentPage" rerender="ciPanel" oncomplete="loadDataGrid1();">
+            <apex:param assignTo="{!cipanelPageSize}" name="cipanelPageSize" value=""/>
+            <apex:param assignTo="{!cipanelcurrentPage}" name="cipanelcurrentPage" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!doNext}" name="next" rerender="impactedCiPanel" oncomplete="loadDataGrid2();"/>
+	    <apex:actionFunction action="{!doPrevious}" name="previous" rerender="impactedCiPanel" oncomplete="loadDataGrid2();"/>
+        <apex:actionFunction action="{!doFirst}" name="first" rerender="impactedCiPanel" oncomplete="loadDataGrid2();" />
+        <apex:actionFunction action="{!doLast}" name="last" rerender="impactedCiPanel" oncomplete="loadDataGrid2();"/>
+        <apex:actionFunction action="{!impactpanelsetCurrentPage}" name="impactpanelsetCurrentPage" rerender="impactedCiPanel" oncomplete="loadDataGrid2();">
+            <apex:param assignTo="{!pageSize}" name="impactpanelPageSize" value=""/>
+            <apex:param assignTo="{!page}" name="impactpanelcurrentPage" value=""/>
+        </apex:actionFunction>
+		<apex:actionFunction action="{!sortImpactedCi}" name="sort" rerender="impactedCiPanel" oncomplete="loadDataGrid2();">
+            <apex:param assignTo="{!pageSize}" name="impactpanelPageSize" value=""/>
+        </apex:actionFunction>
+	    <apex:actionFunction action="{!checkFilter}" name="checkFilter" rerender="impactedCiPanel" oncomplete="loadDataGrid2();" >
+	    	<apex:param name="filter" value=""/>
+	    </apex:actionFunction>
+		<apex:actionFunction action="{!getSelectedRecId}" name="getSelectedRecId" rerender="CIexplorerPanel" oncomplete="" >
+	    	<apex:param name="recId" value=""/>
+	    </apex:actionFunction>
+		<apex:actionFunction action="{!changePageSizes}" name="changePageSizes" rerender="ciPanel,impactedCiPanel" oncomplete="loadDataGrid1();loadDataGrid2();" >
+	    	<apex:param name="newPageSizeGrid1" value=""/>
+	    	<apex:param name="newPageSizeGrid2" value=""/>
+	    </apex:actionFunction>
+	    <apex:actionFunction action="{!attachCSVToCR}" name="attachCSVToCR" rerender="ciAttachPanel" oncomplete="attachmentSuccessful();"/>
+	    
+		<apex:outputPanel id="ciAttachPanel"> 
+            <script>
+                var excMessage = '{!JSENCODE(excMsg)}';
+            </script>
+        </apex:outputPanel> 
+		
+		<div id="ciPanelLabel"  style="font-weight:bold; margin-left:10px; margin-top:5px; margin-bottom:5px; ">
+    		<apex:outputText value="{!JSENCODE($Label.bmcservicedesk__configurationsitemslinkedtomsg)} {!changeRecordName}"  rendered="{!NOT(isFromCILauncher)}"/>
+    	</div>
+        <div id="gridSpace" style="margin-left:10px;margin-right:10px;"></div>
+		<apex:outputPanel id="ciPanel">	
+				<script>
+				linkedCi=JSON.parse('{!JSENCODE(linkedCi)}'); 
+			    linkedCIcount = {!linkedCIcount};	
+			    cipaneltotalPages = {!cipaneltotalPages}; 	
+			    cipanelcurrentPage = {!cipanelcurrentPage};	
+			    cipanelfromRec = {!cipanelfromRec}; 
+			    cipaneltoRec = {!cipaneltoRec};	
+			    </script>
+		</apex:outputPanel>	
+    	<apex:outputPanel id="outerPanel">
+    		<apex:outputPanel id="innerPanel" rendered="{!isEmpty}" >
+	    		<div id="impactPanelLabel" style="font-weight:bold; margin-left:10px; margin-top: 15px;margin-bottom: 5px;">
+	    		<apex:outputText value="{!JSENCODE($Label.bmcservicedesk__configurationsitemsimpactedbychangemsg)} '{!SourceCI}' "/>
+	        	</div>    
+	        	<div id="ImpactGridSpace" style="margin-left:10px;margin-right:10px;"></div>
+	        	<script>
+					var impactedCi= {!impactedCi};
+			    	var totalRecords = {!totalRecords} ;
+			        var totalPages   = {!totalPages} ;
+			        var fromRec = {!startIdx};
+			        var toRec = {!endIdx};
+			        var currentPage = {!page};
+			        var currentFilterValue = '{!currentFilterValue}';
+					populateImpactedCiList();    
+				</script>
+	        	<apex:outputPanel id="impactedCiPanel">        
+	    			<script>
+				    	impactedCi= {!impactedCi};
+				    	totalRecords = {!totalRecords} ; 
+			        	totalPages   = {!totalPages} ;
+				        fromRec = {!startIdx}; 
+				        toRec = {!endIdx}; 
+				        currentPage = {!page}; 
+				        currentFilterValue = '{!currentFilterValue}'; 
+					</script>
+				</apex:outputPanel>
+			</apex:outputPanel>    
+    	</apex:outputPanel>
+    	<apex:outputPanel id="CIexplorerPanel">
+			<script>
+	    		var recordId='{!JSENCODE(changeRecordId)}';
+	    		if(flag == 1){
+	    			var CIExplorerHandlerWindow;
+					var windowFeatures = "width=1100,height= 700,status,resizable,scrollbars=no,left=200,top=100";
+					CIExplorerHandlerWindow =window.open('/apex/CIExplorerLauncher?Module=CI&RecordSequence='+recordId+'&id='+recordId+'&stdForm=true','CIExplorer',windowFeatures);
+				}else if(flag == 2){
+					var CIEditorHandlerWindow;
+					var windowFeatures = "width=1100,height= 700,status,resizable,scrollbars=no,left=200,top=100";
+					CIEditorHandlerWindow =window.open('cmdbgenericpage?className='+className+'&InstanceID='+recordId+'','CIEditor',windowFeatures);
+				}
+			</script>
+    	</apex:outputPanel>
+    </apex:form>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ImpactAnalysis.js" />
+	
+ </body>
+</apex:page>

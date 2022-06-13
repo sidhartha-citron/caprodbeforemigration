@@ -1,0 +1,87 @@
+<apex:page showHeader="true" sidebar="false" controller="malive.MALiveRemoteFunctions" docType="html-5.0" title="MapAnything Live Settings">
+	<style>
+		#maBodyContent {
+			border-radius: 0 0 4px 4px !important;
+		}
+	</style>
+    <apex:composition template="malive__MALivePageTemplate">
+      	<apex:define name="title">
+        	MapAnything Live
+		</apex:define>
+    
+        <apex:define name="subtitle">
+            Advanced Settings
+        </apex:define>
+    
+        <apex:define name="headerButtons">
+            <div class="slds-button-group">
+                <input type="button" value="Close" class="slds-button slds-button_neutral" onclick="redirectPage('cancel')" />
+            </div>
+        </apex:define>
+    
+        <apex:define name="body">
+        	<apex:form >
+        		<apex:outputPanel id="mainSection">
+        		<c:SpinnerFacet />
+        		<div class="ma-body-content is-active slds-p-around_large" style="border-radius: 0 0 4px 4px;">
+				    <div id="maio-toggle" class="slds-form-element">
+					    <label class="slds-checkbox--toggle slds-grid">
+					    <span class="slds-form-element__label slds-m-bottom--none">MA.IO Endpoint</span>
+					    <input type="checkbox" name="maio_api_production_toggle" aria-describedby="toggle-desc" />
+						    <span id="toggle-desc" class="slds-checkbox--faux_container" aria-live="assertive">
+						    	<span class="slds-checkbox--faux"></span>
+						    	<span class="slds-checkbox--on">Production Enabled</span>
+						    	<span class="slds-checkbox--off">Staging Enabled</span>
+						    </span>
+					    </label>
+				    </div>
+			    </div>
+    			</apex:outputPanel>
+    		</apex:form>
+    
+		    <script>
+			    var advancedSettingsLoad = true;
+			    var endpointToggleRemoteFunction = '{!$RemoteAction.MALiveRemoteFunctions.toggleMAIOEndpoint}';
+			    
+			    $(function() {
+					if (typeof advancedSettingsLoad !== undefined && advancedSettingsLoad) {
+						endpointToggleSaveAndLoad(advancedSettingsLoad);
+						advancedSettingsLoad = false;
+					}
+					
+					$('#maio-toggle .slds-checkbox--toggle input').on('click', function(e) {
+						endpointToggleSaveAndLoad(advancedSettingsLoad);
+					});
+				});
+				
+				function endpointToggleSaveAndLoad(advancedLoad) {
+				    var toggleVal = $('#maio-toggle .slds-checkbox--toggle input:checked').length > 0 ? true : false;
+				    
+				    Visualforce.remoting.Manager.invokeAction(endpointToggleRemoteFunction, advancedLoad, toggleVal, function(result, event) {
+				            hasMessages = true;
+				            
+				            if (event.status) {
+				                messageText = result.message;
+				                alertType = 'success';
+				                $('#maio-toggle .slds-checkbox--toggle input').prop('checked', result.toggle_val);
+				            }
+				            else if (event.type === 'exception') {
+				                messageText = event.message;
+				                alertType = 'error';
+				            }
+				            else {
+				                messageText = event.message + ' ' + result.message;
+				                alertType = 'error';
+				            }
+				            
+				            if (!result.success) {
+				                $('#maio-toggle .slds-checkbox--toggle input').prop('checked', !result.toggle_val);
+				            }
+				            checkForMessages();
+				        }
+				    );
+				}
+		    </script>
+    	</apex:define>
+	</apex:composition>
+</apex:page>

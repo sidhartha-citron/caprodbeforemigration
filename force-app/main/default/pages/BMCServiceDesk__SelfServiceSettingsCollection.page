@@ -1,0 +1,214 @@
+<apex:page controller="BMCServiceDesk.SelfServiceSettingsController" showHeader="false" standardStylesheets="false">
+ <c:CommonIncludes ></c:CommonIncludes>
+   <apex:stylesheet value="{!$Resource.BMCServiceDesk__ExtJSUX}/resources/css/ext-all.css" />
+
+    <!-- overrides to base library -->
+   <!--  <apex:stylesheet value="{!$Resource.ExtJSUX}/ex/ux/css/Portal.css" />-->
+    <apex:stylesheet value="{!$Resource.BMCServiceDesk__ExtJSUX}/ex/ux/css/GroupTab.css" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJSUX}/ex/ux/GroupTabPanel.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJSUX}/ex/ux/GroupTab.js" />    
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJSUX}/ex/ux/Portal.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJSUX}/ex/ux/PortalColumn.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJSUX}/ex/ux/Portlet.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJSUX}/ex/portal/sample-grid.js" />
+  
+  <style>
+  
+    
+    .x-panel-body {
+        border:1px solid #D6DFE7;
+    }
+    
+   .x-grouptabs-panel {
+         background-color:#EFF3F7;
+         border:5px;
+      }
+      .x-panel-body .element.style{
+         border-color:#ADB9C0;
+         
+      }
+     
+     ul.x-grouptabs-strip a.x-grouptabs-text {
+        cursor:pointer;
+        font-size:10px;
+        font-family: Tahoma, MS Sans Serif;
+        line-height:18px;
+    }
+    
+    .x-tab-panel-left ul.x-grouptabs-strip li.x-grouptabs-strip-active {
+        border-left:1px solid #D6DFE7;
+    }
+    .x-grouptabs-panel ul.x-grouptabs-strip li.x-grouptabs-strip-active {
+        background:#D6DFE7 none repeat-x scroll 0 0;
+        border-color:none -moz-use-text-color;
+        border-style:solid none;
+        border-width:0px 0;
+    }
+    
+    .x-grouptabs-panel ul.x-grouptabs-sub li.x-tab-with-icon a.x-grouptabs-text {
+        background-repeat:no-repeat;
+        padding-left:10px;
+        background-color:#D6DFE7;
+        border-bottom:1px solid #999999;
+        border-top:1px solid #999999;
+        border-right:1px solid #999999;
+    }
+    
+    .x-grouptabs-panel .x-grouptabs-strip a.x-grouptabs-text {
+        color:#004376;
+        display:block;
+        font-family:tahoma,arial,sans-serif;
+        font-weight:normal;
+        overflow:hidden;
+        text-decoration:none;
+        white-space:nowrap;
+    }
+    
+    .x-grouptabs-panel .x-grouptabs-panel-body {
+        border:1px solid #D6DFE7;
+    }
+    .x-tab-panel-left .x-tab-panel-header ul.x-grouptabs-sub a.x-grouptabs-text, .x-tab-panel-right .x-tab-panel-header ul.x-grouptabs-sub a.x-grouptabs-text {
+        font-size:11px;
+        font-family: Tahoma, MS Sans Serif;
+        padding:0;
+        margin-left:-2px;
+    }
+    .x-tab-panel-left .x-tab-panel-header ul.x-grouptabs-strip a.x-grouptabs-text, .x-tab-panel-right .x-tab-panel-header ul.x-grouptabs-strip a.x-grouptabs-text {
+        cursor:pointer;
+        font-size:11px;
+        font-family: Tahoma, MS Sans Serif;
+        padding-left:5px;
+		white-space: normal;
+    }
+    .x-grouptabs-panel .x-grouptabs-expand {
+        -moz-background-clip: border;
+        -moz-background-inline-policy: continuous;
+        -moz-background-origin: padding;
+        background: transparent url(../images/elbow-plus-nl.gif) no-repeat
+            scroll 0 0;
+        height: 16px;
+        left: 7px;
+        position: absolute;
+        top: 6px;
+        width: 16px;
+    }
+   
+    .x-grouptabs-panel .x-grouptabs-strip-active{
+        background-color:red;
+    }
+    
+    .x-grouptabs-panel ul.x-grouptabs-strip li.x-grouptabs-strip-active {
+        background:#FFFFFF none repeat scroll 0 0;
+        border-bottom:1px solid #999999;
+        border-left:1px solid #999999;
+        padding:3px 0 6px 6px;
+    }
+    .x-grouptabs-panel {
+    
+     background-color:#EFF3F5;
+   // border:medium none white;
+     margin-top:0px;
+    border:0px;
+
+    }
+    .x-border-layout-ct {Skywalke...Sheet.css (line 147)
+        background-color:#334F67;
+    }
+    
+    .x-grouptabs-panel ul.x-grouptabs-strip li {
+        border-bottom:1px solid #999999;
+        border-left:1px solid #999999;
+        border-right:1px solid #999999;
+        background-color:#D6DFE7;
+        padding:3px 0 6px 6px;
+    }
+    .group-tab-item-cls .x-panel-body{
+		padding-bottom: 10px;
+	}
+</style>
+<apex:outputpanel > 
+<apex:form >    
+  <script>
+  
+    Ext.onReady(function() {
+    Ext.QuickTips.init();
+    Ext.override(Ext.EventObjectImpl, {
+    getTarget : function(selector, maxDepth, returnEl){
+        var targetElement;
+
+        try {
+            targetElement = selector ? Ext.fly(this.target).findParent(selector, maxDepth, returnEl) : this.target;
+        } catch(e) {
+            targetElement = this.target;
+        }
+
+        return targetElement;
+    }
+   });
+     var linkDefaultSettings = "/apex/DefaultSettingsPage";
+     var  ObjLabelFAQs = '{!JSENCODE($ObjectType.FAQ__c.labelPlural)}';
+     var  ObjLabelCategories = '{!JSENCODE($ObjectType.Category__c.labelPlural)}'; 
+     var  ObjLabelTemplates = '{!JSENCODE($ObjectType.SYSTemplate__c.labelPlural)}';  
+     var linkFAQ = "/apex/NavigatorPage?title="+ObjLabelFAQs+"&target=SearchPage?popupId=SSFAQ%26view=list&tabName=SSFAQ";
+     var linkCategory="/apex/NavigatorPage?title="+ObjLabelCategories+"&target=SearchPage?popupId=SSCategory%26view=list&tabName=SSCategory";
+     var linkPopularRequest="/apex/ManagePage?manageId=Top Requests&paramId=Templates";
+     var linkBrandingSettings="/apex/BrandingSettingsPage";
+     var gtabpanel1 = { 
+                        xtype: 'grouptabpanel',
+                        tabWidth: 130,
+                        activeGroup: 0,
+                        id: 'grptabpanel1',
+                        items: [{
+                            mainItem: 0,
+                            items:[{title: '{!JSENCODE($Label.DefaultSettings)}',
+                                    id:'defaults',
+                                    tabTip: '{!JSENCODE($Label.DefaultSettings)}',
+                                    html :'<iframe id=\"container\" src=\"'+linkDefaultSettings+'\" style=\"width:96%;height:100%;border:0px solid #DEE0E0;margin-left:2%;margin-top:15px; margin-bottom:10px;margin-right:20px;\"></iframe>'}]                    
+                        }, {
+                            mainItem: 0,
+                            
+                            items:[{title: '{!JSENCODE($Label.Categories)}',
+                                    id:'categories',
+									cls:'group-tab-item-cls',
+                                    tabTip: '{!JSENCODE($Label.Categories)}',
+                                    html :'<iframe id=\"container\" src=\"'+linkCategory+'\" style=\"width:98%;height:100%;border:0px solid #DEE0E0;margin-left:10px;margin-top:10px; margin-bottom:10px;margin-right:10px;\"></iframe>'}]
+                        }, {
+                            mainItem: 0,
+                            items:[{title:'{!JSENCODE($Label.TopRequests)}',
+                                    id:'popular requests',
+									cls:'group-tab-item-cls',
+                                    tabTip: '{!JSENCODE($Label.TopRequests)}',
+                                    html :'<iframe id=\"container\" src=\"'+linkPopularRequest+'\" style=\"width:98%;height:100%;border:0px solid #DEE0E0;margin-left:10px;margin-top:10px; margin-bottom:10px;margin-right:10px;\"></iframe>'}]    
+                        }, {
+                            mainItem: 0,
+                            items:[{title: '{!JSENCODE($Label.Branding)}',
+                                    id:'branding',
+                                    tabTip: '{!JSENCODE($Label.BrandingSettings)}',
+                                    html :'<iframe id=\"container\" src=\"'+linkBrandingSettings+'\" style=\"width:96%;height:97%;border:0px solid #DEE0E0;margin-left:2%;margin-top:10px; margin-bottom:10px;margin-right:10px;\"></iframe>'}]                        
+                        }]
+                    };
+          var detailsPanel1 = new Ext.Panel({
+                    
+                    width:'100%',
+                    split:false ,
+                    layout: 'fit',
+                    overflow:'auto',
+                    autoScroll:false,
+                    height:'150',
+                    minHeight:'100',
+                    collapseMode: 'mini',
+                    items: [gtabpanel1]
+                });
+     var viewport = new Ext.Viewport({
+        layout:'fit',
+        items:[detailsPanel1 ]      
+    });
+});
+
+
+</script>
+
+</apex:form>
+</apex:outputpanel>     
+
+</apex:page>

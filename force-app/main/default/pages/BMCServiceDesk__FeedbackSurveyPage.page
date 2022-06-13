@@ -1,0 +1,119 @@
+<apex:page controller="BMCServiceDesk.FeedbackSurveyController" language="{!$CurrentPage.parameters.lang}"  sidebar="false" showHeader="false" standardStylesheets="false">
+<head>
+<title><apex:outputText value="{!$Label.bmcservicedesk__servicefeedback}"/></title>
+</head>
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/FeedbackStyle.css" />
+	<script>
+		var commentsEntered=false;
+		var feedbackPlaceHolder = "{!JSENCODE($Label.FeedbackPlaceholer)}";
+	</script>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/FeedbackSurveyPage.js" />
+	<body class="margin0px height100">
+	<apex:form id="feedbackForm" styleClass="height100">
+		<apex:outputpanel id="mainPanel">
+		<table cellpadding="0" cellspacing="0" class="width100">
+			<tr>
+				<td id="headerTR" height="49"  class="paddingLeft20 borderBottomStyle">
+					<apex:outputlabel value="{!$Label.bmcservicedesk__servicefeedback}" styleClass="headerStyle"/>	
+				</td>
+			</tr>
+			<tr style="{!IF(isAllowed,'','display:none')}">
+				<td height="72"  class="paddingLeft20 borderBottomStyle bgEFF3F5">
+					<table cellpadding="0" cellspacing="0">
+						<tr>
+							<td>
+								<apex:image url="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'SDEFicons/icon_incident_SR_feedback.png')}"/>
+							</td>
+							<td>
+								<apex:outputlabel value="{!JSENCODE($Label.bmcservicedesk__providefeedbacklabel)}" styleClass="clsOutputLabelLarge paddingLeft10"/>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr style="{!IF(isAllowed,'display:none','')}">
+				<td>
+					<table cellpadding="0" cellspacing="0" class="paddingLeft20 width100">
+						<tr>
+							<td style="padding-bottom: 25px;padding-top: 25px;">
+								<apex:outputlabel value="{!errorMessage}" styleClass="clsTextStyle"/>
+							</td>
+						</tr>
+						<!-- 
+						<tr>
+							<td>
+								<input type="button" class="bgBtnGrey" value="{!$Label.Close}" onclick="window.opener=window.self;alert('window.opener : ' + window.opener);alert('window.close ' + window.close); window.close();; "/>
+							</td>
+						</tr>
+						 -->
+					</table>					
+				</td>
+			</tr>
+			<tr valign="top">
+				<td class="paddingLeft20 paddingRight20">
+					<apex:outputpanel rendered="{!isAllowed}">
+					<table cellpadding="0" cellspacing="0" class="width100">
+						<tr>
+							<td  class="paddingTop20 clsOutputLabelMed"><apex:outputlabel value="{!$Label.bmcservicedesk__supportservicenumber}"/><apex:outputlabel value="{!incNumber}"/></td>
+						</tr>
+						<tr><td height="10"></td></tr>
+						<tr style="{!IF(OR(ISBLANK(incDescription),ISNULL(incDescription)),'display:none','')}">
+							<td><pre class="clsTextStyle" style="display:inline;"><apex:outputText value="{!incDescription}"/></pre></td>
+						</tr>
+						<tr><td height="20"></td></tr>
+						<tr class="bgDEE0E0">
+							<td class="btnStyle">
+								<input type="button" class="bgBtnGrey" value="{!$Label.SSSubmit}" onclick="submitFeedbackJS();"/>
+							</td>
+						</tr>
+						<tr>
+							<td class="paddingLeft15 borderLRstyle">
+								<table cellpadding="0" cellspacing="0" class="width100">
+									<tr height="15"/>
+									<tr>
+										<td class="clsOutputLabelMed"><apex:outputlabel value="{!$Label.bmcservicedesk__satisfactionwithservice}"/></td>
+									</tr>
+									<tr height="10"/>
+									<tr>
+										<td class="clsTextStyle">
+											<apex:outputlabel value="{!$Label.bmcservicedesk__iam}"/>
+											<input  id="feedbackOption1" checked="true" type="radio" value="positive" name="feedbackOption"/> <apex:outputlabel value="{!$Label.bmcservicedesk__psatsatisfied}" for="feedbackOption1"/>
+											<input id="feedbackOption2" type="radio" value="negative" name="feedbackOption"/><apex:outputlabel value="{!$Label.bmcservicedesk__feedbackoptionnotsatisfied}" for="feedbackOption2"/>
+										</td>
+									</tr>
+									<tr height="15"/>
+									<tr>
+										<td class="clsOutputLabelMed"><apex:outputlabel value="{!$Label.bmcservicedesk__feedbackcomplimentscomplaints}"/></td>
+									</tr>
+									<tr height="5"/>
+									<tr>
+										<td>
+											<apex:inputTextarea id="commentsBox" styleClass="clsSSInputTextArea" onfocus="clearPlaceHolder(this);" onchange="commentsEntered=true;" onblur="checkPlaceHoder(this);"/> 
+										</td>
+									</tr>
+									<tr height="15"/>
+								</table>
+							</td>
+						</tr>
+						<tr class="bgDEE0E0">
+							<td class="btnStyle">
+								<input type="button" class="bgBtnGrey" value="{!$Label.SSSubmit}" onclick="submitFeedbackJS();"/>
+							</td>
+						</tr>
+					</table>
+					</apex:outputpanel>
+				</td>
+			</tr>
+		</table>
+	  </apex:outputpanel>
+	  <apex:actionfunction name="submitFeedback" action="{!submitFeedback}" rerender="mainPanel">
+			<apex:param name="feedbackType" value=""/>
+			<apex:param name="feedbackComments" value=""/>
+		</apex:actionfunction>
+	</apex:form>.
+	<script>
+		var ele = document.getElementById('{!$Component.feedbackForm.commentsBox}');
+		setPlaceHolder(ele);
+	</script>
+	</body>
+</apex:page>

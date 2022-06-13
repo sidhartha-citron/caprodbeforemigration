@@ -1,0 +1,201 @@
+<apex:page controller="BMCServiceDesk.AdminSelfServiceVersionController" 
+showHeader="false" standardStylesheets="false"  id="pg" >
+
+
+ <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSSIncident.css" id="incidentCSS"/> 
+ <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>
+ <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+ 
+
+<style>
+
+	.clsheaderalign{
+	
+		*margin-left:19px;
+		margin-left:10px\0/;
+		color: black;
+		font-size: 10pt;
+	    font-family: sans-serif
+	}
+	.clsURLalign{
+	
+		*margin-left:19px;
+		margin-left:10px\0/;
+	
+	}
+	label{
+		margin-right:5px;
+		vertical-align: top;
+	}
+    .x-small-editor
+	{
+		width:100% !important;
+	}
+    .x-toolbar{
+		 background-image:none !important;
+		 background-color: #DEE0E0 !important;
+    }
+    .clsMarginLeft{
+    	margin-left:3px;
+    	 margin-left:14px\9;
+    	margin-left:15px\0;
+    	*margin-left:25px;
+    }
+    #saveBtn {
+    	margin-left:10px !important;
+    }
+    .clsMainContainer{
+    	margin-left:7px\9 !important;
+    	*margin-left:0px !important;
+    }
+	.header{
+    	font-size: 14px;
+	    padding-right: 2px;
+	    padding-left: 0px;
+	    padding-bottom: 5px;
+	    padding-top: 5px;
+	    font-weight: bold;
+	    color: #2E7DB3;
+    }
+	.helpIconFloat{
+    	float:left; 
+    	margin-right:10px;
+    }
+    .clearBoth20{
+    	clear:both;
+    	height:20px;
+    }
+    .clearBoth10{
+    	clear:both;
+    	height:10px;
+    }
+    .clearBoth50{
+    	clear:both;
+    	height:50px;
+    }
+    .configureLabel{
+    	float:left; 
+    	margin-right:80px;
+    	margin-left: 56px;
+    }
+    .deployedLabel{
+    	float:left; 
+    	margin-right:40px;
+    	margin-left: 56px;
+    }
+    .configurePickList{
+    	float:left; 
+    	margin-right:20px;
+    }
+    #previewUrl{
+    	margin-left:10px;
+    }
+</style>
+    <apex:form id="form">
+    	<div id = "btnToolbar"></div>
+    	<div id="helpDiv" class="clshelpDiv"></div>
+    	<apex:outputPanel id="mainPanel"  styleClass="ClsContainer">
+    	<div class="clshelpDiv" id="helpDiv">
+    		<div class="helpDivcls">
+    		<a class="clsHelpAnchorStyle" href="{!ssVersionHelpURL}" 
+    			title="{!$Label.AdminContextHelpTooltip}" target="_blank">
+    		<span class="helpLinkCls">{!$Label.AdminContextHelpText}</span>
+    		<img id="helpIcon" src="{!$Resource.SDEFStyles}/SDEFicons/help_icon.png"  
+    		class="helpIconCls" width="21px"/></a></div></div>
+    		<div Class="clsMainContainer">
+    			<div>
+	    			<div class="header">
+	    				{!$Label.ForConfiguration}
+	    			</div>
+	    			<div class="clearBoth20"></div>
+	    			<div class="helpIconFloat">
+	    				 <img src="{!$Resource.Themes}/SSDefaultTheme/images/en_US/SS_Information_16.png"/>
+	    			</div>
+	    			<div>
+	    				 <apex:outputLabel value="{!$Label.bmcservicedesk__configureselfservicehelp}"/>
+	    			</div>
+	    			<div class="clearBoth10"></div>
+	    			<div class="configureLabel">
+	    				 <apex:outputLabel value="{!$Label.bmcservicedesk__configuredversion}"/>
+	    			</div>
+	    			<div>
+ 							<div class="configurePickList">
+ 				 					<apex:selectList value="{!configuredSSStr}" 
+										multiselect="false" size="1" styleClass="clsMarginRight">
+									<apex:selectOption itemValue="Self Service 2.0" 
+										itemLabel="{!$Label.bmcservicedesk__ssversion2}"/>
+									<apex:selectOption itemValue="Self Service 3.0" 
+										itemLabel="{!$Label.bmcservicedesk__ssversion3}"/>
+									<apex:actionSupport event="onchange"										
+										rerender="previewUrl"/></apex:selectList>
+							</div>
+							<div style="">
+								<apex:outputpanel id="previewUrl">							
+									<a href="{!SelfServiceUrl}" target="_blank">{!$Label.Preview}</a>
+								</apex:outputpanel>
+							</div>
+							<div style="clear:both;"></div>			
+	    			</div>
+	    			<div class="clearBoth50"></div>
+	    			
+	    			
+	    			<div class="header">
+	    				{!$Label.ForClients}
+	    			</div>
+	    			<div class="clearBoth20"></div>
+	    			<div class="helpIconFloat">
+	    				 <img src="{!$Resource.Themes}/SSDefaultTheme/images/en_US/SS_Information_16.png"/>
+	    			</div>
+	    			<div style="">
+	    				 <apex:outputLabel value="{!$Label.bmcservicedesk__deployedselfservicehelp}"/>
+	    			</div>
+	    			<div class="clearBoth10"></div>
+	    			<div class="deployedLabel">
+	    				 <apex:outputLabel value="{!$Label.bmcservicedesk__deployedversion}"/>
+	    			</div>
+	    			<div style="">
+ 								<apex:selectList value="{!deployedSSStr}" multiselect="false" 
+									size="1" styleClass="clsMarginRight">
+									<apex:selectOption itemValue="Self Service 2.0" itemLabel="{!$Label.bmcservicedesk__ssversion2}"/>
+									<apex:selectOption itemValue="Self Service 3.0" itemLabel="{!$Label.bmcservicedesk__ssversion3}"/>
+								</apex:selectList>
+		
+	    			</div>
+	    			<div class="clearBoth10"></div>
+	    			
+	    		</div>
+    			
+	    		
+				</div>
+				
+                <script>
+    		var message = '{!JSENCODE(messageString)}';  
+    		</script>
+    	</apex:outputPanel>
+       
+               <apex:actionfunction name="saveSelfServiceSettings" action="{!saveSelfServiceSettings}" 
+                rerender="mainPanel" onComplete="waitbox.hide();showErrorMsg();"></apex:actionfunction>
+       
+    	
+    	<script type="text/javascript" src="{!$Resource.SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+		<script type="text/javascript" src="{!$Resource.SDEFExtJS}/ext-all.js" id="ext-all-js"/>
+    	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/JSCommon.js" />
+    	<script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/SliderTip.js"/>
+    	<script>
+    		
+    		var saveLabel= '{!JSENCODE($Label.save)}';
+    		var waitImg = '{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif'; 
+    		var SaveMsgHeader= '{!JSENCODE($Label.SelfServiceVersion)}';
+    		 
+    	</script>
+		
+        
+        
+        <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminSelfServiceVersion.js" />
+		<apex:outputPanel id="RFChatPanel" >
+        
+        </apex:outputPanel>
+		
+		<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js" />
+	</apex:form>
+</apex:page>

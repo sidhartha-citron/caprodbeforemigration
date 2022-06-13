@@ -1,0 +1,195 @@
+<apex:page sidebar="{!hideHeaderAndSideBar}" showHeader="{!hideHeaderAndSideBar}" showChat="true" controller="BMCServiceDesk.ReleaseConsoleController" title="{!JSENCODE($Label.bmcservicedesk__release_console)}" action="{!LoadActionAgentItem}" extensions="BMCServiceDesk.JSRemoteActions">
+    <apex:includeScript value="/support/console/25.0/integration.js"/>
+    <c:ConsoleComponent ConsoleObjectName="Release__c" />
+<head>
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/incidentconsole.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/{!IF (userLanguage== 'iw','ActivityFeed_rtl.css','ActivityFeed.css')}" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />  
+	<link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" />
+</head>
+<script type="text/javascript">
+	var releaseConsole = '{!$Page.ReleaseConsole}';
+	var wikiUrl='{!wikiUrl}';
+    var pkgNamespace='BMCServiceDesk__';
+    var isActivityFeedEnabled = {!isActivityFeedEnabled};
+    var isCISidebarEnabled = {!isCISidebarEnabled};
+    var isServicesAndCISliderEnabled = false;
+    var AttRefGeneratorId = '';
+    var isBaseElementAccessible = {!isBaseElementAccessible};
+    Ext.ns("ReleaseConsolePage");
+   ReleaseConsolePage.Labels = {
+        New: '{!JSENCODE($Label.New)}',
+        Save: '{!JSENCODE($Label.Save)}',
+		New_Release: '{!JSENCODE($Label.New_Release)}',
+        ReleaseForm: '{!JSENCODE($Label.ReleaseForm)}',
+        RelatedLists: '{!JSENCODE($Label.Details)}',
+        Undo: '{!JSENCODE($Label.CIExpReload)}',
+        Undo_Consolebtn_Tooltip: '{!JSENCODE($Label.CIExpReload)}',
+        labelcloseWindow : '{!JSENCODE($Label.closeWindow)}',
+        labelcloseWindowLabel : '{!JSENCODE($Label.closeWindowLabel)}',
+		Ok: '{!JSENCODE($Label.Ok)}',
+        Yes: '{!JSENCODE($Label.ExtjsMessageYes)}',
+        No: '{!JSENCODE($Label.ExtjsMessageNo)}',
+        RM: '{!JSENCODE($Label.ReleaseRecordPrefix)}',
+        Actions: '{!JSENCODE($Label.Actions)}',
+        ReleaseClose: '{!JSENCODE($Label.Close)}',
+        Reopen: '{!JSENCODE($Label.Reopen)}', 
+        Print: '{!JSENCODE($Label.Print)}',
+        PrintPDF: '{!JSENCODE($Label.PrintPDF)}',
+        Clone: '{!JSENCODE($Label.Clone)}',
+        AgentTools: '{!JSENCODE($Label.AgentTools)}',
+        KnowledgeSearch: '{!JSENCODE($Label.KnowledgeSearch)}',
+        CIExpCIExplorer: '{!JSENCODE($Label.CIExpCIExplorer)}',
+        ReleaseManifest: '{!JSENCODE($Label.ManifestTitle)}',
+        ChangeSchedule : '{!JSENCODE($Label.Navigator_ChangeSchedule)}',
+        AddNote: '{!JSENCODE($Label.Message1)}',
+        AttachFile: '{!JSENCODE($Label.AttachViewFiles)}',
+        NewAction: '{!JSENCODE($Label.New_Action)}',
+		closeConfirmMsg: '{!JSENCODE($Label.Console_closeConfirmMsg)}',
+        ConfirmAction: '{!JSENCODE($Label.Confirm_Action)}',
+        ViewActionHistory: '{!JSENCODE($Label.ViewActionHistory)}',
+		SubmitForApprovalLabel:'{!JSENCODE($Label.SubmitForApproval)}',
+		LockRecord:'{!JSENCODE($Label.LockRecord)}', 
+        UnlockRecord: '{!JSENCODE($Label.UnlockRecord)}',
+         Locked:'{!JSENCODE($Label.Locked)}', 
+        Unlocked: '{!JSENCODE($Label.Unlocked)}',
+        LockedRecord:'{!JSENCODE($Label.LockedRecord)}', 
+        UnlockedRecord: '{!JSENCODE($Label.UnlockedRecord)}',
+        SmartView: '{!JSENCODE($Label.DeepView)}'
+    }
+	
+	 // common label should be removed later on from the indiviual page label.
+	
+	Ext.ns("ConsoleCommonLabels");
+	ConsoleCommonLabels.Labels = {
+		labelcloseWindowLabel : '{!JSENCODE($Label.closeWindowLabel)}',
+		ConfirmAction: '{!JSENCODE($Label.Confirm_Action)}',
+		Yes: '{!JSENCODE($Label.ExtjsMessageYes)}',
+		No: '{!JSENCODE($Label.ExtjsMessageNo)}',
+		ServiceTargetsOK: '{!JSENCODE($Label.ServiceTargetStatus_OK)}'
+	}
+	
+	var isServiceCloudConsole = "{!JSENCODE($CurrentPage.parameters.isServiceCloudConsole)}";
+	if(isRFConsoleDetailForm && isServiceCloudConsole != 'true' && isActivityFeedEnabled == true && Ext.isIE8 != true && Ext.isIE9!= true && Ext.isIE10!= true ) {
+        isActivityFeedEnabled = true;
+    } else {
+        isActivityFeedEnabled = false;
+    }
+    
+    if(isRFConsoleDetailForm && isServiceCloudConsole != 'true' && isCISidebarEnabled == true && Ext.isIE8 != true && Ext.isIE9!= true && Ext.isIE10!= true) {
+        isCISidebarEnabled = true;
+    } else {
+        isCISidebarEnabled = false;
+    }
+    
+    if(isRFConsoleDetailForm && isServiceCloudConsole != 'true' && Ext.isIE8 != true && Ext.isIE9!= true && Ext.isIE10!= true)
+        isServicesAndCISliderEnabled = true;
+    
+	var tabId = "{!JSENCODE($CurrentPage.parameters.tabId)}";
+    _RemotingActions.reopenRelease = '{!$RemoteAction.ReleaseConsoleController.reopenRelease}';
+    if('{!JSENCODE($CurrentPage.parameters.record_name)}'!='' && isServiceCloudConsole=='true')
+    {
+        sforce.console.setTabTitle('{!JSENCODE($CurrentPage.parameters.record_name)}');
+    }
+  
+ 	function setAttRefGeneratorId(val)
+	{
+		AttRefGeneratorId = val;
+	 	var releaseDetailsFrameId = document.getElementById('releaseDetailsFrameId');
+	 	if(releaseDetailsFrameId != null)
+ 			releaseDetailsFrameId.contentWindow.AssignAttRefGeneratorId(val);
+ 
+	}
+  
+</script>
+
+<script src="{!$Resource.SDEFCommonJS}/ReleaseConsole.js"  type="text/javascript" />
+<script src="{!$Resource.SDEFCommonJS}/ConsoleForm.js"  type="text/javascript" />
+<script>
+    LoadHandlerForActionItem();
+    LoadHandlerForAgentItem();
+    var ActionMenuItem = {!ActionMenuItem};
+    var AgentMenuItem ={!AgentMenuItem};
+    var orgNamespace  = '{!orgNamespace}';
+    var recordLock = '{!JSENCODE(recordLock)}'; 
+	var lockDuration = '{!JSENCODE(lockDuration)}';
+	var continueLockingRecord;
+	var readContinueMessage1 =  '{!JSENCODE($Label.RecordContinueLockingMsg1)}';
+	var isRFHotkeysDisabled = {!isRFHotkeysDisabled};
+</script>
+  <div id="topbar">
+    <div class="d-notification d-notification_warning d-notification_content">
+        <div class="d-notification__icon d-icon-left-exclamation_circle"></div>
+        <div class="d-notification__supporting-text">
+            <p style="float:left;" class="d-notification__item" id="time"></p>
+        </div>
+        <p class="d-notification__item_link centerCrossIcon">
+            <a id="continueLocking" href="#" onclick='continueLockingRecord()'>{!JSENCODE($Label.ContinueLocking)}</a>
+            <a href="#" style="margin-left: 30px;" class="d-icon-left-cross" onclick='closebar()'></a>
+        </p>
+    </div>
+</div>
+ 
+<div id="DetailFormDiv" style="height:100%">
+    <iframe id="releaseDetailsFrameId" name="releaseDetailsFrame"  frameborder="0" scrolling="yes" src ="" style="width:100%;height:100%;border:none;"></iframe>
+    <iframe id="releaseRelatedListFrameId" name="releaseRelatedListFrame" frameborder="0" scrolling="yes"  src ="" style="width:100%;height:100%;border:none;"></iframe>
+	<iframe id="releaseSmartViewFrameId" name="releaseSmartViewFrame" frameborder="0" scrolling="yes"  src ="" style="width:100%;height:100%;border:none;"></iframe>
+</div>
+<apex:outputPanel rendered="{!isActivityFeedEnabled}">
+    <div  id="sidebarcontainer" class="sidebarContainer non-incident">
+        <div id="sideBarloader" />
+        <div class="dialog-backgray" id ="maskActivityFeedParentFrame" onclick="hidesmartview()"/>
+        <div class="activityFeedExpandCollapseIcon" id="activityFeedExpandCollapseIcon" onClick="addAnimation('activity');showsmartview()">
+            <div id="showbuttonSmartView" class="sidebarShowButton"  >
+                <span   class="sidebarShowHideIcon {!IF (userLanguage== 'iw', 'd-icon-arrow_right_circle', 'd-icon-arrow_left_circle')}"/></div>          
+            <div title="{!$Label.ActivityFeed}" class="verticaltext" >{!$Label.ActivityFeed}</div>
+        </div>
+        <div class="activityFeedHeaderRow"  id="activityFeedHeaderRow">
+            <div id="hidebuttonSmartView"  onClick="addAnimation('activity');hidesmartview()" class="sidebarHideButton"  >
+                <span id="sidebarShowHideIcon" class="sidebarShowHideIcon {!IF (userLanguage== 'iw','d-icon-arrow_left_circle','d-icon-arrow_right_circle')}
+    "/>
+            </div>
+            <div class="activityFeedHeaderText">{!$Label.ActivityFeed}</div>     
+        </div>
+        <div id="sidebarWrapper" class="sidebarFrameWrapper" >
+            <iframe id="releaseSmartViewSidebarFrameId" name="releaseSmartViewFrame"   frameborder="0" scrolling="yes"  src ="" class="sidebarIframe" ></iframe>
+        </div>
+        <div class="activityFeedExpandCollapseIcon" id="relatedCIExpandCollapseIcon2" onClick="removeAnimation('ci');showCISmartview()" style="{!IF(isBaseElementAccessible && isCISidebarEnabled,'display:block', 'display:none')}">
+            <div id="showbuttonCISmartView" class="sidebarShowButton"  >
+                <span   class="sidebarShowHideIcon {!IF (userLanguage== 'iw', 'd-icon-arrow_right_circle', 'd-icon-arrow_left_circle')}"/></div>        
+            <div title="{!$Label.ServicesAndCIs}" class="verticaltext verticaltext-ci" style="" >{!$Label.ServicesAndCIs}</div>
+        </div>	 
+    </div>
+</apex:outputPanel>
+<apex:outputPanel rendered="{!isBaseElementAccessible && isCISidebarEnabled}">
+    <div  id="ciSidebarcontainer" class="sidebarContainer">
+        <div id="ciSideBarloader" />
+        <div class="dialog-backgray" id ="maskRelatedCIParentFrame" onclick="hideCISmartview()"/>   
+        <div class="activityFeedExpandCollapseIcon" id="relatedCIExpandCollapseIcon" onClick="addAnimation('ci');showCISmartview()">
+            <div id="showbuttonCISmartView" class="sidebarShowButton"  >
+                <span   class="sidebarShowHideIcon {!IF (userLanguage== 'iw', 'd-icon-arrow_right_circle', 'd-icon-arrow_left_circle')}"/></div>        
+            <div title="{!$Label.ServicesAndCIs}" class="verticaltext verticaltext-ci" >{!$Label.ServicesAndCIs}</div>
+        </div>
+        <div class="activityFeedHeaderRow" id="relatedCIHeaderRow">
+            <div id="hidebuttonCISmartView"  onClick="addAnimation('ci');hideCISmartview()" class="sidebarHideButton"  >
+                <span id="ciSidebarShowHideIcon" class="sidebarShowHideIcon {!IF (userLanguage== 'iw','d-icon-arrow_left_circle','d-icon-arrow_right_circle')}"/>
+            </div>
+            <div class="activityFeedHeaderText" id="servicesAndCIsId" style="width:80%" >{!$Label.ServicesAndCIs}</div>
+            <div class="rf-button-panel">
+                <button class='rf-btn-action d-icon-hub rf-icon-font rf-padding-left5px' onclick="CIExplorerBtnHandler()" title="{!$Label.LaunchCIExplorer}"> </button>
+            </div>		
+        </div>
+        <div id="ciSidebarWrapper" class="sidebarFrameWrapper">
+            <iframe  id="relatedCISmartViewSidebarFrameId" name="relatedCISmartViewSidebarFrame"   frameborder="0" scrolling="no"  src ="" class="sidebarIframe" onload=""></iframe>
+        </div>
+        <div class="activityFeedExpandCollapseIcon" id="activityFeedExpandCollapseIcon2" style="" onClick="removeAnimation('activity');showsmartview()">
+            <div id="showbuttonSmartView" class="sidebarShowButton"  >
+                <span   class="sidebarShowHideIcon {!IF (userLanguage== 'iw', 'd-icon-arrow_right_circle', 'd-icon-arrow_left_circle')}"/></div>        
+            <div title="{!$Label.ActivityFeed}" class="verticaltext" >{!$Label.ActivityFeed}</div>
+        </div>       
+    </div>  
+</apex:outputPanel>       
+<apex:outputPanel layout="none" rendered="{!If(userLanguage=='iw','true','false')}">
+	<link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFConsole-RTL.css" type="text/css" />
+  </apex:outputPanel>
+</apex:page>

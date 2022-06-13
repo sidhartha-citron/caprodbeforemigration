@@ -1,0 +1,70 @@
+<messaging:emailTemplate subject="{! IF(relatedTo.Notification_Language_Locale_Key__c = 'fr','Votre rendez-vous a été pris avec Citron Hygiène!', 'Your appointment has been scheduled with Citron Hygiene!' ) }" 
+    recipientType="Contact" 
+    relatedToType="ServiceAppointment"
+    language="{! IF(relatedTo.Notification_Language_Locale_Key__c = null,'en_US', relatedTo.Notification_Language_Locale_Key__c ) }"
+    >
+
+<messaging:htmlEmailBody >        
+    <html>
+        <body>
+            <font size="+2">
+            <apex:outputPanel rendered="{! IF(relatedTo.Notification_Language_Locale_Key__c = 'fr', false, true ) }">
+            Dear Customer,
+            <br/>
+            <br/>
+            This email confirms that an appointment has been scheduled on {! relatedTo.Scheduled_Start_Date__c}
+            for Customer Account Number {! relatedTo.Account.AccPac_Account__c} ({! relatedto.Account.Name})
+            <br/>
+            <br/>
+            This service will take place at :
+            <br/>
+            {! relatedTo.Street}<br/>
+            {! relatedTo.City}<br/>
+            {! relatedTo.Country}<br/><br/>
+            
+            <apex:outputtext value="In the following areas:" rendered="{! IF(relatedTo.Type__c = 'Delivery', false, true)}"></apex:outputtext>
+            {surveylocations}
+            <br/>
+            <br/>
+            If you have any questions regarding this appointment, please reach out to our
+            Customer Success team and a representative would be happy to assist you. If your facility is experiencing a temporary closure, please reach out to our team at 1-800-643-6922.<br/><br/>
+            Regards,<br/><br/>
+            <b><p style="color:royalblue;">
+            Citron Hygiene Customer Success Department</p></b>
+            <p style="color:yellowgreen;">800.643.6922</p>
+            <b><font size="+1"><p style="color:blue;font-size:-1">customersuccess@citronhygiene.com</p></font></b>
+            <img src="https://citronhygiene.lightning.force.com/servlet/servlet.ImageServer?id=0153Z000003nUsJQAU&oid=00Dj0000001oMa6EAE" />
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{! IF(relatedTo.Notification_Language_Locale_Key__c = 'fr', true, false) }">
+            Cher Client,
+            <br/>
+            <br/>
+            Ce courriel confirme qu&#39;un rendez-vous a été planifié le&nbsp;<apex:outputText value="{0,date,dd/MM/yyyy}">
+                <apex:param value="{! relatedTo.SchedStartTime}" /> </apex:outputText> 
+            pour le compte client #{! relatedTo.Account.AccPac_Account__c} ({! relatedto.Account.Name})
+            <br/>
+            <br/>
+            Le service aura lieu au :
+            <br/>
+            {! relatedTo.Street}<br/>
+            {! relatedTo.City}<br/>
+            {! relatedTo.Country}<br/><br/>
+
+            <apex:outputtext value="Dans les zones suivantes :" rendered="{! IF(relatedTo.Type__c = 'Delivery', false, true)}"></apex:outputtext>
+            {surveylocations}
+            <br/>
+            <br/>
+            Si vous avez des questions concernant ce rendez-vous,
+            veuillez contacter notre équipe de service-excellence et un représentant se fera un plaisir de vous aider. Si votre établissement connaît une fermeture temporaire, veuillez contacter notre équipe au 1-800-643-6922.<br/><br/>
+            Cordialement,<br/><br/>
+            <b><p style="color:royalblue;">
+            Centre de service d&#39;excellence à la clientèle - Citron Hygiène</p></b>
+            <p style="color:yellowgreen;">800.643.6922</p>
+            <b><font size="+1"><p style="color:blue;">service-excellence@citronhygiene.com</p></font></b>
+            <img src="https://citronhygiene.lightning.force.com/servlet/servlet.ImageServer?id=0153Z000004Hwoe&oid=00Dj0000001oMa6" />
+            </apex:outputPanel>
+            </font>
+       </body>
+    </html>
+</messaging:htmlEmailBody>     
+</messaging:emailTemplate>

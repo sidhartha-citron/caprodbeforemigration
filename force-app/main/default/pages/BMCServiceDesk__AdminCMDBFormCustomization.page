@@ -1,0 +1,156 @@
+<apex:page controller="BMCServiceDesk.CMDBCustomizationController" standardStylesheets="false" showheader="false">
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFExtJS31}/resources/css/ext-all.css" />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />	
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBManagerStyles.css" />
+	<link title="aero" rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBTheme.css" media="screen" />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+	<c:CommonIncludes />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminCMDBFormCustomization.css" />
+	<apex:form >
+		<apex:actionFunction name="getAvailableFields" action="{!getAvailableFields}" reRender="updateDataPanelId" oncomplete="updateData();updatePanel();">
+			<apex:param assignTo="{!selectedClass}" name="selectedClassAPI" value=""/>
+		</apex:actionFunction>
+		<apex:actionFunction name="saveCMDBCustomFields" action="{!savCMDBCustomization}" reRender="successid" oncomplete="waitMsg.hide();">
+			<apex:param name="ObjectCustomFields" assignTo="{!selectedFields}" value="" />
+		</apex:actionFunction>
+	</apex:form>
+	
+	<div id="toolbarDiv"/>
+	<script>
+		var wikiUrl = '{!wikiUrl}';
+		var CIFORCE_RES_PATH = '{!$Resource.CIForce}';   
+		var newHeight = 1000;
+		{!ServerVariablesString};
+		var mainPanelHeight = 1000;
+		var gridheight ;
+		var sdefStylePath = '{!$Resource.SDEFStyles}/';
+		var helpResouces = parent.getStdFormHelpPath(); 
+		 
+		
+		var browserContainerPanelHeight = mainPanelHeight;
+		var instanceBrowserPanelHeight = browserContainerPanelHeight -6;
+		var instanceBrowserPanelHeight = browserContainerPanelHeight -6;
+		var tabPanelHeight = instanceBrowserPanelHeight - 20;
+		var instanceDisplayHeight = instanceBrowserPanelHeight; 
+		
+		var ClassIDValue, selectedClassPanel;
+		var newWidth, listviechecked = 0, ds, selectedClassAPI, selectedDS, updateClassId, updateSuperClass, updateClassType, updateIsAbstract;
+		var ClassListView = null; 
+		var tabchange = 0;
+		var tabTipCMDBTileView = '{!JSENCODE($Label.CMDBTileView)}';
+		var tabTipCMDBTreeView = '{!JSENCODE($Label.CMDBTreeView)}';
+		var tabTipCMDBListView = '{!JSENCODE($Label.CMDBListView)}';
+		var selectedRecordId = '';
+		var saveLbl = '{!JSENCODE($Label.Save)}';
+		
+		var AdminContextHelpText = '{!JSENCODE($Label.AdminContextHelpText)}';
+		var AdminContextHelpTooltip = '{!JSENCODE($Label.AdminContextHelpTooltip)}';
+		var msgTitle = '{!JSINHTMLENCODE($Label.CMDBCustomAttributes)}'; 
+		selectedRecordId = '{!JSENCODE(SelectedClass)}';
+	
+	</script>
+
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AppAdminItemselector.js" id="itemselector"/>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CMDBClassChooser.js" id="classChooserjsid"/>       
+	
+	<apex:outputPanel id="updateDataPanelId">
+		<script>	
+			updateClassId = '{!JSENCODE(ClassID)}';
+			updateSuperClass = '{!JSENCODE(superClass)}';
+			updateIsAbstract = '{!JSENCODE(isAbstract)}';
+			updateClassType = '{!JSENCODE(classType)}';
+			var labelClassId = '{!JSENCODE($ObjectType.CMDB_Class__c.fields.ClassID__c.label)}';
+			
+			var labelAbstract = '{!JSENCODE($ObjectType.CMDB_Class__c.fields.Abstract__c.label)}';
+			var labelSuperClass ='{!JSENCODE($ObjectType.CMDB_Class__c.fields.SuperClass__c.label)}';
+			var labelPanelTitle = '{!JSENCODE(SelectedClass)}';
+			var labelSelectedClass = '{!JSENCODE($Label.CMDBSelectedClass)}';
+			var labelSelectedFields = '{!JSENCODE($Label.CMDBSelectedAttributes)}';
+			var labelAvailableFields = '{!JSENCODE($Label.CMDBAvailableAttributes)}';
+			var labelCMDBAvailableClasses = '{!JSENCODE($Label.CMDBAvailableClasses)}';
+			function updatePanel(){
+				if('undefined' != document.getElementById('ClassIdValueId')){
+					document.getElementById('ClassIdValueId').innerHTML  = updateClassId;
+				}
+				
+				if('undefined' != document.getElementById('SuperClassValueId')){
+					document.getElementById('SuperClassValueId').innerHTML  = updateSuperClass;
+				}
+				if('undefined' != document.getElementById('AbstractValueId')){
+					document.getElementById('AbstractValueId').innerHTML  = updateIsAbstract;
+				}
+				if('undefined' != document.getElementById('SCPanelId')){				
+					var title = labelSelectedClass+': '+'{!JSENCODE(SelectedClass)}' + helpLabel;
+					selectedClassPanel.setTitle(title)
+				}	 
+			}
+				
+			var AvailableCustomFields = new Array(); 
+		    var i=0; 
+		    <apex:repeat value="{!avilableClassCustomFieldsLabel}" var="customFieldNameList" >    
+		        AvailableCustomFields[i] = new Array(2);
+		        AvailableCustomFields[i++][0]='{!customFieldNameList}';
+		    </apex:repeat>
+		    i=0; 
+		    <apex:repeat value="{!avialabeleClassCustomFieldsName}" var="customFieldApiNameList" >    
+		        AvailableCustomFields[i++][1]='{!customFieldApiNameList}';
+		    </apex:repeat>
+			    
+			var SelectedCustomFields = new Array();
+		    i=0; 
+		    <apex:repeat value="{!selectedClassCustomFieldsLabel}" var="selFieldNameList" >    
+		        SelectedCustomFields[i] = new Array(2);
+		        SelectedCustomFields[i++][0]='{!selFieldNameList}';
+		    </apex:repeat>
+		    i=0;  
+		    <apex:repeat value="{!selectedClassCustomFieldsName}" var="selFieldApiNameList" >    
+		        SelectedCustomFields[i++][1]='{!selFieldApiNameList}';
+		    </apex:repeat>
+		</script>	   
+	</apex:outputPanel>
+	
+	<script src="{!$Resource.SDEFCommonJS}/AdminCMDBCustomization.js" type="text/javascript"></script>
+	<script>	
+		function showACErrMsg(msg,err,onSave){
+			var extIcon;
+			if(err){
+				extIcon = Ext.MessageBox.ERROR		
+			}else{
+				extIcon = Ext.MessageBox.INFO
+			}
+			var msgTitle = '';
+			if(onSave != null && onSave){
+					msgTitle = '{!JSENCODE($Label.BMCFootPrints)}';
+			}else{
+					msgTitle = '{!JSENCODE($Label.ValidateCredentials)}'
+			}
+				
+			Ext.MessageBox.show({
+			    id:'scMsgBox',
+			    title: msgTitle,
+			    msg: msg,
+			    buttons: Ext.MessageBox.OK,
+			    icon:extIcon,
+			    width:350
+			}); 
+		  }
+	</script>
+	<apex:outputPanel id="successid">
+	<Script>
+		var msg = '{!SaveSuccess}';
+		if(msg == 'Success'){
+			showMessage('{!JSENCODE($Label.SavedSuccessfully)}');
+	    }	    
+	</Script>
+		<style>
+	@media screen and (-webkit-min-device-pixel-ratio:0)
+	{
+		.okButton .x-toolbar-left
+		{
+			padding-left:50%;
+		}
+	}
+	</style>
+	</apex:outputPanel>
+	<div id="itemselector"></div>	
+</apex:page>

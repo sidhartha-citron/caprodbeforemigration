@@ -1,0 +1,356 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="MassEditController">
+    <lightning:workspaceAPI aura:id="workspace"/>
+
+    <aura:attribute name="ids" type="String[]"/>
+    <aura:attribute name="objectName" type="String"/>
+    <aura:attribute name="sortImpl" type="String" default=""/>
+    <aura:attribute name="displayActiveSelector" type="Boolean" default="false"/>
+    <aura:attribute name="pageSize" type="Integer" default="50"/>
+    <aura:attribute name="successes" type="MassEditController.CloneResult[]" access="private"/>
+    <aura:attribute name="failures" type="MassEditController.CloneResult[]" access="private"/>
+    
+    <aura:attribute name="numPages" type="Integer" access="private"/>
+    <aura:attribute name="initialNumLoading" type="Integer" access="private"/>
+    <aura:attribute name="records" type="RecordEntry[]" access="private"/>
+    <aura:attribute name="displayRecords" type="RecordEntry[]" access="private"/>
+    <aura:attribute name="headers" type="FieldEntry[]" access="private"/>
+    <aura:attribute name="isLoading" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="isInitialLoad" type="Boolean" default="true" access="private"/>
+    <aura:attribute name="isSearching" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="searchTerm" type="String" access="private"/>
+    <aura:attribute name="searchSurveyLocation" type="String" access="private"/>
+    <aura:attribute name="searchOrder" type="String" access="private"/>
+    <aura:attribute name="searchPlaceholderAbove" type="String" default="Search records above" access="private"/>
+    <aura:attribute name="searchPlaceholderBelow" type="String" default="Search records below" access="private"/>
+    <!--aura:attribute name="searchSurveyLocBelow" type="String" default="Search Survey Locations below" access="private"/-->
+    <aura:attribute name="searchOrders" type="String" default="Search Orders" access="private"/>
+    
+    <aura:attribute name="toastCmp" type="Aura.Component" />
+    <aura:attribute name="theRecord" type="Order" default="{'sobjectType':'Order'}" access="global"/>
+    
+    <aura:attribute name="recordId" type="String"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/> 
+    <aura:handler event="c:updatePageEvt" action="{!c.handleUpdatePage}"/>
+
+    <aura:attribute name="selectedId" type="String" />
+    <aura:attribute name="selectedOrderNumber" type="String" />
+    <aura:attribute name="accountId" type="String"/>
+    <aura:attribute name="parentName" type="String"/>
+    <aura:attribute name="lookupFieldFilter" type="String"/>
+    
+
+    <div class="slds-align_absolute-center">{!v.toastCmp}</div>
+    
+    <div class="slds-m-left_medium slds-m-bottom_small">
+        <span class="slds-text-heading_small"><b>{!v.parentName}</b></span>
+    </div>
+
+    <aura:if isTrue="{!v.ids.length > 100}">
+        <div class="slds-m-left_medium slds-m-bottom_small">This page's responsiveness may be affected due to the large number of records loaded. Thank you for your patience.</div>
+    </aura:if>
+
+
+    
+    <div class="slds-m-bottom_small slds-align_absolute-center">
+
+        <lightning:button value="Save" label="Save" class="slds-button slds-button_neutral" onclick="{!c.save}"/>&nbsp;&nbsp;
+        <lightning:button value="Cancel" label="Cancel" class="slds-button slds-button_neutral" onclick="{!c.back}"/>&nbsp;&nbsp;
+
+        <ui:inputText value="{!v.searchTerm}" class="slds-lookup__search-input slds-input searchBox" placeholder="{!v.searchPlaceholderBelow}" />&nbsp;
+        <lightning:button value="Search" label="Search" class="slds-button slds-button_neutral" onclick="{!c.search}"/>&nbsp;&nbsp;
+        <lightning:button value="Clear" label="Clear" class="slds-button slds-button_neutral" onclick="{!c.clear}"/>&nbsp;&nbsp;&nbsp;&nbsp;
+        
+        <c:lookupField 
+            objectAPIName="Order"
+            label="" 
+            variant="label-hidden"
+            returnFields="['OrderNumber']" 
+            showAddNew="false" 
+            showRecent="false" 
+            queryFields="['OrderNumber']"
+            selectedId="{!v.selectedId}"
+            selectedName="{!v.selectedOrderNumber}"
+            filter="{!v.lookupFieldFilter}"/>
+
+        &nbsp;&nbsp;
+        <!--<c:InputOrder recordId="{!v.recordId}" label="" value="{!v.theRecord.OrderNumber}" sObjectType="Order" icon="standard:order"/> /-->
+        <lightning:button value="Move to Order" label="Move to Order" class="slds-button slds-button_neutral" onclick="{!c.movetoOrder}"/>
+
+    </div>
+        
+    <div class="slds-align_absolute-center slds-m-bottom_small">
+    	<c:SimplePaginator numPages="{!v.numPages}" aura:id="pagTop"/>
+    </div>
+	
+    <aura:if isTrue="{!v.isInitialLoad}">
+        <div class="slds-is-relative">
+            <div style="height: 6rem;">
+              <div class="slds-align_absolute-center loadingText slds-m-top_small">{!v.initialNumLoading} records loading...</div>
+              <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+                <span class="slds-assistive-text">Loading</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+              </div>
+            </div>
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.isLoading}">
+        <div class="slds-is-relative">
+            <div style="height: 6rem;">
+              <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+                <span class="slds-assistive-text">Loading</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+              </div>
+            </div>
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!and(v.isInitialLoad == false, v.isLoading == false)}">
+    <div class="slds-is-relative">
+        <div class="{!if(v.isSearching,'slds-show overlay','slds-hide')}">
+        	<div class="slds-is-relative" style="height: 20%;">
+            	<div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+                    <span class="slds-assistive-text">Loading</span>
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+              	</div>
+            </div>
+        </div>
+        
+        <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+            <thead>
+                <tr class="slds-text-title">
+                    <th scope="col" class="stickyHeader">
+                        <div class="slds-align_absolute-center selectLink">
+                            <a onclick="{!c.onSelectAll}">all</a>&nbsp;|&nbsp;<aura:if isTrue="{!v.displayActiveSelector}"><a onclick="{!c.onActive}">active</a>&nbsp;</aura:if> 
+                            <!--<ui:inputCheckbox aura:id="selectAllBox" change="{!c.onCheckSelectAll}"/>-->
+                        </div>
+                        <div class="slds-align_absolute-center selectLink">
+                            <a onclick="{!c.onSelectNone}">none</a>&nbsp;|&nbsp;<a onclick="{!c.onInvert}">invert</a>
+                            <!--<ui:inputCheckbox aura:id="selectAllBox" change="{!c.onCheckSelectAll}"/>-->
+                        </div>
+                    </th>
+                    <aura:iteration items="{!v.headers}" var="header" indexVar="index">
+                        <th scope="col" class="stickyHeader">
+                            <aura:if isTrue="{!header.isEditable == true}">
+                                <div class="slds-text-align_left headerTitles">{!header.label}</div>
+                                <aura:set attribute="else">
+                                    <div class="slds-text-align_left headerTitlesReadOnly">{!header.label}</div>
+                                </aura:set>
+                            </aura:if>
+                        </th>
+                    </aura:iteration>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="slds-is-selected">
+                    <td>
+                        <div class="slds-text-align_left">
+                            <lightning:button value="Apply" label="Apply" class="slds-button slds-button_neutral" onclick="{!c.applyControl}"/>
+                        </div>
+                    </td>
+                    <aura:iteration items="{!v.headers}" var="f">
+                        <td>
+                            <div class="slds-text-align_left">
+                                <aura:if isTrue="{!f.isEditable == false}">
+                                    <ui:outputText value="{!f.value}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'BOOLEAN', f.isEditable == true)}">
+                                    <ui:inputCheckbox value="{!f.value}" />
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'CURRENCY', f.isEditable == true)}">
+                                    <ui:inputCurrency value="{!f.value}" />
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'DATE', f.isEditable == true)}">
+                                    <ui:inputDate value="{!f.value}" displayDatePicker="true"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'DATETIME', f.isEditable == true)}">
+                                    <ui:inputDateTime value="{!f.value}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'DOUBLE', f.isEditable == true)}">
+                                    <ui:inputNumber value="{!f.value}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'EMAIL', f.isEditable == true)}">
+                                    <ui:inputEmail value="{!f.value}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'INTEGER', f.isEditable == true)}">
+                                    <ui:inputNumber value="{!f.value}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'MULTIPICKLIST', f.isEditable == true)}">
+                                    <ui:inputText value="{!f.value}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'PERCENT', f.isEditable == true)}">
+                                    <ui:inputNumber value="{!f.value}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'PHONE', f.isEditable == true)}">
+                                    <ui:inputPhone value="{!f.value}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'PICKLIST', f.isEditable == true)}">
+                                    <lightning:select value="{!f.value}" class="slds-align_absolute-center mass_edit_picklist">
+                                        <aura:iteration items="{!f.opts}" var="opt">
+                                            <option value="{!opt}">{!opt}</option>
+                                        </aura:iteration>
+                                    </lightning:select>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'STRING', f.isEditable == true)}">
+                                    <ui:inputText value="{!f.value}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(f.type == 'TEXTAREA', f.isEditable == true)}">
+                                    <ui:inputText value="{!f.value}"/>
+                                </aura:if>
+                            </div>
+                        </td>
+                    </aura:iteration>
+                </tr>
+                <aura:iteration items="{!v.displayRecords}" var="rec" indexVar="index">
+                    <tr>
+                        <td>
+                            <div class="slds-form-element">
+                                <label class="slds-checkbox_toggle slds-grid">
+                                    <ui:inputCheckbox value="{!rec.isSelected}" />
+                                  <span id="checkbox-toggle-apply" class="slds-checkbox_faux_container" aria-live="assertive">
+                                    <span class="slds-checkbox_faux"></span>
+                                  </span>
+                                </label>
+                              </div>
+                        </td>
+                        <aura:iteration items="{!rec.fields}" var="f">
+                            <td>
+                                <div class="slds-text-align_left">
+                                    <aura:if isTrue="{!f.isEditable == false}">
+                                        <ui:outputText value="{!f.value}" class="mass_edit_readonly"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'BOOLEAN', f.isEditable == true)}">
+                                        <ui:inputCheckbox value="{!f.value}" />
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'CURRENCY', f.isEditable == true)}">
+                                        <ui:inputCurrency value="{!f.value}" />
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'DATE', f.isEditable == true)}">
+                                        <ui:inputDate value="{!f.value}" displayDatePicker="true" class="mass_edit_date"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'DATETIME', f.isEditable == true)}">
+                                        <ui:inputDateTime value="{!f.value}"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'DOUBLE', f.isEditable == true)}">
+                                        <ui:inputNumber value="{!f.value}"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'EMAIL', f.isEditable == true)}">
+                                        <ui:inputEmail value="{!f.value}"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'INTEGER', f.isEditable == true)}">
+                                        <ui:inputNumber value="{!f.value}"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'MULTIPICKLIST', f.isEditable == true)}">
+                                        <ui:inputText value="{!f.value}"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'PERCENT', f.isEditable == true)}">
+                                        <ui:inputNumber value="{!f.value}"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'PHONE', f.isEditable == true)}">
+                                        <ui:inputPhone value="{!f.value}"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'PICKLIST', f.isEditable == true)}">
+                                        <lightning:select value="{!f.value}" class="slds-align_absolute-center mass_edit_picklist">
+                                            <aura:iteration items="{!f.opts}" var="opt">
+                                                <option value="{!opt}">{!opt}</option>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'STRING', f.isEditable == true)}">
+                                        <ui:inputText value="{!f.value}"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(f.type == 'TEXTAREA', f.isEditable == true)}">
+                                        <ui:inputText value="{!f.value}"/>
+                                    </aura:if>
+                                </div>
+                            </td>
+                        </aura:iteration>
+                    </tr>	
+                </aura:iteration>
+            </tbody>
+        </table>
+    </div>
+    </aura:if>
+    
+    <div class="slds-align_absolute-center slds-m-bottom_small">
+        <c:SimplePaginator numPages="{!v.numPages}" aura:id="pagBottom"/>
+    </div>
+
+    <div class="slds-m-top_large slds-align_absolute-center">
+        <lightning:button value="Save" label="Save" class="slds-button slds-button_neutral" onclick="{!c.save}"/>&nbsp;&nbsp;
+        <lightning:button value="Cancel" label="Cancel" class="slds-button slds-button_neutral" onclick="{!c.back}"/>&nbsp;&nbsp;
+        <ui:inputText value="{!v.searchTerm}" class="slds-lookup__search-input slds-input searchBox" placeholder="{!v.searchPlaceholderAbove}" />&nbsp;
+        <lightning:button value="Search" label="Search" class="slds-button slds-button_neutral" onclick="{!c.search}"/>
+        <lightning:button value="Clear" label="Clear" class="slds-button slds-button_neutral" onclick="{!c.clear}"/>
+    </div>
+    
+        
+    <div aura:id="resultsModal" class="slds-hide" style="height: 640px;">
+      <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+          <header class="slds-modal__header">
+            <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Clone Results</h2>
+          </header>
+          <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+            <div class="slds-m-bottom_medium">
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                    <tr class="slds-text-title_caps">
+                        <th scope="col" class="slds-cell-wrap" colspan="2"><div>Successes</div></th>
+                    </tr>
+                    <tbody>
+                        <aura:iteration items="{!v.successes}" var="success" indexVar="i">
+                            <tr>
+                                <td class="slds-col slds-size_1-of-12">
+                                    <div>{!i+1}.</div>
+                                </td>
+                                <td class="slds-col slds-size_11-of-12">
+                                    <div>
+                                        <a href="{!'/one/one.app?#/sObject/'+ success.ordItem.Id + '/view'}" target="_blank"><ui:outputText value="{!success.ordItem.Product_Name__c}"/></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_fixed-layout">
+                    <tr class="slds-text-title_caps">
+                        <th scope="col" class="slds-cell-wrap" colspan="3"><div>Failures</div></th>
+                    </tr>
+                    <tbody>
+                        <aura:iteration items="{!v.failures}" var="failure" indexVar="i">
+                            <tr>
+                                <td class="slds-col slds-size_1-of-12">
+                                    <div>
+                                        {!i + 1}.
+                                    </div>
+                                </td>
+                                <td class="slds-col slds-size_5-of-12 slds-cell-wrap">
+                                    <div>
+                                        <ui:outputText value="{!failure.ordItem.Product_Name__c}"/>
+                                    </div>
+                                </td>
+                                <td class="slds-col slds-size_6-of-12 slds-cell-wrap">
+                                    <div>
+                                        <ui:outputText value="{!failure.msg}"/>
+                                    </div>
+                                </td>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+            </div>
+          </div>
+          <footer class="slds-modal__footer">
+            <button class="slds-button slds-button_neutral" onclick="{!c.closeModal}">Close</button>
+          </footer>
+        </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+</aura:component>

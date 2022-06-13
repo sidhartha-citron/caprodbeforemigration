@@ -1,0 +1,160 @@
+<!--
+ - Created by timothychiang on 2020-05-08.
+ -->
+
+<!-- Cpq 2 Order Screen -->
+<template>
+	
+	<template if:true={result}>
+		<template if:false={showExistingServices}>
+			<lightning-card title="">
+				<lightning-button label="Back"
+								  slot="actions"
+								  onclick={handleBack}></lightning-button>
+				<lightning-button label="Existing Services"
+								  slot="actions"
+								  onclick={handleOpenExistingServices}></lightning-button>
+				<lightning-button label="Quick Save"
+								  slot="actions"
+								  onclick={handleSave}></lightning-button>
+				<lightning-button label="Save"
+								  slot="actions"
+								  onclick={handleSaveAndClose}></lightning-button>
+
+				<div class="slds-p-horizontal_small">
+					<div if:true={isLoading}>
+						<lightning-spinner alternative-text={spinnerMessage}></lightning-spinner>
+					</div>				
+					<span class="slds-text-heading_large slds-truncate">
+						{headerTitle}
+					</span>
+					<template if:true={result.accountItem.shipComplete}>
+						<p>
+							<span class="slds-text-heading_medium slds-text-color_error slds-truncate">
+								Orders for this customer must be shipped completely not partially.
+							</span>
+						</p>
+					</template>
+					<br/><br/>
+
+					<lightning-tabset>
+						<lightning-tab label={serviceLabel}
+									   show-error-indicator={showServiceTabError}>
+							<lightning-accordion allow-multiple-sections-open
+												 active-section-name="Search">
+								<lightning-accordion-section name="Search"
+															 label="Search for Product">
+									<c-cpq2-search-product price-book={result.header.priceBookId}
+														   account-id={result.header.accountId}
+														   record-id={recordId}
+														   type-filter="Service"
+														   display-quantity
+														   onproductadd={handleProductAdd}
+									></c-cpq2-search-product>
+								</lightning-accordion-section>
+							</lightning-accordion>
+							<template if:true={showServiceTable}>
+								<c-cpq-2-table-body-order class="serviceTable"
+																table-type="Service"
+																line-items={listLineItemsServices}
+																frequency-map={frequency}
+														  		has-access-to-approval={permissions.canApproveOrders}
+																core-list-price-lob-list={coreListPriceLobList}
+																onlinechange={handleServiceChange}
+																ondeleteline={handleDeleteLine}
+																onstalescore={handleSetStaleScore}></c-cpq-2-table-body-order>
+							</template>
+						</lightning-tab>
+						<lightning-tab label={consumablesLabel}
+									   show-error-indicator={showConsumableTabError}>
+							<lightning-accordion allow-multiple-sections-open
+												 active-section-name="Search">
+								<lightning-accordion-section name="Search"
+															 label="Search for Product">
+									<c-cpq2-search-product price-book={result.header.priceBookId}
+														   account-id={result.header.accountId}
+														   record-id={recordId}
+														   type-filter="Consumables"
+														   onproductadd={handleProductAdd}
+									></c-cpq2-search-product>
+								</lightning-accordion-section>
+							</lightning-accordion>
+							<template if:true={showConsumablesTable}>
+								<c-cpq-2-table-body-order class="consumableTable"
+																table-type="Consumables"
+																line-items={listLineItemsConsumables}
+																frequency-map={frequency}
+																is-vmi-service-present={isVmiServicePresent}
+																core-list-price-lob-list={coreListPriceLobList}
+														  		has-access-to-approval={permissions.canApproveOrders}
+																onlinechange={handleConsumablesChange}
+																ondeleteline={handleDeleteLine}
+																onstalescore={handleSetStaleScore}></c-cpq-2-table-body-order>
+							</template>
+						</lightning-tab>
+						<lightning-tab label={equipmentLabel}
+									   show-error-indicator={showEquipmentTabError}>
+							<lightning-accordion allow-multiple-sections-open
+												 active-section-name="Search">
+								<lightning-accordion-section name="Search"
+															 label="Search for Product">
+									<c-cpq2-search-product price-book={result.header.priceBookId}
+														   account-id={result.header.accountId}
+														   record-id={recordId}
+														   type-filter="Equipment"
+														   onproductadd={handleProductAdd}
+									></c-cpq2-search-product>
+								</lightning-accordion-section>
+							</lightning-accordion>
+							<template if:true={showEquipmentTable}>
+								<c-cpq-2-table-body-order class="equipmentTable"
+																table-type="Equipment"
+																line-items={listLineItemsEquipment}
+																frequency-map={frequency}
+																core-list-price-lob-list={coreListPriceLobList}
+														  		has-access-to-approval={permissions.canApproveOrders}
+																onlinechange={handleEquipmentChange}
+																ondeleteline={handleDeleteLine}
+																onstalescore={handleSetStaleScore}></c-cpq-2-table-body-order>
+							</template>
+						</lightning-tab>
+					</lightning-tabset>
+				</div>
+				<div class="slds-clearfix slds-p-right_medium">
+					<div class="slds-float_right"> 
+						<lightning-button label="Back"
+											onclick={handleBack}></lightning-button>
+						<lightning-button label="Existing Services"
+											onclick={handleOpenExistingServices}></lightning-button>
+						<lightning-button label="Quick Save"
+											onclick={handleSave}></lightning-button>
+						<lightning-button label="Save"
+											onclick={handleSaveAndClose}></lightning-button>
+					</div>
+				</div>
+				
+				
+				<div slot="footer">
+					<c-cpq-2-summary-footer ship-to-score={shipToScore}
+											service-list={listLineItemsServices}
+											consumable-list={listLineItemsConsumables}
+											equipment-list={listLineItemsEquipment}
+											cat-multiplier-list={listCATMultiplier}
+											score-multiplier-list={listScoreMultiplier}
+											cpq-settings={cpqSettings}
+											frequency-map={frequency}
+											header={result.header}
+											account={result.accountItem}
+											onrefreshscore={handleRefresh}>
+					</c-cpq-2-summary-footer>
+				</div>
+			</lightning-card>
+		</template>
+	</template>
+	<template if:true={showExistingServices}>
+		<c-cpq-2-existing-services header-title={result.header.order.Account.Name}
+								   record-id={result.header.accountId}
+								   ononclose={handleCloseExistingServices}></c-cpq-2-existing-services>
+	</template>
+
+</template>

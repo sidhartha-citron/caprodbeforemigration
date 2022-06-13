@@ -1,0 +1,695 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.StandardDescriptionController" contentType="{!contetnTypeForIE}" standardStylesheets="false">
+<c:CommonIncludes />
+
+
+    <script>
+       var enablesavebtn={!disableforStaff};
+	   var enablecopybtn = {!copybtnflag};
+	   var enabledeletebtn = {!deletebtnflag};
+       var standardDescriptionCategory ;               
+       var standardDescriptionId ;
+       var errormsg;
+       var chkBoxValue;
+       var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+       var standardDescriptionHeader = '{!JSENCODE($ObjectType.standardDescription__c.label)}';
+      document.onclick = activateWindow; 
+      function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+      }
+
+    	function afterResetSI(){
+    	 	var modName = "{!JSENCODE($CurrentPage.parameters.moduleName)}";  
+       		var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";  
+	        if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined' && errormsg=='{!JSENCODE($Label.savedSuccessfully)}'){
+	            window.parent.parent.refreshSupportingInformation(parentWid,modName);
+	        }
+        }
+        /*
+            Code for handling Data change on Page
+            - START
+        */
+        var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+        var clickedOnce = false;  
+        function handleChange(){
+            if(!clickedOnce){
+                clickedOnce = true;
+                window.parent.registerChange(wid2);
+            }
+        }
+            
+        function handleResetChange(){
+            if(clickedOnce){
+               clickedOnce = false;
+               window.parent.registerSave(wid2);
+            }
+           }
+           
+       
+         
+         /*
+            END
+        */
+        
+    var resizeGrid= function resizeGrid(){
+        if(Ext.getCmp('southPanelSI')!=undefined)
+         Ext.getCmp('southPanelSI').setWidth(Ext.getCmp('southPanelSI').getWidth());
+        };
+        if(window.parent.refreshGridSI!=undefined)
+         window.parent.refreshGridSI(wid,resizeGrid);
+        
+        
+        function callCopyPage(){
+            window.parent.addTab("StandardDescriptionPage?copyId=" + standardDescriptionId,standardDescriptionHeader,standardDescriptionHeader);
+        }
+        
+
+        var isLookup = "{!JSENCODE($CurrentPage.parameters.islookup)}";
+        var isInactive = "{!JSENCODE($CurrentPage.parameters.isinactive)}";         
+        if(isLookup){
+            window.parent.changePopUpTitle('{!objLabel}');
+        }      
+        function getSDid(sdId,isSave){
+            //if((taskCategory != null && taskCategory != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){
+                if(isLookup){
+                  window.parent.refreshDocs();
+                    
+                  window.parent.closePopup();
+               }else{
+                   setId(sdId,isSave);
+               }
+        }
+        
+        function saveRecords(){
+            if((standardDescriptionCategory != null && standardDescriptionCategory != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){
+        if(isLookup){       
+          window.parent.refreshDocs();
+          window.parent.closePopup();
+       }
+     }
+     }
+     function completeDelete(){
+                if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}'){
+                    showError();
+                }else{
+                    closeWindow();
+                }
+     }
+     
+        function closeWindow(){
+            if(isLookup){
+              window.parent.refreshDocs();                
+              window.parent.closePopup();
+           }else{
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+           }
+        }   
+        
+        
+         function openCategoryPage(returnValues){    
+            if(returnValues != null || returnValues != '')
+            {
+                if(returnValues[0] != null ||returnValues[0] !='' ) {
+                    setCategoryNext(returnValues[0]); //Calling Action Function
+                    }
+                    if(returnValues[1] != null || returnValues[1] != '') {
+                           setDescriptionNext(returnValues[1]); //Calling Action Function
+                    }
+                   
+             }
+            
+        }
+
+        function openCategoryLookup(returnValues){      
+            if(returnValues!= null) {
+                if(returnValues[0] != null ||returnValues[0] !='')
+                {
+                    if(returnValues[0] == 'OpenCategoryPage')
+                    {
+                        parent.openPopupWithTitle('CategoryPage?popupId=Category&isPopup=true',openCategoryPage,'',550,670,false);
+                    }
+                    else
+                    {
+                if(returnValues[0] != null ||returnValues[0] !='' ) {
+                    setCategoryNext(returnValues[0]); //Calling Action Function
+                }
+                if(returnValues[1] != null && returnValues[1] != '' && returnValues[1] != 'undefined' ) {
+                       setDescriptionNext(returnValues[1]); //Calling Action Function
+                }
+               
+            }
+        }
+            }
+        }
+        
+        var disableTrue = true;
+        Ext.onReady(function(){
+        
+        Ext.QuickTips.init();   
+         if(isLookup){
+            disableTrue = true;
+          }else{ 
+          disableTrue = false; }
+   
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event){ activeAllWindowFlag=false;  openPage("StandardDescriptionPage",standardDescriptionHeader,standardDescriptionHeader); };
+        var SaveBtnHandler = function(button,event) {   
+        Ext.getCmp('saveId').setDisabled(true);
+        waitbox(0); 
+        chkBoxValue=Ext.getCmp('idInactive').getValue();
+        save(chkBoxValue); };
+        var CopyBtnHandler = function(button,event) {  activeAllWindowFlag=false; callCopyPage(); };
+        var DeleteBtnHandler = function(button,event) { 
+                                                         Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}', function(btn){
+                                                           if(btn === 'yes'){
+                                                                   deleteSTDDescription();
+                                                           }});
+                                                         };
+                var ResetBtnHandler = function(button,event) {resetStdDesc(); };
+        var NextBtnHandler = function (button,event) { if(document.getElementById('nextId').disabled!=true) nextSDBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { if(document.getElementById('prevId').disabled!=true)  previousSDBtnHandler1();};  
+        
+        var SamplePanel = Ext.extend(Ext.Panel, {
+
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.new)}',
+                iconCls: 'bmcNew',
+                id:'newId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                     
+                },
+                tabIndex: 1,
+                handler:NewBtnHandler
+              
+            },' ',{
+                scale: 'medium',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.save)}',
+                id:'saveId',
+                iconCls: 'bmcSave',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                    
+                },
+                tabIndex: 2,
+                handler:SaveBtnHandler
+           
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.copy)}',
+                id:'copyId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                     
+                },
+                tabIndex: 3,
+                handler:CopyBtnHandler              
+             
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.delete)}',
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                    
+                },
+                tabIndex: 4,
+                handler:DeleteBtnHandler    
+           
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcRefreshDasboard',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.Refresh)}',
+                id:'resetId',
+                hidden:disableTrue,
+                
+                tabIndex: 5,
+                handler:ResetBtnHandler 
+            
+            },
+            new Ext.Toolbar.Fill(), 
+            {
+                  id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               align:'top',
+               checked: false,
+               boxLabel:'{!JSENCODE($ObjectType.StandardDescription__c.fields.inactive__c.label)}',
+               cls:'chkStyle',
+               boxLabel:'<span class="checkboxLabelCls">{!JSENCODE($ObjectType.StandardDescription__c.fields.inactive__c.label)}</span>',
+               tabIndex: 6,
+               listeners:{
+                    render:function(){
+                        Ext.QuickTips.register({
+                            target:this,
+                            text:'{!JSENCODE($ObjectType.StandardDescription__c.fields.inactive__c.label)}',
+                            dismissDelay: 20000
+                        });
+                    }               
+               }     
+            }, {
+               
+               
+                  xtype : 'box',
+                  id    : 'prevId',
+                autoEl:  {tag: 'img', 
+                          src:('{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_previous.gif'),   
+                         title:'{!JSENCODE($Label.previousRecord)}'
+                         },
+                          
+                cls:'cursorCls',
+                tabIndex: 7,
+               listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                             
+            },{
+               
+                xtype : 'box',
+                id    : 'nextId',
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_next.gif',
+                          title:'{!JSENCODE($Label.nextRecord)}' },
+                cls:'cursorSpaceCls',
+                tabIndex: 8,
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+               
+                
+            }
+            ] 
+        });
+        if(isInactive){     	     	
+        Ext.getCmp('idInactive').setDisabled(true);       
+     	}
+        Ext.getCmp('idInactive').setValue('{!standardDescription.BMCServiceDesk__inactive__c}');
+ 
+        
+        
+        standardDescriptionId = '{!JSENCODE(standardDescription.Id)}';    
+        if(standardDescriptionId == null ||standardDescriptionId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+        Ext.getCmp('copyId').setDisabled(true);
+        Ext.getCmp('resetId').setDisabled(true); 
+        Ext.getCmp('prevId').setDisabled(true);
+        Ext.getCmp('nextId').setDisabled(true);  
+        
+        }
+         ///////////// // IE7-8 Related Changes
+                   var canvasPanel = new Ext.Panel({
+                         layout:'border',
+                        // width:'auto',    
+                         height:Ext.isIE7 ? 670: Ext.isIE ? 674:Ext.isSafari ? 695:680,
+                         border:false, 
+                         id:'canvasPanelId',
+                        cls:'canvasPanelCls',
+                         items:[{  
+                                xtype: 'panel', // TabPanel itself has no title    
+                                  layout: 'fit',                                                   
+                                overflow:'auto',
+                                autoScroll:true,
+                                split:false,
+                                width:'auto',    
+                                height:500, 
+                                cls:'northPanelCls',
+                                                                             
+                                region: 'center',                   
+                               // margins:'2 4 2 0',
+                                                       
+                                contentEl : Ext.isIE ? 'capsule' : '{!$Component.standardDescriptionForm}'
+                                
+                        },{                                                         
+                                xtype: 'panel', // TabPanel itself has no title
+                                layout: 'fit',  
+                                overflow:'auto',
+                                border:false, 
+                id:'southPanelSI',
+                                autoScroll:true,
+                                split:true,
+                                collapsible: true,
+                                collapseMode: 'mini',
+                                width:'auto',    
+                                height:Ext.isIE ?182:180,
+                                minHeight:Ext.isIE ?120:150,
+                                                                                  
+                                region: 'south',
+                               listeners : {
+                                    resize:function( obj,adjWidth,adjHeight,rawWidth,rawHeight ) { 
+                                    
+                                        if(Ext.getCmp('south-panel')!=undefined){
+                                               Ext.getCmp('south-panel').setHeight(adjHeight); 
+                                        }
+                                   }
+                               },
+                              
+                               contentEl :'detailsDiv' 
+                        }],
+                        listeners: {
+                        afterlayout: function(c) {
+                            c.layout.south.miniSplitEl.dom.qtip = '{!JSENCODE($Label.DragResizeClickCollapse)}';
+                            c.layout.south.getCollapsedEl();
+                            c.layout.south.miniCollapsedEl.dom.qtip = '{!JSENCODE($Label.ClickToExpand)}';
+                        },
+                        single: true
+                    }
+                        
+                       
+                         
+                       
+                });
+            
+                     var viewport = new Ext.Viewport({
+                     layout:'anchor',
+                    // renderTo:'viewPortDiv',
+                     width:'auto',
+                     id:'viewportId',
+                     border:false, 
+                     cls:'viewportCanvasCls',  
+                     //items:canvasPanel
+                     items:[{anchor: '100%', layout:'fit', items:canvasPanel} ]
+                    });
+/////////////// // End IE7-8 Related Changes
+
+        handleElemEvent();
+		if (!Ext.isIE)
+        {
+        converdisabletoreadonly();
+        }
+        resetbuttonstatus();
+		updateTitle();  /// vilas
+	    standardDescriptionId = '{!JSENCODE(standardDescription.Id)}';    
+        if(standardDescriptionId == null ||standardDescriptionId == ''){  
+	      document.getElementById('{!$Component.standardDescriptionForm.Category__c_id_name}').focus();
+	}
+    });
+      function resetbuttonstatus()
+    {
+    	if(!enablesavebtn)
+        {
+           Ext.getCmp('saveId').setDisabled(true);
+             
+        }
+        if(!enablecopybtn)
+        {
+        	Ext.getCmp('newId').setDisabled(true);
+        	Ext.getCmp('copyId').setDisabled(true);
+        }
+        if(!enabledeletebtn)
+        {
+        	 Ext.getCmp('deleteId').setDisabled(true);
+             Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+        }   
+    }
+    var SDIdSet='';
+    if(!isLookup){
+        /*SDIdSet=window.parent.returnListOfId();*/
+        if(SDIdSet == null || SDIdSet == ''){
+			if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+			if(typeof(window.parent.returnListOfId)=='function')
+        SDIdSet=window.parent.returnListOfId();
+		}else{
+			if(typeof(window.parent.parent.getIdArray)=='function')
+				SDIdSet=window.parent.parent.getIdArray();
+				window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+			}
+		}
+        
+    }
+
+        function previousSDBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(SDIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=SDIdSet[i];
+                }else{
+                    idSetString=idSetString+','+SDIdSet[i];
+                }
+                i++;
+            }
+            previousSDBtnHandler(idSetString);
+        }
+
+       function nextSDBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(SDIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=SDIdSet[i];
+                }else{
+                    idSetString=idSetString+','+SDIdSet[i];
+                }
+                i++;
+            }
+            nextSDBtnHandler(idSetString);
+      } 
+	    function resetSupportingInformation(isSave){
+    	  if(standardDescriptionId != null && standardDescriptionId != ''){
+    	  	enableAll();
+    	  }else{
+    	  	disableAll();
+    	  }
+    	  getSDid(standardDescriptionId,isSave);
+     	}
+      function buttonValidator() {
+       if((standardDescriptionCategory != null && standardDescriptionCategory != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){   
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('deleteId').setIconClass('bmcDelete');
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('resetId').setDisabled(false); 
+        
+       }  
+     }
+    
+    
+
+     function clearDescription(){
+        document.getElementById('{!$Component.standardDescriptionForm.Category__c_id_categorydescription__c}').value = '';
+    }
+                                        
+    </script>
+   
+     <apex:outputPanel id="panelId">
+        <script>
+        
+           standardDescriptionCategory = '{!JSENCODE(fCategoryId)}';               
+           standardDescriptionId = '{!JSENCODE(standardDescription.Id)}';      
+           
+        </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+        <apex:outputPanel id="afterSavePanel">
+            <script>
+               function handleSave(){
+                   var id = "{!JSENCODE(standardDescription.Id)}";
+                window.parent.handleSave(wid, id);
+            }
+              
+        	function enableSaveButton() {
+        		Ext.getCmp('saveId').setDisabled(false);
+      		} 
+      		 enablesavebtn={!disableforStaff};
+            </script>
+        </apex:outputPanel>
+         <apex:outputPanel id="titlePanel">
+            <script>
+                function updateList(){
+                    saveRecords();
+                    window.parent.refreshList();
+                }
+         var newsdId;
+                    function updateTitle(){
+                        
+                        var newTitle = '{!JSENCODE(standardDescription.Description__c)}';  //'{!$Label.StandardDescription}';  
+                        //newsdId = '{!JSENCODE(standardDescription.id)}';  
+                        //getSDid(newsdId);   
+                        if(newTitle != null && newTitle !='')  
+                        window.parent.changeTitle(wid,newTitle,standardDescriptionHeader);
+                        else if(newTitle =='')
+                        	window.parent.changeTitle(wid,standardDescriptionHeader,standardDescriptionHeader);
+                        //window.parent.refreshList();
+                    }
+            
+        
+        </script>
+    </apex:outputPanel>  
+    
+    
+        <apex:outputPanel id="inactivePanel">
+        <script>
+           function updateInactive(){
+            Ext.getCmp('idInactive').setValue('{!standardDescription.BMCServiceDesk__inactive__c}');
+        }
+          
+    
+        </script>
+    </apex:outputPanel>
+       
+    <apex:form id="standardDescriptionForm">  
+    <div id="capsule" class="CapsuleDiv1">
+    <apex:outputPanel >
+   
+     <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+   
+     <apex:actionFunction action="{!save}" name="save" reRender="headerId,validationComponent,titlePanel,panelId,afterSavePanel,errorId" oncomplete="waitMsg.hide();enableSaveButton();showError();updateList();updateTitle();resetSupportingInformation(true);buttonValidator();updateTitle();converdisabletoreadonly();handleSave();resetbuttonstatus();afterResetSI();">
+      <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+                 </apex:actionFunction>
+       <apex:actionFunction action="{!descriptionQuery}" name="setDescriptionNext" reRender="standardDescription" oncomplete="converdisabletoreadonly();"> 
+                <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+            </apex:actionFunction>
+     <apex:actionFunction action="{!deleteSTDDescription}" name="deleteSTDDescription" onComplete="completeDelete();" rerender="errorId,validationComponent"/>
+     <apex:actionFunction action="{!newStdDescription}" name="newStdDescription" reRender="dummyoutputpanel,headerId"/>
+     <apex:actionFunction action="{!resetStdDesc}" name="resetStdDesc" rerender="dummyoutputpanel,inactivePanel,afterSavePanel" oncomplete="handleResetChange();handleElemEvent();updateInactive();converdisabletoreadonly();"/>     
+     <apex:actionFunction name="setCategoryNext" action="{!categoryQuery}" reRender="dummyoutputpanel" oncomplete="converdisabletoreadonly();"> 
+            <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+     </apex:actionFunction>
+     
+      <apex:actionFunction action="{!nextBtnHandler}" name="nextSDBtnHandler" 
+                                    rerender="dummyoutputpanel,inactivePanel,titlePanel,afterSavePanel,panelId" onComplete="updateInactive();handleResetChange();handleElemEvent();updateTitle();converdisabletoreadonly();reloadSupportInfo();resetSupportingInformation(false);">
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>   
+      </apex:actionFunction>
+      <apex:actionFunction action="{!previousBtnHandler}" name="previousSDBtnHandler" 
+                                    rerender="dummyoutputpanel,inactivePanel,titlePanel,afterSavePanel,panelId"  onComplete="updateInactive();handleResetChange();handleElemEvent();updateTitle();converdisabletoreadonly();reloadSupportInfo();resetSupportingInformation(false);">
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>  
+      </apex:actionFunction>
+      
+      
+
+            <table class="clsMainTableSI" cellspacing="0" cellpadding="0">
+                
+              <tr class="clsRowGreyBg">
+                   <td>
+                          <div id="btnToolbar"></div>
+                   </td>
+              </tr>
+              <tr>
+                     <td class="clsTopAlignment75">
+                       <apex:outputPanel id="dummyoutputpanel">
+                          <table class="clsTableS" cellspacing="0" cellpadding="0">
+                             <tr>
+                                   <td><div class="div15pxVspacing"/></td><td></td>
+                             </tr>
+                             <tr>
+                                 <td class="clsInputLabelTD" > 
+                                        <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__StandardDescription__c.fields.BMCServiceDesk__FKCategory__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                 </td>
+                                 <td class="clsInputTextBoxTD">
+                                      <apex:inputText title="{!$ObjectType.BMCServiceDesk__StandardDescription__c.fields.BMCServiceDesk__FKCategory__c.inlineHelpText}" value="{!fCategoryId}" styleClass="clsInputTextBox" id="Category__c_id_name" onblur="showalldata(event,'',escape('inactive__c = false'));" tabindex="9"/>
+                                      <td class="lookupIconTD">
+                                      <div class="lookUpIconDiv">
+										<apex:commandButton id="categoryLookup" onclick="if(!inProgress){openPopupRF('CategorySearchPage?isLookup=true&isSD=true',openCategoryLookup);}" reRender="dummy" styleClass="lookupIconOn" tabindex="10"/>
+                                   </div></td>
+                                 </td>
+                             </tr>
+                          </table> 
+                          <table class="clsTableS" cellspacing="0" cellpadding="0">
+                               <tr>
+                                      <td class="clsInputBoldLabelTD">
+                                         <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__StandardDescription__c.fields.BMCServiceDesk__Description__c.label}" /></td>
+                                  </tr>
+                                  <tr>  
+                                       <td class="clsInputTextAreaTD">
+                                                <apex:inputTextarea title="{!$ObjectType.BMCServiceDesk__StandardDescription__c.fields.BMCServiceDesk__Description__c.inlineHelpText}" value="{!standardDescription.BMCServiceDesk__Description__c}" id="standardDescription" styleClass="clsInputTextAreaPgWoSidePanel" tabindex="11"/>
+                                       </td>
+                                  </tr>
+                           </table>
+                           
+                           <div class="div13pxVspacing"></div>
+                           
+                        </apex:outputPanel>         
+                 </td>
+               </tr>                
+               
+      </table> 
+      
+        </apex:outputPanel>
+        </div> 
+      
+         <!--  IE7-8 Related Changes -->
+        <div class="detailSectinDivCls">
+                      <table>
+                      <tr >
+                                    <td >
+                                           <c:SupportInformationComponent setinactive="{!standardDescription.BMCServiceDesk__inactive__c}" objectName="StandardDescription__c" fKeyValue="{!id}" urlForStaticResource="{!$Resource.BMCServiceDesk__SDEFStyles}" />
+                                    </td>
+                         </tr>
+                       </table>          
+                   </div>
+                  <apex:outputPanel id="dummy"></apex:outputPanel>
+                  <c:TabOutComponent ></c:TabOutComponent>
+<!--  Ends IE7-8 Related Changes Taken div inside form-->
+     </apex:form>                           
+       <style>
+           .clsInputTextBox {
+             *height: 19px;
+          }
+   
+          .clsPanelInputTextboxTD1{
+            *padding-bottom: 5px;
+          }
+      
+           .clsPanelInputTextboxReadOnly {
+               *height: 19px;
+            }
+    
+          .clsPanelInputTextbox {
+              *height: 19px;
+            }
+          
+          .clsPanelInputTextAreaReadOnly {
+           *width: 195px;
+            }
+            .clsIdInputTextBox {
+               *height: 19px;
+            }
+            .clsInputTextBoxReadOnly {
+                *height: 19px;
+            }
+        </style>
+      
+    
+</apex:page>

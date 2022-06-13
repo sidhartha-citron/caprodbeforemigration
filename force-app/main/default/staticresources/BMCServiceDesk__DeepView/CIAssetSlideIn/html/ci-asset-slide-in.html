@@ -1,0 +1,173 @@
+<div id="sideBarloader" ></div>
+<div id="sideBarActionMask" class="dialog-whiteMask" ></div>
+<div class="config-window-container" style="padding-bottom:10px;" ng-show="isPrimaryVisible">
+	<div tabindex="0"  class="Quick-Details-RelatedList-headerRow">
+		 <div class="Quick-Details-RelatedList-headerRow-content" ng-click="showHidePrimarySection()">
+		 <span class="header-content" ng-class="{'d-icon-angle_right': !primaryClicked == true,'d-icon-angle_down': primaryClicked}"></span>
+		<span class="header-content sidebar-headerrow-text" title="{{_labels.PrimaryCiHeader}}">{{_labels.PrimaryCiHeader}}</span>
+		</div>
+	<div class="actions-button-panel">
+		<button class='rf-btn-action d-icon-pencil rf-icon-font' ng-click="toggleViewMode()"  ng-show="isViewMode" ng-disabled="isDisabled" title="{{_labels.Edit}}"></button>
+		<button class='rf-btn-action d-icon-check rf-icon-font' ng-click="savePrimaryDetails()"  ng-show="!isViewMode" title="{{_labels.Save}}"></button>
+		<button class='rf-btn-action d-icon-reply rf-icon-font' ng-click="toggleViewMode()"  ng-show="!isViewMode" title="{{_labels.Cancel}}">
+		</button>
+		<span class="rf-padding-left5px" />
+	</div>
+	</div>
+	<div ng-show="primaryClicked" class="primaryCIClass" id="primaryCI">
+	 <table class="quickView accordion-detail" id="ViewMode" ng-show="isViewMode">
+	  <tr ng-repeat="pdata in primaryCiData" class="rf-table-tr" >
+	   <td width="35%">
+	   <span class="input-label input-label-bold rf-padding-left10px" >{{pdata.fieldLabel}}</span>
+	   </td>
+	   <td width="65%" class="rf-table-td" ng-mouseover="pdata.showMe = true" ng-mouseleave = "pdata.showMe = false">
+			<a id="{{pdata.fieldApi}}_link" href="#" ng-click="openCIRecord(pdata.fieldId)" 
+			rftooltip rf-tooltip-content-property="instanceDetails" 
+			rf-tooltip-content-function="getInstanceDetails(pdata['fieldId'])" 
+			rf-tooltip-position="bottom" ng-show="pdata.fieldId != ''" >{{pdata.fieldValue}}</a>
+			<label ng-hide="pdata.fieldId != '' && pdata.fieldId != null ">{{_labels.NotSelected}}</label>
+	   </td>
+	  
+	  </tr>
+	 </table>
+	 <table class="quickView accordion-detail" id="EditMode" ng-show="!isViewMode">
+	  <tr ng-repeat="pdata in primaryCiData" class="rf-table-tr" >
+	   <td width="35%">
+	   <span class="input-label input-label-bold rf-padding-left10px" >{{pdata.fieldLabel}}</span>
+	   </td>
+	   <td width="65%" class="rf-table-td" ng-show="pdata.isUpdateable">
+		<input type="text" id="{{pdata.fieldApi}}_name" ng-model="pdata.fieldValue"  ng-keyup="fetchTypeAheadData('BMC_BaseElement__c',pdata.fieldApi,$event);" ng-blur="hideTypeAheadDiv()" class="input-data-box" autocomplete="off"/>
+		<span class="d-icon-cross_circle rf-icon-font rf-padding-left5px" ng-click="clearPrimaryDetails(pdata.fieldApi)" title="{{_labels.Clear}}"></span>
+		<span class="d-icon-search rf-icon-font rf-padding-left5px" ng-click="openCIlookup(pdata.fieldApi)" title="{{pdata.fieldLabel}} {{_labels.LookupNewWindow}}"></span>
+		<span class="d-icon-comment_text rf-icon-font" rftooltip rf-tooltip-content-property="instanceDetails" 
+		rf-tooltip-content-function="getInstanceDetails(tooltipPrimaryCIContentId(pdata))" 
+		rf-tooltip-position="{{PrimaryTooltipPosition}}" rf-tooltip-delayed-info="false"
+		ng-show="tooltipIconShowCondition(pdata)" ></span>
+		<input type="text" id="{{pdata.fieldApi}}_name_lkid"  ng-model="pdata.fieldId" style="display:none"/>
+	   </td>
+		<td width="65%" class="rf-table-td" ng-show="!pdata.isUpdateable">
+			<a id="{{pdata.fieldApi}}_link" href="#" ng-click="openCIRecord(pdata.fieldId)" 
+				rftooltip rf-tooltip-content-property="instanceDetails" 
+				rf-tooltip-content-function="getInstanceDetails(pdata['fieldId'])" 
+				rf-tooltip-position="bottom">{{pdata.fieldValue}}</a>
+	    </td>
+	  </tr>
+	  
+	 </table >
+	
+	</div>
+</div>
+<div class="container" >
+	<div tabindex="0"  class="Quick-Details-RelatedList-headerRow rf-top-border" ng-show="isPrimaryVisible">
+		<div class="Quick-Details-RelatedList-headerRow-content" ng-click="showHideAdditionalCISection()">
+			<span class="header-content" ng-class="{'d-icon-angle_right': !additionalCIClicked == true,'d-icon-angle_down': additionalCIClicked}"></span>
+			<span class="header-content sidebar-headerrow-text" title="{{_labels.AdditionalCIsAndServices}}">{{_labels.AdditionalCIsAndServices}}</span>
+			<span class="header-content sidebar-headerrow-text" style="margin-left:0px;" >({{AdditionalCICount}})</span>
+		</div>
+	</div>
+	<div id="relatedCIDetails" ng-show="additionalCIClicked" >
+		<table class="quickView accordion-detail" border="0" width="100%">
+		     <tr class="rf-listview-hd-tr">
+			  <td width="46.5%" class="rf-listview-hd-th">
+			     
+				   <a href="#" rf-column-sort 
+				   rf-column-sort-column="instanceName" rf-column-sort-collection="additionalCiData" class="rf-list-item rf-padding-left10px">
+						{{_labels.InstanceName}}
+					</a>				
+					<button  ng-class="{'rf-btn-action rf-float-right d-icon-filter_o': !filterCriteria.isFilterAppliedForInstanceName == true,'rf-btn-action rf-float-right d-icon-filter-applied': filterCriteria.isFilterAppliedForInstanceName}" id="InstanceFilterBtn" ng-click="showHideFilter('InstanceName')" >	
+					</button>					
+					<div id="InstanceFilter" class="instancefilter-content">
+						<div id="InstanceFilterDivId">
+							<select id="opLstId_InstanceFilter" ng-model="filterCriteria.filterOperationInstanceName" name="opLstId_txt" class="rf-filter-input" size="1">
+								<option id="Equals_InstanceFilter" value="Equals">{{_labels.Equals}}</option>
+								<option id="NotEqualTo_InstanceFilter" value="NotEqualTo">{{_labels.NotEqualTo}}</option>
+								<option ng-selected="selected"  id="Contains_InstanceFilter" value="Contains">{{_labels.Contains}}</option>
+								<option id="DoesNotContain_InstanceFilter" value="DoesNotContain">{{_labels.DoesNotContain}}</option>
+								<option id="StartsWith_InstanceFilter" value="StartsWith">{{_labels.StartsWith}}</option>
+							</select>
+						</div>
+						<div style="height:10px" />
+						<div>             
+							<input  type="text" id="InstanceFilterText" class="rf-filter-input" ng-model="filterCriteria.filterTextInstanceName" autocomplete="off" />
+						</div>
+						<div class="rf-filter-btn-div">
+						<input class="bmc-btn-small" ng-click="ClearFilter('InstanceName')" style="padding-left:10px;margin-right: 8px;" type="button" value="{{_labels.Clear}}"> 
+						<input class="bmc-btn-primary" ng-click="ApplyFilter('InstanceName')" type="button" value="{{_labels.Apply}}">
+						</div>
+					</div>
+					
+			  
+			  </td>
+			 
+			  <td width="46.5%" class="rf-listview-hd-th" style="border-right:none">
+			  <a href="#" rf-column-sort 
+					  rf-column-sort-column="className" rf-column-sort-collection="additionalCiData" 
+					  class="rf-list-item rf-padding-left5px">
+					{{_labels.ClassName}}
+					</a>
+					<button class='rf-btn-action rf-float-right' ng-class="{'rf-btn-action rf-float-right d-icon-filter_o': !filterCriteria.isFilterAppliedForClassName == true,'rf-btn-action rf-float-right d-icon-filter-applied': filterCriteria.isFilterAppliedForClassName}"  id="ClassFilterBtn" ng-click="showHideFilter('ClassName')" >
+						
+					</button>
+					
+					<div id="ClassFilter" class="classfilter-content">
+						<div id="ClassFilterDivId">
+						<select id="opLstId_ClassFilter" ng-model="filterCriteria.filterOperationClassName" name="opLstId_txt" class="rf-filter-input" size="1">
+							<option id="Equals_ClassFilter" value="Equals">{{_labels.Equals}}</option>
+							<option id="NotEqualTo_ClassFilter" value="NotEqualTo">{{_labels.NotEqualTo}}</option>
+							<option ng-selected="selected" id="Contains_ClassFilter" value="Contains">{{_labels.Contains}}</option>
+							<option id="DoesNotContain_ClassFilter" value="DoesNotContain">{{_labels.DoesNotContain}}</option>
+							<option id="StartsWith_ClassFilter" value="StartsWith">{{_labels.StartsWith}}</option>
+						</select>
+						
+						</div>
+						<div style="height:10px" />
+						<div>             
+							<input  type="text" id="ClassFilterText" ng-model="filterCriteria.filterTextClassName" class="rf-filter-input" autocomplete="off" />
+						</div>
+						<div class="rf-filter-btn-div">
+						<input class="bmc-btn-small" ng-click="ClearFilter('ClassName')" style="padding-left:10px;margin-right: 8px;" type="button" value="{{_labels.Clear}}"> 
+						<input class="bmc-btn-primary" ng-click="ApplyFilter('ClassName')" type="button" value="{{_labels.Apply}}">
+						</div>
+					</div>
+				</a>
+			  
+			  </td>
+			  <td width="7%">&nbsp;</td>
+			 </tr>
+			 <tr >
+				<td colspan="3" width="100%">
+					<a href="#!" ng-click="linkCI()" ng-disabled="isDisabled" ng-class="{'a.disabled':isDisabled}" class="btn d-icon-plus_circle_o rf-ci-link rf-padding-left10px"><span class="rf-padding-left5px"> {{SelectAndLinkLabel}}<span>
+					</a>
+				</td>
+			</tr>
+			 </table>
+			 </div>
+			 <div ng-show="additionalCIClicked" id="addtionalListId" ng-init="setAdditionalPanelHeight()" >
+			 <table class="quickView accordion-detail" border="0" width="100%">
+				<tr ng-if="additionalCiData == undefined || additionalCiData.length == 0">
+					<td colspan="3">{{_labels.NoRecordsFound}}</td>
+				</tr>
+				<tr ng-repeat="adCiData in additionalCiData" >
+					<td width="46.5%" ng-mouseover="adCiData.showMe = true" ng-mouseleave = "adCiData.showMe = false">
+							<a href="#!" rftooltip rf-tooltip-content-property="instanceDetails" 
+							rf-tooltip-content-function="getInstanceDetails(adCiData['instanceId'])"
+								ng-click="openCIRecord(adCiData.instanceId)" class="rf-link-font rf-padding-left10px">{{adCiData.instanceName}}</a>
+					</td>
+					<td width="46.5%">
+						<span class="rf-list-item rf-padding-left5px">
+								{{adCiData.className}}
+						</span>
+						
+					</td>
+					<td width="7%">
+						<span>
+						<a href="#!" class="rf-list-item" ng-click="unlinkCI(adCiData)" id={{adCiData.id}} title="{{_labels.Delete}}" ng-disabled="isDisabled" ng-class="{'a.disabled':isDisabled}">
+							<span class="d-icon-minus_circle_o rf-red-icon" ></span>
+						</a>
+						</span>
+					</td>
+				</tr>
+			</table>
+	       </div>
+</div>
+

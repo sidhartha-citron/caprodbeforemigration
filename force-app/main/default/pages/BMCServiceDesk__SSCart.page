@@ -1,0 +1,68 @@
+<apex:page Controller="BMCServiceDesk.SSCartController" showheader="false" sidebar="false" standardStylesheets="false">
+
+<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SSThemes}/{!staticResource}/SSCart.css" />
+ 
+<apex:outputPanel id="cartDataPanel">
+	<script type="text/javascript">
+	    var cartData =[{!cartGridData}]; 
+		var cartDataLen = '{!cartDataLen}';
+	      var cartMessage='{!JSENCODE(cartMessage)}';
+        var errorMsg = '{!JSENCODE(errorMsg)}';
+	</script>
+</apex:outputPanel> 
+<script>
+ var deleteConfirmationMsg='{!JSENCODE($Label.SSCartItemDeleteConfirmationMsg)}';
+ var deleteConfirmationTitle='{!JSENCODE($Label.SSCartItemDeleteTitle)}';
+ var errorMessageTitle = '{!JSENCODE($Label.ThereIsAnIssue)}';
+ var imagePath = '{!$Resource.SDEFStyles}/SDEFbuttons/b_delete_email.png';
+
+ </script>
+
+ <apex:form >
+
+        <apex:actionFunction action="{!checkOutAction}" name="checkoutJSAction" rerender="cartDataPanel" oncomplete="showCartMessage(); updateParentCartIcon();">
+        </apex:actionFunction>
+        <apex:actionFunction action="{!deleteCartItem}" name="deleteCartJS" rerender="cartDataPanel" oncomplete="setPagingTBarValue();loadCartData();updateParentCartIcon();">
+        	<apex:param name="IdForDelete" assignTo="{!IdForDelete}" value=""/>
+    	</apex:actionFunction>
+        <div id="ssCartDiv" style="margin:0px" tabindex="-1"></div>
+         
+		<div class="cart-footer" tabindex="-1">
+		
+		<div class="cartPortletItemCls" style="cursor:auto !important;" tabindex="-1"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__items)}:" />&nbsp;<label id="cartItems">{!cartDataLen}</label></div>
+        <div style="float:right;width:50%; padding-right : 10px;" tabindex="-1"><input type="button"  id="checkoutBtnID" value="{!JSENCODE($Label.checkoutlabel)}" class="clsCheckoutCartBtn" onclick="disableCheckout();checkoutJSAction();" onkeydown="revertFocus(event);" /></div>
+		</div>
+</apex:form>
+<script>
+	var displayMsg= '{!JSENCODE($Label.NoRecordsFound)}';
+    var emptyMsg= '{!JSENCODE($Label.NoRecordsFound)}';
+    var displayRec= '{!JSENCODE($Label.GridPagerDisplayRecText)}';
+    var displayOf= '{!JSENCODE($Label.Of)}';
+    var beforePageTextMsg= '{!JSENCODE($Label.Page)}';
+    var FirstPage = '{!JSENCODE($Label.FirstPage)}';
+    var PreviousPage = '{!JSENCODE($Label.PreviousPage)}';
+    var NextPage = '{!JSENCODE($Label.NextPage)}';
+    var LastPage = '{!JSENCODE($Label.LastPage)}';
+    </script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+	<script src="{!$Resource.ExtJS4_1_3}/ext-all.js" />
+	<script src="{!$Resource.SSjs}/SSCart.js" />
+<script>
+	if(Sarissa._SARISSA_IS_IE && (navigator.userAgent.indexOf("Trident/6")>-1)){  
+		window.XMLSerializer = function(){};      
+		window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+</script>	
+<style>
+.x-grid-row .x-grid-cell :focus {
+   border: 1px dotted #0000FF;
+}
+input[type=button]:focus{
+	box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+	border: 1px solid #5ee3ff;
+    border:1.5px dotted #0000FF;
+    background-color:#dbdbdb;
+}
+</style>
+</apex:page>

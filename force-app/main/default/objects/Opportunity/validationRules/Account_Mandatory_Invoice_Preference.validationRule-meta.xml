@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Account_Mandatory_Invoice_Preference</fullName>
+    <active>true</active>
+    <description>Customers require an Invoice Preference</description>
+    <errorConditionFormula>OR (
+   AND(
+      Account.Is_Bill_To__c,
+      ISBLANK(TEXT( Account.Invoice_Preference__c  )), 
+      OR (ISPICKVAL(  ForecastCategoryName, &quot;Commit&quot;), IsWon),  
+      CASESAFEID($User.ProfileId) &lt;&gt; $Setup.Field_Service_Settings__c.Integration_User_Profile__c,
+      CASESAFEID($User.ProfileId) &lt;&gt; $Setup.Field_Service_Settings__c.System_Administrator_Profile_Id__c 
+   ),
+   AND(
+      NOT(Account.Is_Bill_To__c),
+      ISBLANK(TEXT( Account.Parent.Invoice_Preference__c  )), 
+      OR (ISPICKVAL(  ForecastCategoryName, &quot;Commit&quot;), IsWon),  
+      CASESAFEID($User.ProfileId) &lt;&gt; $Setup.Field_Service_Settings__c.Integration_User_Profile__c,
+      CASESAFEID($User.ProfileId) &lt;&gt; $Setup.Field_Service_Settings__c.System_Administrator_Profile_Id__c 
+   )
+)</errorConditionFormula>
+    <errorDisplayField>AccountId</errorDisplayField>
+    <errorMessage>Invoice Preference is required for customers</errorMessage>
+</ValidationRule>

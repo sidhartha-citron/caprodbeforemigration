@@ -1,0 +1,44 @@
+<div class="srd-questions-placeholder" style="overflow-y: auto;" set-Height="setNewIncFormHeight">
+	<loading-spinner overlay="true" if="userModel.dataLoading"></loading-spinner>	
+	<div class="srd-question-wrapper">
+		<div class="srd-question"
+			 ng-repeat="question in profileInfo.questions"
+			 data-id="{{question.id}}"
+			 data-hasAnswer="{{question.hasAnswer}}"
+			 data-answer="{{question.Value}}"
+			 data-visibility="{{question.isVisible}}"
+			 data-hidden="{{!question.isVisible}}"
+			 data-parent="{{question.parentId}}"
+			 data-order="{{question.order}}"
+			 data-level="{{question.level}}"
+			> 
+			
+			<ng-form name="subFormInputs">
+				<div ng-switch="question.Type">
+					<srd-text-question ng-switch-when="string" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="textfield" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="phone" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="textarea" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="encryptedstring" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="email" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="url" data="question"></srd-text-question>
+					<srd-radio-question ng-switch-when="radiobutton" data="question"></srd-radio-question>
+					<srd-checkbox-question ng-switch-when="boolean" data="question"></srd-checkbox-question>
+					<srd-number-question ng-switch-when="number" data="question"></srd-number-question>
+					<srd-menu-question ng-switch-when="picklist" data="question"></srd-menu-question>
+					<srd-menu-question ng-switch-when="multipicklist" data="question"></srd-menu-question>
+					<srd-date-time-question ng-switch-when="datetime" data="question"></srd-date-time-question>
+					<srd-date-question ng-switch-when="date" data="question"></srd-date-question>
+					<srd-reference-question ng-switch-when="reference" data="question" on-behalf-of-user="srdDetailsCtrlState.requestedFor.userId"></srd-reference-question>
+					<srd-text-question ng-switch-when="richtextarea" data="question"></srd-text-question>
+					
+					<span class="srd-question-error_message" ng-show="formSubmitted && (subFormInputs.formField.$error.required || (question.Type=='radiobutton' && subFormInputs['{{question.Id}}'].$error.required ))">{{selfServiceLabels.EnterValue}}</span>
+					<span class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.email">{{selfServiceLabels.InvalidEmailAddress}}</span>
+					<span class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.url">{{selfServiceLabels.InvalidURL}}</span>				
+					<span class="srd-question-error_message" ng-show="formSubmitted && question.Type=='date' && subFormInputs.formField.$error.ValidDate">{{selfServiceLabels.InvalidDate}}</span>
+					<span class="srd-question-error_message" ng-show="formSubmitted && question.Type=='datetime' && subFormInputs.formField.$error.ValidDate">{{selfServiceLabels.InvalidDate}}</span>
+				</div>
+			</ng-form>
+		</div>
+	</div>
+</div>

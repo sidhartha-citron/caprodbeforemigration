@@ -1,0 +1,133 @@
+<apex:page id="AdminFieldPriority" controller="BMCServiceDesk.AdminCMDBClassPermissionsCtrl" standardstylesheets="false" showheader="false" >
+    <html>
+        <head>   
+            <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+            <meta http-equiv="pragma" content="no-cache" />
+            <meta http-equiv="cache-control" content="must-revalidate" />
+            <meta http-equiv="cache-control" content="post-check=0" />
+            <meta http-equiv="cache-control" content="pre-check=0" />
+            <meta http-equiv="cache-control" content="no-cache" />
+            <meta http-equiv="expires" content="-1" />
+            <meta http-equiv="pragma" content="no-cache" />   
+            <title></title>
+            
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/vendor/bootstrap/bootstrap.min.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/styles/scss/myit.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" />
+            <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'RFAdminExt4Common.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__RemedyforceAdministration, 'styles/remedyforce-administration.css')}"/>          
+            <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__RemedyforceAdministration, 'CMDBClassPermissions/style/cmdb-class-permissions.css')}"/>
+            
+            
+            <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/DPLFramework/css/bmc-all.css')}"/>
+            <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/css/rfmodal.css')}"/>
+                
+        </head>
+        <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}" />
+        <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular.min.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-sanitize.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-ui-grid.min.js')}"/>
+        <script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/angular-plugins/ui-bootstrap-custom-tpls-0.6.0.js"/>
+        
+        
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/jquery-ui.min.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'js/rfmodal.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'CIAssetSlideIn/script/rf-angular-tooltip.js')}"/>    
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/ui-sortable.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/ui.sortable.multiselection.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'FieldLevelPrioritization/script/ui.grid.selection.js')}"/>
+        <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/Sidebar.css')}"/>     
+        <script type="text/javascript" src="{!$Resource.DeepView}/js/sidebar.js"/> 
+        
+        <script type="text/javascript" src="{!URLFOR($Resource.RemedyforceAdministration, 'CMDBClassPermissions/script/cmdb-class-permissions-controller.js')}"/>
+        <script type="text/javascript" src="{!URLFOR($Resource.RemedyforceAdministration, 'CMDBClassPermissions/script/cmdb-class-permissions-service.js')}"/>  
+        
+               
+        
+           
+        <script>
+			var wikiURL = '{!wikiUrl}';
+            var permissionSetJson ={!ISBLANK(permissionSetJSON)}?'':JSON.parse('{!JSENCODE(permissionSetJSON)}');
+			var classPermissionsJSON ={!ISBLANK(classPermissionsJSON)}?'':JSON.parse('{!JSENCODE(classPermissionsJSON)}');
+            var isCMDBClassPermissionEnable = {!isCMDBClassPermissionsEnabled};
+            var htmlPath = "{!URLFOR($Resource.RemedyforceAdministration,'CMDBClassPermissions/html')}";
+            var isServerSearchForPS = {!isServerSearchForPS };
+			var selPermissionSetId  ='{!JSENCODE(selPermissionSetId)}';
+                 
+            var _RemotingActions = {
+                "getCMDBClassPermissions" : "{!$RemoteAction.AdminCMDBClassPermissionsCtrl.getCMDBClassPermissions}",
+                "save" : "{!$RemoteAction.AdminCMDBClassPermissionsCtrl.saveCMDBClassPermissions}",
+                "saveFeatureEnablement" :  "{!$RemoteAction.AdminCMDBClassPermissionsCtrl.saveFeatureEnablement}",
+                "clonePermissions" :  "{!$RemoteAction.AdminCMDBClassPermissionsCtrl.clonePermissions}",
+                "getPermissionSets" :  "{!$RemoteAction.AdminCMDBClassPermissionsCtrl.getPermissionSets}"
+            }
+			
+			var ootbPSArr = ['BMCServiceDesk__Remedyforce_Administrator', 'BMCServiceDesk__ServiceDesk_Change_Manager', 'BMCServiceDesk__ServiceDesk_Client', 'BMCServiceDesk__ServiceDesk_Release_Coordinator', 'BMCServiceDesk__ServiceDesk_Staff'];
+            
+            var _Labels={
+                "Search" : "{!JSENCODE($Label.Search)}",
+                "Clear" : "{!JSENCODE($Label.Clear)}",
+                "ClassType" : "{!JSENCODE($Label.ClassType)}",
+                "CMDBClassName" : "{!JSENCODE($Label.CMDBClassName)}",
+                "Save" : "{!JSENCODE($Label.Save)}",
+                "RecordSaved" : "{!JSENCODE($Label.RecordSavedSuccessfuly)}",
+                "Yes":"{!JSENCODE($Label.ExtjsMessageYes)}",
+                "No": "{!JSENCODE($Label.ExtjsMessageNo)}",
+                "Warning":"{!JSENCODE($Label.Warning)}",
+                "ciTab" : "{!JSENCODE($Label.CMDB_TAB_CIs)}",
+                "assetTab" : "{!JSENCODE($Label.CMDB_TAB_Assets)}",
+                "allTab" : "{!JSENCODE($Label.All)}",
+                "Read" : "{!JSENCODE($Label.Read)}",
+                "Create" : "{!JSENCODE($Label.Create)}",
+                "Edit" : "{!JSENCODE($Label.cmdbedit)}",
+                "Delete" : "{!JSENCODE($Label.Delete)}",
+                "EnableCMDBClassPermissions" : "{!JSENCODE($Label.EnableCMDBClassPermissions)}",
+                "ListOfPermissionSets" : "{!JSENCODE($Label.ListOfPermissionSets)}",
+                "CloneFrom" : "{!JSENCODE($Label.CloneFrom)}",
+                "PermissionName" : "{!JSENCODE($Label.PermissionName)}",
+                "PermissionFor" : "{!JSENCODE($Label.PermissionFor)}",
+                "Reset" : "{!JSENCODE($Label.LoadDefault)}",
+                "Import" : "{!JSENCODE($Label.Import)}",
+                "Information" : "{!JSENCODE($Label.Information)}",
+                "EnabaleClassPermissionInfo" : "{!JSENCODE($Label.EnableClassPermissionInfo)}",
+                "ClonePermissions" : "{!JSENCODE($Label.ClonePermissions)}",
+                "SearchClass" : "{!JSENCODE($Label.CMDB_View_Search)}",
+                "SearchPs" : "{!JSENCODE($Label.SearchPs)}",
+                "Clone" : "{!JSENCODE($Label.Clone)}",
+                "Ok" : "{!JSENCODE($Label.Ok)}",
+                "Cancel" : "{!JSENCODE($Label.Cancel)}",
+				"Continue" : "{!JSENCODE($Label.SF1Continue)}",
+                "UnsavedChanges" : "{!JSENCODE($Label.UnsavedChanges)}",
+				"ResetSuccessfully" : "{!JSENCODE($Label.ResetSuccessfully)}",
+                "ResetTooltip" : "{!JSENCODE($Label.ResetTooltip)}",
+				"CloneTooltip" : "{!JSENCODE($Label.CloneTooltip)}",
+				"ImportTooltip" : "{!JSENCODE($Label.ImportTooltip)}",
+				"ApplyCMDBClsTooltip" : "{!JSENCODE($Label.ApplyCMDBClsTooltip)}",
+				"ImportPermissionMessage" : "{!JSENCODE($Label.ImportPermissionMessage)}",
+                "ClonedSuccessfully" : "{!JSENCODE($Label.ClonedSuccessfully)}",
+				"searchResult": "{!JSENCODE($Label.searchResult)}",
+				"HideCILabel": "{!JSENCODE($Label.HideCILabel)}",
+				"HideAssetLabel": "{!JSENCODE($Label.HideAssetLabel)}",
+				"HideCiAssetInfo": "{!JSENCODE($Label.HideCiAssetInfo)}",
+				"ClickHere" : "{!JSENCODE($Label.ClickHere)}"
+              }
+            
+            function openHelpPage() {
+                window.open(wikiURL );
+            }           
+        </script>
+        
+        <body ng-app="CMDBClassPermissionsModule">
+            <div id="tbar" style="height:30px;">
+                <apex:outputLabel styleClass="outputlabel" value="{!JSENCODE($Label.bmcservicedesk__classpermissions)}"></apex:outputLabel>
+                <span class=" d-icon-question_circle helpIconCls float_help_icon" onclick="openHelpPage();"></span>
+            </div>
+            
+            <div id="CMDBClassPermissionsControllerId"  ng-controller="CMDBClassPermissionsController" class="" style="margin:20px;margin-top:0px;height:88%;">
+                <div  ng-include="'{!URLFOR($Resource.RemedyforceAdministration,'CMDBClassPermissions/html/cmdb-class-permissions.html')}'" class="full-height"></div>
+            </div>
+        </body>
+        
+    </html>
+</apex:page>

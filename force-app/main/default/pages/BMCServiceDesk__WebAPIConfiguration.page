@@ -1,0 +1,589 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.WebAPIConfigurationController" standardStylesheets="false">
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/WebAPIConfiguration.css" />
+<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+<!--[if lte IE 9]>
+<style>
+.ie9SpecificWidth
+{
+    width:0px !important;\
+}
+.ie9Specific
+{
+    margin-right:200px ! important;\    
+
+}
+.checkboxLabelCls{
+        vertical-align: 1px !important;
+    }
+</style>
+<![endif]-->
+<script>
+var copyWebConfigID;
+var isCertificateReq=false;
+var dataPresent;
+var saveSuccessful=true;
+var tooltipNew='{!JSENCODE($Label.New)}';
+var tooltipSave='{!JSENCODE($Label.Save)}';
+var tooltipCopy='{!JSENCODE($Label.Copy)}';
+var tooltipDelete='{!JSENCODE($Label.Delete)}';
+var tooltipRefresh='{!JSENCODE($Label.Refresh)}';
+var tooltipPreviousRecord='{!JSENCODE($Label.PreviousRecord)}';
+var tooltipNextRecord='{!JSENCODE($Label.NextRecord)}';
+var b_previous='{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif';
+var b_next='{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif';
+var InactiveLabelWithStyle= '<span id="InactiveLabel"  class="checkboxLabelCls">'+'{!JSENCODE($ObjectType.WebAPIConfiguration__c.fields.inactive__c.Label)}'+'</span>';
+var inactiveLabel='{!JSENCODE($ObjectType.WebAPIConfiguration__c.fields.inactive__c.label)}';
+var callOnTaskClose={!WebAPIConfiguration.BMCServiceDesk__Call_Web_API_on_Task_Closed__c};
+var WebAPIConfigurationId='{!JSENCODE(WebAPIConfiguration.ID)}'; 
+var deleteConfirm='{!JSENCODE($Label.DeleteConfirmMessage)}';
+var chkBoxValue;
+var WebAPIConfigurationName;
+var savedSOAPMethod;
+var webAPIConfigurationHeader = '{!JSENCODE($ObjectType.WebAPIConfiguration__c.Label)}'; 
+var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+var activeAllWindowFlag=true;
+var inActiveValue='{!WebAPIConfiguration.inactive__c}';     
+var NonPrimitiveData='{!JSENCODE($Label.NonPrimitiveDatatypesNotSupported)}';   
+var contentTypeObj;
+var hoursObj;
+var Required_CertificateObj;
+var serviceTypeObj;
+var securityTypeObj;
+var WebAPIConfigurationNameObj;
+var passwordObj;
+var isDeletable = {!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.deletable};
+var isCreateable = {!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.createable};
+var isEditable = {!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.updateable};
+
+var rerenderPage=false;
+function getWID(){
+       return '{!JSENCODE($CurrentPage.parameters.wid)}';
+}
+function activateWindow()
+{   
+    if(window.parent.activateWindow != undefined){
+    if(activeAllWindowFlag==true)
+        window.parent.activateWindow(getWID());       
+    }
+    activeAllWindowFlag=true;
+}
+document.onclick = activateWindow;  
+var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+var clickedOnce = false;  
+function handleChange(){
+    if(!clickedOnce){
+        clickedOnce = true;
+        window.parent.registerChange(wid2);
+    }
+}
+function handleResetChange()
+{
+    if(clickedOnce){
+          clickedOnce = false;
+          window.parent.registerSave(wid2);
+      }
+}  
+var WACset;
+if(WACset == null || WACset == '')
+{
+    if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == '')
+    {
+    if(typeof(window.parent.returnListOfId)=='function')
+        WACset=window.parent.returnListOfId();
+    }
+    else
+    {
+    if(typeof(window.parent.parent.getIdArray)=='function')
+        WACset=window.parent.parent.getIdArray();
+        window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+    }
+}   
+</script>   
+<apex:outputPanel id="parameterValuesPanel">
+<script>
+    var parameter='{!JSENCODE(parameterValues)}'; 
+</script>
+</apex:outputPanel>  
+<apex:outputPanel id="panelId">
+<script>
+  WebAPIConfigurationName = "{!JSENCODE(WebAPIConfiguration.Name)}";               
+  WebAPIConfigurationId = "{!JSENCODE(WebAPIConfiguration.Id)}";
+</script>
+</apex:outputPanel>
+<apex:outputPanel id="validationComponent">
+</apex:outputPanel>
+<apex:outputPanel id="errorId">
+<script>
+function completeDelete()
+{
+        
+        if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}')
+        {
+            showError();
+        }else
+        {
+            closeWindow();
+        }
+}
+</script>
+</apex:outputPanel>
+
+<apex:outputPanel id="afterSavePanel">
+<script>
+ function handleSave()
+ {
+    var id = "{!JSENCODE(WebAPIConfiguration.Id)}";
+    window.parent.handleSave(wid, id);
+ }  
+</script>
+</apex:outputPanel>
+<apex:outputPanel id="titlePanel">
+<script>
+    var msgFromServer='{!messageString}';
+    var SavedSuccessfully;
+    function afterSave()
+    {   
+         SavedSuccessfully='{!JSENCODE($Label.SavedSuccessfully)}';
+        if(SavedSuccessfully==msgFromServer)
+        {
+            updateList();
+            updateTitle();
+            enableSaveButton();
+            buttonValidator();
+        }
+    }
+    function updateList()
+    {
+         window.parent.refreshList();
+    }
+    var firstClick=true;
+    function updateTitle()
+     {
+       var newTitle= "{!JSENCODE(WebAPIConfiguration.Name)}";
+       if(newTitle != ""){     
+          window.parent.changeTitle(wid,newTitle,webAPIConfigurationHeader);                   
+        }                       
+     }
+    var newTitle;
+   
+    function getNewTitle()
+    {
+         newTitle= "{!JSENCODE(WebAPIConfiguration.Name)}";
+         SavedSuccessfully='{!JSENCODE($Label.SavedSuccessfully)}';
+    }
+</script>
+</apex:outputPanel>  
+<apex:outputPanel id="inactivePanel">
+    <script>
+        function updateInactive()
+        {
+            Ext.getCmp('idInactive').setValue('{!WebAPIConfiguration.inactive__c}');
+        }
+  </script>
+</apex:outputPanel>
+<apex:messages />
+<apex:form id="WebAPIForm">
+<apex:actionFunction action="{!newWebAPIConfiguration}" name="newWebAPIConfiguration" rerender="mainFormData" oncomplete=""/>
+<apex:actionFunction action="{!deleteWebAPIConfiguration}" name="deleteWebAPIConfiguration" onComplete="completeDelete();updateList();" rerender="errorId,validationComponent"/>
+<apex:actionFunction action="{!reset}" name="resetWebAPICongiguration" rerender="inactivePanel,afterSavePanel,mainFormData,getLatestId,soapBasicMethods" oncomplete="buttonValidator();handleElemEvent();loadPage();updateInactive();"/>
+<c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+<apex:actionFunction action="{!save}" name="save" reRender="getLatestId,afterSavePanel,titlePanel,validationComponent,errorId,PanelId,parameterValuesPanel" oncomplete="waitMsg.hide();showError();afterSave();handleElemEvent();handleSave();">
+    <apex:param assignTo="{!inactiveCheckBox}" name="chkBox" value=""/> 
+    <apex:param assignTo="{!parameterValues}" name="ParameterList" value=""/>
+</apex:actionFunction>
+<apex:actionFunction action="{!copy}" name="copy" rerender="mainFormData"/>
+
+<apex:actionFunction action="{!nextBtnHandler}" name="nextBtnWACHandler" 
+   rerender="inactivePanel,getLatestId,panelId,titlePanel,afterSavePanel,methodConfigPanel,mainFormData,getLatestId,soapBasicMethods,parameterValuesPanel" onComplete="handleResetChange();updateTitle();handleElemEvent();loadPage();updateInactive();">
+   <apex:param assignTo="{!listOfWACIds}" name="idSetString" value=""/>  
+</apex:actionFunction>
+
+<apex:actionFunction action="{!previousBtnHandler}" name="previousBtnWACHandler" 
+    rerender="inactivePanel,getLatestId,panelId,titlePanel,afterSavePanel,methodConfigPanel,mainFormData,getLatestId,soapBasicMethods,parameterValuesPanel" onComplete="handleResetChange();updateTitle();handleElemEvent();loadPage();updateInactive();">
+    <apex:param assignTo="{!listOfWACIds}" name="idSetString" value=""/> 
+</apex:actionFunction>
+<apex:actionFunction action="{!loadMethods}" name="loadMethods" rerender="soapBasicMethods" oncomplete="setParsingStatus();waitMsg.hide();setDefaultSOAPMethod();"/>
+<apex:actionFunction action="{!getParameter}" name="getParameter" reRender="parameterPanel,parameterValuesPanel" oncomplete="showParameters(); changeIdForRepeatEle();chkForSavedParameter();"/>
+
+<div id="mainDiv" style="border: 1px solid #999999;*height:100%;">
+<div id="btnToolbar" ></div>
+  <apex:outputPanel id="mainFormData">
+    <table id="mainForm"  cellpadding="0" cellspacing="0"  width="100%"> 
+    <tr>
+        <td>
+            
+         </td>
+    </tr> 
+    
+    <tr id="example_Info">
+        <td>
+            <table  width="100%" style="border-bottom-width:1px; border-bottom-style: solid;">
+            <tr>
+                      <td  class="tdLabelAlignLeft" style="padding-top:10px;">
+                     <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__toenablewebapiconfigmessage)}"/>&nbsp;
+                     <a onclick="window.open(window.parent.parent.getSetupMenuUrl('REMOTE_SITE_SETTINGS'));" class="textColorBlue cursorCls">{!JSENCODE($Label.remotesitesettings)}</a>
+                     </td>
+            </tr>
+            <tr>
+                    <td class="tdLabelAlignLeft">
+                        <apex:outputLabel styleClass="textColorBlue" value="{!($Label.bmcservicedesk__servername)}" escape="true"/>
+                </td>
+            </tr>
+       </table>
+       </td>
+   </tr>
+   
+   <tr id="commonContent">
+       <td>
+       <table style="width=100%">
+           <tr id="webConfgurationName">
+                   <td class="tdLabelAlignLeft labelWidth WACInputLabelTD"> 
+                       <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.Name.label}"/>&nbsp;<span Class="clsRequiredRed">*</span>
+                </td>
+                    <td style="padding-top:5px;">
+                   <apex:inputText title="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.Name.Label}" value="{!WebAPIConfiguration.Name}" id="WebAPIConfiguration_Id" styleClass="componentWidth clsIdInputTextBox" /> 
+                </td>
+           </tr>
+           <tr id="serviceType">
+               <td class="tdLabelAlignLeft WACInputLabelTD">
+                       <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Service_Type__c.label}"/>&nbsp;<span Class="clsRequiredRed">*</span>
+               </td>
+               <td class = "tdAlignLeft">
+                        <apex:selectList size="1" value="{!WebAPIConfiguration.BMCServiceDesk__Service_Type__c}" id="service_Type" styleClass="componentWidthPickList" onchange="changeContentType('{!$Component.service_Type}');" title="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Service_Type__c.inlineHelpText}">
+                        <apex:selectOptions value="{!serviceTypePicklist}"/>
+                     </apex:selectList>
+               </td>
+           </tr>
+           <tr id="serviceURL">
+                   <td class="tdLabelAlignLeft WACInputLabelTD"> 
+                        <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Service_URL__c.label}"/>&nbsp;<span Class="clsRequiredRed">*</span>
+               </td>
+               <td class = "tdAlignLeft">
+                   <apex:inputText title="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Service_URL__c.inlineHelpText}" value="{!WebAPIConfiguration.BMCServiceDesk__Service_URL__c}" id="WebAPIConfiguration_Service_URL" styleClass="componentWidth clsIdInputTextBox" /> 
+               </td>
+               <td id="loadMethods" style="display:none;padding-left:5px;">
+                         <input type = "button" class="btnStyle WACbuttoncls" id="buttonUrl" title = "{!$Label.LoadMethods}" value="{!$Label.LoadMethods}"  onClick = "showMethods('{!$Component.WebAPIConfiguration_Service_URL}');"/>
+                   </td> 
+               <td id="ForRestUrlButton" style="display:none;padding-left:5px;" >
+                     <input type = "button" name="buttonURL" class="insertFieldImage " id="buttonUrl" title = "{!$Label.Insert} {!$Label.CIExpField}"  onClick = "openMeargeFieldPopUp('{!$Component.WebAPIConfiguration_Service_URL}');"/>
+               </td>                   
+           </tr>
+           <tr id="contentType" style="display:none">
+               <td class = "tdLabelAlignLeft WACInputLabelTD"> <apex:outputLabel styleClass=""  value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__HTTP_Content_Type__c.label}"/></td>
+                <td title="{!$ObjectType.WebAPIConfiguration__c.fields.HTTP_Content_Type__c.inlineHelpText}">
+                       <apex:inputField value="{!WebAPIConfiguration.BMCServiceDesk__HTTP_Content_Type__c}" id="content_Type" styleClass="componentWidthPickList"/>
+                </td>
+           </tr>
+               
+           </table> 
+       </td>
+   </tr>
+   <tr id="tabPanel">
+       <td  class="tdLabelAlignLeft">
+                 <input type="button" class="btnStyle WACbuttonOnClickcls" id="webAPISettingBtn" value ="{!$Label.Web_API_Setting}" title="{!$Label.Web_API_Setting}" onClick="enbaleWebAPISetting();"/> &nbsp;&nbsp;
+                 <input type="button" class="btnStyle WACbuttoncls" id="methodConfigBtn" value ="{!$Label.Method_Configuration}" title="{!$Label.Method_Configuration}" onClick="enableMethodCongiuration();"/>
+       </td>
+   </tr>   
+   <tr id="Panelbody">
+                <td class="clsPanelBody">
+                <table summary="Tab Table" class = "borderColor" width = "100%">
+               <tr id="WebAPISetting">
+                   <td>
+                       <table summary="Authentication">
+                           <tr>
+                               <td colspan = "2" class = "tdInnerLabelAlignLeft textColorBlue">
+                                   <apex:outputLabel styleClass="" value="{!$Label.bmcservicedesk__authentication}"/>
+                               </td>
+                           </tr>
+                           <tr style="display:inherit" id="security_Type">
+                                    <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD">    
+                                   <apex:outputLabel styleClass="" value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Security_Type__c.label}"/>
+                               </td>
+                               <td>
+                                        <apex:selectList size="1" value="{!WebAPIConfiguration.BMCServiceDesk__Security_Type__c}" id="SecurityType" styleClass="componentWidthPickList" onchange="getAuthenticationBody('{!$Component.SecurityType}');" title="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Security_Type__c.inlineHelpText}">
+                                             <apex:selectOptions value="{!securityTypePicklist}"/>
+                                        </apex:selectList>
+                                    
+                               </td>
+                           </tr>
+                           <tr id="service_Identity" style="display:none">
+                                    <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD">
+                                       <apex:outputLabel styleClass="" value="{!$Label.bmcservicedesk__username}"/>&nbsp;<span Class="clsRequiredRed">*</span>
+                               </td>
+                               <td title="{!$ObjectType.WebAPIConfiguration__c.fields.Service_Identity__c.inlineHelpText}">
+                                   <apex:inputField value="{!WebAPIConfiguration.BMCServiceDesk__Service_Identity__c}" id="ServiceIdentity" styleClass="componentWidth" />
+                               </td>
+                           </tr>
+                           <tr id="service_Passphrase" style="display:none">
+                                    <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD">
+                                       <apex:outputLabel value="{!$Label.bmcservicedesk__password}"/>&nbsp;<span Class="clsRequiredRed">*</span>
+                               </td>
+                               <td>
+                                   <apex:inputsecret value="{!WebAPIConfiguration.BMCServiceDesk__Service_Pass_phrase__c}" id="ServicePassphrase" styleClass="componentWidth" redisplay="true" title="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Service_Pass_phrase__c.inlineHelpText}"/>
+                                </td>
+                           </tr>
+                           <tr id="is_sandbox" style="display:none">
+                                    <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD">
+                                   <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Is_Sandbox__c.label}"/>
+                               </td>
+                               <td>
+                                   <apex:inputField value="{!WebAPIConfiguration.BMCServiceDesk__Is_Sandbox__c}" id="isSandbox"/>
+                               </td>
+                           </tr>
+                           <tr id="API_Key" style="display:none">
+                                    <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD">
+                                   <!--<apex:outputLabel styleClass="" value="{!$ObjectType.WebAPIConfiguration__c.fields.API_Key__c.label}"/>-->
+                               </td>
+                               <td>
+                                   <!--<apex:inputField value="{!WebAPIConfiguration.API_Key__c}" styleClass="componentWidth"/>-->
+                               </td>
+                           </tr>
+                           <tr id="Secret_Key" style="display:none">
+                                    <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD">
+                                   <!--<apex:outputLabel styleClass="" value="{!$ObjectType.WebAPIConfiguration__c.fields.Secret_Key__c.label}"/>-->
+                               </td>
+                               <td>
+                                   <!--<apex:inputField value="{!WebAPIConfiguration.Secret_Key__c}" styleClass="componentWidth"/>-->
+                               </td>
+                           </tr>
+                           <tr id="Required_Certificate" style="display:inherit">
+                                    <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD">
+                                   <apex:outputLabel styleClass="" value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Required_Certificate__c.label}"/>
+                               </td>
+                               <td>
+                                   <apex:inputField value="{!WebAPIConfiguration.BMCServiceDesk__Required_Certificate__c}" id="RequireCertificate" onClick="enableCertificate('{!$Component.RequireCertificate}');"/>
+                               </td>
+                           </tr>
+                           <tr id="Certificate_Name" style="display:none">
+                                    <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD">
+                                   <apex:outputLabel styleClass="" value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Certificate_Name__c.label}"/>
+                               </td>
+                               <td title="{!$ObjectType.WebAPIConfiguration__c.fields.Certificate_Name__c.inlineHelpText}">
+                                   <apex:inputField value="{!WebAPIConfiguration.BMCServiceDesk__Certificate_Name__c}" id="certificateText"  styleClass="componentWidth"  />
+                               </td>
+                           </tr>
+                       </table>
+                       <table summary="Other API Setting">
+                           <tr>
+                               <td colspan = "2" class = "tdInnerLabelAlignLeft textColorBlue">
+                                   <apex:outputLabel value="{!$Label.bmcservicedesk__other_api_setting}"/> 
+                               </td>
+                           </tr>
+                           <tr style="display:inherit">
+                                    <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD">
+                                   <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Call_Web_API_on_Task_Closed__c.label}"/>
+                               </td>
+                               <td class = "tdAlignLeft">
+                                   <apex:inputCheckbox id="CallWebAPIOnTaskClose" value="{!WebAPIConfiguration.BMCServiceDesk__Call_Web_API_on_Task_Closed__c}" style="vertical-align: text-top;"  onclick="hideHours('{!$Component.CallWebAPIOnTaskClose}');" />
+                               </td>
+                           </tr>
+                           <tr id="Hours" style="display:none">
+                                    <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__Hours__c.label}" id="HoursLabel" /></td>
+                                   <td style="padding-bottom:5px;" title="{!$ObjectType.WebAPIConfiguration__c.fields.Hours__c.inlineHelpText}">
+                                   <apex:inputField value="{!WebAPIConfiguration.BMCServiceDesk__Hours__c}" id="HoursTextBox" styleClass="componentWidth"/>
+                               </td>
+                           </tr>       
+                       </table>
+                   </td>
+               </tr>
+                   <tr id="methodConfiguration" style="display:none" width="100%"> 
+                   <td>
+                       <table>
+                           <tr id="ServicesLabel" style="display:none">
+                               <td colspan = "2" class = "tdInnerLabelAlignLeft textColorBlue">
+                                   <apex:outputLabel value="{!$Label.bmcservicedesk__serviceoperations}"/>
+                               </td>
+                           </tr>
+                           <tr id="WebCallingMethod" style="display:none">
+                               <td colspan = "2" class = "tdInnerLabelAlignLeft textColorBlue"><apex:outputLabel value="{!$Label.bmcservicedesk__webservicecallingmethod}"/></td>
+                           </tr>
+                           <tr id="RestService" style="display:none">
+                               <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD ie9SpecificWidth">
+                                   <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__HttpMethod__c.label}"/>&nbsp;&nbsp;
+                               </td>
+                               <td>
+                                    <apex:selectList size="1" value="{!WebAPIConfiguration.BMCServiceDesk__HttpMethod__c}" id="HTTPMethod_Rest" styleClass="componentWidthPickList ie9Specific" title="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__HttpMethod__c.inlineHelpText}">
+                                        <apex:selectOptions value="{!methodpickList}"/>
+                                     </apex:selectList>
+                               </td>
+                           </tr>
+                           <tr id="methodList" style="display:none">
+                                <td>
+                                   <table>
+                                       <tr>
+                                           <td class="tdInnerLabelAlignLeft innerLabelWidth WACInputLabelTD">
+                                                <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__SOAP_Method_Name__c.label}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputPanel id="soapBasicMethods" >
+                                                    <apex:inputhidden id="ParserStatus" value="{!IsWSDLParsingFailed}"/>
+                                                    <apex:selectList value="{!WebAPIConfiguration.BMCServiceDesk__SOAP_Method_Name__c}" multiselect="false" size="1" id="SOAP_Method"  onchange=" loadParameters('{!$Component.SOAP_Method}');" styleClass="componentWidthPickList" title="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__SOAP_Method_Name__c.inlineHelpText}">
+                                                        <apex:selectOptions value="{!BasicMethod}"/>
+                                                    </apex:selectList>
+                                                </apex:outputPanel>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                           </tr>
+                           <tr id="ParameterLabel" style="display:none;padding-left: 5px;">
+                               <td colspan = "2" class = "textColorBlue tdInnerLabelAlignLeft"><apex:outputLabel styleClass="" value="{!$Label.bmcservicedesk__parameters}"/></td>
+                           </tr>
+                           <tr>
+                               <td colspan = "2" class ="tdInnerLabelAlignLeft">
+                                 <apex:outputPanel id="parameterPanel">
+                                   <table id="BasicGrid" style="display:none">
+                                       <apex:repeat var="parameter" value="{!Parameters}" id="repeat" >
+                                           <tr>
+                                               <td class="WACInputLabelTD paramLabelWidth">
+                                                   <apex:outputLabel styleClass=""  value="{!parameter}" />
+                                               </td>
+                                                       <td class = "tdAlignLeft">
+                                                           <input type="text" id="textBox" name="textBoxNameRepeat" Class="componentWidth" style="margin-right: 10px;"/>
+                                               </td>
+                                               <td>
+                                                            <input type = "button" name="buttonNameRepeat" style="padding-left: 5px;" class="insertFieldImage " id="button" title = "{!$Label.Insert} {!$Label.CIExpField}"  onClick = "callMergeFeild(this);"/>
+                                               </td>
+                                           </tr>
+                                       </apex:repeat> 
+                                   </table>
+                                 </apex:outputPanel>
+                               </td>
+                           </tr>
+                           <tr style="display:none" id="SOAPEnvelope">
+                               <td colspan = "2" class = "tdInnerLabelAlignLeft textAreaRightPad">
+                                       <table width="100%">
+                                       <tr id="insert_SOAP_Envelope" style="">
+                                           <td class = "textColorBlue" style="padding-bottom:5px">
+                                               <apex:outputLabel styleClass="" value="{!$Label.bmcservicedesk__soapenvelope}"/>
+                                           </td>
+                                       </tr>
+                                       <tr class = "rowBorderMiddle" style = "background-color: #DEE0E0" height="30">
+                                           <td style="padding-left:5px">
+                                               <input type = "button" title = "{!$Label.Insert} {!$Label.CIExpField}" class="insertFieldImage" onClick = "openMeargeFieldPopUp('{!$Component.SOPAEnvelopeBody}');"/>
+                                           </td>
+                                       </tr>
+                                       <tr class = "rowBorder">
+                                           <td>
+                                                   <apex:inputTextarea rows="10" Cols="500" id="SOPAEnvelopeBody" title="{!$Label.bmcservicedesk__soapenvelope}" value="{!SOAPEnv}" styleClass="textAreaBorder textAreaWidth"/>
+                                           </td>
+                                       </tr>
+                                   </table>
+                               </td>
+                           </tr>
+                           <tr style="display:none" id="RequestBody">
+                               <td colspan = "2" class = "tdInnerLabelAlignLeft textAreaRightPad">
+                                       <table width="100%">
+                                       <tr id="objectLabelBody" style="">
+                                           <td class = "textColorBlue" style="padding-bottom:5px">
+                                               <apex:outputLabel styleClass="" value="{!$Label.bmcservicedesk__requestbody}"/>
+                                           </td>
+                                       </tr>
+                                       <tr class = "rowBorderMiddle" style = "background-color: #DEE0E0" height="30">
+                                           <td style="padding-left:5px">
+                                               <input type = "button" title = "{!$Label.Insert} {!$Label.CIExpField}" class="insertFieldImage" onClick = "openMeargeFieldPopUp('{!$Component.RequestBodyArea}');"/>
+                                           </td>
+                                       </tr>
+                                       <tr class = "rowBorder">
+                                           <td >
+                                                   <apex:inputTextarea rows="10" Cols="500" id="RequestBodyArea" title="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__HTTPBody__c.inlineHelpText}" value="{!WebAPIConfiguration.BMCServiceDesk__HTTPBody__c}" styleClass="textAreaBorder textAreaWidth"/>
+                                           </td>
+                                       </tr>
+                                   </table>
+                               </td>
+                           </tr>
+                           <tr class="" id="RequestHeader" style="display:none">
+                               <td colspan = "2" class = "tdInnerLabelAlignLeft textAreaRightPad">
+                                       <table width="100%">
+                                       <tr>
+                                           <td  class = "textColorBlue" style="padding-bottom:5px">
+                                               <apex:outputLabel value="{!$Label.bmcservicedesk__requestheader}"/>
+                                           </td>
+                                       </tr>
+                                       <tr id="insertBtnHeader"  class = "rowBorderMiddle" style = "background-color: #DEE0E0" height="30">
+                                           <td style="padding-left:5px">
+                                               <input type = "button" title = "{!$Label.Insert} {!$Label.CIExpField}" class="insertFieldImage" onClick = "openMeargeFieldPopUp('{!$Component.HTTPHeaders}');"/>
+                                                </td>
+                                            </tr>
+                                            <tr class = "rowBorder">
+                                                <td>
+                                                        <apex:inputTextarea rows="10" Cols="500" value="{!WebAPIConfiguration.BMCServiceDesk__HTTPHeaders__c}" id="HTTPHeaders" styleClass="textAreaBorder textAreaWidth" title="{!$ObjectType.BMCServiceDesk__WebAPIConfiguration__c.fields.BMCServiceDesk__HTTPHeaders__c.inlineHelpText}"/>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>       
+    
+     </tr>
+</table>
+</apex:outputPanel>
+</div>
+<apex:outputPanel id="getLatestId">
+<script>
+copyWebConfigID='{!wid}';
+contentTypeObj='{!JSENCODE(WebAPIConfiguration.HTTP_Content_Type__c)}';
+hoursObj='{!(WebAPIConfiguration.Call_Web_API_on_Task_Closed__c)}';
+serviceTypeObj='{!JSENCODE(WebAPIConfiguration.Service_Type__c)}';
+securityTypeObj='{!JSENCODE(WebAPIConfiguration.Security_Type__c)}';
+WebAPIConfigurationNameObj='{!JSENCODE(WebAPIConfiguration.Name)}';
+Required_CertificateObj='{!(WebAPIConfiguration.Required_Certificate__c)}';
+savedSOAPMethod='{!(WebAPIConfiguration.SOAP_Method_Name__c)}';
+passwordUpdatedObj='{!JSENCODE(Password)}';
+</script>
+</apex:outputPanel>
+</apex:form>
+
+<script>
+var certificateTextBox;
+var reqCertificate;
+var restMethod;
+var taskClosed;
+var hoursTextBoxValue;
+var WACName;
+var serviceUrl;
+var username;
+var password;
+var securityType;
+var serviceType; 
+var nameEmptyLMsg='{!JSENCODE($Label.ConfigurationNameCanNotBeEmpty)}';
+var serviceUrlEmptyMsg='{!JSENCODE($Label.ServiceUrlCanNotBeEmpty)}';
+var userNamePasswordEmptyMsg='{!JSENCODE($Label.UsernamePasswordEmptyMessage)}';
+var serviceTyeEmptyMsg='{!JSENCODE($Label.ServiceTypeEmptyMessage)}';
+var HoursValidationMsg='{!JSENCODE($Label.HoursValidation)}';
+var HoursDigitValidationMsg='{!JSENCODE($Label.HoursDigitValidation)}';
+var WACNameValidationMsg='{!JSENCODE($Label.WebAPIConfigurationNameValidation)}';
+var CertificateNameValidationMsg='{!JSENCODE($Label.CertificateNameValidation)}';
+var WSDLParsingFailedMsg='{!JSENCODE($Label.WSDLParsingFailed)}';
+var IsParserFailed;
+tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+var enterCertificateMsg='{!JSENCODE($Label.EnterCertificateName)}';
+var initialServieType = '{!$Component.WebAPIForm.service_Type}';
+function setDefaultSOAPMethod(){
+    var SOAP_Method_ID = '{!$Component.WebAPIForm.SOAP_Method}';
+    document.getElementById(SOAP_Method_ID).selectedIndex=0;
+}
+function getVarsOfPage()
+ {
+      certificateTextBox='{!$Component.WebAPIForm.certificateText}';
+      reqCertificate='{!$Component.WebAPIForm.RequireCertificate}';
+      restMethod='{!$Component.WebAPIForm.HTTPMethod_Rest}';
+      taskClosed='{!$Component.WebAPIForm.CallWebAPIOnTaskClose}';
+      hoursTextBoxValue='{!$Component.WebAPIForm.HoursTextBox}';
+      WACName=document.getElementById('{!$Component.WebAPIForm.WebAPIConfiguration_Id}').value;
+      serviceUrl=document.getElementById('{!$Component.WebAPIForm.WebAPIConfiguration_Service_URL}').value;
+      username=document.getElementById('{!$Component.WebAPIForm.ServiceIdentity}').value;
+      password=document.getElementById('{!$Component.WebAPIForm.ServicePassphrase}').value;
+      securityType=document.getElementById('{!$Component.WebAPIForm.SecurityType}').value;
+      serviceType=document.getElementById('{!$Component.WebAPIForm.service_Type}').value;
+      IsParserFailed = document.getElementById('{!$Component.WebAPIForm.ParserStatus}').value;
+ }      
+</script>    
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WebAPIConfiguration.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/JSCommon.js"></script>
+</apex:page>

@@ -1,0 +1,97 @@
+﻿
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta name="GENERATOR" content="Quadralay WebWorks Publisher 2003 for FrameMaker 8.6.6587.0" />
+    <meta name="TEMPLATEBASE" content="BMC_WebWorksHelp_52407" />
+    <meta name="LASTUPDATED" content="06/11/14 13:56:47" />
+    <title>CMDB 1.0で構成アイテムをインポートする方法の概要</title>
+    <link rel="StyleSheet" href="Remedy.css" type="text/css" />
+    <link rel="StyleSheet" href="catalog.css" type="text/css" />
+<script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/context.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/towwhdir.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/wwhpagef.js"></script>
+
+  <script type="text/javascript" language="JavaScript1.2">
+   <!--
+    // Set reference to top level help frame
+    //
+    var  WWHFrame = WWHGetWWHFrame("");
+   // -->
+  </script>
+
+    <script type="text/javascript" language="JavaScript1.2" src="scripts/expand.js"></script>
+  </head>
+
+  <body onLoad="WWHUpdate();" onUnload="WWHUnload();" onKeyDown="WWHHandleKeyDown((document.all||document.getElementById||document.layers)?event:null);" onKeyPress="WWHHandleKeyPress((document.all||document.getElementById||document.layers)?event:null);" onKeyUp="WWHHandleKeyUp((document.all||document.getElementById||document.layers)?event:null);">
+
+    
+    
+
+    <blockquote>
+<script type="text/javascript" language="JavaScript1.2">
+   WWHFrame.WWHHelp.mRemedyTitle = "CMDB 1.0で構成アイテムをインポートする方法の概要";
+   WWHFrame.WWHHelp.fRemedyShowTitle();
+</script><a name="wp828732"> </a><p class="pBody">構成アイテム（CI）を外部ソースからCMDBオブジェクトにインポートすることができます。CIはまずステージリストにインポートされます。ステージリストは、外部データをマッピングしてからCMDBオブジェクトへ保存するために必要なフラットテーブルです。ステージリストでは、CMDBのすべてのフィールドがカラムとして使用されます。ステージリストのデータはCMDBオブジェクトに保存されます。</p>
+<a name="wp936332"> </a><p class="pBody">Pentaho Data Integrationツールは、外部データソースからBMC Remedyforce CMDBにデータをインポートするためのオープンソースソリューションです。PentahoパッケージはBMC CommunitiesのWebサイトから入手できます。このパッケージは、外部データソースとCMDBオブジェクトのマッピングに使用します。BMC CommunitiesのWebサイトではジョブファイルを入手できます。ジョブファイルはPentaho Data Integrationツールで作成され、SCCM、BMC Atrium Discovery、BMC BladeLogic Client Automation、BMC FootPrints Asset Core、Dell KACE、BMC Atrium CMDBからデータをインポートできます。</p>
+<a name="wp937135"> </a><p class="pBody">データの取得はSQLクエリ（データをSCCMおよびBMC BladeLogic Client Automationから取得する場合など）またはHTTP要求（データをBMC Atrium Discoveryからインポートする場合など）を使用して実行されます。データのインポート時に、CMDBステージオブジェクトへ行を保存するたびに、CMDBオブジェクトへデータを送信するトリガーがアクティブになります。</p>
+<a name="wp779998"> </a><p class="pBodyRelative"></p>
+<div align="right"><img src="images/importing_architecture.gif" id="wp779996" border="0" hspace="0" vspace="0"/></div><p class="pBodyRelative">
+</p>
+
+<a name="wp938423"> </a><h3 class="pHeading3">
+CMDB 1.0でのフィールドのマッピング
+</h3>
+<a name="wp938811"> </a><p class="pBody">SCCM、BMC Atrium Discovery、BMC BladeLogic Client Automation、BMC FootPrints Asset Core、およびDell KACEのデータベースフィールドとRemedyforce CMDBのフィールドとの間のマッピングは、対応するジョブファイルに事前に定義されています。必要に応じて、データのインポート中にマッピングを変更できます。</p>
+<a name="wp938425"> </a><p class="pBody">また、SCCM、BMC Atrium Discovery、BMC BladeLogic Client Automation、BMC FootPrints Asset Core、Dell KACEのデータベースフィールドをCIのカスタム属性にマッピングすることもできます。詳細は、<a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'importing_data-59.htm');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'importing_data-59.htm', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">カスタム属性へのデータのインポート</a>を参照してください。</p>
+<a name="wp938429"> </a><p class="pBody">マッピングを変更する場合は、次のフィールドが必須です。</p>
+<div class="pSmartList1"><ul class="pSmartList1">
+<div class="pSmartList2"><ul class="pSmartList2">
+<a name="wp938430"> </a><div class="pSmartList2"><li><b class="cBold">BMCServiceDesk__ClassName__c</b>： データのインポート先となるCIのクラスが格納されます。たとえば、CMDB階層のBMC_computersystemクラスにデータをインポートする場合は、<span style="font-weight: bold">BMCServiceDesk__ClassName__c</span>はBMC_COMPUTERSYSTEMとします。クラス名は、BMC RemedyforceにあるCIリストで検索できます。</li></div>
+<a name="wp938434"> </a><div class="pSmartList2"><li><b class="cBold">BMCServiceDesk__UniqueCISourceID__c</b>： データソースからインポートしたCIの固有IDが格納されます。このフィールドの値は変更しないことをお勧めします。</li></div>
+</ul></div>
+</ul></div>
+<a name="wp938436"> </a><p class="pBody">コンピュータシステムと各種CIとの間に関係を作成する場合は、<b class="cBold">BMCServiceDesk__AssemblyId__c</b>フィールドが必要です。関係により、データのソースと宛先を特定することができます。ソースはコンピュータシステムであり、宛先にはオペレーティングシステム、プロセッサ、IPエンドポイント、LANエンドポイント、ソフトウェアサーバー、製品、スタッフなどがあります。</p>
+<a name="wp938437"> </a><p class="pBody">SCCM、BMC Atrium Discovery、BMC BladeLogic Client Automation、BMC FootPrints Asset Core、およびDell KACEのデータベースフィールドとマッピングできるCIタイプおよびその階層は、一度に1つだけです。</p>
+
+
+
+  <script type="text/javascript" language="JavaScript1.2">
+   <!--
+    // Clear related topics
+    //
+    WWHClearRelatedTopics();
+
+   // -->
+  </script>
+    </blockquote>
+
+    
+<hr class="REM"/>
+
+<table align="center" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="577" align="center"><p class="copyright">
+
+ &#169; Copyright  2010-2014
+ BMC Software, Inc. All rights reserved.<br/>
+
+サポートが必要な場合は、BMC Remedyforce管理者にお問い合わせください。 
+ドキュメントに関するご質問またはコメントについては、<a href="mailto:doc_feedback@bmc.com">doc_feedback@bmc.com</a>までメールをお願いいたします。 
+
+    </p></td>
+  </tr>
+</table>
+
+
+
+<script type="text/javascript" language="JavaScript1.2">
+   <!--
+    document.write(WWHRelatedTopicsDivTag() + WWHPopupDivTag() + WWHALinksDivTag());
+   // -->
+  </script>
+
+  </body>
+</html>

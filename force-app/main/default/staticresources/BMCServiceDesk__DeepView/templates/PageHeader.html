@@ -1,0 +1,133 @@
+<!-- SECTION TO DISPLAY LOADING MESSAGE ON PAGE LOAD -->
+<div class="load-wrap" ng-show="!pageLoaded">
+	<div class="loader">Loading...</div>
+	<span>Loading</span>
+</div>
+<script>
+	if(isEmbeddedMode){
+		document.getElementById("broadcastTickerId").style.display = "none";
+		document.getElementById("objectTypeName").style.display = "none";
+	}
+</script>
+<!-- BROADCAST MESSAGES WHICH ARE COMMON ACROSS ORG -->
+<table id="broadcastTickerId" class="broadcast-ticker">
+	<tr>
+		<td id="messageScrollContainer" ng-if="broadcastMode == 'MESSAGE'">
+			<table width="100%;">
+				<tr>
+					<td class="d-icon-left-speaker broadcast_message_left_icon"></td>
+					<td id="BroadcastPageNumber" class="broadcast_ticker">
+						<div id="BRCurrentPage" ng-if="totalBrodcasts > 0">{{currentBroadcastNumber}}</div>
+						<div>{{_Labels.pageHeader.of}}</div>
+						<div id="BRTotalPages" ng-bind="totalBrodcasts"></div>
+					</td>
+					<td class="broadcast_message_scroll fadein">
+						<div class="broadcastContent" id ="BroadcastMessage">{{broadcastMessage}}</div>
+					</td>
+				</tr>
+			</table>
+		</td>
+		<td id="textScrollContainer" ng-if="broadcastMode != 'MESSAGE'">
+			<marquee id="broadcast-ticker" direction="left" behavior="scroll" scrollamount="{{broadcast.TickerSpeed}}" ng-bind-html="message">
+			</marquee>
+		</td>
+		<td class="img" ng-if="broadcastMode != 'MESSAGE'"></td>
+	</tr>
+</table>
+
+<div class="header-wrapper">
+	<header class="sub-header">
+		<div class="main-width">
+			<div class="header-wrapper-row-small-screen details">
+				<div id="left-aligned">
+				<!-- RECORD'S OBJECT TYPE AND NAME -->
+				<div id="objectTypeName" class="header-label-wrapper {{objectMetaData.APIName.replace(namespacePrefix, '')}}">
+					<h5 class="record-type-label">{{objectMetaData['fldLabel']}}</h5>
+					<h3 class="record-name-label">{{parentNodeData.Name}}</h3>
+				</div>
+			
+			    <!-- RECORD STATUS/OWNER NAME -->			
+				<div class="ownerLabel" >
+					<span ng-if="parentNodeData[namespacePrefix+'FKClient__r'] != undefined" class="header-label">{{_Labels.pageHeader.client}}:</span>
+					<span ng-if="parentNodeData[namespacePrefix+'FKClient__r'] != undefined" class="header-data wordwrap" title="{{parentNodeData[namespacePrefix+'FKClient__r']['Name']}}">{{parentNodeData[namespacePrefix+'FKClient__r']['Name'] | limitTo: 25 }}{{parentNodeData[namespacePrefix+'FKClient__r']['Name'].length > 25 ? '...' : ''}}<br /></span>
+					<span ng-if="parentNodeData[namespacePrefix+'FKInitiator__r']['Name'] != undefined" class="header-data wordwrap" title="{{parentNodeData[namespacePrefix+'FKInitiator__r']['Name']}}"><span class="header-label">{{objectMetaData['initiator']}}: </span>{{ parentNodeData[namespacePrefix+'FKInitiator__r']['Name'] | limitTo: 25 }}{{parentNodeData[namespacePrefix+'FKInitiator__r']['Name'].length > 25 ? '...' : ''}}<br /></span>
+					<span ng-if="parentNodeData[namespacePrefix+'FKReleaseCoordinator__r']['Name'] != undefined" class="header-data wordwrap" title="{{parentNodeData[namespacePrefix+'FKReleaseCoordinator__r']['Name']}}"><span class="header-label">{{objectMetaData['initiator']}}: </span>{{ parentNodeData[namespacePrefix+'FKReleaseCoordinator__r']['Name'] | limitTo: 25 }}{{parentNodeData[namespacePrefix+'FKReleaseCoordinator__r']['Name'].length > 25 ? '...' : ''}}<br /></span>
+					<span class="header-label">{{_Labels.pageHeader.assignedTo}}:</span>
+					<span class="header-data wordwrap" title="{{parentNodeData['Owner']['Name']}}">
+						{{ parentNodeData['Owner']['Name'] | limitTo: 25 }}{{parentNodeData['Owner']['Name'].length > 25 ? '...' : ''}}
+						<span class="wordwrap" ng-if="parentNodeData[namespacePrefix+'FKOpenBy__r']['Name'] != undefined" title="{{parentNodeData[namespacePrefix+'FKOpenBy__r']['Name']}}">
+							({{parentNodeData[namespacePrefix+'FKOpenBy__r']['Name'] | limitTo: 25 }}{{parentNodeData[namespacePrefix+'FKOpenBy__r']['Name'].length > 25 ? '...' : ''}})
+						</span>
+						<span class="wordwrap" ng-if="parentNodeData[namespacePrefix+'FKStaff__r']['Name'] != undefined" title="parentNodeData[namespacePrefix+'FKStaff__r']['Name']}}">
+							({{parentNodeData[namespacePrefix+'FKStaff__r']['Name'] | limitTo: 25 }}{{parentNodeData[namespacePrefix+'FKStaff__r']['Name'].length > 25 ? '...' : ''}})
+						</span>
+					</span>
+				</div>			
+			
+				<!-- OPTION MENUS -->
+								
+								<div class="status-wrapper details" >
+									<span class="status" ng-class="parentNodeData[namespacePrefix+'FKStatus__r'][namespacePrefix+'state__c'] ? 'statusConditionOpen' : 'statusCondition'"></span>
+									<span>
+										<span class="bold-text">{{parentNodeData[namespacePrefix+'FKStatus__r']['Name']}}</span><br />
+										<span ng-if="parentNodeData[namespacePrefix+'StatusChangeDate__c'] != undefined" class="header-label">
+											({{_Labels.pageHeader.since}}: {{parentNodeData[namespacePrefix+'StatusChangeDate__c']}})
+										</span>
+									</span>
+								</div>
+								<div class="stage-bar-container" style="float:left;padding-top:5px;">
+									<span id="btnStage" style="float:right;top:0px; left:0px;" class="btn-header stageFont stageHoverOff" ng-mouseleave="hideShowEffect('');" ng-mouseover="hideShowEffect('hover');" ng-click="showStageHTML($event)">
+										<div>
+											<div class="miniTimelineWrapper">
+												<div id="miniTimeline" class="miniTimelineWrapper" style="height:21px;"></div>
+											</div>
+											<div ng-switch="parentNodeData[namespacePrefix+'FKStatus__r'][namespacePrefix+'FKSYSStage__r']['Name']">
+												<div ng-switch-when="Opened"style="text-align:center; font-weight:normal; padding-top:20px;">{{_Labels.pageHeader.opened}}</div>
+												<div ng-switch-when="Acknowledged"style="text-align:center; font-weight:normal; padding-top:20px;">{{_Labels.pageHeader.acknowledged}}</div>
+												<div ng-switch-when="In Process"style="text-align:center; font-weight:normal; padding-top:20px;">{{_Labels.pageHeader.inprocess}}</div>
+												<div ng-switch-when="Closed"style="text-align:center; font-weight:normal; padding-top:20px;">{{_Labels.pageHeader.closed}}</div>
+											</div>
+										</div>
+									</span>
+							    </div>	
+							</div>	
+							<div class="bar-option-wrapper">	
+								<!-- MENU OPTION FOR MOBILE SCREENS -->
+								<span class="menu-option details" style="float:right;">
+									<button class="btn-header" onclick="$('.bar-option').toggleClass('show')">
+										<span class="btn-icon __icon-ellipsis" style="font-size: 24px"/>
+									</button>
+								</span>
+								<!-- MENU OPTION FOR DESKTOP SCREENS -->
+								<span class="bar-option details" style="float:right;">
+									<button class="btn-header node-expand disabled" onclick="handleExpand(this)">
+										<span class="btn-icon __icon-nic"/>
+										<span class="btn-text">{{_Labels.pageHeader.expandNode}}</span>
+									</button>
+									<span class="separator details"></span>
+									<button class="btn-header" ng-click="ExportChart()">
+										<span class="btn-icon __icon-share"/>
+										<span class="btn-text">{{_Labels.pageHeader.export}}</span>
+									</button>
+									<button class="btn-header" onclick="printPage()">
+										<span class="btn-icon __icon-printer"/>
+										<span class="btn-text">{{_Labels.pageHeader.print}}</span>
+									</button>
+								</span>
+							</div>
+			</div>
+			<div class="record-detail-header details">
+				<!-- SHORTCUT TO OPEN RECORD DETAILS -->
+				<div class="record-details hide">
+					<a href="#" class="recordDtlArrow __icon-left-arrow_left_circle" ng-click="showQuickDetails()">{{_Labels.pageHeader.recordDetails}}</a>
+				</div>
+				
+				<div class="quick-detail-header">
+					<a class="recordDtlArrow __icon-left-arrow_right_circle" ng-click="hideQuickDetails()">{{_Labels.pageHeader.recordDetails}}</a>					
+				</div>
+			</div>		
+				
+		</div>
+		
+	</header>
+</div>

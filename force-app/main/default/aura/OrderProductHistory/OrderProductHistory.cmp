@@ -1,0 +1,93 @@
+<aura:component controller="OrderProductHistoryCntl"
+	implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes"
+	access="global">
+
+	<aura:attribute name="OrderItemHistoryData" type="Object" />
+	<aura:attribute name="startPage" type="Integer" />
+	<aura:attribute name="endPage" type="Integer" />
+	<aura:attribute name="totalRecords" type="Integer" />
+	<aura:attribute name="pageSize" type="Integer" default="10" />
+	<aura:attribute name="totalPages" type="Integer" default="0"
+		description="Total number of pages for the order product list" />
+	<aura:attribute name="currentPage" type="Integer"
+		description="Current page number" />
+
+	<aura:attribute name="filterChecked" type="Boolean" default="true" />
+	<aura:attribute name="sortedBy" type="String" default="Date" />
+	<aura:attribute name="sortedDirection" type="String" default="desc" />
+	<aura:attribute name="recordId" type="String" />
+	<aura:attribute name="oihList" type="List" />
+	<aura:attribute name="columns" type="List" />
+
+	<aura:handler name="init" action="{!c.doInit}" value="{!this}" />
+
+	<lightning:spinner aura:id="mySpinner" />
+
+	<lightning:card iconName='standard:orders' class="slds-card_boundary">
+		<aura:set attribute="title">
+			<span class="slds-text-heading_small"> <b>{!$Label.c.Order_Product_History_Title}
+					{!v.totalRecords != 0 ? '&nbsp;(' + v.totalRecords + ')' : ''} </b>
+			</span>
+		</aura:set>
+
+		<aura:set attribute="actions">
+			<lightning:input type="toggle"
+				label="{!$Label.c.Order_Product_History_Last_Activated}"
+				name="sinceLastDeactivated" checked="{!v.filterChecked}"
+				messageToggleActive="" messageToggleInactive=""
+				onchange="{!c.refresh}" />
+		</aura:set>
+
+		<aura:set attribute="body">
+			<p class="slds-p-horizontal_small">
+				<lightning:datatable data="{!v.oihList}" columns="{!v.columns}"
+					keyField="orderItemHistoryId" hideCheckboxColumn="true"
+					onsort="{!c.updateColumnSorting}" sortedBy="{!v.sortedBy}"
+					sortedDirection="{!v.sortedDirection}" />
+				<br />
+
+				<lightning:layout horizontalAlign="spread">
+					<lightning:layoutItem flexibility="auto" padding="horizontal-small">
+						<lightning:formattedText value="{!'Total Records: ' + v.totalRecords}" />
+					</lightning:layoutItem>
+					<lightning:layoutItem flexibility="auto" padding="horizontal-small">
+						<lightning:select aura:id="pageSize" name="pageSize"
+							label="Page Size" value="{!v.pageSize}"
+							onchange="{!c.pageSizeSelect}">
+							<option value="10">10</option>
+							<option value="25">25</option>
+							<option value="50">50</option>
+							<option value="100">100</option>
+						</lightning:select>
+					</lightning:layoutItem>
+					<lightning:layoutItem flexibility="auto" padding="horizontal-small">
+						<aura:if isTrue="{!v.totalPages > 0}">
+							<lightning:formattedText value="{!'Pages: ' + v.currentPage + ' of&nbsp;' + v.totalPages}" />
+						</aura:if>
+					</lightning:layoutItem>
+				</lightning:layout>
+			</p>
+		</aura:set>
+
+		<aura:set attribute="footer">
+			<lightning:buttonGroup >
+				<lightning:buttonIcon title="First" disabled="{!v.startPage == 0}"
+					onclick="{!c.first}" variant="brand" iconName='utility:back' />
+                &nbsp; &nbsp; &nbsp;                
+                <lightning:buttonIcon title="Previous"
+					disabled="{!v.startPage == 0}" onclick="{!c.previous}"
+					variant="brand" iconName='utility:chevronleft' />
+                &nbsp; &nbsp; &nbsp;
+                <lightning:buttonIcon title="Next"
+					disabled="{!v.endPage >= v.totalRecords-1}" onclick="{!c.next}"
+					variant="brand" iconName='utility:chevronright' />
+                &nbsp; &nbsp; &nbsp;
+                <lightning:buttonIcon title="Last"
+					disabled="{!v.endPage >= v.totalRecords-1}" onclick="{!c.last}"
+					variant="brand" iconName='utility:forward' />
+			</lightning:buttonGroup>
+
+		</aura:set>
+	</lightning:card>
+
+</aura:component>

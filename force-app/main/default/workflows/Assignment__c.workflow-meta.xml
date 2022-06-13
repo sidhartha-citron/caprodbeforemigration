@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>Assignment_Update_Notfication</fullName>
+        <description>Assignment Update Notfication</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <recipients>
+            <recipient>enicholson@citronhygiene.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>julieprocee@citronhygiene.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>Assignments_Initiatives/Assignment_Update_Notification</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>Completed_Date_TODAY</fullName>
+        <description>The completed date is marked as TODAY.</description>
+        <field>Completed_Date__c</field>
+        <formula>TODAY()</formula>
+        <name>Completed Date = TODAY</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <rules>
+        <fullName>Assignment Complete</fullName>
+        <actions>
+            <name>Completed_Date_TODAY</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>false</active>
+        <criteriaItems>
+            <field>Assignment__c.Status__c</field>
+            <operation>equals</operation>
+            <value>Completed</value>
+        </criteriaItems>
+        <description>When an assignment is marked as completed, the completed date is populated.</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Assignment Update Notification</fullName>
+        <actions>
+            <name>Assignment_Update_Notfication</name>
+            <type>Alert</type>
+        </actions>
+        <active>false</active>
+        <description>Notifies the Assignment Owner when the Assignment status has been updated or when a new comment has been added.</description>
+        <formula>OR( ISCHANGED( Status__c ), AND( ISCHANGED( OwnerId ), NOT( ISPICKVAL( Status__c , &apos;New&apos;)))
+ )</formula>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+</Workflow>

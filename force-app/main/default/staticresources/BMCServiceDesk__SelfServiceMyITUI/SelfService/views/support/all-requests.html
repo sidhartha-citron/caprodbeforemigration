@@ -1,0 +1,152 @@
+<div class="support-request-container">
+	<loading-spinner centered="true" if="supportModel.dataLoading"></loading-spinner>
+	<div ng-hide="supportModel.dataLoading">
+
+		<!--Browse Categories-->
+		<div ng-if = "isCategoryHierarchyNavEnabled" class="browse-category-container filter-sorting-container" ng-init="initBrowseCategory();">
+		
+			<button class="btn dropdown-toggle menu-btn browseCategoryButton" ng-click="browseCategory();">
+				<span class="browseCategoryButtonIcon"></span>
+				<span class="browseCategoryLabel">{{selfServiceLabels.SSBrowseCategories}}</span>
+				<span class="d-icon-right-angle_down browseCategoryButtonEndIcon transformEndIcon"></span>
+			</button>
+
+			<button id="browseCategoryActive" ng-show="showCategory" class="btn dropdown-toggle menu-btn showCategoryButton browseCategoryButton" ng-click="browseCategory();">
+				<span class="browseCategoryButtonIcon"></span>
+				<span class="browseCategoryLabel">{{selfServiceLabels.SSBrowseCategories}}</span>				
+				<span class="d-icon-cross browseCategoryButtonEndIcon"></span>				
+			</button>
+
+			<div ng-show="showCategory && upScrollAvailable" class="categoryScrollDiv upScrollDivClass">
+				<span id="scrollCategoryUp" class="upDownScrollClass upScrollClass"></span>
+			</div>
+			<div ng-show="showCategory && downScrollAvailable" class="categoryScrollDiv downScrollDivClass browseCategoryTopClass">
+				<span id="scrollCategoryDown" class="upDownScrollClass downScrollClass"></span>
+			</div>
+			<div id="scrollEndDiv" style="top: 490px;"></div>
+
+			<div aria-listnavigation id="browseCategoryContent" role="listbox" class="browseCategoryDropdownDiv" ng-if="showCategory" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'browseCategoryContent');" tabindex="0">
+				<div selectable aria-selected="false" tabindex="-1" ng-class="getCategoryDivClass(item)" ng-click="selectItem(item,true)" ng-repeat="item in browseCategoryData" ng-mouseenter="handleCategoryEnter($event, item);" ng-mouseleave="handleCategoryLeave(item)" ng-keyup="catKeyPressHandler($event, item)" data-boundary="window" data-placement="bottom" data-toggle="popover" data-catId={{item.categoryId}} data-catDesc={{item.categoryDescription}} rfcat-tooltip>
+					<div class="categoryDivClass">
+						<span class="catIconPicklist">
+							<img ng-if="item.catImage && item.catImage != 'useDefaultFromStaticResource'" ng-src="{{item.catImage}}" class="browseCategoryIcon category_for_breadcrumbs"/>
+							<img ng-if="item.catImage && item.catImage == 'useDefaultFromStaticResource'" ng-src="{{supportModel.defaultCategoryIconFromStaticResource}}" class="browseCategoryIcon category_for_breadcrumbs"/>
+						</span>
+						<div ng-class="getCategoryTextClass(item)" aria-label="{{decodeText(item.accessibilityName)}}">
+							<span>{{decodeText(item.name)}}</span>
+						</div>
+						<span ng-if="item.leaf == 'false'" ng-class="item.hovering ? 'i-timeline-toolbar-dropdown-arrow expandCategoryClass expandHighlightClass' : 'i-user-nav-dropdown-arrow expandCategoryClass expandClass'"></span>
+					</div>
+				</div>
+			</div>
+			
+			<div id="secondLevelCategory" ng-if="showCategory && supportModel.showSecondLevelCategories">
+				<browse-category category-item-data="supportModel.secondCategoryData" index-id="'subCategory'" is-last-node=false></browse-category>
+			</div>
+			
+			<div id="thirdLevelCategory" ng-if="showCategory && supportModel.showThirdLevelCategories">
+				<browse-category category-item-data="supportModel.thirdCategoryData" index-id="'subChildCategory'" is-last-node=true></browse-category>
+			</div>
+		</div>
+		<div ng-if = "isCategoryHierarchyNavEnabled" ng-class="showCategory ? 'browseCategoryBackdrop browseCategoryBackdropOpen' : ''" ng-click="browseCategory();"></div>
+		<!--Browse Categories - END-->
+
+		<!--Common Requests Section-->
+		<div ng-if = "isCategoryHierarchyNavEnabled && supportModel.isProblemRequestAllState" class="support-request-container">
+			<loading-spinner if="sectionsLoadingFlag" style="min-height:100px"></loading-spinner>
+		
+			<div ng-if="!sectionsLoadingFlag" ng-init="setFocusToElement()">
+				<div class="catalog-section">
+					<header class="catalog-section__header clearfix">
+						<h4 class="catalog-section__name  bold-text" role="text" tabindex="0">{{section.title}}</h4>
+						<span class="catalog-section__item-count" ng-if="section.totalItemCount">
+							{{section.items.length}}
+						</span>
+					</header>
+		
+					<ul aria-listnavigation role="listbox" id="itemID" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'itemID');" class="catalog-section__items" tabindex="0">
+						<unified-catalog-item selectable ng-focus="item.selected = true" ng-blur="item.selected = false" aria-selected="false" tabindex="-1" role="option"
+							ng-repeat="item in section.items"
+							data="item"
+							display-style="catalog" noc="allSrdCtrlState.numberOfColumns">
+						</unified-catalog-item>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!--Common Requests Section - END-->
+
+		<!--Service Requests Lists breadcrum-->
+		<div  ng-if = "!supportModel.isProblemRequestAllState"  ng-class="isCategoryHierarchyNavEnabled ? 'categoryMargin category-breadcrumb-container' : 'category-breadcrumb-container'" aria-label="Breadcrumb">
+			<span class="category-breadcrumb-span" ng-show="dropDownBreadCrumbsData.breadCrumbs.length > 0 && dropDownBreadCrumbsData.resultsDisplayed">
+				<a aria-button class="page-breadcrumb-item Branding-Right_Panel-hyperlink breadcrumb-navigate" ng-click="goBackToCategory(-1)" tabindex="0">
+					<span ng-bind-html=selfServiceLabels.Categories/>
+				</a>
+				<span class="page-breadcrumb-item" style="font-weight:bold;">&#10095;</span>
+			</span>
+			<span  ng-repeat="breadcrumbItem in dropDownBreadCrumbsData.breadCrumbs" ng-show="dropDownBreadCrumbsData.breadCrumbs.length > 0 && dropDownBreadCrumbsData.resultsDisplayed" class="category-breadcrumb-span">		
+				<a aria-button class="page-breadcrumb-item Branding-Right_Panel-hyperlink breadcrumb-navigate"   ng-if="!$last" ng-click="goBackToCategory($index)" tabindex="0" >
+					<span ng-bind-html="breadcrumbItem.name"/>
+				</a>
+				<span class="page-breadcrumb-item" style="font-weight:bold;" ng-if="!$last">&#10095;</span>
+				<span class="page-breadcrumb-item" style="font-weight:bold;"  ng-if=" $last" class="page-breadcrumb-item" ng-class="{ 'page-breadcrumb-item_active': $last }" aria-current="page" tabindex="0">
+					<span ng-bind-html="breadcrumbItem.name"/>
+				</span>		
+			</span>
+		</div> 
+		<!--Service Requests Lists breadcrum - END-->
+		
+		<!--Sub Categories Dropdown-->
+		<div ng-if = "!isCategoryHierarchyNavEnabled" style="margin-bottom:10px;" ng-show="dropDownBreadCrumbsData.resultsDisplayed" ng-class="{'no-height':dropDownBreadCrumbsData.subCategories.length == 0,'filter-sorting-container':dropDownBreadCrumbsData.subCategories.length > 0 }">
+			<div ng-show="dropDownBreadCrumbsData.subCategories.length > 0" class="filter-container dropdown">
+				<div id="srDropdown" aria-listnavigation aria-label="{{selfServiceLabels.Categories}}" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'requestCategoryId');" role="listbox" class="category-dropdown dropdown-toggle" data-toggle="dropdown" ng-click="supportModel.updateCategoryDropdownUI();" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'categoryOption');" tabindex="0"><span class="activity-item_clickable">{{selfServiceLabels.Categories}} <span class="d-icon-triangle_down"/></span></div>		
+				<div class="dropdown-menu dropdown-container-div" ng-class="{'multi-column-wrapper':dropDownBreadCrumbsData.subCategories.length > supportModel.categoryFilterConfig.minLimit && dropDownBreadCrumbsData.subCategories.length < supportModel.categoryFilterConfig.maxLimit}" id="dropdown-container-div">	
+					<ul aria-listnavigation id="requestCategoryId" class="category-ul" ng-class="{'multi-column-ul': dropDownBreadCrumbsData.subCategories.length > supportModel.categoryFilterConfig.minLimit && dropDownBreadCrumbsData.subCategories.length <supportModel.categoryFilterConfig.maxLimit}" >
+						<li selectable ng-focus="menuItem.selected = true" ng-blur="menuItem.selected = false" aria-selected="false" tabindex="-1" data-boundary="window" data-placement="right" data-toggle="popover" data-catId={{item.categoryId}} rfss-tooltip  class="category-option" ng-repeat="item in dropDownBreadCrumbsData.subCategories | orderBy: 'name'" ng-click="selectItem(item,true)">
+							<span class="catIconPicklist">
+								<img ng-if="item.catImage && item.catImage != 'useDefaultFromStaticResource'" ng-src="{{item.catImage}}" class="category_for_breadcrumbs"/>
+								<img ng-if="item.catImage && item.catImage == 'useDefaultFromStaticResource'" ng-src="{{supportModel.defaultCategoryIconFromStaticResource}}" class="category_for_breadcrumbs"/>
+							</span>
+							<span class="catIconPicklist">
+								{{decodeText(item.name)}}
+							</span>
+						</li>
+						<li class="dummy-category-listitem" ng-if="dropDownBreadCrumbsData.subCategories.length%2!=0 && dropDownBreadCrumbsData.subCategories.length > supportModel.categoryFilterConfig.minLimit && dropDownBreadCrumbsData.subCategories.length <supportModel.categoryFilterConfig.maxLimit" ></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!--Sub Categories Dropdown-->
+		
+		<!--Categories List in All Requests and Request Definitions for given Category-->
+		<ul aria-listnavigation role="listbox" id="requestID" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'requestID');" style="padding:0px;" tabindex="0" ng-init="setFocus();" ng-if="supportModel.categoriesOrSrds.length > 0 && (!isCategoryHierarchyNavEnabled || !supportModel.isProblemRequestAllState)">
+			<li selectable ng-focus="item.selected = true" ng-blur="item.selected = false" aria-selected="false" tabindex="-1" role="option"
+				ng-class="item.serviceRequestDefinitionId == null ? 'item-display-catalog' : 'srdSeperator support-request'"
+				ng-repeat="item in supportModel.categoriesOrSrds | orderBy: (supportModel.config.isSRD ? 'title' : 'name')" ng-click="selectItem(item,true)" data-boundary="window" data-placement="right" data-toggle="popover" data-catId={{item.categoryId}} data-srdId={{item.serviceRequestDefinitionId}} rfss-tooltip set-Width-Of-Tile="{{numberOfCols}}">
+				<div>
+					<div ng-if="!item.catImage" class="support-request__icon">
+						<div class="i {{ item.icon }}" ng-if="!item.calculatedIcon"></div>			
+						<img ng-src="{{item.calculatedIcon}}" ng-if="item.calculatedIcon" class="support-request__icon" aria-hidden="true" />
+					</div>
+					<div ng-if="item.catImage && item.catImage != 'useDefaultFromStaticResource'" class="support-request__icon icon_for_category">
+						<img ng-src="{{item.catImage}}" class="support-request__icon" aria-hidden="true" />
+					</div>
+					<div ng-if="item.catImage && item.catImage == 'useDefaultFromStaticResource'" class="support-request__icon icon_for_category">
+						<img ng-src="{{supportModel.defaultCategoryIconFromStaticResource}}" class="support-request__icon" aria-hidden="true" />
+					</div>
+					<div ng-class="{'support-request_tableDisplay': $root.isSwitchToEnhancedUI}">
+						<div class="support-request__title bold-text" ng-class="{'support-request_floatleft': $root.isSwitchToEnhancedUI}" ng-bind-html="item.title" ng-if="!item.name"></div>			
+						<div ng-class="item.serviceRequestDefinitionId == null ? 'item-display-catalog-text paddingtop5px' : ''" ng-if="item.name" ng-bind-html="item.name"></div>
+						<request-description data="item"></request-description>
+					</div>
+				</div>	
+				
+			</li>
+		</ul>
+		<!--Categories List in All Requests and Request Definitions for given Category - End-->
+
+		<div ng-if="supportModel.categoriesOrSrds.length == 0 && (!isCategoryHierarchyNavEnabled || !supportModel.isProblemRequestAllState)" tabindex="0">			
+			<div class="support-request__title">{{selfServiceLabels.noResults}}.<span ng-show="dropDownBreadCrumbsData.subCategories.length > 0"> {{selfServiceLabels.SelectChildCategory}}</span></div>				
+		</div>
+	</div>
+</div>

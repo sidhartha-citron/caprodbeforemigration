@@ -1,0 +1,48 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="SiteSurveySettingsController">
+    
+    <aura:attribute name="columns" type="SiteSurveySettingsController.ColumnRecord[]"/>
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="isEdit" type="Boolean" default="false"/>
+    <aura:attribute name="newSkill" type="SiteSurvey_RequiredSkills__c"/>
+    <aura:attribute name="pickList" type="SiteSurveySettingsController.PickList[]"/>
+    <aura:attribute name="existingSkills" type="SiteSurvey_RequiredSkills__c[]"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!-- Event to notify the Site Survey Skill Requirement Component that a Skill is selected by the user -->
+    <aura:registerEvent name="skillSavedEvent" type="c:SkillSaved"/>
+    
+    <aura:method name="setRecordDetails" action="{!c.setEditRecord}" description="Method to facilitate edit of existing skill">
+        <aura:attribute name="skill" type="SiteSurvey_RequiredSkills__c" default="{'sobjectType':'SiteSurvey_RequiredSkills__c'}"/>
+        <aura:attribute name="isEdit" type="Boolean" default="false"/>
+    </aura:method>
+    
+    <div class="demo-only slds-hide" style="height: 640px;" aura:id="theModal">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Site_Survey_Edit}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <div class="slds-form-element">
+                        <lightning:input type="number" label="{!v.columns[1].label}" min="0" value="{!v.newSkill.Skill_Level__c}"/>
+                    </div>
+                    <br/>
+                    <div class="slds-text-color_weak">{!v.columns[2].label}</div>
+                    <aura:iteration items="{!v.pickList}" var="p">
+                        <div class="slds-form-element">
+                            <lightning:input type="checkbox" label="{!p.label}" value="{!p}" checked="{!p.isChosen}" class="slds-m-top_small" onchange="{!c.onSelectChange}"/>
+                        </div>
+                    </aura:iteration>
+                </div>
+                <footer class="slds-modal__footer">
+                    <!-- <button class="slds-button slds-button_neutral">Close</button> -->
+                    <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Submit}" onclick="{!c.saveSkill}"/>
+                    <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeModal}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+    
+</aura:component>

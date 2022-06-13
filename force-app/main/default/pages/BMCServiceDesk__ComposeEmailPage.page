@@ -1,0 +1,407 @@
+<apex:page controller="BMCServiceDesk.ComposeEmailController" showHeader="false" standardStylesheets="false">
+<body id='docBody' onload="initiateSelfClosing()">
+<c:CommonIncludes />
+<script type="text/javascript" src="{!$Resource.BMCRFCommonJS}/StdLayoutCommon.js"></script>
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ComposeEmailPage.css" />
+<style>
+	.x-form-cb-label {
+		vertical-align: 15%;
+	}
+	
+	.clsInputLabelTD2, .clsInputLabelTD
+	{
+	padding-left:0px !important;
+	text-align:left;
+	}
+</style>
+<script type="text/javascript">
+	var wikiUrl = '{!JSENCODE(wikiUrl)}';
+	// Replace first /apex/ with blank string from MultiDocumentAttachmentPage url
+	// Replacement of blank is because of this url is passed in openPopupWithTitle which expect url without /apex/
+	var multiDocumentAttachmentPageURL = '{!$Page.MultiDocumentAttachmentPage}'.replace('/apex/', '');
+  var dateTimeFormatStr = '{!JSENCODE(dateTimeFormatStr)}';
+  var dateFormatStr = '{!JSENCODE(dateFormatStr)}';
+	var isNew = '{!JSENCODE(isNew)}',
+		IsPlainText = '{!JSENCODE(IsPlainText)}',
+	 	objectName = '{!JSENCODE(objectName)}', 
+	 	toAddress='{!JSENCODE(toAddress)}',
+	 	fromAddress='{!JSENCODE(fromAddress)}',
+	 	ccAddress='{!JSENCODE(ccAddress)}',	 
+	 	subject='{!JSENCODE(subject)}',	
+	 	historyRecordJSON='{!JSENCODE(historyRecordJSON)}',
+	 	emailParentRecordJSON='{!JSENCODE(emailParentRecordJSON)}',	 	
+	 	clientSearchPageFlag = '{!showClientSearch}',
+	 	inciFields = {!serverFieldLabelMap},
+	 	emailTemplId = '{!JSENCODE(emailTemplateId)}',
+	 	emailTmplConv={!emailTmplConv},
+		propEnableEmailConvToFld = '{!enableEmailToField}',
+		propEnableEmailConvTempl = '{!enableEmailTemplate}',
+		propEnableEmailTemplatePreview ='{!enableEmailTemplatePreview}',
+		recordId = "{!JSENCODE($CurrentPage.parameters.recordId)}",
+		labelSend = '{!JSENCODE($Label.Send)}',
+		labelReply = '{!JSENCODE($Label.Reply)}',
+		labelReplyAll = '{!JSENCODE($Label.ReplyAll)}',
+		labelAttachFile = '{!JSENCODE($Label.AttachFileAttachmentPage)}',
+		labelReset = '{!JSENCODE($Label.Reset)}',
+		labelContextMenuIncident = '{!JSENCODE($Label.EmailConvContextMenuHeader)}',
+		labelContextMenuChange = '{!JSENCODE($Label.EmailConvChangeContextMenuHeader)}',
+		labelAddAttachment = '{!JSENCODE($Label.AddAttachments)}',
+		labelInciCopyField = '{!JSENCODE($Label.EmailConvCopyInciFlds)}',
+		labelInciCopyFldsToolTip = '{!JSENCODE($Label.EmailConvCopyInciFldsToolTip)}',
+		labelInciBodyToolTip = '{!JSENCODE($Label.TooltipEmailBody)}',
+		labelChngCopyFlds = '{!JSENCODE($Label.EmailConvCopyChangeFlds)}',
+		labelChngCopyFldsToolTip = '{!JSENCODE($Label.EmailConvCopyChangeFldsToolTip)}',
+		labelChngBodyToolTip = '{!JSENCODE($Label.TooltipChangeEmailBody)}',
+		labelSelectClients = '{!JSENCODE($Label.SelectClients)}',
+		labelSelectFrom = '{!JSENCODE($Label.selectFrom)}',
+		labelUserWinHeaderSrchPage = '{!JSENCODE($Label.User)}',
+		labelInciWinHeaderSrchPage = '{!JSENCODE($Label.Incident)}',
+		labelActions = 	'{!JSENCODE($Label.actions)}',
+		labelStaffLink = '{!JSENCODE($Label.StaffLink)}',
+		labelClientLink = '{!JSENCODE($Label.ClientLink)}',
+		labelLinkSelfServiceClient	= '{!JSENCODE($Label.LinkSelfServiceClient)}',
+		labelLinkRemedyforceUser = '{!JSENCODE($Label.LinkRemedyforceUser)}',
+		
+		labelContextMenuTask = '{!JSENCODE($Label.EmailConvTaskContextMenuHeader)}',
+		labelTaskCopyFlds = '{!JSENCODE($Label.EmailConvCopyTaskFlds)}',
+		labelTaskCopyFldsToolTip = '{!JSENCODE($Label.EmailConvCopyTaskFldsToolTip)}',
+		labelTaskBodyToolTip = '{!JSENCODE($Label.TooltipTaskEmailBody)}',
+		
+		labelContextMenuProblem = '{!JSENCODE($Label.EmailConvProblemContextMenuHeader)}',
+		labelProblemCopyFlds = '{!JSENCODE($Label.EmailConvCopyProblemFlds)}',
+		labelProblemCopyFldsToolTip = '{!JSENCODE($Label.EmailConvCopyProblemFldsToolTip)}',
+		labelProblemBodyToolTip = '{!JSENCODE($Label.TooltipProblemEmailBody)}',
+		labelNoEmailAddr =  '{!JSENCODE($Label.EmailConvNoEmailAddress)}',
+		labelMaxToAddr =  '{!JSENCODE($Label.maximumEmailIDLimitInToField)}',
+		labelMaxCCAddr =  '{!JSENCODE($Label.maximumEmailIDLimitInCcField)}',
+		labelMaxBCCAddr =  '{!JSENCODE($Label.maximumEmailIDLimitInBccField)}',
+		labelInvalidEmail =  '{!JSENCODE($Label.Emailstr)}',
+		labelTooltipHelp = '{!JSENCODE($Label.TooltipHelp)}',
+		labelTooltipClose =  '{!JSENCODE($Label.Close)}',
+		labelSubject = '{!JSENCODE(SubjectLine)}',
+		labelRefUID = '{!JSENCODE(RefUID)}',		
+		labelStdInsufficentOperationPrivilege = '{!JSENCODE($Label.StdInsufficentOperationPrivilege)}';
+	var cookieName =  '{!JSENCODE($CurrentPage.parameters.objectName)}'+'{!JSENCODE($User.Id)}'; 
+		
+	
+	var subjId = '{!$Component.mailForm.subjectLine}';
+	var bodyId = '{!$Component.mailForm.mailBodyId}';
+	var richBodyId='{!$Component.mailForm.mailBodyRich}';
+	var ccId = '{!$Component.mailForm.ccFieldId}';
+	var bccId = '{!$Component.mailForm.bccFieldId}';
+	var chkBxId = '{!$Component.mailForm.copyInciFldsChkBox}';
+	var rmvChkBxId = '{!$Component.mailForm.rmvOrgCon}';
+	var rmvChkBxLabelId = '{!$Component.mailForm.rmvOrgConLabel}';	             
+	var emailTmplId = '{!$Component.mailForm.templateId}';
+	var toAddrId = '{!$Component.mailForm.toFieldId}';
+	var fromAddrId = '{!$Component.mailForm.fromAddressId}';
+	var attachFileId = '{!$Component.mailForm.attachFiles}';
+	var copyFieldLblId = '{!$Component.mailForm.lblcopyInciFlds}';
+	var sClientURL = '{!JSENCODE(ClientURL)}';
+	var sClientURL_RTF = '<a href="'+sClientURL+'">'+sClientURL+'</a>' ;
+	var sStaffURL = '{!JSENCODE(StaffURL)}';
+	var sStaffURL_RTF = '<a href="'+sStaffURL+'">'+sStaffURL+'</a>' ;
+	var EnableEmailBody={!EnableEmailBody};
+    var LabelAddInfoEmptyText='{!JSENCODE($Label.EmailAdditionalInfoEmptyText)}';
+    var LabelEmailAddInfoTooltip='{!JSENCODE($Label.EmailAdditionalInfoTooltip)}';
+    var LabelEmailBodyLabel='{!JSENCODE($Label.TooltipEmailBody)}';
+    var textFormatWarningMsg='{!JSENCODE($Label.textFormatSwitchWarningMsg)}';
+	var waitMsg ='{!JSENCODE($Label.PleaseWait)}...';
+    var plainTextLabel='{!JSENCODE($Label.plainTextLabel)}';
+    var richTextLabel='{!JSENCODE($Label.richTextLabel)}';
+   var isConsolePage = getUrlParameter('isConsolePage');
+    var nameSpacePrefix='BMCServiceDesk__';
+	var accessibilityModeMsg = '{!JSENCODE($Label.AccessibilityModeErrorMsg)}';
+	var hasEditAccess = {!IF(hasEditAccess, true, false)};
+    var StaffLightningURL = '{!JSENCODE(StaffLightningURL)}';
+    var RecordLinkClassicLabel = '{!JSENCODE($Label.EmailRecordLinksForClassicUser)}';
+    var RecordLinkLightningLabel = '{!JSENCODE($Label.EmailRecordLinksForLightningUser)}';
+
+    // Added By Nakul ----------------------
+    
+    var standardLayout = getStandardLayout();
+var showPopupHeader;
+//Start Manasi
+    if(getUrlParameter('objectName')=='Problem__c'){
+    showPopupHeader ='{!JSENCODE($Label.ComposeEmailProblemPageHeader)}';       
+    }
+    else if(getUrlParameter('objectName')=='Incident__c'){
+    showPopupHeader ='{!JSENCODE($Label.ComposeEmailPageHeader)}';  
+    }
+     else if(getUrlParameter('objectName')=='Task__c'){
+    showPopupHeader ='{!JSENCODE($Label.ComposeEmailTaskPageHeader)}';  
+    }
+ else if(getUrlParameter('objectName')=='Change_Request__c'){
+    showPopupHeader ='{!JSENCODE($Label.ComposeEmailChangePageHeader)}';  
+    }  
+    showPopupHeader=showPopupHeader+getPopupHeader(); 
+    //End
+    var showStdLayout = getStandardLayout();
+    
+    if(showStdLayout || (isConsolePage!=null && isConsolePage)){
+        
+        document.title=showPopupHeader;
+    }
+    var url = document.URL;
+   _RemotingActions={}
+   _RemotingActions.replyMailRemote= "{!$RemoteAction.ComposeEmailController.replyMailRemote}";
+
+</script>
+
+  <apex:outputPanel id="panelId">
+  <script>
+  	var isSendEnabled = '{!isSendEnabled}';
+  	var recordName = '{!JSENCODE(recordName)}';  	
+  </script>
+ </apex:outputPanel>
+ <apex:outputPanel id="errorId">
+     <script>
+        errormsg = '{!JSENCODE(messageString)}';               
+     </script>
+ </apex:outputPanel>
+ <apex:form id="mailForm">
+ <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+ <apex:actionFunction action="{!sendMail}" name="sendMail" reRender="validationComponent,errorId" oncomplete="afterSendEmail();">
+  	<apex:param name="isIE" assignTo="{!isIE}" value=""/>
+	<apex:param name="save_attachments_flag" assignTo="{!save_attachments_flag}" value=""/>
+    <apex:param name="isRBEnabledFlag" assignTo="{!isRBEnabled}" value=""/>   
+	<apex:param name="attRefGeneratorId" assignTo="{!attRefGeneratorId}" value=""/>  
+ </apex:actionFunction>
+ <apex:actionFunction action="{!sendMailTemplate}" name="sendMailTemplate" reRender="validationComponent,errorId" oncomplete="afterSendEmail();">
+  	<apex:param name="isIE" assignTo="{!isIE}" value=""/>
+	<apex:param name="emailTemplateId" assignTo="{!emailTemplateId}" value=""/>
+    <apex:param name="save_attachments_flag" assignTo="{!save_attachments_flag}" value=""/>
+	<apex:param name="attRefGeneratorId" assignTo="{!attRefGeneratorId}" value=""/>  
+ </apex:actionFunction>
+ <apex:actionFunction action="{!reset}" name="reset" rerender="attachFiles" oncomplete="buttonValidator();AttachContextMenu();AttachContextMenuRich();SetMailBodyText();">
+ </apex:actionFunction>
+ 
+ <apex:actionFunction action="{!fetchAttachmentList}" name="fetchAttachmentListJS" reRender="attachFiles" oncomplete="hideWaitMask();">
+  	<apex:param name="attachmentIds" assignTo="{!paramID}" value=""/>
+  </apex:actionFunction>
+ <apex:actionFunction action="{!setUserEmail}" name="setUserEmail" reRender="ccFieldId">
+  	<apex:param name="varId" assignTo="{!selectId}" value=""/>
+  </apex:actionFunction>
+  <apex:actionFunction action="{!setBccUserEmail}" name="setBccUserEmail" reRender="bccFieldId">
+  	<apex:param name="varId" assignTo="{!selectId}" value=""/>
+  </apex:actionFunction>
+  <apex:actionFunction action="{!setUserToEmail}" name="setUserToEmail" reRender="toFieldId">
+  	<apex:param name="varId" assignTo="{!selectId}" value=""/>
+  </apex:actionFunction>
+  
+  <apex:actionFunction action="{!fetchObjectFieldData}" name="fetchObjectFieldData" reRender="MailBodyPanel" oncomplete="AttachContextMenu();">
+  	<apex:param name="fieldName" assignTo="{!fieldName}" value="" />
+  </apex:actionFunction>
+  
+ 
+<div id="capsule" class="CapsuleDiv1">
+   <table cellpadding="0" cellspacing="0" class="clsEmailMainTable">
+       <tr class="clsRowGreyBg">
+           <td>
+                <div id="btnToolbar"></div>        
+           </td>
+       </tr>
+		<tr>
+			<td><div style="height:15px;"/></td>
+		</tr>
+		<apex:outputPanel id="frompanel" rendered="{!NOT(disableFromList)}" layout="none">
+		<tr>
+			 
+			 <td align="center" style="padding-right:1px;">
+			 <table cellpadding="0" cellspacing="0" border="0" width="98%">
+				<tr>
+				<td class="clsInputLabelTD" style="width:10%">
+					<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__from)}"/>
+				</td>
+				<td class="textBoxLookupIconTD" align="right" style="width:19px;padding:1px 5px 0px"><div class="lookUpIconDiv"/> </td>
+				<td style="width: 100%">
+				 <apex:selectList size="1" disabled="{!disableFromList}" value="{!emailId}" id="fromAddressId" styleClass="clsComboBox" title="{!JSENCODE($Label.bmcservicedesk__from)}" >
+					 <apex:selectOptions value="{!EmailOptions}"/>
+				 </apex:selectList>
+				</td>
+				</tr> 
+				 </table>
+			 </td>
+			 
+		 </tr>
+		</apex:outputPanel>	   
+       <tr>
+           <td align="center" style="padding-right:5px;"> 
+				<apex:outputPanel id="MainPanel">
+                <table cellpadding="0" cellspacing="0" border="0" width="98%">
+                <tr>
+                    <td colspan="3"><div style="height:5px;"/></td>
+                </tr>
+                
+                <tr>
+                    <td class="clsInputLabelTD" style="width:10%">
+                        <apex:outputLabel value="{!$Label.bmcservicedesk__to}"></apex:outputLabel>
+                      </td>
+                    <td class="textBoxLookupIconTD" align="right" style="width:19px;padding:1px 5px 0px">
+						<div class="lookUpIconDiv"> 
+				        	<input type="button" id="toLookupBtn" class="TextboxPopupIcon" onclick="callToOpenPopup();"/>
+			        	</div>
+				    </td>
+                    <td class="clsInputTextBoxTD" style="width:94%;padding:0px 0px 0px 0px;">
+                        <apex:inputTextarea value="{!toAddress}" id="toFieldId" style="width:100%;height:29px;padding:0px 0px 0px 3px;" styleClass="clsInputTextArea" />
+      				</td>
+                  </tr>
+                 <tr>
+                    <td colspan="3"><div style="height:5px;"/></td>
+                </tr>
+                <tr>
+                    <td class="clsInputLabelTD" >
+                        <apex:outputLabel value="{!$Label.bmcservicedesk__cc}"></apex:outputLabel>
+                      </td>
+                    <td class="textBoxLookupIconTD" align="right" style="width:19px;padding:1px 5px 0px">
+                         <div class="lookUpIconDiv">
+                             <input type="button" id="ccLookupBtn" class="TextboxPopupIcon" onclick="callCCOpenPopup();"/>
+                         </div>
+                    </td>
+                      <td class="clsInputTextBoxTD" style="width:94%;padding:0px 0px 0px 0px;">
+                          <apex:inputTextarea value="{!ccAddress}" id="ccFieldId" style="width:100%;height:29px;padding:0px 0px 0px 3px;" styleClass="clsInputTextArea" />
+                      </td>
+                </tr>
+                <tr id="bccTRFiller">
+                      <td colspan="3"><div style="height:5px;"/></td>
+                </tr>
+			
+				<tr id="bccTR">
+						<apex:outputPanel id="bccpanel" rendered="{!enableEmailBccField}" layout="block">
+									<td class="clsInputLabelTD clsBccLabelTD">
+	                        			<apex:outputLabel value="{!$Label.bmcservicedesk__bcc}"></apex:outputLabel>
+	                      			</td>
+									<td class="textBoxLookupIconTD" align="right" style="width:19px;padding:1px 4px 0px 8px">
+				                         <div class="lookUpIconDiv">
+				                             <input type="button" id="bccLookupBtn" class="TextboxPopupIcon" onclick="callBCCOpenPopup();"/>
+				                         </div>
+	                    			</td>
+				                      <td class="clsInputTextBoxTD" style="width:auto;padding:0px 0px 0px 0px;">
+                              <apex:inputTextarea value="{!bccAddress}" id="bccFieldId" style="width:100%;height:29px;padding:0px 0px 0px 3px;" styleClass="clsInputTextArea" />
+				                      </td>
+						</apex:outputPanel>
+	            </tr>
+	            <tr id="emailTempTRFiller"> 
+	            	<td colspan="3"><div style="height:5px;"/></td>
+	            </tr>
+                <tr id="emailTempTR">
+                     <td class="clsInputLabelTD2" style="width:100px;whitespace:nowrap;overflow:auto;">
+                     	<apex:outputLabel value="{!$Label.bmcservicedesk__emailconversationtemplate}"/>
+                     </td>
+                      <td></td>
+                     <td class="clsInputTextBoxTD" style="width:94%;padding:0px 0px 0px 0px;">
+                     <table style="border-collapse: collapse;width:100%;">
+                     <tr>
+                     	<td style="width: 100%">
+                         <apex:selectList size="1" value="{!emailTemplateId}" id="templateId" styleClass="clsComboBox" title="{!JSENCODE($Label.bmcservicedesk__emailconvtemplatesel)}" onchange="enableDisbaleEmailBody(this.options[this.selectedIndex].value);">
+                             <apex:selectOptions value="{!templateItems}"/>
+                         </apex:selectList>
+						</td>
+						<td style="margin:0px;padding:0px; float:right;">
+								<a id="lnPreviewEmailtemplate" href="#" onclick="ShowEmailTemplatePreview();" class="disabled">{!$Label.Preview}</a>
+						</td>
+					</tr> 
+                     </table>
+                     </td>
+                 </tr>
+                 <tr>
+                    <td colspan="3"><div style="height:5px;"/></td>
+              	</tr>
+                <tr>
+                     <td class="clsInputLabelTD" >
+                        <apex:outputLabel value="{!$Label.bmcservicedesk__subject}"></apex:outputLabel>
+                      </td>
+                    <td > </td>
+                      <td class="clsInputTextBoxTD" style="width:94%;padding:0px 0px 0px 0px;">
+                          <apex:inputText value="{!subject}" id="subjectLine" maxlength="237" style="width:100%;height:18px;padding:0px 0px 0px 3px;" styleClass="clsInputTextBox" />
+                      </td>
+                  </tr>
+                  <tr id="attTRFiller">
+                    <td colspan="3"><div style="height:5px;"/></td>
+                  </tr>
+                  <tr id="attTR">
+                    <td class="clsInputLabelTD" >
+                        <apex:outputLabel value="{!$Label.bmcservicedesk__attachments}"></apex:outputLabel>
+                    </td>
+                    <td></td>
+                    <td class="clsInputTextBoxTD" style="width:94%;padding:0px 0px 0px 0px;">
+                        <apex:inputTextarea value="{!attachFiles}" id="attachFiles"  style="width:100%;height:auto;padding:0px 0px 0px 3px;" styleClass="clsInputTextAreaReadOnlyBrownBackground" onfocus="this.blur()" readonly="true"/>
+               		</td>
+                </tr>
+                <tr>
+                    <td colspan="3"><div style="height:5px;"/></td>
+               	</tr>
+               	<tr>
+                     <td colspan="2" ></td>
+                     
+                    <td colspan="1" >
+                    	<table cellpadding="0" cellspacing="0" >
+                    		<tr>
+                      			<td>
+									<apex:outputText value="CRUDFLSCheck# False Positive: Since value attribute is not bind to any field and onclick function is expected to work outside of FLS and CRUD permission." rendered="false" />
+                          			<apex:inputCheckbox id="copyInciFldsChkBox" onclick="getCheckBoxVal(this);" title="{!$Label.bmcservicedesk__emailconvcopyincifldstooltip}"/>
+                     			</td>
+                     			<td style="width:5px;"></td>
+                                <td  class="clsInputCheckBoxLabelTD1" >
+                                
+                      				<apex:outputLabel id="lblcopyInciFlds" value="" for="copyInciFlds"/>
+                     			</td>
+                      			<td >
+									<apex:outputText value="CRUDFLSCheck# False Positive: Since value attribute is not bind to any field and onclick function is expected to work outside of FLS and CRUD permission." rendered="false" />
+                          			<apex:inputCheckbox id="rmvOrgCon" onclick="removeOriginalContent(this);" style="display:none"/>
+                     			</td>
+                     			<td style="width:5px;"></td>
+                                <td  class="clsInputCheckBoxLabelTD1" >
+                      				<apex:outputLabel id="rmvOrgConLabel" value="{!$Label.bmcservicedesk__rmvoriginalcontentlabel}" for="rmvOrgCon" style="display:none"/><!-- Create Label for this -->
+                     			</td>
+                     		</tr>
+                      </table>
+               		</td>
+                  </tr>
+                <tr>
+                    <td colspan="3"><div style="height:5px;"/></td>
+               	</tr>
+                  <tr>
+                     <td colspan="3" class="clsMailInputTextAreaTD" style="padding-right:5px;">
+                          <apex:inputTextarea title="{!$Label.bmcservicedesk__tooltipemailbody}" value="{!mailBody}" id="mailBodyId" style="visiblity:hidden !important;display :none ;" styleClass="clsMailInputTextArea" onclick="if({!EnableEmailBody})AddInfoOnClick(this);" onblur="if({!EnableEmailBody})AddInfoOnBlur(this);" />
+                       <script>
+                       if({!NOT(isSendEnabled)}){
+                        document.getElementById('{!$Component.mailForm.mailBodyId}').onfocus = function(){this.blur();};
+                       }
+                      </script>
+	                      <div  id="RichBodyDiv">	                      
+	                         <apex:inputField value="{!HistoryInstance['RichTextNote__c']}" id="mailBodyRich"  styleclass="abc" />	                      	
+	                      </div>
+                      </td>
+                  </tr>
+                </table>
+			 </apex:outputPanel>
+			
+            </td>
+        </tr>
+    </table>
+   </div>
+
+ <script>
+    if(Sarissa._SARISSA_IS_IE && ((navigator.userAgent.indexOf("Trident/5")>-1) || (navigator.userAgent.indexOf("Trident/6")>-1))) {  
+      window.XMLSerializer = function(){};      
+      window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+</script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script> 
+	<script src="{!$Resource.SDEFCommonJS}/ComposeEmailPage.js" type="text/javascript"></script>
+	<script src="{!$Resource.SDEFCommonJS}/WikiHelp.js" type="text/javascript"></script>
+	<apex:outputPanel id="MailBodyPanel">
+	 	<script>	 		 	 
+	 		InsertDataAtCursor('{!JSENCODE(fieldData)}', '{!JSENCODE(fieldType)}');
+	 	</script>	 		 		 	
+	 </apex:outputPanel>
+	 <!-- Use below div popupContainer for displaying popup image from RTF field when clicked. -->
+	 <div id="popupContainer" class="popupContainerCls">
+		<span id="closeImage" class="closeImageCls">&times;</span>
+		<img id="popupImage" class="popupImageCls"/>
+	 </div>
+	 <c:RTFCopyPaste />
+   </apex:form> 	 
+  </body>
+</apex:page>

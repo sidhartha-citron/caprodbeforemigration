@@ -1,0 +1,103 @@
+<apex:page controller="BMCServiceDesk.CIAssetSlideIn" extensions="BMCServiceDesk.ConsoleRemoteActions" showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0">
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" rel="stylesheet" /> 
+    <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/DPLFramework/css/bmc-all.css')}"/> 
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />
+	<link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" />
+	<link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/Sidebar.css')}"/> 
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/incidentconsole.css" type="text/css" /> 
+	<link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/css/rfmodal.css"/>
+	<link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/bootstrap.css')}"/>
+	<link rel="stylesheet" href="{!$Resource.SDEFStyles}/TypeAhead.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.DeepView, 'CIAssetSlideIn/style/ci-asset-slide-in.css')}"/>
+	
+    <apex:outputPanel rendered="{!userLanguage == 'iw'}">
+    	<link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/styles/Sidebar-rtl.css')}"/>
+    </apex:outputPanel>
+	
+	 <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}"/>
+     <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular.js')}"/>
+     <script type="text/javascript" src="{!$Resource.DeepView}/js/rfmodal.js"/>
+     <script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/angular-plugins/ui-bootstrap-custom-tpls-0.6.0.js"/>
+	 <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'CIAssetSlideIn/script/rf-angular-tooltip.js')}"/>
+	 <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'CIAssetSlideIn/script/rf-angular-column-sort.js')}"/>
+     <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'CIAssetSlideIn/script/ci-asset-slide-controller.js')}"/>
+     <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'CIAssetSlideIn/script/ci-asset-slide-in-service.js')}"/>
+	 
+	 <apex:outputPanel rendered="{!NOT(ISBLANK(errorMessage))}" >
+		 <div id="jsscripterrorId" style="margin-top:15px">
+			<div class="d-notification d-notification_error d-notification_content">
+				<div class="d-notification__icon d-icon-left-exclamation_triangle"></div>
+				<div class="d-notification__supporting-text maxWidthNone">
+					<apex:outputlabel value="{!errorMessage}" />
+				</div>
+			</div>
+		</div>
+	</apex:outputPanel>
+	 
+    <body ng-app="ciAssetSlideInModule" class="container" style="margin: 0px;" id="ciAssetSlide">
+        <div  id="consoleMainController"  ng-controller="ciAssetSlideInController" class="full-height">
+            <div ng-include="'{!URLFOR($Resource.Deepview,'CIAssetSlideIn/html/ci-asset-slide-in.html')}'" class="full-height"></div>
+        </div>        
+    </body>
+	<div id="parentTypeAheadDiv" /> 
+
+<script>
+var ciTooltipTemplateUrl = "{!URLFOR($Resource.Deepview,'CIAssetSlideIn/html/rf-ng-tooltip-template.html')}";
+var resourceUrl = "{!URLFOR($Resource.DeepView, '/')}";
+var pageLoadData = {!ISBLANK(pageLoadData)}?'':JSON.parse('{!JSENCODE(pageLoadData)}');
+var orgNamespace=pageLoadData['orgNamespace'];
+var primaryCIsDataJSON={!ISBLANK(primaryCIsDataJSON)}?'':JSON.parse('{!JSENCODE(primaryCIsDataJSON)}');
+var additionalCIsJSON={!ISBLANK(additionalCIsJSON)}?'':JSON.parse('{!JSENCODE(additionalCIsJSON)}');
+var userLanguage = '{!JSENCODE(userLanguage)}';
+var isLightningExperience ={!isLightningExperience};
+var _Labels={
+	"PrimaryCiHeader":"{!JSENCODE($Label.PrimaryCIsAndServices)}",
+	"ServicesAndCIs":"{!JSENCODE($Label.ServicesAndCIs)}",
+	"AdditionalCIsAndServices":"{!JSENCODE($Label.AdditionalCIsAndServices)}",
+	"InstanceName":"{!JSENCODE($Label.CMDBCIName)}",
+	"ClassName":"{!JSENCODE($Label.CMDBClassName)}",
+	"SelectAndLinkToIncident":"{!JSENCODE($Label.SelectAndLinkToIncident)}",
+	"SelectAndLinkToTask":"{!JSENCODE($Label.SelectAndLinkToTask)}",
+	"SelectAndLinkToChangeRequest":"{!JSENCODE($Label.SelectAndLinkToChangeRequest)}",
+	"SelectAndLinkToProblem":"{!JSENCODE($Label.SelectAndLinkToProblem)}",
+	"SelectAndLinkToRelease":"{!JSENCODE($Label.SelectAndLinkToRelease)}",
+	"NoRecordsFound":"{!JSENCODE($Label.CMDBListViewCustNoRecordsFound)}",
+	"Equals":"{!JSENCODE($Label.Equals)}",
+	"NotEqualTo":"{!JSENCODE($Label.NotEqualTo)}",
+	"Contains":"{!JSENCODE($Label.ContainsFilters)}",
+	"DoesNotContain":"{!JSENCODE($Label.DoesNotContain)}",
+	"StartsWith":"{!JSENCODE($Label.StartsWith2)}",
+	"Edit":"{!JSENCODE($Label.CMDBEdit)}",
+	"Refresh":"{!JSENCODE($Label.Refresh)}",
+	"Cancel":"{!JSENCODE($Label.Cancel)}",
+	"Save":"{!JSENCODE($Label.Save)}",
+	"Apply":"{!JSENCODE($Label.Apply)}",
+	"Clear":"{!JSENCODE($Label.Clear)}",
+	"Of":"{!JSENCODE($Label.Of)}",
+	"RecordSavedSuccessfuly":"{!JSENCODE($Label.RecordSavedSuccessfuly)}",
+	"ServicesAndCIs":"{!JSENCODE($Label.ServicesAndCIs)}",
+	"Yes":"{!JSENCODE($Label.ExtjsMessageYes)}",
+    "No": "{!JSENCODE($Label.ExtjsMessageNo)}",
+	"Delete":"{!JSENCODE($Label.Delete)}",
+	"DeleteConfirmMessage":"{!JSENCODE($Label.DeleteConfirmMessage)}",
+	"NotSelected":"{!JSENCODE($Label.NotSelected)}",
+	"LookupNewWindow":"{!JSENCODE($Label.tooltipForLookup)}"
+	
+}
+_RemotingActions={
+     "getPrimaryCIsDetails" : "{!$RemoteAction.CIAssetSlideIn.getPrimaryCIsDetails}",
+     "getAdditionalCIsDetails" : "{!$RemoteAction.CIAssetSlideIn.getAdditionalCIsDetails}",
+     "savePrimaryDetails" : "{!$RemoteAction.CIAssetSlideIn.savePrimaryDetails}",
+	 "removeCILink" : "{!$RemoteAction.CIAssetSlideIn.removeCILink}",
+	 "getInstanceDetails" : "{!$RemoteAction.ConsoleRemoteActions.getObjectBubbleInfo}",
+	 "getLookupFieldData" : '{!$RemoteAction.ConsoleRemoteActions.getLookupFieldData}'
+};
+</script>
+
+<script src="{!$Resource.SDEFCommonJS}/TypeAhead.js"  type="text/javascript" />
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js" />
+<script type="text/javascript" src="{!$Resource.DeepView}/js/CIAssetSlideIn.js"/>
+</apex:page>

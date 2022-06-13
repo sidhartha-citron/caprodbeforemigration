@@ -1,0 +1,86 @@
+<!--
+- @FileName: TechCapacityTechnicianDetail
+- @Description: Component to display technician details
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       10/18/2019         Created
+*************************************************************  
+-->
+
+<aura:component description="TechCapacityTechnicianDetail"
+                controller="TechCapacityCtrl"
+                implements="flexipage:availableForAllPageTypes">
+
+    <aura:attribute name="technicianId" type="String" default="" />
+    <aura:attribute name="technician" type="Map" default="{}" />
+    <aura:attribute name="travelTime" type="String" default="" />
+
+    <aura:handler event="c:TechCapacityTechnicianSelectEvt" action="{!c.setTechnicianDetails}" />
+    <aura:registerEvent name="selectTechnician" type="c:TechCapacityCalendarRefreshEvt" />
+
+    <div class="slds-card slds-p-around_medium">
+        <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium">
+            <h1 class="slds-text-heading_small">
+                <strong>Technician Details</strong>
+            </h1>
+            <div>
+                <lightning:button variant="brand"
+                                  label="{!$Label.c.Refresh}"
+                                  onclick="{!c.refreshTechnicianDetails}"
+                                  disabled="{!v.technicianId == ''}"/>
+            </div>
+        </div>
+
+        <aura:if isTrue="{!not(v.technician.tech == null)}" >
+            <div class="slds-grid slds-grid_align-spread">
+                <div class="slds-col slds-grid slds-wrap slds-gutters">
+                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                        <strong>{!$Label.c.Name}</strong>
+                        <p><lightning:formattedText value="{!v.technician.tech.Name}" /></p>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                        <strong>{!$Label.c.Shift}</strong>
+                        <p>{!v.technician.shift}</p>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                        <strong>{!$Label.c.Travel_Factor}</strong>
+                        <p>{!v.technician.tech.Travel_Factor__c}%</p>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                        <strong>{!$Label.c.Travel_Time}</strong>
+                        <p>{!v.travelTime}</p>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                        <strong>{!$Label.c.Skills}</strong>
+                        <aura:iteration items="{!v.technician.skills}" var="skill">
+                            <p>{!skill}</p>
+                        </aura:iteration>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                        <strong>{!$Label.c.Utilization_Legend}</strong>
+                        <aura:iteration items="{!v.technician.utilizations}" var="utilization">
+                            <div class="{!utilization.DeveloperName + ' slds-m-bottom_xx-small slds-p-left_x-small slds-p-right_x-small'}">
+                                {!utilization.MasterLabel}
+                            </div>
+                        </aura:iteration>
+                    </div>
+                </div>
+            </div>
+
+            <aura:set attribute="else">
+                <p>{!$Label.c.TCW_No_Technician_Selected}</p>
+            </aura:set>
+        </aura:if>
+
+    </div>
+</aura:component>

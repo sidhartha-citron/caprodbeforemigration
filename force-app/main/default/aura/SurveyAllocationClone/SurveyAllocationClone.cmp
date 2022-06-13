@@ -1,0 +1,105 @@
+<aura:component implements="flexipage:availableForAllPageTypes,force:hasRecordId" access="global" controller="SurveyAssetAllocationController">
+    
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="siteSurveyId" type="String"/>
+    <aura:attribute name="minFloor" type="Decimal"/>
+    <aura:attribute name="maxFloor" type="Decimal"/>
+    <aura:attribute name="startUnit" type="String"/>
+    <aura:attribute name="numUnit" type="Integer"/>
+    <aura:attribute name="cloneCurrent" type="Boolean"/>
+    <aura:attribute name="surveyLocation" type="Survey_Location__c"/>
+    <aura:attribute name="spinner" type="Boolean"/>
+    <aura:attribute name="cloneWarnings" type="List" />
+    
+    <aura:method name="setLocationDetails" action="{!c.setCloneRecord}" description="Method to facilitate clone of existing locations">
+        <aura:attribute name="location" type="Survey_Location__c" default="{'sobjectType':'Survey_Location__c'}"/>
+    </aura:method>
+    
+    <aura:registerEvent name="cloneEvent" type="c:SurveyAllocationClonedEvent"/>
+    
+    <!--<c:CustomToast aura:id="customToast" /> -->
+    
+    <lightning:spinner alternativeText="Loading" size="medium" aura:id="theSpinner" class="slds-hide"/>
+    
+    <div class="slds-hide" aura:id="theModal">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-modal--prompt slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-theme--info">
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Site_Survey_Clone_Allocations}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <c:CustomToast aura:id="customToast" /><br/>
+                    <div class="slds-form-element">
+                        <lightning:input aura:id="min" type="number" label="{!$Label.c.Site_Survey_Min_Floor}" min="0" value="{!v.minFloor}" required="true" 
+                                         messageWhenValueMissing="{!$Label.c.Site_Survey_Fill_In_Field}" class="slds-required"/>
+                    </div>
+                    <div class="slds-form-element">
+                        <lightning:input aura:id="max" type="number" label="{!$Label.c.Site_Survey_Max_Floor}" min="0" value="{!v.maxFloor}" required="true" 
+                                         messageWhenValueMissing="{!$Label.c.Site_Survey_Fill_In_Field}" class="slds-required"/>
+                    </div>
+                    <div class="slds-form-element">
+                     	<lightning:input aura:id="startUnit" type="number" label="{!$Label.c.Site_Survey_Start_Unit}" min="0" value="{!v.startUnit}"
+                                         class="slds-required"/>
+                    </div>
+                    <div class="slds-form-element">
+                     	<lightning:input aura:id="numberUnits" type="number" label="{!$Label.c.Site_Survey_Num_Unit_Per_Floor}" min="1" value="{!v.numUnit}"
+                                          class="slds-required"/>
+                    </div>
+                    <div class="slds-form-element">
+                        <lightning:input aura:id="cloneCurrentProds" type="checkbox" label="{!$Label.c.Site_Survey_Clone_Current}" checked="{!v.cloneCurrent}"
+                                         class="slds-required"/>
+                    </div>
+                </div> 
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeModal}"/>
+                    <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Clone_Allocations}" onclick="{!c.cloneAllocations}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+    
+    <div class="slds-hide" aura:id="warningModal">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-modal--prompt slds-fade-in-open">
+        	<div class="slds-modal__container">
+                <header class="slds-modal__header slds-theme--warning">
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Site_Survey_Warning_Header}</h2>
+                </header>
+            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                <div class="slds-form-element">
+					<h4 id="modal-description" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Site_Survey_Warning_Description}</h4>
+                </div>
+                <br/>
+                <div class="slds-form-element">
+                    <table>
+                        <tr>
+                            <th>
+                                {!$Label.c.Site_Survey_Product_Name}
+                            </th>
+                            <th>
+                                {!$Label.c.Site_Survey_Missing_Products}
+                            </th>
+                        </tr>
+                        <aura:iteration items="{!v.cloneWarnings}" var="cloneWarning">
+                            <tr>
+                                <td>
+                                    {!cloneWarning.key}
+                                </td>
+                                <td>
+                                    {!cloneWarning.value}
+                                </td>
+                            </tr>
+                        </aura:iteration>
+                    </table>
+                </div>
+                <br/>
+                <footer class="slds-float_right">
+                    <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeWarningModal}"/>
+                    <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Clone_Allocations}" onclick="{!c.cloneAllocationsWithWarnings}"/>
+                </footer>
+            </div>
+          </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+</aura:component>

@@ -1,0 +1,143 @@
+<div class="Branding-Right_Panel-activity">
+
+<hr style="margin-bottom: 5px;margin-top: 0px;width: 96%;">
+
+<div ng-show="!manageApprovalsModel.dataLoading">
+	</div>
+
+<div ng-if="manageApprovalsModel.requests.length == 0 && !manageApprovalsModel.dataLoading" style="text-align: center;">     
+  <div >{{selfServiceLabels.noResults}}</div>     
+</div>
+<div class="timeline-approval-toolbar" style="padding-top:5px;padding-bottom:15px;">
+<loading-spinner centered="true" if="manageApprovalsModel.dataLoading"></loading-spinner>
+<div ng-if="manageApprovalsModel.requests.length != 0 && !manageApprovalsModel.dataLoading" class="float-left-rtl">
+	<div style="float: right;" title="{{ (manageApprovalsModel.disableClearAllBtn == false && manageApprovalsModel.disableApproveRejectBtn == true) ? $root.selfServiceLabels.MultiApproveInsufficientPrev : ''}}">
+		<button class="btn btn-primary Branding-Right_Panel-default_button Branding-Right_Panel-button_outline ng-binding manage-approval-buttons" ng-disabled="manageApprovalsModel.disableApproveRejectBtn" ng-click="massApproveReject()" style="margin-right: 23px;">{{$root.selfServiceLabels.Approve}}&nbsp;/&nbsp;{{$root.selfServiceLabels.Reject}}</button>
+	</div>
+
+	<button class="btn Branding-Right_Panel-button_outline ng-binding manage-approval-buttons" ng-disabled="manageApprovalsModel.disableReassignBtn" ng-click="massReassign()">{{$root.selfServiceLabels.Reassign}}</button>
+
+	<button class="btn Branding-Right_Panel-button_outline ng-binding manage-approval-buttons" ng-disabled="manageApprovalsModel.disableSelectAllBtn" ng-click="selectAll()">{{$root.selfServiceLabels.SelectAll}}</button>
+
+	<button class="btn Branding-Right_Panel-button_outline ng-binding manage-approval-buttons"  ng-disabled="manageApprovalsModel.disableClearAllBtn" ng-click="clearAll()">{{$root.selfServiceLabels.ClearAll}}</button>
+	
+</div>
+<div class="ng-scope">
+<div id="activity-items" class="activity-item timeline-activity-item timeline-activity-item_first-in-group timeline-activity-item_last-in-group activity-item_remove_padding" ng-repeat="activityItem in manageApprovalsModel.requests" ng-if="manageApprovalsModel.requests.length != 0" ng-class="{'timeline-activity-item_today': activityItem.isToday,
+		 'timeline-activity-item_first-in-group': activityItem.isFirstInGroup,
+		 'timeline-activity-item_last-in-group': activityItem.isLastInGroup,
+		 'timeline-activity-item_last': $last}"
+		 ng-init="activityItem.selected =false;activityItem.checkboxClass = 'checkmark';activityItem.dataLoading = false;">
+		 <loading-spinner centered="true" if="activityItem.dataLoading"></loading-spinner>
+<div class="activity-item_type_request_padding" ng-class="{'activity-item_type_request' : isLinkVisible(activityItem, 'show-detail'), 'activity-item_type_request_hover' : activityItem.selected}">		 
+<div class="activity-item__header">
+          <div ng-class="{'disable-manage-approval-item': !isLinkVisible(activityItem, 'show-detail')}" ng-click="!isLinkVisible(activityItem, 'show-detail') || showHideDetails(activityItem);">
+			<div>
+	          	<div ng-click="approvalCheckBoxClicked(activityItem);$event.stopPropagation();" style="pointer-events: all;">
+					<input type="checkbox" class="activity-item_input_checkbox" ng-checked="activityItem.selected == true">
+				</div>
+	          <div class="activity-item__request-name approval-request-name nowrap-line" title="{{activityItem.TargetObjectName}}">
+					{{activityItem.TargetObjectName}}&nbsp;&nbsp;|&nbsp;&nbsp;{{activityItem.TargetObjectType}}
+			  </div>
+		  	</div>
+		  <div style="clear:both;"></div>
+			
+	          <div class="activity-item-field"><label class="activity-item__labels approval-item-label" >{{$root.selfServiceLabels.SSApprovalListColumnHeaderSubmitter}}</label>
+	          <label class="activity-item__values approval-item-value"  >{{activityItem.CreatedBy}}</label></div>
+	          <div class="activity-item-field"><label class="activity-item__labels approval-item-label">{{$root.selfServiceLabels.SSApprovalListColumnHeaderAssignedTo}}</label>
+	          <label class="activity-item__values approval-item-value"  >{{activityItem.Actorname}}</label></div>
+		  </div>
+          <div>
+			<div style="float:left" class="activity-item-field float-right-rtl" ng-class="{'disable-manage-approval-item': !isLinkVisible(activityItem, 'show-detail')}" ng-click="!isLinkVisible(activityItem, 'show-detail') || showHideDetails(activityItem);">
+				<label class="activity-item__labels approval-item-label">{{$root.selfServiceLabels.SSApprovalListColumnHeaderDateSubmitted}}</label>
+				<label class="activity-item__values approval-item-value" >{{activityItem.CreatedDate}}</label>
+			</div>
+			<div class="activity-item_details" title="{{ !isLinkVisible(activityItem, 'show-detail') ? $root.selfServiceLabels.InsufficientPrivilegeContactAdministrator : ''}}">
+				  <label style="width:auto;"><a class="Branding-Right_Panel-hyperlink manage-approval-links activity-item_details_link" ng-class="{'disable-manage-approval-links': !isLinkVisible(activityItem, 'show-detail')}" ng-show="selectedItem.selectedApproval.hashKey != activityItem.$$hashKey" ng-click="!isLinkVisible(activityItem, 'show-detail') || openItem(activityItem);">{{$root.selfServiceLabels.ShowDetails}}</a>
+				  <a style="font-size: 10px;" class="Branding-Right_Panel-hyperlink activity-item_details_link" ng-hide="selectedItem.selectedApproval.hashKey != activityItem.$$hashKey" ng-click="$event.stopPropagation(); selectedItem.selectedApproval.hashKey ='0' ">{{$root.selfServiceLabels.HideDetails}}</a></label>
+			</div>
+		   </div>
+          
+          <div class="activity-item__type-icon ng-scope" ng-class="activityItem.TargetObjectType == $root.selfServiceLabels.IncidentLabel ? 'd-icon-file_text_clock iconSize' : (activityItem.TargetObjectType == $root.selfServiceLabels.ServiceRequestLabel ? 'd-icon-file_atom_clock iconSize' : 'd-icon-file_clock iconSize' )
+		  " ng-mouseover="supportModel.timelineHover($event, true, true)" ng-mouseleave="supportModel.timelineHover($event, true, false)" aria-hidden="true"> 
+          </div>
+          <div class="timeline-activity-item__timeline-time ng-scope ng-binding" ng-mouseover="supportModel.timelineHover($event, true, true)" ng-mouseleave="supportModel.timelineHover($event, true, false)">
+              {{activityItem.CreatedTime}} 
+          </div>
+       
+  <loading-spinner centered="true" if="manageApprovalState.isLoading && selectedItem.selectedApproval.TargetObjectId == activityItem.TargetObjectId"></loading-spinner>
+  <div  ng-hide="selectedItem.selectedApproval.hashKey != activityItem.$$hashKey">
+  <div ng-show="!manageApprovalState.isLoading"> 
+  <hr style="margin-bottom: 5px;margin-top: 5px;">
+    <table style="width:100%">
+      <tr ng-repeat="recordDetails in selectedItem.selectedApproval">
+        <td class="activity-item__labels approval-item-label wrapContents" style="width: 23%;" ng-show="recordDetails.name!='Name'" ng-bind-html="recordDetails.label"></td>
+          <td class="activity-item__values approval-item-value wrapContents" ng-if="recordDetails.additionalinfo != undefined && recordDetails.additionalinfo.fieldtype !='URL' && recordDetails.additionalinfo.fieldtype !='formulatextfields' && recordDetails.additionalinfo.fieldtype =='richtextareafield'" ng-bind-html="to_trusted(recordDetails.value)"  ng-show="recordDetails.name!='Name'"></td>
+        <td class="activity-item__values approval-item-value wrapContents" ng-if="recordDetails.additionalinfo != undefined && recordDetails.additionalinfo.fieldtype !='URL' && recordDetails.additionalinfo.fieldtype !='richtextareafield' && recordDetails.additionalinfo.fieldtype =='formulatextfield'" ng-bind-html="to_trustURL(recordDetails.value)"  ng-show="recordDetails.name!='Name'"></td>
+        <td class="activity-item__values approval-item-value wrapContents" ng-if="recordDetails.additionalinfo != undefined && recordDetails.additionalinfo.fieldtype !='URL' && recordDetails.additionalinfo.fieldtype !='richtextareafield' && recordDetails.additionalinfo.fieldtype !='formulatextfield'" ng-bind-html="recordDetails.value"  ng-show="recordDetails.name!='Name'"></td>
+        <td class="activity-item__values" ng-if="recordDetails.additionalinfo != undefined && recordDetails.additionalinfo.fieldtype =='URL'" ng-bind-html="recordDetails.value | createAnchors"  ng-show="recordDetails.name!='Name'"></td>
+      </tr>
+    </table>      
+  </div>
+ </div>
+ </div>
+ </div>
+<hr class="activity-item_hr_above_link">
+<div class="modal-footer__btn-container modal-footer__btn-container_manage_approval">
+	<a class="Branding-Right_Panel-hyperlink manage-approval-links" ng-click="reassignSelectedApproval(activityItem)">{{$root.selfServiceLabels.Reassign}}</a>
+	<span title="{{!isLinkVisible(activityItem, 'record-accessible') ? $root.selfServiceLabels.InsufficientPrivilegeContactAdministrator : ''}}">
+		|
+		<a class="Branding-Right_Panel-hyperlink manage-approval-links" ng-class="{'disable-manage-approval-links': !isLinkVisible(activityItem, 'record-accessible')}" ng-click="!isLinkVisible(activityItem, 'record-accessible') || approveRejectSelectedApproval(activityItem)">{{$root.selfServiceLabels.Approve}}&nbsp;/&nbsp;{{$root.selfServiceLabels.Reject}}</a>
+	</span>
+	<span ng-if="showApprovalHistory" title="{{ !isLinkVisible(activityItem, 'record-accessible') ? $root.selfServiceLabels.InsufficientPrivilegeContactAdministrator : ''}}">
+		|
+		<a class="Branding-Right_Panel-hyperlink manage-approval-links" ng-class="{'disable-manage-approval-links': !isLinkVisible(activityItem, 'record-accessible')}" ng-click="!isLinkVisible(activityItem, 'record-accessible') || loadApprovalHistory(activityItem)">{{$root.selfServiceLabels.ApprovalHistory}}</a>
+	</span>
+	<span ng-if="showRecordDetail" title="{{isLinkVisible(activityItem, 'show-record') == false ? $root.selfServiceLabels.InsufficientPrivilegeContactAdministrator : ''}}" ng-class="{'hide-manage-approval-link': isLinkVisible(activityItem, 'show-record-non-rf-object')}">
+		|
+		<a class="Branding-Right_Panel-hyperlink manage-approval-links" ng-class="{'disable-manage-approval-links': !isLinkVisible(activityItem, 'show-record')}" ng-click="!isLinkVisible(activityItem, 'show-record') || showDialog(activityItem)">{{$root.selfServiceLabels.ShowRecord}}</a>
+	</span>
+</div>
+<div class="timeline-activity-item__timeline-elements ng-scope" ng-mouseover="supportModel.timelineHover($event, true, true)" ng-mouseleave="supportModel.timelineHover($event, true, false)">
+<ins class="i-timeline-bubble-pointer"></ins>
+<ins class="timeline-activity-item__the-line"></ins>
+<ins class="timeline-activity-item__timeline-dot" ng-class="{ 'timeline-activity-item__timeline-dot_today': activityItem.isToday }">
+</ins>
+<div class="timeline-activity-item__group-title" ng-if="activityItem.isFirstInGroup">
+			<span ng-if="activityItem.relativeDateLabel">
+				{{activityItem.relativeDateLabel}}
+			</span>
+			<span ng-if="!activityItem.relativeDateLabel">
+				{{activityItem.CreatedDate}}
+			</span>
+</div>
+</div>
+
+</div>
+</div>
+<!-- Pagination Div -->
+<div ng-if="manageApprovalsModel.requests.length > 0" class="approval-page-pagination-container">
+	<div class="support-back-link-container profile-back-link approval-page-navigator profile-page-navigator-first">
+		<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goToFirstPage()" ng-show="manageApprovalsModel.isPreviousEnabled">
+			&#10094;&#10094; {{ $root.selfServiceLabels.First }} 
+		</a>
+		&nbsp;
+		<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goToPrevPage()" ng-show="manageApprovalsModel.isPreviousEnabled">
+			&#10094; {{ $root.selfServiceLabels.Previous }} 
+		</a>
+	</div>
+	<div class="support-back-link-container profile-back-link approval-page-number" ng-show="manageApprovalsModel.isPreviousEnabled || manageApprovalsModel.isNextEnabled">
+		{{ $root.selfServiceLabels.Page }} {{manageApprovalsModel.currentPageNo}}
+	</div>
+	<div class="support-back-link-container profile-back-link profile-page-navigator approval-page-navigator profile-page-navigator-last">
+		<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goToNextPage()" ng-show="manageApprovalsModel.isNextEnabled">
+			{{ $root.selfServiceLabels.Next }} &#10095;
+		</a>
+		&nbsp;
+		<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goToLastPage()" ng-show="manageApprovalsModel.isNextEnabled">
+			{{ $root.selfServiceLabels.Last }} &#10095;&#10095;
+		</a>
+	</div>
+</div>
+</div>
+</div>

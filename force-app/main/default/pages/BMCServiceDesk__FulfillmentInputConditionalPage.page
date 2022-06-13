@@ -1,0 +1,393 @@
+<apex:page sidebar="false" showHeader="false"  controller="BMCServiceDesk.FulfillmentInputConditionalController">
+	
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+<c:CommonIncludes isExtJS4="true"/>
+<apex:slds />
+<c:UserContextComponent />
+<apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'RFAdminExt4Common.css')}" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" />
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/Calender.css" /> 
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ServiceLevelTarget.css" />
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomViews.css" /> 
+<link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ServiceRequestCommonJS.js" /> 
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/FulfillmentInputConditionPage.js"/>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/svgForIE11.js"></script>
+
+<script>
+var compStore = new Object(),
+inputData = '[]',
+booleanArray = [['True', 'True'],['False', 'False']],
+listData = [],
+selectedTextAreaLength = 0,
+conditionOrderIndex =1,
+popUpString = '',
+referenceId,
+referenceName,
+logOpeStore,
+logicalOperator,
+comparisonOperator,
+inputsComboStore,
+postfixString,
+inputsEditor,
+pickListComboStore,
+pickListComboBx	,
+booleanComboStore,
+booleanComboBx,
+conditionGridStore,
+ConditionGrid,
+conditionValue;
+var conditionOperatorLabel =  '{!JSENCODE($Label.FulfillmentConditionOperatorMsg)}',
+ conditionHeader = '{!JSENCODE($Label.serviceTargetConditionOrder)}',
+ operatorHeader = '{!JSENCODE($Label.Operator)}',
+ logicalConditionHeader = '{!JSENCODE($Label.LogicalOperator )}',
+ operandHeader = '{!JSENCODE($Label.Value)}',
+ inputHeader =  '{!JSENCODE($Label.InputNameLabel)}',
+ labelOperator = '{!JSENCODE($Label.Operator)}',
+ labelRemove = '{!JSENCODE($Label.Remove)}',
+ OperandErrMsg =  '{!JSENCODE($Label.ErrorMsgTemplateS)}',
+ comOpErrMsg = '{!JSENCODE($Label.SelectCompOpMessage)}',
+ logicalOpErrMsg	= '{!JSENCODE($Label.SelectLogicalOpMsg)}',
+ enterVaErrMsg = '{!JSENCODE($Label.EnterValueMsg)}';
+ var invalidNumberLabel = '{!JSENCODE($Label.TemplateInvalidNumber)}';
+ var invalidDateLabel = '{!JSENCODE($Label.SS_InvalidDate)}';
+ var CMDBConfirmDelete = '{!JSENCODE($Label.DeleteConfirmMessage)}';
+var DZHE     ='џ'; //Cyrillic character
+var	EF       ='ф'; //Cyrillic character
+var nonPrint = '¬';
+var PE = 'П';
+var deleteIconPath = "{!URLFOR($Resource.SDEFStyles,'/SDEFbuttons/Delete_Disabled.png')}";
+var errorStr = '';
+	function getInputTxtEle(){
+   		return document.getElementById('{!$Component.cndtnMainForm.inputTxt}');
+   }
+   function getInputTextAreaEle(){
+   		return document.getElementById('{!$Component.cndtnMainForm.inputTxtArea}');
+   } 
+   function getDateTimeInputEle(){
+   		return document.getElementById('{!$Component.cndtnMainForm.datetimeinput}');	
+   }
+   function getDateTimePickerImg(){
+   		return document.getElementById('dateTimePopupImg');
+   }	
+   function getDateInputEle(){
+   		return document.getElementById('{!$Component.cndtnMainForm.inputDate}');	
+   }
+   function getDatePickerImg(){
+   		return document.getElementById('datePopupImg');
+   }
+   function getLookupEle(){
+   		return document.getElementById('lookUp');
+   }
+   function getLookUpPanelEle(){
+   		return document.getElementById('{!$Component.lookUpPanel}');
+   }
+   function getInfixStrEle() {
+   	 return document.getElementById('{!$Component.cndtnMainForm.infixStr}');
+   }
+    function getUpdateBtnEle(){
+		return document.getElementById('updateButtonId');
+	}
+	function getAddBtnEle(){
+		return document.getElementById('addButtonId');
+	}
+	
+	function getSDFStylesResPath(){
+          return '{!$Resource.SDEFStyles}';
+    }
+	
+	function loadDataToGrids(){
+		conditionGridStore.loadData(listData);
+	}
+	var isUseOldSeparator = {!isUseOldSeparator};
+</script>
+<style>
+	.x-form-trigger-wrap{
+		border: 1px solid #c9c9c9;
+		border-radius: 2px;
+		background-color: transparent;
+		width: 100% !important;
+		height: 25px;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+	}
+	.x-form-text,
+	.x-form-field{
+		border: none !important;
+		background-color: transparent !important;
+		background-image: none !important;
+		height: 28px !important;
+		font-size: 12px !important;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+	}
+
+	.x-boundlist-list,.x-boundlist{
+		border: none !important;
+	}
+
+	.x-boundlist-item{
+		background-color: white !important;
+		padding-left: 8px !important;
+		padding-top: 5px !important;
+		padding-bottom: 5px !important;
+		margin: 0 !important;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+	}
+	.x-panel, .x-plain{
+		overflow: unset !important;
+	}
+	.x-form-arrow-trigger{
+		background: url({!$Resource.SDEFStyles}/SDEFicons/arrow-down.png) no-repeat 0px 8px !important;
+		border: none !important;
+	}
+	.x-grid-cell-inner{
+		font-size: 12px !important;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+	}
+	.x-grid-cell{
+		height: 100% !important;
+		padding-top: 5px !important;
+		padding-bottom: 5px !important;
+	}
+	.x-column-header-first{
+		border-left: 1px solid #c5c5c5 !important;
+	}
+	.x-column-header-text{
+		font-size: 13px !important;
+	}
+	.x-column-header-over{
+		background-image: none !important;
+		background-color: #BDBDBD !important;
+		border: 1px solid #BDBDBD !important;
+	}
+	.x-column-header-trigger{
+		background-image: none !important;
+	}
+	.inputBox{
+		border: 1px solid #c9c9c9 !important;
+		border-radius: 2px;
+		height: 30px;
+		color: #000000;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+		font-size: 12px;
+		margin: 0;
+		padding: 2px 2px 2px 5px;
+		vertical-align: top;
+		width: 100%;
+	}
+	.inputAreaBox{
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+		font-size: 11px;
+		height: 40px;
+		overflow: auto;
+		width: 100%;
+		border: 1px solid #c9c9c9;
+		border-radius: 2px;
+	}
+	.bmc-message-header-default {
+		background-color: white !important;
+		color: black !important;
+		padding: 5px;
+	}
+	.lookupIcon{
+		background-image: url({!$Resource.SDEFStyles}/SDEFicons/search-icon.svg) !important;
+		background-repeat: no-repeat !important;
+		background-color: white !important;
+		border: none !important;
+		vertical-align: top;
+		width: 12px !important;
+		height: 15px !important;
+		margin: 0px;
+		padding: 0px;
+		transform: scale(1.4);
+	}
+	.transformIcon{
+		transform: scale(1.5);
+	}
+	.pad-10px-td{
+		padding-left: 22px !important;
+	}
+	.pad-25px-td{
+		padding-left: 25px !important;
+	}
+	.height-30px-button{
+		height: 30px !important;
+	}
+	.text-align-right{
+		text-align: right;
+	}
+	.x-grid-view{
+		overflow-X: hidden !important;
+	}	
+	.x-grid-dirty-cell{
+		background-image: none !important;
+	}
+	.x-boundlist-item-over,.x-boundlist-selected{
+		border: 1px solid #dddbda !important;
+		background-color:#dddbda !important;
+
+	}
+	.x-tool-rfclose, .x-tool-winclose, .x-tool-rfdescclose {
+		background: url("{!URLFOR($Resource.SDEFStyles, 'SDEFbuttons/win-close-gray-icon.svg')}") !important;
+	}
+	.RFAdminWindow .x-window-header {
+		background-color: white !important;
+		border: none !important;
+		box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2) !important;
+	}
+</style>
+  <apex:outputpanel id="postfixPanel">
+    <script>
+        postfixString='{!JSENCODE(postfix)}';
+		errorMsg = '{!JSENCODE(messageString)}';
+        </script>
+    </apex:outputpanel> 
+ <apex:outputPanel id="fldTypePanel">
+        <script>
+        	inputData = {!inputData};
+        	errorMsg = '{!JSENCODE(messageString)}';
+        	
+    </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="gridStorePanel">
+        <script>
+        listData = {!listData};
+        </script>
+    </apex:outputPanel>
+<apex:form id="cndtnMainForm"> 
+	 <c:ValidationComponent errorMsgList="{!messageString}" id="vComponent"></c:ValidationComponent>
+	<apex:actionFunction name="assignConditionData" action="{!assignToCondition}" reRender="vComponent,postfixPanel,cndtnStrPanel" oncomplete="setCondtionValue();" />
+    <apex:outputPanel id="cndtnStrPanel">
+			<apex:inputHidden id="infixStr"  value="{!conditionData}"/>
+			<script>
+			  conditionValue = '{!JSENCODE(conditionData)}';
+			</script>
+   </apex:outputPanel>
+	<apex:actionRegion >
+	<apex:actionFunction name="getData" action="{!assignData}" reRender="gridStorePanel" oncomplete="loadDataToGrids();" >
+			<apex:param assignTo="{!infixCondStr}" name="condition" value="" />
+		</apex:actionFunction>
+	</apex:actionRegion>
+
+	<table  class="clsTable" cellspacing="0" cellpadding="0">  
+		<tr>
+		    <td colspan="3">
+		        <div class="div15pxVspacing"></div>
+		    </td>
+		</tr>
+		<tr>
+			<td>
+				<apex:outputPanel id="consPanel">
+			       <table class="" bgcolor="white" cellpadding="0" cellspacing="0">
+			       	<tr bgcolor="white" height="50">
+			       		<td width="25%" class="pad-10px-td" title="{!$Label.ToolTipQualificationFieldlist}">
+			       			<div id="extFieldList"></div>
+			               </td>
+			       		<td width="14%" class="pad-25px-td" title="{!$Label.ToolTipOperator}">
+			       			<div id="compareOpDiv"></div>
+			       		</td>
+			       		<td width="25%" class="pad-25px-td" title="{!$Label.SRDConditionalDisplayToolTip}">
+			       			<table width="100%" cellpadding="0" cellspacing="0">
+			       				<tr>
+				       				<td style="">
+				       					<apex:inputText id="inputTxt" style="display:block;"  styleClass="inputBox"/ >
+				       					<input type="text" id="referenceID" value="" class="inputBox" style="display:none;" />
+				       					<apex:inputText id="datetimeinput" styleClass="inputBox" style="display:none"/>
+				       					<apex:inputText id="inputDate" styleClass="inputBox" style="display:none"/>
+				       					<apex:inputTextarea id="inputTxtArea" style="display:none" styleClass="inputAreaBox" />
+				    				</td>
+				    				<td>
+										<input type="button" id="lookUp" class="lookupIcon" style="display:none; margin-left: 7px;" onClick="openLookupRF();"/>
+										<span id="inputTxtAreaButtonEle" type="button" class="d-icon-align_left transformIcon" style="display:none; padding-left:10px;" onclick="parent.showTextEditorRD(getInputTextAreaEle(), selectedLabel, '32000' , '{!$Label.OK}', '{!$Label.Cancel}',350);"></span>
+										<span id="dateTimePopupImg" type="button" class="d-icon-calendar_clock_o transformIcon" style="display:none; padding-left:10px;" onclick="showDateTimePicker();"></span>
+										<span id="datePopupImg" type="button" class="d-icon-calendar transformIcon" style="display:none; padding-left:10px;" onclick="showDatePicker();"></span>
+				    		   		</td>
+				    				<td>
+				    					<div id="picklistCombo"/>	
+				    				</td>
+				    				<td>
+				    					<div id="booleanCombo"/>		
+				    				</td>
+			    				</tr>
+			    			</table>
+			    		</td>
+			            <td width="12%" id="qualButtonTD" class="pad-25px-td" title="{!$Label.ToolTipLogOperator}">
+			             	<div id="qualLogicalOperatorCombo"></div>
+			            </td>
+			            <td width="8%" align="right" style="padding-left:22px;"> 
+							<button  id="addButtonId" title="{!$Label.Add}" type="button" class="slds-button slds-button_icon slds-button_icon-border-filled" onclick="addCndData()">
+								<lightning-primitive-icon lightning-primitiveicon_primitiveicon-host="">
+									<svg lightning-primitiveIcon_primitiveIcon="" focusable="false"  aria-hidden="true" class="slds-button__icon">
+										<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#add')}"></use>
+									</svg>
+								</lightning-primitive-icon>
+							</button>
+							<button  id="updateButtonId" style="display:none;margin-left:-2px !important" title="{!$Label.Update}" type="button" class="slds-button slds-button_icon slds-button_icon-border-filled" onclick="upadateCndData()">
+								<lightning-primitive-icon lightning-primitiveicon_primitiveicon-host="">
+									<svg lightning-primitiveIcon_primitiveIcon="" focusable="false"  aria-hidden="true" class="slds-button__icon">
+										<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#check')}"></use>
+									</svg>
+								</lightning-primitive-icon>
+							</button>
+			                
+			            </td>
+			      	</tr>
+			     </table>
+			   </apex:outputPanel>
+			</td>
+		</tr>
+		<tr align="center">
+			<td>
+				<div style="border-bottom: 1px solid #c9c9c9; width:97%; margin: 5px 12px 16px 12px;"></div>
+			</td>
+		</tr>
+		<tr>
+	      	<td>
+	      		<table class="" id="qual_grid_table_id"  cellpadding="0" cellspacing="0" style="width:97.5%; margin-left:22px; margin-right:22px;">
+	      			<tr>
+	      				<td>
+							<div id="conditionGridDiv"/>             				
+	      				</td>
+	      			</tr>
+	      		</table>
+	      		
+	      	</td>
+	    </tr>
+	    <tr align="right" style="background-color:#f5f5f5; height: 60px;">
+	    	<td>
+        		<div>
+					<table>
+						<tr style="width:100%;">
+							<td style="padding-right:22px;">
+								<div >
+								<input type="button" style ="float:right;margin-left:12px" id="cancelButton" onclick="parent.rfPopUpClose('rfModalVFPage');" value="{!$Label.Cancel}" class="slds-button slds-button_neutral height-30px-button"/>
+								<input type="button" style ="float:right" onclick="okBtnHandler();" value="{!$Label.Save}"  class="slds-button slds-button_brand height-30px-button" />
+								</div>
+								
+							</td>
+						</tr>
+					</table>
+				</div>
+        	</td>
+	    </tr>
+	</table>
+</apex:form>
+<apex:outputpanel id="sldsAlert">
+	<c:RFMessagingComponent />
+</apex:outputpanel>
+<!-- Toast Start -->
+<div id="rfToastPopop" style="display:none;">
+    <div class="demo-only slds-modal slds-fade-in-open slds-modal--medium" style="height:4rem">
+        <div class="slds-notify_container slds-is-relative">
+          <div class="slds-notify slds-notify_toast slds-theme_error" role="status" id="themeToastPopup">
+            <span class="slds-assistive-text" id="headerToast"></span>
+            <span id="themeIconPopup" class="slds-icon_container slds-icon-utility-success slds-m-right_small slds-no-flex slds-align-top">
+            </span>
+            <div class="slds-notify__content">
+              <h2 class="slds-text-heading_small " id="mainContentToastPopup"></h2>
+            </div>
+          </div>
+        </div>
+    </div>
+</div>
+<!-- Toast End -->
+</apex:page>

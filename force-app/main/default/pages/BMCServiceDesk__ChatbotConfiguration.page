@@ -1,0 +1,183 @@
+<apex:page controller="BMCServiceDesk.ChatbotConfigurationController" sidebar="false" docType="html-5.0">
+	<apex:outputText value="{!JSENCODE($Label.bmcservicedesk__noaccesserrormessage)}"></apex:outputText>
+	<apex:outputPanel rendered="false">
+	<head>
+			<link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+            <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" /> 
+			<link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" />
+	</head>
+	<style type="text/css">
+        .hasMotif{
+            margin-left:0px !important;
+            margin-right:0px !important;
+        }
+        .chatbotTextBox {   
+					border: e1e1e1 ;
+					width: 100%;
+					padding: 3px 5px;
+					color: #555;
+					font-size: 1.2em;
+                    margin-bottom:16px;
+                    margin-left:20px;
+				}
+		.chatbotTextArea {
+					height: 54px;
+					width: 100%;
+					border: e1e1e1 !important;
+					font-size: 1.2em;
+					padding: 3px 5px;
+                    margin-left:20px;
+                    margin-bottom: 16px;
+				}
+		.chatbotHeaderContainer{
+			    overflow: hidden;
+				background-color: #333;
+				top: 0;
+                height: 30px;
+                line-height: 30px;
+				width: 100%;
+			}
+		.chatbotHeaderText {
+                padding: 0 22px;
+				color: #fff;
+                font-size: 13px;
+			}
+		.chatbotLabel {
+                color: #414042;
+                margin-bottom: .25rem;
+                font-size: 13px;
+                font-weight: normal;
+                padding-left: 20px;
+			}
+		.requiredField{
+					color: #f86e00;
+					font-size: 13px;
+                    font-weight:400
+			}
+		.d-button_primary {
+					color: #fff;
+				    color: #fff;
+					border-color: #f86e00;
+					background-color: #f86e00;   
+					font-size: 14px;
+					line-height: 20px;
+					padding: 7px 19px;
+					border-width: 1px;
+					border-style: solid;
+					cursor:pointer;
+                    font-family: 'Salesforce Sans',Arial,sans-serif !important;
+			}
+    </style>
+    <script>
+        var ChangeVisibilityVar;
+        function ShowInlineSaveMessage( isError){
+			if(isError == true){
+				document.getElementById('jsscripterrorId').setAttribute('style','display:block; margin-top :5px !important; margin-bottom : 5px !important;');
+				var errrorDiv = document.getElementById('errorDescId');
+				var txtNode = document.createTextNode('{!($Label.requiredFieldMsg)}');	
+				errrorDiv.appendChild(txtNode);
+			}
+            else if(isError == false){
+               var SaveMessageDiv=document.getElementById('SaveMessageDiv');
+               if(SaveMessageDiv!=null && SaveMessageDiv!='undefined'){
+                    var PanelWidth,divWidth,leftAlign;
+                    PanelWidth= window.innerWidth;
+                    if(PanelWidth!=null && PanelWidth!='undefined' )
+                        leftAlign = parseInt((PanelWidth/2)-200);
+                   SaveMessageDiv.setAttribute('style','visibility: visible; display:table;position: absolute;margin-top: -400px;left: '+ leftAlign +'px; z-index:2;');
+                    ChangeVisibilityVar = setTimeout(function(){
+                      CloseSavePopUp();
+                    }, 3000);
+                }
+           }
+        }
+        function CloseSavePopUp(){
+               clearTimeout(ChangeVisibilityVar);
+               document.getElementById('SaveMessageDiv').setAttribute('style','visibility: hidden; display:none');
+        }
+    </script>
+   <apex:form id="chatbotForm">
+	   <div class="chatbotHeaderContainer">
+	   		<span class="chatbotHeaderText">{!$Label.chatbotconfigurationsettings}</span>
+	   		<span style="float:right; color:white; cursor:pointer;" title="Help" id="helpId" class="d-icon-question_circle chatbotHeaderText" onclick="openHelpPage();"></span>
+	   </div>
+	   
+			<apex:outputPanel id="tableOutputpanel" layout="block" style="overflow:none;height:100%;width:100%">  
+                  <apex:outputPanel id="messagePanel" styleClass="messageContainer">            
+                             
+                    <div id="jsscripterrorId" style="display:none">
+                        <div class="d-notification d-notification_error d-notification_content">
+                            <div class="d-notification__icon d-icon-left-exclamation_triangle"></div>
+                            <div class="d-notification__supporting-text">
+                                <h3 class="d-notification__title">{!JSENCODE($Label.Error)}</h3>
+                                <p class="d-notification__item" id="errorDescId" ></p>
+                            </div>
+                        </div>
+                    </div> 
+                    </apex:outputPanel>
+            </apex:outputPanel>
+            <table style="width:85%;margin-top: 20px;">
+				<tr>
+						<td>
+							<span class="chatbotLabel">{!$Label.ChatbotInnovationSuiteURL} <label class="requiredField">({!$Label.Required})</label></span>
+						</td>
+				</tr>
+				<tr>
+						<td>
+							<apex:input value="{!chatBotInnovationSuiteURL}" id="chatBotInnovationSuiteURL" styleClass="chatbotTextBox"/>
+						</td>
+				</tr>
+				<tr>
+						<td>
+							<span class="chatbotLabel">{!$Label.ChatbotRSSOURL} <label class="requiredField">({!$Label.Required})</label></span>
+						</td>
+				</tr>
+				<tr>
+						<td>
+							<apex:input value="{!chatBotRSSOURL}" id="chatBotRSSOURL" styleClass="chatbotTextBox"/>
+						</td>
+				</tr>
+				<tr>
+						<td>
+							<span class="chatbotLabel">{!$Label.ChatbotIssuer} <label class="requiredField">({!$Label.Required})</label></span>
+						</td>
+				</tr>
+				<tr>
+						<td>
+							<apex:input value="{!chatbotIssuer}" id="chatbotIssuer" styleClass="chatbotTextBox"/>
+						</td>
+				</tr>
+				<tr>
+					<td style="width:20%">
+						<div class="chatbotLabel">{!$Label.ChatbotPrivateKey} <label class="requiredField">({!$Label.Required})</label></div>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<apex:inputTextarea id="chatBotPrivateKey" value="{!chatBotPrivateKey}" styleClass="chatbotTextArea"/>
+					</td>
+				</tr>
+                <tr>
+                    <td><div style="float: left;padding-left: 20px;"><input class="d-button_primary" type="button" value="{!$Label.Save}" onClick="saveConfiguration()"/></div></td>
+                </tr>
+			</table>
+		 <br/>
+	   
+		<apex:actionFunction action="{!Save}" name="saveConfiguration" rerender="chatbotForm" onComplete="ShowInlineSaveMessage({!isError});"/>
+	</apex:form>
+	<div id="SaveMessageDiv" class="d-notification d-notification_success d-notification_content" style="visibility:hidden; display: none;">
+                            <div class="d-notification__icon d-icon-left-check"></div>
+                            <div class="d-notification__supporting-text">
+                                <h3 class="d-notification__item"><apex:outputText value="{!$Label.bmcservicedesk__savedsuccessfully}" /></h3>
+                            </div>
+    </div>
+    <script>
+    	var wikiUrl = '{!JSENCODE(wikiUrl)}';
+    	function openHelpPage(){
+            if(wikiUrl){
+            	window.open(wikiUrl,false,"width="+screen.width+",height="+screen.height+",resizable = 1,scrollbars=no,status=1,top=0,left=0",false);
+            }
+        }
+	</script>
+	</apex:outputPanel>
+</apex:page>

@@ -1,0 +1,129 @@
+<apex:page controller="BMCServiceDesk.SuggestedOwnerMappingController" standardStylesheets="false" sidebar="false" showHeader="false">
+<c:CommonIncludes />
+    <apex:form >
+    	<script>
+    		var isPageLoaded = false;
+    	</script>
+         <div id="capsule" class="CapsuleDiv1">
+            <table cellpadding="0" cellspacing="0" class="clsMainTableSI">
+                 <tr>
+                    <td>
+                        <div id='SLA_ServiceTargetsTab' style='height: 292px; padding-top: 0px;  border:0'>
+                            <iframe id ="SLTframe" name="SLTframe" src="/apex/SearchPage?popupId=Suggested_Owner&view=list&pgheight=656&wid=1" width ="100%" style="border:none;" height="292"></iframe>
+                        </div>
+                    </td>
+                 </tr>
+				 <tr>
+					<td colspan="10px">
+					</td>
+				 </tr>
+				 <tr>
+                    <td align="center" width="100%">
+                        <table cellpadding="0" cellspacing="0" width="100%">
+							<tr>
+                                <td align="left">
+                                    <div id='userID' style="text-align: left;">
+									</div>
+								</td>
+                                <td align="right">
+                                    <div id='queueID' style="text-align: left;">
+									</div>
+								</td>
+							</tr>
+						</table>	
+					</td>
+				 </tr>
+            </table>
+        </div>
+    
+	<apex:outputpanel id="resetUserAndQueueID">
+		<script>
+			var resultSet, resultSetUser;
+			{!strRsUser}
+			{!strRsQueue}
+			if (isPageLoaded)
+				renderUserGrid();
+		</script>
+	</apex:outputpanel>
+	
+	<apex:actionFunction name="getSuggestedOwnerBySuggestion" action="{!getSuggestedOwnerBySuggestion}" reRender="resetUserAndQueueID">
+        <apex:param assignTo="{!strSelectedSuggestion}" name="selectedSuggestionID" value=""/>
+    </apex:actionFunction>
+    
+    </apex:form>
+	
+	<script>
+		isPageLoaded = true;			
+		var store_staff = new Ext.data.ArrayStore({
+			fields: [
+				{name: 'Staff'}
+				]
+			});
+			
+		var store = new Ext.data.ArrayStore({
+			fields: [
+				{name: 'Queue'}
+				]
+			});
+		
+		var grid = new Ext.grid.GridPanel({
+				store: store,
+				columns: [
+					{
+						id       :'Queue',
+                        header   : '{!JSENCODE($Label.SuggestedQueues)}', 
+                        //width    : 300, 
+						sortable : true, 
+                        dataIndex: 'Queue',
+                        forceFit:true
+					}],
+				
+				viewConfig:{forceFit:true, scrollOffset:0},
+				stripeRows: true,
+				height: 370,
+                //width: Ext.isIE?632:645,
+                width: 200,
+                enableHdMenu :false
+			});	
+		
+		var grid_staff = new Ext.grid.GridPanel({
+				store: store_staff,
+				columns: [
+					{
+						id       :'Staff',
+                        header   : '{!JSENCODE($Label.IncidentsSuggestedStaff)}',
+                        //width    : 300, 
+						sortable : true, 
+                        dataIndex: 'Staff',
+                        forceFit:true
+					}],
+				
+				viewConfig:{forceFit:true, scrollOffset:0},
+				stripeRows: true,
+				height: 370,
+                //width: Ext.isIE?632:645,
+                width: 200,
+                enableHdMenu :false
+			});	
+
+		function renderUserGrid()
+		{
+        	grid.show();
+            grid_staff.show();
+            
+			store.loadData(resultSet);	
+			store_staff.loadData(resultSetUser);	
+			
+			grid.render('queueID');
+			grid_staff.render('userID');
+			parentGrid=window.frames.SLTframe.grid;
+			var width = parentGrid.getWidth();
+			width = (width/2);
+			if (grid != undefined) { 
+				grid.setWidth(width);
+				grid_staff.setWidth(width);
+			}
+		}
+	</script>
+	
+</apex:page>

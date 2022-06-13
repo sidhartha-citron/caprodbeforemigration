@@ -1,0 +1,222 @@
+<apex:page controller="BMCServiceDesk.CMDBListViewCustomizationController" standardStylesheets="FALSE" contentType="{!contetnTypeForIE}" showheader="false" cache="true">
+
+    <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBListViewCustomization.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    
+    <apex:outputPanel id="errorId">
+        <script>
+            //Variables used in ShowError()
+           var errormsg = '{!JSENCODE(messageString)}';               
+        </script>
+    </apex:outputPanel>
+    <apex:form id="listViewCustomization">
+       <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:20px;margin-left:10px">
+        <tr>
+            <td class="titleHeading">
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__cmdb_listofviews}"/>
+            </td>
+        </tr>
+        <tr>
+             <td style="padding-bottom:5px;padding-right:60px">
+                    <div style='width: 100%;text-align: right;' id="helpDiv"></div>
+             </td>
+       </tr>        
+       <tr>
+             <td style="padding-right:60px">
+                    <div style='width: 100%;text-align: right;' id="btnToolbar"></div>
+            </td>
+       </tr>
+     </table>     
+     <div id="ViewGridDiv" style="border:1px solid;margin-left:10px;margin-right:49px;border-color:#999999"></div>     
+     <div id="bottomDiv" style="border:1px solid;margin-left:10px;margin-top:10px;margin-right:49px;border-color:#999999;height:700px">
+     <div id="bottomBtnToolbar" style="margin-bottom:15px"></div>
+    <table width="65%">
+        <tr>
+            <td>
+                <apex:outputLabel value="{!$Label.bmcservicedesk__classtype}" styleClass="FieldLabes"/>
+            </td>
+            <td>
+                <div id="classFilterDiv"></div>
+            </td>       
+            <td >
+                <apex:outputLabel value="{!$Label.bmcservicedesk__cmdbclassname}" styleClass="FieldLabes"/>
+            </td>
+            <td>
+                <div id="classListDiv"></div>
+            </td>            
+        </tr> 
+    </table>
+    <table>
+        <tr style="height:10px">
+             <td width="290px" class="clsHeading">
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__availablefields}"/>
+             </td> 
+             <td width="290px" class="clsHeading">
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__selectedfields}"  />
+                    <apex:outputLabel styleClass="maxLabel" value="{!JSENCODE($Label.bmcservicedesk__srvalidationrulenumbermaximumlbl)} 25"/> 
+             </td>
+             <td class="clsHeading paddingLeft14">
+                   <apex:outputLabel value="{!$Label.bmcservicedesk__fieldwidth}"/>: <apex:outputText value="" id="fieldNameId" style="padding-left:5px;"/>
+             </td>             
+                    
+        </tr>           
+    </table>
+    <table>
+        <tr>
+            <td>        
+                <div id="columnSelectorDiv" style="width:585px;margin-bottom:30px;display:inline-block;margin-left:10px"></div>
+                <apex:inputText id="inputWidth" title="{!$Label.bmcservicedesk__columnwidthtooltip}" styleClass="widthInputTextBox" onchange="saveWidth();"/>                
+
+            </td>           
+             
+            <td style="padding-top:10px;vertical-align:top;">
+                <apex:outputLabel styleClass="clsInputLabelTD" value="{!$Label.bmcservicedesk__cmdblistcustomizationpixels}"/>
+            </td>        
+        </tr>           
+         
+    </table>        
+    <table>
+         <tr>
+                <td class="clsHeading" style="padding-left:10px;padding-bottom: 3px;">
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__preview}"/> 
+                    <input type="button" id="button1" class="changeBtnCls" value="{!$Label.Refresh}" title="{!$Label.Refresh}" onClick="refresh();"/>
+                </td>
+            </tr>
+    </table>                    
+        <div id="previewGridDiv" style="padding-left:10px"></div>       
+    </div>
+            
+   <apex:actionFunction Name="save" action="{!save}" oncomplete="enableSaveBtn();showError();hideWaitMsgBar();refresh();" reRender="errorId,validationComponent">
+            <apex:param name="jsonStrProp" value="" assignTo="{!finalJSONProperty}" /> 
+            <apex:param name="jsonStrVal" value="" assignTo="{!finalJSONValue}" />
+    </apex:actionFunction>   
+     
+    <apex:actionRegion >
+        <apex:actionFunction Name="refreshPreviewGrid" action="{!refreshPreviewGrid}" reRender="errorId,previewGridData" oncomplete="hideWaitMsgBar();showError();refreshGrid();" >
+            <apex:param name="previewGridJsonStr" value="" />
+            <apex:param name="objType" value="" /> 
+        </apex:actionFunction>
+        
+    </apex:actionRegion>    
+        <apex:actionFunction action="{!getGridData}" name="refreshviewgrid" rerender="gridDataload" oncomplete="reload();hideWaitMsgBar();">
+    </apex:actionFunction>  
+       
+    <apex:actionFunction action="{!deleteView}" name="deleteView" rerender="gridDataload,errorId" oncomplete="showError();reload();hideWaitMsgBar();">
+        <apex:param name="propertyVal" value="" assignTo="{!propertyVal}" />
+    </apex:actionFunction>
+        
+    <apex:actionFunction action="{!getGridData}" name="applyView" rerender="gridDataload" oncomplete="reload();hideWaitMsgBar();">
+        <apex:param name="selectedView" value="" assignTo="{!selectedView}" />
+    </apex:actionFunction>
+        
+     <apex:actionFunction action="{!getFieldsforclass}" name="getSelectedClassFields" rerender="gridDataload" oncomplete="loadDataIntoList();enableSaveBtn();hideWaitMsgBar();refreshGrid();">
+        <apex:param name="clsName" value="" assignTo="{!clsName}" />
+    </apex:actionFunction>  
+      
+     <apex:actionFunction action="{!populateClassList}" name="getClsLabel" rerender="gridDataload" oncomplete="loadDataIntoList();hideWaitMsgBar();">
+        <apex:param name="clsAPIName" value="" assignTo="{!clsAPIName}" />
+        <apex:param name="clstype" value="" assignTo="{!clstype}" />
+        
+    </apex:actionFunction>    
+            
+    <apex:actionFunction action="{!getListofClasses}" name="getListofClasses" rerender="gridDataload" oncomplete="reloadStore();">
+        <apex:param name="selectedClsType" value="" assignTo="{!selectedClsType}" />
+
+    </apex:actionFunction>
+    
+            
+    <apex:outputpanel id="previewGridData">
+        <script>
+           dataforBE = eval('{!JSENCODE(sampleDataforBE)}');
+           dataforBS = eval('{!JSENCODE(sampleDataforBS)}'); 
+           dataforBR = eval('{!JSENCODE(sampleDataforBR)}');
+           
+        </script>
+    </apex:outputpanel>
+    </apex:form>
+   <script>    
+        var classlblforBE = '{!JSENCODE(classlblforBE)}';
+        var CMDBNew = '{!JSENCODE($Label.New)}';
+        var CMDBDelete = '{!JSENCODE($Label.Delete)}';
+        var views = '{!JSENCODE($Label.Views)}';
+        var search = '{!JSENCODE($Label.Search)}';
+        var clear = '{!JSENCODE($Label.Clear)}';
+        var CMDBSave = '{!JSENCODE($Label.Save)}';
+        var CreatedBy = '{!JSENCODE($Label.CreatedBy)}';
+        var LastModifiedDate = '{!JSENCODE($Label.LastModifiedDate)}';
+        var System = '{!JSENCODE($Label.System)}';
+        var CMDBType = '{!JSENCODE($Label.Type)}';
+        var Custom = '{!JSENCODE($Label.CMDBCustom)}';
+        var classname = '{!JSENCODE($Label.CMDBClassName)}';
+        var classtype = '{!JSENCODE($Label.ClassType)}';         
+        var CIclasses = '{!JSENCODE($Label.CMDB_CIClasses)}';
+        var Assetclasses = '{!JSENCODE($Label.CMDB_AssetClasses)}';
+        var Allclasses = '{!JSENCODE($Label.AllClasses)}';                
+        var allTab = '{!JSENCODE($Label.All)}';
+        var CITab = '{!JSENCODE($Label.CMDB_TAB_CIs)}';
+        var assetTab = '{!JSENCODE($Label.CMDB_TAB_Assets)}';
+        var CIandAssetTab = '{!JSENCODE($Label.CIAndAsset)}';
+        var orgnamespace = '{!ORGNamespace}';              
+        var isAssetMgmtEnabled = {!isAssetManagementEnabled};        
+        var isCIMgmtEnabled = {!isCIManagementEnabled};                      
+        var path='{!$Resource.SDEFStyles}/SDEFbuttons/';
+        var preGridforBE = '{!JSENCODE(colGridforBE)}';
+        var preGridforBS = '{!JSENCODE(colGridforBS)}';
+        var preGridforBR = '{!JSENCODE(colGridforBR)}';
+        var saveLabel = '{!JSENCODE($Label.save)}';
+        var colWidth = '{!$Component.listViewCustomization.inputWidth}';
+        var fieldName = '{!$Component.listViewCustomization.fieldNameId}';
+        var selectedvalue = 'BaseElement';
+        var colValidation = '{!JSENCODE($Label.CMDBListCustomizationEnterColumn)}';
+        var colWidthValidation = '{!JSENCODE($Label.ColWidthValidationMsg)}';        
+        var BELabel = '{!JSENCODE(labelforBE)}';
+        var BSLabel = '{!JSENCODE(labelforBS)}';
+        var BEValidationMsg = '{!JSENCODE($Label.CMDBListViewCustomizationSelectOneColumn)}';
+        var BSValidationMsg = '{!JSENCODE($Label.CMDBListCustomizationSelectOneColumnforBS)}';
+        var validNoMsg = '{!JSENCODE($Label.CMDBListCustomizationValidNo)}';
+        var ClsSelectedFld = '{!JSENCODE($Component.listViewCustomization.ClsSelectedField)}';        
+        var helpResouces = parent.getStdFormHelpPath();
+        var PleaseWait = '{!JSENCODE($Label.PleaseWait)}';
+        var cmdbListViewLimitLabel = '{!JSENCODE($Label.CMDBListViewLimit)}';
+        var cmdbLstViewLimit = {!cmdbListViewLimit};        
+        var isFlattened = {!isFlattenedCmdb};       
+        var wikiUrl = '{!wikiUrl}';
+        var noClassNameSelectedMsg = '{!JSENCODE($Label.CMDBListViewSelectClassName)}';
+        if(isFlattened)
+            parent.addHelpOnPage(document.getElementById('helpDiv'),'cmdb_list_view_customize.htm',wikiUrl);
+        else
+            parent.addHelpOnPage(document.getElementById('helpDiv'),'helpfile.htm',wikiUrl); 
+        var selectedClassName = '';       
+        var selectedClassView = '';
+        var CMDBListViewCustNoRecordsFound ='{!JSENCODE($Label.CMDBListViewCustNoRecordsFound)}';
+        var SystemLabel = '{!JSENCODE($Label.System)}';
+        var CustomLabel = '{!JSENCODE($Label.CMDBCustom)}';
+        var skywalkerConstant = 'ф';
+        var objNames = [];
+        objNames['BMC_BaseElement__c'] = "{!JSENCODE($ObjectType.BMC_BaseElement__c.label)}";
+        objNames['BMC_BaseRelationship__c'] = "{!JSENCODE($ObjectType.BMC_BaseRelationship__c.label)}";
+    </script>    
+    
+    <apex:outputPanel id="gridDataload" >       
+        <script>                    
+            var jsonData = {!IF(jsoncontent == null || jsoncontent == '' ,'null',jsoncontent)};                     
+            jsonClasses = '{!JSENCODE(strClassJson)}';                      
+            var selDataforBE = {!SelectedFieldsforBEJSON};
+            var availDataforBE = {!AvailableFieldsForBEJSON};
+            var availDataforBS = {!AvailableFieldsForBSJSON};
+            var selDataforBS = {!SelectedFieldsforBSJSON};                  
+        </script>           
+    </apex:outputPanel>
+    
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/MultiSelect.js" /> 
+     <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/CMDBListViewCustomization_ItemSelector.js" />
+     <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/CMDBListViewCustomization.js" />
+     <script src="{!$Resource.SDEFCommonJS}/JSCommon.js"  type="text/javascript"/>
+     
+</apex:page>

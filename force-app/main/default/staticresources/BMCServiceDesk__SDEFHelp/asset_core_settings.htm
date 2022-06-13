@@ -1,0 +1,445 @@
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta name="GENERATOR" content="Quadralay WebWorks Publisher 2003 for FrameMaker 8.6.6587.0" />
+    <meta name="TEMPLATEBASE" content="BMC_WebWorksHelp_52407" />
+    <meta name="LASTUPDATED" content="12/10/14 12:28:06" />
+    <title>Configuring the integration between BMC Remedyforce and BMC Client Management</title>
+    <link rel="StyleSheet" href="Remedy.css" type="text/css" />
+    <link rel="StyleSheet" href="catalog.css" type="text/css" />
+<script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/context.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/towwhdir.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/wwhpagef.js"></script>
+
+  <script type="text/javascript" language="JavaScript1.2">
+   <!--
+    // Set reference to top level help frame
+    //
+    var  WWHFrame = WWHGetWWHFrame("");
+   // -->
+  </script>
+
+    <script type="text/javascript" language="JavaScript1.2" src="scripts/expand.js"></script>
+    <style type="text/css">
+<!--
+.style7 {
+	color: #FF0000;
+	font-weight: bold;
+}
+-->
+    </style>
+</head>
+
+  <body onLoad="WWHUpdate();" onUnload="WWHUnload();" onKeyDown="WWHHandleKeyDown((document.all||document.getElementById||document.layers)?event:null);" onKeyPress="WWHHandleKeyPress((document.all||document.getElementById||document.layers)?event:null);" onKeyUp="WWHHandleKeyUp((document.all||document.getElementById||document.layers)?event:null);">
+
+    
+    
+
+    <blockquote>
+<script type="text/javascript" language="JavaScript1.2">
+   WWHFrame.WWHHelp.mRemedyTitle = "Configuring the integration between BMC Remedyforce and BMC Client Management";
+   WWHFrame.WWHHelp.fRemedyShowTitle();
+</script><a name="wp1189871"> </a><p class="pBody">To enable staff members to work with BMC Client Management devices in BMC Remedyforce, you must enable the integration between BMC Remedyforce and BMC Client Management on the <b class="cBold">Remedyforce Administration &gt; Integrations &gt; </b>BMC Client Management Integration Settings page. If you are using the Visualforce page layout user interface (UI), navigate to <b class="cBold">Configuration &gt; Application Settings &gt; BMC FootPrints</b>.</p>
+<hr size="2" class="NoteRule"/><a name="wp1261427"> </a><p class="pNote"><span style="color: #003366"> Note: </span> Before you enable the integration, you must set up BMC Client Management as a remote site at <b class="cBold">Setup &gt; Security Controls &gt; Remote Site Settings</b>. You might need to repeat this step only if the URL or port is changed for BMC Client Management.</p><hr size="2" class="NoteRule"/><a name="wp1261282"> </a><p class="pBody">The following steps provide an overview of how to configure the integration between BMC Remedyforce and BMC Client Management. Details for each step are provided in following sections. </p>
+<a name="wp1189879"> </a><p class="pOverviewStep">
+	Step 1	Ensure that the BMC Client Management Web Service port is accessible over the Internet.
+</p>
+<a name="wp1189880"> </a><p class="pOverviewStep">
+	Step 2	Whitelist salesforce.com network IP addresses.
+</p>
+<a name="wp1189881"> </a><p class="pOverviewStep">
+	Step 3	Configure the BMC Remedyforce external integration on the BMC Client Management server.
+</p>
+<a name="wp1293747"> </a><p class="pOverviewStep">
+	Step 4	<em class="cEmphasis">(For </em>BMC Client Management 1<em class="cEmphasis">1.7 only)</em> To use the enhanced UI in BMC Remedyforce for managing devices, enable the REST Web API on the BMC Client Management server.
+</p>
+<a name="wp1293773"> </a><p class="pOverviewStep">
+	Step 5	<em class="cEmphasis">(For </em>BMC Client Management 1<em class="cEmphasis">1.7 only)</em> To perform direct actions on devices from the enhanced UI in BMC Remedyforce, clear the settings in the BMC Client Management server to request system credentials for remote access.
+</p>
+<a name="wp1189882"> </a><p class="pOverviewStep">
+	Step 6	Install a Secure Socket Layer (SSL) certificate on the BMC Client Management server.
+</p>
+<hr size="2" class="WarnRule"/><a name="wp1189883"> </a><p class="pImportant"><span style="color: #CC0033"> Important: </span> You <em class="cEmphasis">must</em> install a Secure Socket Layer (SSL) certificate for the integration to work.</p><hr size="2" class="WarnRule"/>
+<a name="wp1189884"> </a><p class="pOverviewStep">
+	Step 7	Set up BMC Client Management as a remote site in BMC Remedyforce.
+</p>
+<a name="wp1189885"> </a><p class="pOverviewStep">
+	Step 8	Configure the BMC Client Management server details in BMC Remedyforce.
+</p>
+<a name="wp1189886"> </a><p class="pOverviewStep">
+	Step 9	Configure the status mapping to track the progress of operational rules.
+</p>
+<a name="wp1189887"> </a><p class="pOverviewStep">
+	Step 10	Configure the Asset Core Processor to run the job that retrieves the latest logs and operational rule statuses from BMC Client Management.
+</p>
+<a name="wp1266654"> </a><p class="pOverviewStep">
+	Step 11	<em class="cEmphasis">(Optional) </em>Configure the creation of logs in BMC Remedyforce for all actions that are performed on BMC Client Management devices.
+</p>
+<a name="wp1189888"> </a><p class="pOverviewStep">
+	Step 12	<em class="cEmphasis">(Optional)</em> Edit the page layout of the User object to display the <b class="cBold">FootPrints Login ID </b>field.
+</p>
+<hr size="2" class="NoteRule"/><a name="wp1261472"> </a><p class="pNote"><span style="color: #003366"> Note: </span> When first-time users connect to BMC Client Management from BMC Remedyforce, they must enter their BMC Client Management credentials. If the credentials are correct, BMC Remedyforce stores the user name in the <b class="cBold">FootPrints Login ID</b> field of the user record. Users are not required to enter their credentials for future connection attempts. For more information, see <a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'integration-08.htm');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'integration-08.htm', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">Integrated authentication for BMC Client Management administrators</a>.</p><hr size="2" class="NoteRule"/><a name="wp1189889"> </a><p class="pOverviewStep">
+	Step 13	<em class="cEmphasis">(Optional)</em> Prevent users from editing the BMC Client Management user name stored in the <b class="cBold">FootPrints Login ID </b>field of the User object by enabling the <b class="cBold">Validate_FootPrints_Login</b> validation rule.
+</p>
+<a name="wp1189890"> </a><p class="pOverviewStep">
+	Step 14	Enable users to search for and link BMC Client Management devices to incidents in the Incident form.
+</p>
+<a name="wp1189893"> </a><p style="text-decoration: none" class="pStepIntro">
+To configure the integration between BMC Remedyforce and BMC Client Management
+</p>
+
+<div class="pSmartList1"><ol type="1" class="pSmartList1">
+<a name="wp1189895"> </a><div class="pSmartList1"><li>Ensure that the BMC Client Management Web Service port is accessible over the Internet. </li></div>
+<a name="wp1189896"> </a><p class="pIndented1">
+BMC recommends that you only provide access to the Salesforce platform by whitelisting the valid Salesforce IP addresses. Contact your IT system administrator to make the BMC Client Management Web Service port accessible over the internet and whitelist the valid Salesforce IP addresses.
+</p>
+<a name="wp1189898"> </a><div class="pSmartList1"><li>Whitelist salesforce.com network IP addresses.</li></div>
+<a name="wp1189900"> </a><p class="pIndented1">
+For more information, see <a href="https://na1.salesforce.com/_ui/training/help/pub/UserEdSolution?id=50130000000MExc&amp;retURL=https://na12.salesforce.com/_ui/training/help/CombinedSearchPage?str=whitelist&amp;ps=1&amp;orgId=00D000000000062" target="_window">https://na1.salesforce.com/_ui/training/help/pub/UserEdSolution?id=50130000000MExc&amp;retURL=https://na12.salesforce.com/_ui/training/help/CombinedSearchPage?str=whitelist&amp;ps=1&amp;orgId=00D000000000062</a>.
+</p>
+<a name="wp1189901"> </a><div class="pSmartList1"><li>To configure the BMC Remedyforce external integration on the BMC Client Management server, perform the following actions:</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1189902"> </a><div class="pSmartList2"><li>In the BMC Client Management server, navigate to <b class="cBold">Global Settings &gt; External Integration</b>. </li></div>
+<a name="wp1189903"> </a><div class="pSmartList2"><li>Click the <b class="cBold">Create BMC Remedyforce Integration</b> toolbar icon.</li></div>
+<a name="wp1189904"> </a><div class="pSmartList2"><li>In the Properties dialog box, click <b class="cBold">Select an existing administrator</b>.</li></div>
+<a name="wp1189906"> </a><div class="pSmartList2"><li>In the Assign an Administrator dialog box, select the user who is a BMC Client Management administrator.</li></div>
+<a name="wp1291667"> </a><p class="pIndented1">
+Ensure that the user has the appropriate permissions to perform direct actions on all devices managed from BMC Remedyforce. Also, the user password must not exceed 127 characters.
+</p>
+<a name="wp1291695"> </a><p class="pIndented1">
+If the password of the External Integration user exceeds 127 characters, change the password in BMC Client Management by navigating to <b class="cBold">Global Settings &gt; Administrators &gt; Properties &gt; Authentication</b> tab.
+</p>
+<a name="wp1259604"> </a><div class="pSmartList2"><li><em class="cEmphasis">(Optional) </em>To create an incident in BMC Remedyforce when an alert is generated in BMC Client Management, enter the appropriate information in the following fields:</li></div>
+<div class="pSmartList3"><ul class="pSmartList3">
+<a name="wp1259608"> </a><div class="pSmartList3"><li><b class="cBold">Application Login</b> — Type the user name of the BMC Remedyforce staff member who creates all incidents for BMC Client Management alerts and events.</li></div>
+<a name="wp1259486"> </a><div class="pSmartList3"><li><b class="cBold">Application Password</b> — Type the password and the security token of the BMC Remedyforce staff member who creates all incidents for BMC Client Management alerts and events.</li></div>
+<a name="wp1193720"> </a><p class="pBodyRelative">In Salesforce, navigate to <b class="cBold">Setup &gt; Reset My Security Token</b>. Click <b class="cBold">Reset Security Token</b> and an email message is sent to your email address stored in Salesforce. In the <b class="cBold">Password</b> field, append the security token to the password. For example, if your password is <b class="cBold">mypassword</b> and your security token is <b class="cBold">XXXXXXXXX</b>, then you must enter <b class="cBold">mypasswordXXXXXXXXX</b> in the <b class="cBold">Password</b> field. If <b class="cBold">Reset Security Token</b> is not visible, you need to enter the password only.</p>
+
+<hr size="2" class="NoteRule"/><a name="wp1259553"> </a><p class="pNote"><span style="color: #003366"> Note: </span> If you have enabled the improved Setup user interface in your Salesforce organization, navigate to <b class="cBold">My Settings &gt; Personal &gt; Reset My Security Token</b>. For more information about the improved Setup user interface, see <a href="http://help.salesforce.com/apex/HTViewHelpDoc?id=admin_setup_improved.htm&amp;language=en_US" target="_window">http://help.salesforce.com/apex/HTViewHelpDoc?id=admin_setup_improved.htm&amp;language=en_US</a>.</p><hr size="2" class="NoteRule"/><a name="wp1259556"> </a><div class="pSmartList3"><li><b class="cBold">Select the event notifications you want to receive</b> section — Expand the subsections and select the required alerts and events.</li></div>
+<a name="wp1259615"> </a><p class="pIndented1">
+For more information, see the BMC Client Management -<em class="cEmphasis"> External Integration Guide</em>.
+</p>
+</ul></div>
+<a name="wp1189916"> </a><div class="pSmartList2"><li>To close the Assign an Administrator dialog box, click <b class="cBold">OK</b>.</li></div>
+<a name="wp1289955"> </a><div class="pSmartList2"><li>To close the Properties dialog box, click <b class="cBold">OK</b>.</li></div>
+</ol></div>
+<a name="wp1290162"> </a><div class="pSmartList1"><li><em class="cEmphasis">(For </em>BMC Client Management 1<em class="cEmphasis">1.7 only)</em> To use the enhanced UI in BMC Remedyforce for managing devices, you must enable the REST Web API on the BMC Client Management server:</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1290164"> </a><div class="pSmartList2"><li>In the BMC Client Management server, navigate to <b class="cBold">Global Settings &gt; External Integration &gt; Web Service Configuration</b>.</li></div>
+<a name="wp1290169"> </a><div class="pSmartList2"><li>Click the <b class="cBold">Enable Web Service Module on Selected Device </b>toolbar icon.</li></div>
+<a name="wp1290170"> </a><div class="pSmartList2"><li>In the Enable Web Service Module on Selected Device dialog box, select the BMC Client Management server with which you are configuring the integration.</li></div>
+<a name="wp1290189"> </a><div class="pSmartList2"><li>Click <b class="cBold">OK</b>.</li></div>
+</ol></div>
+<a name="wp1290193"> </a><div class="pSmartList1"><li><em class="cEmphasis">(For </em>BMC Client Management 1<em class="cEmphasis">1.7 only)</em> To perform direct actions on devices from the enhanced UI in BMC Remedyforce, perform the following actions: </li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1290195"> </a><div class="pSmartList2"><li>In the BMC Client Management server, navigate to <b class="cBold">Global Settings &gt; System Variables</b>.</li></div>
+<a name="wp1290196"> </a><div class="pSmartList2"><li>Click the <b class="cBold">Security</b> tab.</li></div>
+<a name="wp1290470"> </a><div class="pSmartList2"><li>Click the <b class="cBold">Display the properties of the selected object </b>toolbar icon.</li></div>
+<a name="wp1290197"> </a><div class="pSmartList2"><li>In the Properties dialog box, clear the <b class="cBold">Request System Credentials for Windows Remote Access</b>, <b class="cBold">Request System Credentials for Linux Remote Access</b>, and <b class="cBold">Request System Credentials for Mac OS Remote Access</b> check boxes.</li></div>
+<a name="wp1290583"> </a><div class="pSmartList2"><li>Click <b class="cBold">OK</b>.</li></div>
+</ol></div>
+<a name="wp1289741"> </a><div class="pSmartList1"><li>To secure the transactions and encrypt the information passing between the BMC Client Management server and BMC Remedyforce, install a Secure Socket Layer (SSL) certificate on the BMC Client Management server.</li></div>
+<a name="wp1189924"> </a><p class="pIndented1">
+For more information, see <a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1190071');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1190071', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">Installing an SSL certificate on the BMC Client Management server</a>.
+</p>
+<a name="wp1189926"> </a><div class="pSmartList1"><li>To set up BMC Client Management as a remote site in BMC Remedyforce, perform the following actions:</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1189929"> </a><div class="pSmartList2"><li>Click the <b class="cBold">Remedyforce Administration</b> tab.</li></div>
+<a name="wp1198656"> </a><div class="pSmartList2"><li>On the Home page, click the <b class="cBold">Integrations</b> tile, and from the menu select BMC Client Management Integration Settings.</li></div>
+<a name="wp1300100"> </a><div class="pSmartList2"><li>If you are using the Visualforce page layout user interface, navigate to <b class="cBold">Configuration &gt; Application Settings &gt; BMC FootPrints</b>.</li></div>
+<a name="wp1215960"> </a><div class="pSmartList2"><li>Click <b class="cBold">Salesforce Remote Site Settings</b>.</li></div>
+<a name="wp1189939"> </a><p class="pIndented1">
+The All Remote Sites page opens in a new tab.
+</p>
+<a name="wp1189940"> </a><div class="pSmartList2"><li>Click <b class="cBold">New Remote Site</b>.</li></div>
+<a name="wp1189941"> </a><div class="pSmartList2"><li>In the <b class="cBold">Remote Site Name</b> field, type the name of the remote site.</li></div>
+<a name="wp1189942"> </a><div class="pSmartList2"><li>In the <b class="cBold">Remote Site URL</b> field, type the URL of the BMC Client Management server:port. </li></div>
+<a name="wp1189943"> </a><p class="pIndented1">
+Ensure that you enter the same port number that you have entered in the <b class="cBold">Web Service Port</b> field while installing the SSL certificate. For more information, see <a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1190071');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1190071', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">Installing an SSL certificate on the BMC Client Management server</a>.
+</p>
+<a name="wp1189947"> </a><p class="pIndented1">
+Ensure that you include <b class="cBold">https://</b> at the beginning of the URL. For more information, see <a href="https://na9.salesforce.com/help/doc/user_ed.jsp?loc=help&amp;target=configuring_remoteproxy.htm&amp;section=Security " target="_window">https://na9.salesforce.com/help/doc/user_ed.jsp?loc=help&amp;target=configuring_remoteproxy.htm&amp;section=Security</a>.
+</p>
+<a name="wp1189949"> </a><div class="pSmartList2"><li>Click <b class="cBold">Save</b>.</li></div>
+</ol></div>
+<a name="wp1189952"> </a><div class="pSmartList1"><li>To configure the BMC Client Management server details in BMC Remedyforce, perform the following actions:</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1189954"> </a><div class="pSmartList2"><li>Navigate to the BMC Client Management Integration Settings page.</li></div>
+<a name="wp1189955"> </a><div class="pSmartList2"><li>Select the <b class="cBold">Enable </b>BMC Client Management Integration check box.</li></div>
+<a name="wp1189956"> </a><p class="pIndented1">
+The <b class="cBold">Enable Enhanced UI for BMC FootPrints version 11.7</b> check box and the <b class="cBold">Server Name</b>, <b class="cBold">Server Port</b>, <b class="cBold">User Name</b>, and <b class="cBold">Password</b> fields are enabled only <em class="cEmphasis">after </em>you select this check box.
+</p>
+<a name="wp1263800"> </a><p class="pIndented1">
+The <b class="cBold">Enable Enhanced UI for BMC FootPrints version 11.7 </b>check box is selected by default, unless you are upgrading from a previous version and enabled the integration with BMC Client Management 11.6 or earlier.
+</p>
+<a name="wp1263994"> </a><div class="pSmartList2"><li>If you are configuring the integration with BMC Client Management 11.6, or you do not want to use the REST web API in version 11.7, clear the <b class="cBold">Enable Enhanced UI for BMC FootPrints version 11.7</b> check box.</li></div>
+<a name="wp1264800"> </a><p class="pIndented1">
+If you enable the enhanced UI, selecting an action from the <b class="cBold">Asset Core Actions</b> menu opens the CI Actions window in BMC Remedyforce. You can perform actions on the BMC Client Management devices from the CI Actions window, without launching the BMC Client Management console. However, the Remote Control, File System, and File Transfer actions continue to launch the BMC Client Management console.
+</p>
+<hr size="2" class="NoteRule"/><a name="wp1266687"> </a><p class="pNote"><span style="color: #003366"> Note: </span> If you are using the <b class="cBold">Incidents</b> tab (Salesforce page layout) to manage incidents and service requests, the enhanced UI (CI Actions window) is not available even if you select the <b class="cBold">Enable Enhanced UI for BMC FootPrints version 11.7</b> check box.</p><hr size="2" class="NoteRule"/><a name="wp1263490"> </a><div class="pSmartList2"><li>In the <b class="cBold">Server Name</b> field, type the name or IP address of the BMC Client Management server.</li></div>
+<a name="wp1285387"> </a><p class="pIndented1">
+You can enter a maximum of 255 characters in the <b class="cBold">Server Name</b> field. If the server name exceeds 255 characters, enter the IP address instead.
+</p>
+<hr size="2" class="NoteRule"/><a name="wp1285388"> </a><p class="pNote"><span style="color: #003366"> Note: </span> If you have entered an IP address in the <b class="cBold">Server Name</b> field, you must ensure that you also enter an IP address while creating the Salesforce Remote Site Setting.</p><hr size="2" class="NoteRule"/><a name="wp1189960"> </a><div class="pSmartList2"><li>In the <b class="cBold">Server Port</b> field, type the port number of the BMC Client Management server.</li></div>
+<a name="wp1189961"> </a><p class="pIndented1">
+Ensure that you enter the same port number that you have entered in the <b class="cBold">Web Service Port</b> field while installing the SSL certificate. For more information, see <a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1190071');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1190071', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">Installing an SSL certificate on the BMC Client Management server</a>.
+</p>
+<a name="wp1189965"> </a><div class="pSmartList2"><li>In the <b class="cBold">User Name</b> field, type the user name of the BMC Client Management External Integration user (the user that you configured in <a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1189906');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1189906', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">step&#160;3d on page&#160;1019</a>).</li></div>
+<a name="wp1189966"> </a><div class="pSmartList2"><li>In the <b class="cBold">Password</b> field, type the password of the BMC Client Management External Integration user.</li></div>
+<a name="wp1189972"> </a><div class="pSmartList2"><li>Click <b class="cBold">Test Connection</b> to validate the credentials that you have entered.</li></div>
+<a name="wp1189973"> </a><div class="pSmartList2"><li>In the confirmation dialog box, click <b class="cBold">OK</b>.</li></div>
+<a name="wp1259892"> </a><div class="pSmartList2"><li>Click <b class="cBold">Save</b>.</li></div>
+<a name="wp1263603"> </a><p class="pIndented1">
+If you have configured the integration with version 11.6 of BMC Client Management, or if the REST web API for version 11.7 is not configured, the <b class="cBold">Enable Enhanced UI for BMC FootPrints version 11.7 </b>check box is cleared.
+</p>
+<hr size="2" class="NoteRule"/><a name="wp1189977"> </a><p class="pNote"><span style="color: #003366"> Note: </span> After you save the BMC Client Management server details, BMC Remedyforce creates the FootPrints Asset Core category and its subcategories for events that are received from BMC Client Management. Some of the subcategories that are created in BMC Remedyforce are Database, Inventory, Operational Rule, and Performance.</p><hr size="2" class="NoteRule"/></ol></div>
+<a name="wp1189991"> </a><div class="pSmartList1"><li>To configure status mapping to track the progress of operational rules, perform the following actions:</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1189994"> </a><div class="pSmartList2"><li>For each operational rule status in the <b class="cBold">Map Operational Rule Status to Task Status</b> section, click the <b class="cBold">Task Status</b> list.</li></div>
+<a name="wp1189996"> </a><div class="pSmartList2"><li>In the Select From Status window, select the task status that maps to the operational rule status.</li></div>
+<a name="wp1189999"> </a><div class="pSmartList2"><li>Repeat <a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1189994');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1189994', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">step&#160;a</a> and <a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1189996');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'asset_core_settings.htm#wp1189996', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">step&#160;b</a> for each operational rule status.</li></div>
+<a name="wp1190004"> </a><p class="pIndented1">
+The following table describes the possible statuses of an operational rule.
+</p>
+<a name="wp1190034"> </a><p class="pBodyRelative"><div align="left">
+<table border="1" cellpadding="3" id="wp1190007table1190005">
+  <caption></caption>
+  <tr align="left" valign="top">    <th><a name="wp1190007"> </a><div class="pCellHeading">
+Status
+</div>
+</th>
+    <th><a name="wp1190009"> </a><div class="pCellHeading">
+Description
+</div>
+</th>
+</tr>
+  <tr align="left" valign="top">    <td><a name="wp1190011"> </a><div class="pCellBody">
+Approval Rejected
+</div>
+</td>
+    <td><a name="wp1191488"> </a><div class="pCellBody">
+The operational rule could not be deployed because the approver rejected the approval record for the incident or service request that contained the linked task used to deploy the operational rule.
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td><a name="wp1190015"> </a><div class="pCellBody">
+Execution Error
+</div>
+</td>
+    <td><a name="wp1190017"> </a><div class="pCellBody">
+The request to deploy the operational rule could not be successfully completed.
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td><a name="wp1190019"> </a><div class="pCellBody">
+Requested
+</div>
+</td>
+    <td><a name="wp1190021"> </a><div class="pCellBody">
+The request to deploy the operational rule has been sent to the BMC Client Management server.
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td><a name="wp1190023"> </a><div class="pCellBody">
+Request Error
+</div>
+</td>
+    <td><a name="wp1190025"> </a><div class="pCellBody">
+The BMC Client Management server could not accept the request. 
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td><a name="wp1190027"> </a><div class="pCellBody">
+Request Pending
+</div>
+</td>
+    <td><a name="wp1190029"> </a><div class="pCellBody">
+The request to deploy the operational rule has not been sent to the BMC Client Management server.
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td><a name="wp1190031"> </a><div class="pCellBody">
+Request Successful
+</div>
+</td>
+    <td><a name="wp1190033"> </a><div class="pCellBody">
+The request to deploy the operational rule was successfully completed.
+</div>
+</td>
+</tr>
+</table>
+</div>
+</p>
+
+<a name="wp1190035"> </a><div class="pSmartList2"><li>Click <b class="cBold">Save</b>.</li></div>
+<a name="wp1285969"> </a><p class="pIndented1">
+The status of the task is updated depending on the status of the operational rule.
+</p>
+</ol></div>
+<a name="wp1190036"> </a><div class="pSmartList1"><li>To configure the Asset Core Processor to run the job that retrieves the latest logs and operational rule statuses from BMC Client Management, perform the following actions:</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1190037"> </a><div class="pSmartList2"><li>In the Asset Core Processor section, type the interval at which the job should run in the <b class="cBold">Hours</b> and <b class="cBold">Minutes</b> fields.</li></div>
+<a name="wp1190038"> </a><div class="pSmartList2"><li>Click <b class="cBold">Start Asset Core Processor</b>.</li></div>
+<hr size="2" class="NoteRule"/><a name="wp1190039"> </a><p class="pNote"><span style="color: #003366"> Note: </span> BMC recommends that you complete mapping the operational rule and task statuses before starting the processor.</p><hr size="2" class="NoteRule"/></ol></div>
+<a name="wp1267566"> </a><div class="pSmartList1"><li><em class="cEmphasis">(Optional)</em> To enable the creation of logs in BMC Remedyforce, select the <b class="cBold">Enable logs for all actions performed on devices</b> check box.</li></div>
+<a name="wp1283301"> </a><p class="pIndented1">
+If you do not enable the enhanced UI, logs are created only for the Remote Control and Audit Now actions. However, if you enable the enhanced UI, logs are also created for the following direct actions:
+</p>
+<div class="pSmartList2"><ul class="pSmartList2">
+<a name="wp1283260"> </a><div class="pSmartList2"><li>Shut down</li></div>
+<a name="wp1283242"> </a><div class="pSmartList2"><li>Wake up</li></div>
+<a name="wp1283279"> </a><div class="pSmartList2"><li>Registry</li></div>
+<a name="wp1283281"> </a><div class="pSmartList2"><li>Process Management</li></div>
+<a name="wp1283277"> </a><div class="pSmartList2"><li>Services</li></div>
+<hr size="2" class="NoteRule"/><a name="wp1283243"> </a><p class="pNote"><span style="color: #003366"> Note: </span> The <b class="cBold">Incidents</b> tab (Salesforce page layout) does not support the enhanced UI. If you access the <b class="cBold">Asset Core Actions</b> menu from the <b class="cBold">Incidents</b> tab, logs are created only for the Remote Control and Audit Now actions.</p><hr size="2" class="NoteRule"/><a name="wp1274938"> </a><p class="pIndented1">
+Each time you perform any direct action on a device, your user name, the action performed, the date/time the action was performed, and the device name are stored in the following location:
+</p>
+<a name="wp1267568"> </a><div class="pSmartList2"><li>If you perform an action from the Incidents form, the log entry is added to the <b class="cBold">Action History</b> related list of the incident record and in the <b class="cBold">Instance Editor &gt; Details &gt; History</b> tab of the CI instance.</li></div>
+<a name="wp1267569"> </a><div class="pSmartList2"><li>If you perform an action from the CMDB Manager, the log entry is added to the <b class="cBold">Instance Editor &gt; Details &gt; History</b> tab of the CI instance.</li></div>
+<hr size="2" class="NoteRule"/><a name="wp1268383"> </a><p class="pNote"><span style="color: #003366"> Note: </span> Logs for operational rules are generated even if you do not select this option.</p><hr size="2" class="NoteRule"/></ul></div>
+<a name="wp1268385"> </a><div class="pSmartList1"><li><em class="cEmphasis">(Optional)</em> To display the <b class="cBold">FootPrints Login ID</b> field on the User form, perform the following actions:</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1190048"> </a><div class="pSmartList2"><li>Navigate to <b class="cBold">Setup &gt; Customize &gt; Users &gt; Page Layouts</b>.</li></div>
+<a name="wp1190049"> </a><div class="pSmartList2"><li>Next to the Remedyforce User page layout, click <b class="cBold">Edit</b>.</li></div>
+<a name="wp1190050"> </a><div class="pSmartList2"><li>Drag the <b class="cBold">FootPrints Login ID</b> field to the BMC Remedyforce section.</li></div>
+<a name="wp1190051"> </a><div class="pSmartList2"><li>Click <b class="cBold">Save</b>.</li></div>
+<a name="wp1190052"> </a><div class="pSmartList2"><li>Click <b class="cBold">Page Layout Assignment</b>.</li></div>
+<a name="wp1190053"> </a><div class="pSmartList2"><li>On the Page Layout Assignment page, click <b class="cBold">Edit Assignment</b>.</li></div>
+<a name="wp1190054"> </a><div class="pSmartList2"><li>Select the required profiles in the <b class="cBold">Profiles</b> column.</li></div>
+<a name="wp1190055"> </a><div class="pSmartList2"><li>From the <b class="cBold">Page Layout To Use</b> list, select the <b class="cBold">Remedyforce User</b> page layout.</li></div>
+<a name="wp1268379"> </a><div class="pSmartList2"><li>Click <b class="cBold">Save</b>.</li></div>
+</ol></div>
+<a name="wp1268380"> </a><div class="pSmartList1"><li><em class="cEmphasis">(Optional) </em>To prevent users from editing the BMC Client Management user name in the FootPrints Login ID field of the User object, perform the following actions to enable the <b class="cBold">Validate_FootPrints_Login</b> validation rule:</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1190058"> </a><div class="pSmartList2"><li>Navigate to <b class="cBold">Setup &gt; Customize &gt; Users &gt; Validation Rules</b>.</li></div>
+<a name="wp1190059"> </a><div class="pSmartList2"><li>Next to the <b class="cBold">Validate_FootPrints_Login</b> rule, click <b class="cBold">Edit</b>.</li></div>
+<a name="wp1190060"> </a><div class="pSmartList2"><li>Select the <b class="cBold">Active</b> check box.</li></div>
+<a name="wp1190061"> </a><div class="pSmartList2"><li>Click <b class="cBold">Save</b>.</li></div>
+</ol></div>
+<a name="wp1190062"> </a><div class="pSmartList1"><li>To allow users to search for and link BMC Client Management devices to incidents in the Incident form and to view the severity of incidents, perform the following actions:</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1190063"> </a><div class="pSmartList2"><li>Navigate to <b class="cBold">Setup &gt; Create &gt; Objects</b>.</li></div>
+<a name="wp1190064"> </a><div class="pSmartList2"><li>In the <b class="cBold">Label</b> column, click <b class="cBold">Incident</b>.</li></div>
+<a name="wp1190065"> </a><div class="pSmartList2"><li>In the <b class="cBold">Page Layouts</b> section, click <b class="cBold">Edit </b>next to the page layout that you are using for the Incident object.</li></div>
+<a name="wp1190066"> </a><div class="pSmartList2"><li><em class="cEmphasis">(Optional) </em>To allow users to view the severity of the incidents created for the alerts and events generated from BMC Client Management, drag the <b class="cBold">Asset Core Severity</b> field to the section.</li></div>
+<a name="wp1190067"> </a><div class="pSmartList2"><li>Drag the <b class="cBold">Link CI</b> and <b class="cBold">CI Actions </b>buttons to the <b class="cBold">Incident Detail</b> section.</li></div>
+<a name="wp1190068"> </a><div class="pSmartList2"><li>Click <b class="cBold">Save</b>.</li></div>
+</ol></div>
+</ol></div>
+<a name="wp1190071"> </a><h4 class="pHeading3">
+Installing an SSL certificate on the BMC Client Management server
+</h4>
+<a name="wp1190072"> </a><p class="pBody">To secure the transactions and encrypt the information passing between the BMC Client Management server and BMC Remedyforce, you must install a Secure Socket Layer (SSL) certificate on the BMC Client Management server. For more information about SSL, see <a href="http://en.wikipedia.org/wiki/Secure_Sockets_Layer" target="_window">http://en.wikipedia.org/wiki/Secure_Sockets_Layer</a>. </p>
+<a name="wp1190077"> </a><p class="pBody">If your organization already has an SSL certificate, you can use it or you can purchase an SSL certificate from an SSL vendor such as Go Daddy (<a href="http://www.godaddy.com/ssl/ssl-certificates.aspx" target="_window">http://www.godaddy.com/ssl/ssl-certificates.aspx</a>) or Symantec (<a href="http://www.symantec.com/theme.jsp?themeid=ssl-information-center" target="_window">http://www.symantec.com/theme.jsp?themeid=ssl-information-center</a>). For more information, see <a href="http://wiki.developerforce.com/page/Outbound_Messaging_SSL_CA_Certificates" target="_window">http://wiki.developerforce.com/page/Outbound_Messaging_SSL_CA_Certificates</a>.</p>
+<a name="wp1190081"> </a><p class="pBody">After preparing the certificate request by creating a private key and Certificate Signing Request (CSR), you must purchase the SSL certificate. After you purchase the SSL certificate, you are ready to install it.</p>
+<hr size="2" class="WarnRule"/><a name="wp1190082"> </a><p class="pImportant"><span style="color: #CC0033"> Important: </span> You <em class="cEmphasis">must</em> install an SSL certificate for the integration to work.</p><hr size="2" class="WarnRule"/>
+<a name="wp1190083"> </a><p style="text-decoration: none" class="pStepIntro">
+To install an SSL certificate on the BMC Client Management server
+</p>
+
+<div class="pSmartList1"><ol type="1" class="pSmartList1">
+<a name="wp1190086"> </a><div class="pSmartList1"><li>Launch the BMC Client Management console from the CMDB Manager in BMC Remedyforce.</li></div>
+<a name="wp1190088"> </a><div class="pSmartList1"><li>Navigate to <b class="cBold">Global Settings &gt; External Integration &gt; Web Service Configuration</b>.</li></div>
+<a name="wp1190089"> </a><div class="pSmartList1"><li>Click the <b class="cBold">Properties</b> toolbar icon.</li></div>
+<a name="wp1190090"> </a><div class="pSmartList1"><li>Select the <b class="cBold">Enable Web Service</b> check box.</li></div>
+<a name="wp1190091"> </a><div class="pSmartList1"><li>In the <b class="cBold">Web Service Port</b> field, type the number of the port on which the web service should run.</li></div>
+<a name="wp1190092"> </a><div class="pSmartList1"><li>In the <b class="cBold">Web Service Thread Count</b> field, type the number of threads that may be handled simultaneously.</li></div>
+<a name="wp1190093"> </a><div class="pSmartList1"><li>Click <b class="cBold">OK</b>.</li></div>
+<a name="wp1190094"> </a><div class="pSmartList1"><li>To create a private key and CSR, perform the following actions:</li></div>
+<div class="pSmartList2"><ol type="a" class="pSmartList2">
+<a name="wp1190095"> </a><div class="pSmartList2"><li>Click the <b class="cBold">Prepare Certificate Request</b> toolbar icon.</li></div>
+<a name="wp1190096"> </a><div class="pSmartList2"><li>In the Prepare Certificate Request window, enter the following details:</li></div>
+<div class="pSmartList3"><ul class="pSmartList3">
+<a name="wp1190097"> </a><div class="pSmartList3"><li>Domain Name</li></div>
+<a name="wp1190098"> </a><div class="pSmartList3"><li>Organization</li></div>
+<a name="wp1190099"> </a><div class="pSmartList3"><li>Department</li></div>
+<a name="wp1190100"> </a><div class="pSmartList3"><li>City</li></div>
+<a name="wp1190101"> </a><div class="pSmartList3"><li>State/Province</li></div>
+<a name="wp1190102"> </a><div class="pSmartList3"><li>Country</li></div>
+<a name="wp1190103"> </a><div class="pSmartList3"><li>Private Key Password</li></div>
+</ul></div>
+<a name="wp1190104"> </a><div class="pSmartList2"><li>Click <b class="cBold">Save Private Key</b>.</li></div>
+<a name="wp1190105"> </a><div class="pSmartList2"><li>Browse to the location at which you want to save the private key.</li></div>
+<a name="wp1288926"> </a><p class="pIndented1">
+BMC recommends that you save the private key in the same folder in which you saved the SSL certificate.
+</p>
+<a name="wp1288927"> </a><div class="pSmartList2"><li>Click <b class="cBold">Save</b>.</li></div>
+<a name="wp1190108"> </a><div class="pSmartList2"><li>In the Prepare Certificate Request window, click <b class="cBold">Save CSR</b>.</li></div>
+<a name="wp1190109"> </a><div class="pSmartList2"><li>Browse to the location at which you want to save the CSR. </li></div>
+<a name="wp1190110"> </a><p class="pIndented1">
+BMC recommends that you save the CSR in the same folder in which you saved the SSL certificate and the private key.
+</p>
+<a name="wp1190111"> </a><div class="pSmartList2"><li>Click <b class="cBold">Save</b>, and then click <b class="cBold">Close</b>.</li></div>
+</ol></div>
+<a name="wp1190113"> </a><div class="pSmartList1"><li>Provide the private key and CSR to an SSL vendor and purchase the SSL certificate from the vendor.</li></div>
+<a name="wp1190114"> </a><div class="pSmartList1"><li>Click <b class="cBold">Install the certificate</b>.</li></div>
+<a name="wp1190115"> </a><div class="pSmartList1"><li>In the <b class="cBold">Give a name to your certificate</b> field, type a name for your certificate.</li></div>
+<a name="wp1190116"> </a><div class="pSmartList1"><li>In the <b class="cBold">Root Certificate</b> section, click <b class="cBold">Browse</b> to browse to the location at which the root certificate is located, and open the root certificate file.</li></div>
+<a name="wp1190117"> </a><p class="pIndented1">
+Some certificate providers might give you the root and intermediate certificates in one file. You can verify that you have added the correct certificate by clicking <b class="cBold">Details</b> and viewing the content of the certificate. A root authority is self-signed; therefore, the <b class="cBold">Issuer</b> and <b class="cBold">Subject</b> fields must have the same value. 
+</p>
+<a name="wp1190118"> </a><div class="pSmartList1"><li>If both certificates are present in one file, delete the content from the<b class="cBold"> -----BEGIN CERTIFICATE-----</b> to the <b class="cBold">-----END CERTIFICATE-----</b> markers for the first certificate. Click <b class="cBold">Details</b> and verify that the <b class="cBold">Issuer</b> and <b class="cBold">Subject</b> fields have the same value. If values are different, delete the entire content and again open the root certificate file. Now, delete the content from the<b class="cBold"> -----BEGIN CERTIFICATE-----</b> to the <b class="cBold">-----END CERTIFICATE-----</b> markers for the second certificate. Click <b class="cBold">Details</b> and verify that the <b class="cBold">Issuer</b> and <b class="cBold">Subject</b> fields have the same value.</li></div>
+<a name="wp1190119"> </a><div class="pSmartList1"><li>Click <b class="cBold">Close</b>.</li></div>
+<a name="wp1190120"> </a><div class="pSmartList1"><li>In the <b class="cBold">Intermediate Certificate</b> section, click <b class="cBold">Browse</b> to browse to the location at which the intermediate certificate is located, and open the intermediate certificate file.</li></div>
+<a name="wp1289524"> </a><div class="pSmartList1"><li>If both certificates are present in one file, delete the content from the<b class="cBold"> -----BEGIN CERTIFICATE-----</b> to the <b class="cBold">-----END CERTIFICATE-----</b> markers for the first certificate. Click <b class="cBold">Details</b> and verify that the <b class="cBold">Issuer</b> and <b class="cBold">Subject</b> fields have different values. If the values are the same, delete the entire content and again open the intermediate certificate file. Now, delete the content from the<b class="cBold"> -----BEGIN CERTIFICATE-----</b> to the <b class="cBold">-----END CERTIFICATE-----</b> markers for the second certificate. Click <b class="cBold">Details</b> and verify that the <b class="cBold">Issuer</b> and <b class="cBold">Subject</b> fields have different values.</li></div>
+<a name="wp1190122"> </a><div class="pSmartList1"><li>In the <b class="cBold">Final Certificate</b> section, click <b class="cBold">Browse</b> to browse to the location at which the final certificate is located, and open the final certificate file.</li></div>
+<a name="wp1190123"> </a><div class="pSmartList1"><li>To view the final certificate, click <b class="cBold">Details</b>.</li></div>
+<a name="wp1190124"> </a><div class="pSmartList1"><li>Click <b class="cBold">Close</b>.</li></div>
+<a name="wp1190125"> </a><div class="pSmartList1"><li>In the <b class="cBold">Final Certificate</b> section, click <b class="cBold">Browse</b> to browse to the location at which the private key is located, and open the private key file.</li></div>
+<a name="wp1190126"> </a><p class="pIndented1">
+You can verify that the private key has been added by checking for the <b class="cBold">-----BEGIN RSA PRIVATE KEY-----</b> and <b class="cBold">-----END RSA PRIVATE KEY-----</b> markers.
+</p>
+<a name="wp1190127"> </a><div class="pSmartList1"><li>In the <b class="cBold">Private Key Password</b> field, type the private key password you entered while creating the private key.</li></div>
+<a name="wp1190128"> </a><div class="pSmartList1"><li>Click <b class="cBold">Install Certificates</b>.</li></div>
+<a name="wp1190129"> </a><div class="pSmartList1"><li>In the confirmation dialog box, click <b class="cBold">Close</b>.</li></div>
+<a name="wp1190130"> </a><div class="pSmartList1"><li>In the Install Certificate window, click <b class="cBold">Close</b>.</li></div>
+<a name="wp1190131"> </a><div class="pSmartList1"><li>Click <b class="cBold">Refresh</b>.</li></div>
+<a name="wp1190132"> </a><p class="pIndented1">
+The SSL certificate is installed on the BMC Client Management server. The SSL certificate appears in the <b class="cBold">Web Service SSL Certificate File</b> attribute.
+</p>
+</ol></div>
+
+
+
+  <script type="text/javascript" language="JavaScript1.2">
+   <!--
+    // Clear related topics
+    //
+    WWHClearRelatedTopics();
+
+   // -->
+  </script>
+    </blockquote>
+
+    
+<hr class="REM"/>
+
+<table align="center" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="577" align="center"><p class="copyright"><span class="copyright style7">This help was last updated for version 20.14.02.021.038 of BMC Remedyforce. You must use this help for information about working on the BMC Remedyforce Home tab only. To access an updated version of  the online help, go to the <a href="http://docs.bmc.com" target="_blank">http://docs.bmc.com</a> and search for your version of BMC Remedyforce.</span>
+
+ </p>
+      <p class="copyright">&#169; Copyright  2010-2014
+ BMC Software, Inc. All rights reserved.<br/>
+        
+        Please contact your BMC Remedyforce system administrator if you require support.<br/>
+        
+        For questions or comments about the documentation, email us at <a href="mailto:doc_feedback@bmc.com">doc_feedback@bmc.com</a>.
+        
+      </p></td>
+  </tr>
+</table>
+
+
+
+<script type="text/javascript" language="JavaScript1.2">
+   <!--
+    document.write(WWHRelatedTopicsDivTag() + WWHPopupDivTag() + WWHALinksDivTag());
+   // -->
+  </script>
+
+  </body>
+</html>

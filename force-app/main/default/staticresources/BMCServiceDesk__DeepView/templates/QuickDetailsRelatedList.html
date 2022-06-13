@@ -1,0 +1,380 @@
+<div class="container" ng-click="hideActionMenuonBlur($event);">
+		<div id="sideBarloader" />
+		<div id="sideBarActionMask" class="dialog-whiteMask"/>
+        <div tabindex="0"  class="Quick-Details-RelatedList-headerRow">
+            <div class="Quick-Details-RelatedList-headerRow-content" ng-click="showHideActivitySection()"><span class="header-content" ng-class="{'d-icon-angle_right': !activityClicked == true,'d-icon-angle_down': activityClicked}"></span>
+			<span class="header-content sidebar-headerrow-text" title="{{_Labels.quickDetails.actions}}">{{_Labels.quickDetails.actions}}</span>
+			</div>
+            <div class="actions-button-panel">
+				<button ng-show="enableSidebarActions" class="btn-action {{(showActionButtons)? 'enabled' : 'disabled'}}" ng-click="showAddNotes()" title="{{_Labels.quickDetails.addNotes}}" ng-disabled="!(showActionButtons)" >
+					<span class="btn-gliff d-icon-note_pencil action-menu-btn">
+						<span class="d-icon-plus_circle add-new-note-icon"></span>
+					</span>
+				</button>
+				<div id="emailIconDiv" ng-if="isSendEmailAvailable" ng-show="enableSidebarActions" class="btn-action btnPos" title="{{_Labels.quickDetails.sendEmail}}">
+					<span id="emailIcon" class="btn-gliff d-icon-envelope_o action-menu-btn" ng-click="showEmailPanel()" ng-class="{'disbale-div': (showSendEmail || !isObjectEditable || !(recordState == 'true' || recordState == true)) }"></span>
+				</div>
+			<div id="downArrowIconDiv" tabindex = '-1' ng-blur="hideActionMenu($event);" class="btn-action btnPos {{ (showActionButtons && Actions.ActionList.size > 0 )? 'enabled' : 'disabled'}}" ng-click="showActionMenu($event);" >
+					<span id="actionIcon" class="btn-gliff d-icon-angle_down action-menu-btn" title="{{_Labels.quickDetails.moreAction}}" ng-class="{'actionBtnClicked': Actions.isActionBtnClicked}"></span>
+					<div id="actionDiv" class="container-action-menu" style="display:none">
+						<div class="actionMenu" ng-show="Actions.isActionBtnClicked">
+							<table>
+								<tr class="actionMenu-li actionMenu-table-row" ng-repeat="action in Actions.ActionList" ng-click="showActionEditor(action.Id);$event.stopPropagation();">
+									<td><div id="{{ action.Id + 'div' }}" style="cursor: pointer;" class="actionMenuText actionMenu-table-data" title='{{action.Name}}'  ng-click="showActionEditor(action.Id);$event.stopPropagation();" >{{action.Name}}</div></td>
+									<td><div class="d-icon-pencil pencil-icon ssIconCls" title="{{_Labels.quickDetails.AddANoteToTheAction}}" ng-if="action[namespacePrefix + 'autoModify__c']"></div></td>
+									<td><div id="ssIcon" class="d-icon-eye eye-icon ssIconCls" title="{{_Labels.quickDetails.externalAction}}" ng-if="action[namespacePrefix + 'Display_In_SelfService__c']" ></div></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+				<button class='btn-action' ng-click="getActivities(false);getAttachments();cleanEmailSettings();" title="{{_Labels.quickDetails.refresh}}">
+					<span class="btn-gliff d-icon-restart action-menu-btn"></span>
+				</button>
+			</div>                    
+        </div>
+		<div id="activityFeedDetails" ng-show="activityClicked">	
+			<div class="sidebar-panel" ng-show="showAddNote">
+				<div class="sidebar-panel-header" style="padding-left:30px;width: 83%; word-wrap: break-word;">{{Actions.ActionName}}</div>
+				<div class="panel-body" >					
+					<textarea class="add-note-textarea" id="actionEditor" ng-model="quickNote.data" rows="5"/>	
+					<div ng-if="!actionHideDuration" >
+						<div class="duration-label">{{_Labels.quickDetails.duration}}</div>
+						<input placeholder="00:00" title="{{_Labels.quickDetails.durationTooltip}}" class="duration-input" ng-blur="validateDuration()" ng-model="quickNote.durationString"/>
+						<div  class="duration-format" >{{_Labels.quickDetails.HHMM}}</div>
+					</div>					
+					<div class="btn-panel btn-panel-add-notes" >						
+						<button ng-click="clearNotes();" class="btn btn-default sidebar-cancel-button">{{_Labels.quickDetails.cancel}}</button>
+						<button ng-disabled="(!(quickNote.data.trim())) && Actions.isAction==false" ng-click="saveNotes(Actions.isAction);" class="btn btn-default sidebar-save-button" >{{_Labels.modal.add}}</button>
+					</div>
+				</div>
+			</div>
+			<div class="sidebar-panel"  ng-show="showSendEmail" id="showSendEmail">
+				<div class="" style="">
+					<div class="sidebar-email-section-header cursor-Pointer emailDetails" id='emailDetailPanel' style="" ng-click="toggleEmailDetailsSection()">	
+						<span class="header-content arrow-icon" ng-class="{'d-icon-angle_right': !emailDetailsClicked,'d-icon-angle_down': emailDetailsClicked}"></span>
+						<span class="header-content sidebar-headerrow-text" title="Email Details">{{_Labels.quickDetails.emailDetails}}</span>
+					</div>
+					<div  class="sendCancelButton">
+						<span class="btn-panel" ng-show="showSendButtons.showUpperSendButtons">						
+							<button ng-click="hideEmailPanel();"  class="btn btn-default sidebar-cancel-button" >{{_Labels.quickDetails.cancel}}</button>
+							<button ng-disabled="!(email.toEmails.trim()||email.CCEmails.trim()||email.BccEmails.trim())" ng-click="beforeSendEmail()"  class="btn btn-default sidebar-save-button">{{_Labels.modal.send}}</button>
+						</span>
+					</div>
+					<div class="sidebar-email-detail" ng-show="emailDetailsClicked">
+						<table width="100%" >
+							<tr ng-if="!isFromDisabled">
+								<td class="input-label">{{_Labels.modal.from}} </td>
+								<td>
+									<select class="input-data-box email-body-textarea" ng-model="email.fromEmail">
+										<option ng-repeat="x in fromEmails" ng-selected="x.OrgWideEmailId == defaultFromEmail.OrgWideEmailId" value="{{x.OrgWideEmailId}}">{{getLabelForSelectOption(x.OrgWideEmailAddress)}}</option>
+									</select>								
+								</td>
+							</tr>
+							<tr>
+								<td class="input-label">{{_Labels.modal.to}} </td>
+								<td>
+									<input class="input-data-box email-body-textarea" ng-model="email.toEmails" ng-change="searchUser('toEmails', 'email.toEmails')" ng-disabled="!isToFieldEditable" id="toEmails" ng-keydown="navigateKeypress($event)" ng-blur="hideAutoSuggestion();"/>
+								</td>
+							</tr>
+							<tr>
+								<td class="input-label">{{_Labels.modal.cc}}</td>
+								<td><input class="input-data-box email-body-textarea" ng-model="email.CCEmails" ng-change="searchUser('CCEmails', 'email.CCEmails')" id="CCEmails" ng-keydown="navigateKeypress($event)" ng-blur="hideAutoSuggestion();"/></td>
+							</tr>
+							<tr ng-if="isBccFieldEnabled">
+								<td class="input-label">{{_Labels.modal.bcc}} </td>
+								<td>
+									<input class="input-data-box email-body-textarea" ng-model="email.BccEmails" ng-change="searchUser('BccEmails', 'email.BccEmails')" id="BccEmails" ng-keydown="navigateKeypress($event)" ng-blur="hideAutoSuggestion();"/>
+								</td>
+							</tr>
+							<tr ng-if="isEmailTemplateEnabled">
+								<td class="input-label">{{_Labels.modal.EmailConversationTemplate}}</td>
+								<td><select ng-class="(isEmailTemplatePreviewEnabled && selectedTemplate.value !='none')? 'actions-email-template' : 'input-data-box email-body-textarea'" name="templateDropdown" id="templateDropdown" style="width:'80% !important';" ng-model="selectedTemplate.value"  ng-change="changeSelectedTemplate()">
+										<option ng-selected="{{selectedTemplate.value == option.value }}" ng-repeat="option in emailTemplates" value="{{option.value}}" title="{{option.label}}">
+											 {{getLabelForSelectOption(option.label)}}
+										</option>
+									</select>
+									<div class="preview-template-container" ng-if="(isEmailTemplatePreviewEnabled && selectedTemplate.value !='none')">
+										<a id="preview_template" href="#"  ng-click="previewTemplate()" title="{{_Labels.modal.Preview}}" >{{_Labels.modal.Preview}}</a>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td class="input-label" >{{_Labels.modal.subject}} </td>
+								<td>
+									<div class="email-subject">
+									<input id="email_subject" class="input-data-box email-body-textarea" ng-disabled="selectedTemplate.value !='none'" ng-model="email.emailSubject" />
+									</div>
+									<div class="email-attachment-float" id="attachmentInputWrapper" class="btn-action {{isObjectEditable ? 'enabled' : 'disabled'}}"  title="{{_Labels.quickDetails.addAttachment}}" class="email-attachment-icon-container">
+										<span class="d-icon-paperclip email-attachment-icon" ></span>
+										<input type="file" name="emailFile" title="{{_Labels.modal.labelAttachFile}}" files="newEmailAttachment" id="newEmailAttFiles" class="email-attachment-file-input" onchange="angular.element(this).scope().emailFileSelected();"/>
+									</div>
+								</td>
+							</tr>
+							<tr ng-show="sendEmailAttachmentMap != undefined && sendEmailAttachmentMap.length != 0">
+								<td class="input-label">{{_Labels.quickDetails.attachments}}</td>
+								<td>
+									<div class="demo-tags">
+										<ul class="tag-list">	
+											<li class="d-tag" ng-repeat="myEmailAttachment in sendEmailAttachmentMap" ><span class="d-tag-attachment-name" title="{{myEmailAttachment.Name}} ({{fnconvertsize(myEmailAttachment.Size)}})">{{myEmailAttachment.Name}} ({{fnconvertsize(myEmailAttachment.Size)}})</span><a class="added-attachment-remove-icon" data-role="remove" ng-click="removeAttachmentchip(myEmailAttachment)"></a></li>
+										</ul>
+									</div>	
+								</td>
+							</tr>
+							<tr ng-show="sendEmailAttachmentMap != undefined && sendEmailAttachmentMap.length != 0">
+								<td class="input-label"></td>
+								<td>								
+									<div>
+										<input type="checkbox" class="email-add-attachment-checkbox" ng-model="email.saveAttachmentsFlag" ng-change="setAttachmentsFlag();" ng-true-value="'true'" ng-false-value="'false'"/>
+										<span class="email-add-attachment-checkbox-text">{{_Labels.quickDetails.ActivityFeedEmailAttachmentFlag}}</span>
+									</div>						
+								</td>
+							</tr>
+							<tr ng-show="isReplyEmail">
+								<td class="input-label"></td>
+								<td>								
+									<div>
+										<input type="checkbox" class="email-add-attachment-checkbox" ng-disabled="selectedTemplate.value != 'none'" ng-model="email.removeOriginalContent" ng-change="removeOriginalContent();"/>
+										<span class="email-add-attachment-checkbox-text">{{_Labels.modal.rmvOriginalContentLabel}}</span>
+									</div>						
+								</td>
+							</tr>
+						</table>
+					</div>  
+					<div class="sidebar-email-section-header padding-right-30px">	
+						<span class="header-content arrow-icon cursor-Pointer" ng-class="{'d-icon-angle_right': !emailContentClicked,'d-icon-angle_down': emailContentClicked}" ng-click="toggleEmailContentsSection()"></span>
+						<span class="header-content sidebar-headerrow-text cursor-Pointer" style="width:100%" ng-click="toggleEmailContentsSection()">{{selectedTemplate.value =='none'?_Labels.quickDetails.emailContent:_Labels.quickDetails.additionalInfo}}</span>
+						<span class="email-settings-icon-container" ng-show="emailContentClicked">
+							<div ng-class="{'mergeField-icon-IE-Edge' : (isIE() || isEdge() || isIE11()) , 'mergeField-icon': ( !isIE() &&  !isEdge() && !isIE11()), 'cursor-Pointer':true}" ng-click="setVisibility();focusOnSetting(emailDetailsClicked);"  ng-style="selectedTemplate.value !='none' && isEmailBodyEnabled ? {} : selectedTemplate.value !='none' &&  !isEmailBodyEnabled ? {'pointer-events': 'none', 'cursor': 'not-allowed'} : {}">
+								<div id="mergeField" ng-class="{'mergeFieldIcon' : (selectedTemplate.value =='none' || (selectedTemplate.value !='none' && isEmailBodyEnabled)) , 'inactiveMergeIcon': (selectedTemplate.value !='none' &&  !isEmailBodyEnabled), 'openMergeIcon': mergeFieldIcon.clicked == true}" title="{{_Labels.quickDetails.copyRecordFields}}"/>
+								<div id="mergeFieldDiv" class="container-merge-menu">
+									<div class="actionMenu mergeFieldMenu " ng-show="mergeFieldIcon.clicked">
+										<div class="searchDiv" ng-click="$event.stopPropagation();" ng-style="{'padding-bottom': (isIE11() || isIE()) ? '6px' : ''}">
+											<i class="btn-gliff d-icon-search typeAheadSearchicon" ng-click="$event.stopPropagation();"></i>
+    										<input  ng-keyup="searchFieldNames()" id="searchtext" type="text"  class="typeaheadInput" ng-class="{'searchDivIE': (isIE11() || isIE())}" placeholder="{{_Labels.quickDetails.SearchFor}}..." ng-blur="setVisibility(false);" autofocus />
+										</div>
+										<div class="mergeFieldMenuDropdown FieldMenuHeight">
+											<div class="actionMenu-li" ng-click="stopPropagation($event)" ng-repeat="field in fieldInfoMap | orderBy:'fieldLabel' ">
+												<div ng-click='copyFieldValue(editor.mode, field)' id="{{field['fieldApi'] + 'div' }}" class="actionMenuText" style="cursor: pointer;" title="{{getDecodedText(field['fieldLabel'])}}" >{{getDecodedText(field['fieldLabel'])}}
+												</div>
+											</div>
+										</div>
+										<div ng-click="$event.stopPropagation();" class="nofieldsfound" ng-show="noFieldsFound"> {{_Labels.quickDetails.NoFieldsToDisplay}} 
+										</div>
+									</div>										
+								</div>
+							</div>							
+
+							<div tabindex = '-1' ng-blur="emailSettings.clicked = false;" class="email-settings-icon cursor-Pointer">
+								<span id="emailSettingIcon" class="btn-gliff d-icon-right-gear email-settings-icon-gear" title="{{_Labels.modal.Settings}}" ng-class="{'disbale-div': selectedTemplate.value !='none' }"  ng-click="emailSettings.clicked = !emailSettings.clicked; focusOnSetting(emailDetailsClicked);" ng-style="{'color': (emailSettings.clicked) ? '#3cb6ce' : ''}"></span>
+								<div class="email-settings-container" ng-show="emailSettings.clicked">
+									<div id="emailSettingDiv" class="actionMenu email-setting-menu">
+										<div class="actionMenu-li" title="{{_Labels.modal.StaffLink}}" ng-click="linkClickHandler('staff');  $event.stopPropagation();">
+											<div class="checkboxcontainer">
+												<input type="checkbox" ng-checked="getLinkCookieValue('staff') == 'true'" style="width:0px;"/><span class="checkmark"></span>
+												<span class="actionMenuText">{{_Labels.modal.StaffLink}}</span>
+											</div>
+										</div>
+										<div class="actionMenu-li" title="{{_Labels.modal.ClientLink}}" ng-hide="ClientURL == '' || ClientURL == null" ng-click="linkClickHandler('client'); $event.stopPropagation();">
+											<div class="checkboxcontainer">
+												<input type="checkbox" ng-checked="ClientURL && getLinkCookieValue('client') == 'true'" style="width:0px;"/><span class="checkmark"></span>
+												<span class="actionMenuText">{{_Labels.modal.ClientLink}}</span>
+											</div>
+										</div>
+										<div class="email-setting-row"></div>
+										<div class="actionMenu-li email-setting-row" title="{{_Labels.modal.PlainTextMode}}" ng-click="editorModeHandler(editor.mode == 'plaintext' ? 'richtext' : 'plaintext'); $event.stopPropagation();">
+											<div class="checkboxcontainer" >
+												<input type="checkbox"  ng-checked="editor.mode == 'plaintext'" style="width:0px;"/><span class="checkmark"></span>
+												<span class="actionMenuText">{{_Labels.modal.PlainTextMode}}</span>
+											</div>
+										</div>
+										<div class="actionMenu-li" ng-class="{'disbale-div': emailSignature.isAccessible == false || emailSignature.custom == undefined || emailSignature.custom == null || emailSignature.custom == ''}" title="{{_Labels.modal.InsertSignature}}" ng-show="emailSignature.enabled" ng-click="insertEmailSignature(); $event.stopPropagation();">
+											<div class="checkboxcontainer">
+												<input type="checkbox" ng-checked="insertEmailSignatureCB" style="width:0px;"/><span class="checkmark">
+												</span><span class="actionMenuText">{{_Labels.modal.InsertSignature}}</span>
+											</div>
+										</div>
+										<div class="actionMenu-li" title="{{_Labels.modal.ConfigureSignature}}" ng-show="emailSignature.enabled"  ng-click="configureSignatureClick(); $event.stopPropagation();">
+											<div class="checkboxcontainer">
+											<span class="btn-gliff btn-sign-edit-icon email-configure-icon"></span>
+											<span class="actionMenuText">{{_Labels.modal.ConfigureSignature}}</span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</span>
+					</div>
+					<div class="sidebar-email-content" ng-show="emailContentClicked">
+						<table width="100%" >
+							<tr>
+								<td colspan="2" style="padding:0px">
+									<textarea id="email_body" class="email-body-textarea" ng-show="editor.mode== 'plaintext' || boolAllowRichTextArea == false" ng-class="(selectedTemplate.value !='none' && isEmailBodyEnabled)? 'quick-details-info' : ''" ng-model="email.emailBody" ng-disabled="selectedTemplate.value !='none' && !isEmailBodyEnabled" placeholder="{{(selectedTemplate.value !='none'  && isEmailBodyEnabled)?_Labels.message.EmailAdditionalInfoEmptyText:''}}" style="height:auto" rows="{{emailDetailsClicked?17:25}}"/>
+									<div id="iframePlaceHolder">
+									</div>
+									<div id="htmlContentPlaceHolder" style="height:0px;width:0px;opacity:0;"></div>
+								</td>
+							</tr>
+						</table>
+						<div class="btn-panel" id="footerButtonsPanel"  ng-show="showSendButtons.showBottomSendButtons">						
+							<button ng-click="hideEmailPanel();"  ng-show="showSendButtons.showBottomSendButtons" class="btn btn-default sidebar-cancel-button" >{{_Labels.quickDetails.cancel}}</button>
+							<button ng-disabled="!(email.toEmails.trim()||email.CCEmails.trim()||email.BccEmails.trim())" ng-click="beforeSendEmail()"  ng-show="showSendButtons.showBottomSendButtons" class="btn btn-default sidebar-save-button">{{_Labels.modal.send}}</button>
+						</div>
+					</div>
+				</div>
+			</div>
+            <div  id="activityfeedDataPanel" style="display: block !important;">
+                <table class="quickView accordion-detail">
+                    <tr ng-if="activities == undefined || activities.length == 0">
+                        <td>{{_Labels.message.noActivityFound}}</td>
+                    </tr>
+                    <tr ng-repeat="activity in activities" class="activity-row" ng-if="activities != undefined && activities.length != 0" ng-mouseover="showReplyIcon = true" ng-mouseleave="showReplyIcon = false">
+                        <td class="activity-feed" ng-init="activity['charLength'] = DeepViewconfiguration.limits.descText; activity[showMore] = true">						
+							<div class="activity-feed-info">
+								<div>
+                                <img class="user-suggestion sidebar-user-suggestion" src="{{activity['userPhotoUrl'] ? activity['userPhotoUrl'] : '/profilephoto/005/T'}}"
+                                />
+								</div>	
+								<div class="description-container" id="{{activity['Id']}}" tabindex="-1">
+									<div class="desc">
+                                    	{{activity['description']}}
+                                	</div>
+									<div class="author">{{activity['userName']}} {{ (activity['userName']) ? '|':'' }} {{activity.createdDate}}
+										<div ng-show="activity['hasAttachment']== true && activity[showMore]" style="display:inline-block" class="btn-action enabled">
+	                                	<span style="padding: 0px 10px;">|</span><span title="{{_Labels.quickDetails.attachments}}" class="btn-gliff d-icon-paperclip attachment-icon-showmore" ng-click="activity[showMore] = !activity[showMore];activity['charLength'] = activity[showMore] ? DeepViewconfiguration.limits.descText: activity['body'].length"></span>
+										</div>
+									</div>
+								</div> 
+								<div class="reply-btn-container">
+									<button ng-show="showReplyIcon && activity['isReplyAll']" class="btn-action enabled btn-reply-all-icon" ng-click="replyEmail(activity, true)" title="{{_Labels.quickDetails.ReplyAll}}">
+									</button>
+									<button ng-show="showReplyIcon && activity['isReply']" class="setActvityReplyBtnWidth btn-action enabled btn-reply-icon" ng-click="replyEmail(activity, false)" title="{{_Labels.quickDetails.Reply}}">
+									</button>
+								</div>                          
+							</div>
+							<div class="note-details">
+
+	                            <span ng-if="(activity['hasAttachment']!= true || activity['hasAttachment']== undefined || activity['hasAttachment']== null) && (activity['activityContent'] != undefined)" >
+									<pre class="wrap-content envelope" ng-show="!activity[showMore]"> {{activity['envelope']}} </pre>
+									<div compile="activity['attachmentContent']" ng-if="!activity[showMore]"></div>
+	                                <pre ng-if="!activity['isRichTextContent']" class="wrap-content">{{activity['activityContent'] | limitTo: activity['charLength']}}  
+	                                </pre>
+	                                <pre ng-if="activity['isRichTextContent'] " ng-class="{showmorecls: activity[showMore] == true, showlesscls: activity[showMore] != true}" class="wrap-content" style="overflow-y: hidden">
+	                                    <div  name="ActivityContent" compile="activity['activityContent']" ng-style ="{all: 'initial'}" class="activityContentDiv"></div>
+	                                </pre>
+							<div id="summarizationDiv" class="summarization">
+								<div ng-if="isSummarizationEnabled && moduleName=='Incident__c'" style="float: left;">
+									<span  class="text-wrapper do-not-wrap-newline" ng-if="(activity['isRichTextContent'] || activity['activityContent'].length > DeepViewconfiguration.limits.descText)" ng-click="getSummarizedData(activity,activity['Id'])">Summarize&nbsp;&nbsp;|&nbsp;&nbsp;
+									</span>
+								</div>
+	                                <span class="do-not-wrap-newline" ng-if="(activity['isRichTextContent'] || activity['activityContent'].length > DeepViewconfiguration.limits.descText)"  ng-click="activity[showMore] = !activity[showMore];activity['charLength'] = activity[showMore] ? DeepViewconfiguration.limits.descText :   (activity['activityContent'].length > activity['envelope'].length ? activity['activityContent'].length : activity['envelope'].length); setBackFocus(activity['Id'], activity[showMore]) ">
+							        	<span  class="text-wrapper do-not-wrap-newline">{{activity[showMore] ? _Labels.quickDetails.showMore : _Labels.quickDetails.showLess}}</span>
+							    	</span>							
+									<span ng-if="activity['containsExternalImage'] && !activity[showMore]" ng-click="showExternalImages(activity);" class="text-wrapper do-not-wrap-newline">&nbsp;|&nbsp;&nbsp;{{_Labels.quickDetails.showExternalContent}}</span>
+								
+							</div>
+								</span>
+							
+								<!-- This span is used to display the email content in 3 parts, envelop, attachment section & rest of the body -->
+								<span ng-if="(activity['hasAttachment']== true) && (activity['envelope'] != undefined || activity['body'] != undefined)">
+	                                <div ng-show="!activity[showMore]">
+										<pre class="wrap-content attachment-envelope">{{activity['envelope']}}</pre>
+									</div>
+									<div class="emailAttachmentCls" ng-show="!activity[showMore]">									
+										<span class="d-icon-paperclip emailAttachmentTypeCls"></span>
+										<div class="emailAttachmentBodyCls">
+											<span ng-repeat="attachment in activityAttachmentMap" class="activity-feed float-left activity-feed-width" ng-if="attachment != undefined && attachment.activityId == activity['Id']">
+												<div class="attachmentContentCls">				
+													<span  class="{{attachment.attachmentValue.iconClass}} attachment-type-icon-attachment iconFontSize">
+													</span>
+													<div class="attachment-description attachment_description">
+														<a href="{{attachment.hrefURL}}" target="_blank" class="attachmentHrefCls">
+															<span title="{{attachment.attachmentValue.Name}}" class="attachmentValueCls" ng-bind-html="attachment.attachmentValue.Name"></span>&nbsp;({{fnconvertsize(attachment.attachmentValue.BodyLength,0)}})
+														</a>
+													</div>
+												</div>	
+											</span>
+										</div>
+									</div>								
+	                                <div ng-if="activity['body'] && activity['body'].length > 0" >
+										<pre ng-if="!activity['isRichTextContent']" class="wrap-content">{{activity['body'] | limitTo: activity['charLength']}}</pre>
+	                                    <pre ng-if="activity['isRichTextContent']" ng-class="{showmorecls: activity[showMore] == true, showlesscls: activity[showMore] != true}" class="wrap-content" style="overflow-y: hidden">
+	                                        <div  name="ActivityContent" compile="activity['body']" ng-style ="{all: 'initial'}" class="activityContentDiv">
+	                                        </div>
+	                                    </pre>
+	                                </div>
+									<div id="recordWithAttachment" class="summarization">
+										<div ng-if="isSummarizationEnabled && moduleName=='Incident__c'" style="float: left;">
+										<span  class="text-wrapper do-not-wrap-newline" ng-if="(activity['isRichTextContent'] || activity['activityContent'].length > DeepViewconfiguration.limits.descText)" ng-click="getSummarizedData(activity,activity['Id'])">Summarize&nbsp;&nbsp;|&nbsp;&nbsp;
+										</span>
+										</div>
+										<span class="do-not-wrap-newline" ng-if="(activity['isRichTextContent'] || activity['activityContent'].length > DeepViewconfiguration.limits.descText)"  ng-click="activity[showMore] = !activity[showMore];activity['charLength'] = activity[showMore] ? DeepViewconfiguration.limits.descText :   (activity['activityContent'].length > activity['envelope'].length ? activity['activityContent'].length : activity['envelope'].length); setBackFocus(activity['Id'], activity[showMore]) ">
+							        	<span  class="text-wrapper do-not-wrap-newline">{{activity[showMore] ? _Labels.quickDetails.showMore : _Labels.quickDetails.showLess}}</span>
+										</span>							
+										<span ng-if="activity['containsExternalImage'] && !activity[showMore]" ng-click="showExternalImages(activity);" class="text-wrapper do-not-wrap-newline">&nbsp;|&nbsp;&nbsp;{{_Labels.quickDetails.showExternalContent}}</span>
+								
+									</div>
+								</span>
+	                            </span>
+							</div>
+                        </td>
+                    </tr>
+					<tr ng-if="ShowMore.ShowActivityFeedActionsInBatches">
+						<td class="center-align"><span ng-click="getActivities(true)" class="text-wrapper">{{_Labels.quickDetails.getActivityFeedItems}}</span></td>
+					</tr>
+                </table>
+            </div>
+		</div>
+        <div tabindex="0"  class="Quick-Details-RelatedList-headerRow">
+            <div class="Quick-Details-RelatedList-headerRow-content" 
+			ng-click="showHideAttachmentSection()">
+				<span class="header-content" ng-class="{'d-icon-angle_right':!attachmentClicked,'d-icon-angle_down': attachmentClicked} "></span>
+				<span class="header-content sidebar-headerrow-text" title="{{_Labels.quickDetails.attachments}}" >{{_Labels.quickDetails.attachments}}</span>
+			</div>
+			<span class="attachment-icon-wrapper">
+				<div  ng-show="enableSidebarActions" id="attachmentInputWrapper" class="btn-action {{isObjectEditable ? 'enabled' : 'disabled'}}"  title="{{_Labels.quickDetails.addAttachment}}" class="attachment-icon-container">
+					<span class="d-icon-paperclip attachment-icon"></span>
+					<input type="file" name="file" files="newAttachment" id="newAttFiles" class="attachment-file-input" onchange="angular.element(this).scope().fileSelected();" title="{{_Labels.quickDetails.addAttachment}}" />
+				</div>
+			</span>
+						
+        </div>
+		<div id="acttachmentDetails" ng-show="attachmentClicked">
+			<div class="sidebar-panel-attachment" ng-show="newAttachment.length > 0">	
+				<div class="sidebar-panel-header">
+					<div class="srd-attachment" ng-repeat="attachment in newAttachment">
+						<div ng-bind="attachment.name"></div>
+					</div>	
+				</div>
+			</div>  
+            <div  id="attachmentDataPanel">
+                <table class="quickView accordion-detail">
+                    <tr ng-if="attachments == undefined || attachments.length == 0">
+                        <td>{{_Labels.message.noAttachmentFound}}</td>
+                    </tr>
+                    <tr ng-repeat="attachment in attachments" class="activity-row" ng-if="attachments != undefined && attachments.length != 0">
+                        <td class="activity-feed">
+						<div style="width:100%;display:flex;">							
+							<span  class="{{attachment.iconClass}} attachment-type-icon">
+							</span>
+							<div class="attachment-description description-container">
+								<div class="desc">
+									<a href="/servlet/servlet.FileDownload?file={{attachment.Id}}" target="_blank" ng-if="!attachment.isFile"> 
+										<span ng-bind-html="attachment.Name"></span>
+									</a>
+									<a href="/{{attachment.contentDocumentId}}" target="_blank" ng-if="attachment.isFile">
+										<span ng-bind-html="attachment.Name"></span>
+									</a>
+									| {{fnconvertsize(attachment.BodyLength,2)}}
+								</div>
+								<div class="author">
+									{{attachment.CreatedDate}} | <span ng-bind-html="attachment.ownerName"/>
+								</div>
+							</div>
+						</div>	
+                        </td>
+                    </tr>
+                </table>
+            </div>			
+		</div>
+</div>

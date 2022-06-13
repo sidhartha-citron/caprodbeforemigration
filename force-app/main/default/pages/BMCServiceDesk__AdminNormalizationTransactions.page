@@ -1,0 +1,179 @@
+<apex:page controller="BMCServiceDesk.AdminNormalizationTransactionsController" showHeader="false" sidebar="false">
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminNormalizationTransaction.css" />
+<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css"/>
+<script>
+    var ValidateMinimumCharsSearchPage = '{!JSENCODE($Label.GsErrorMsg)}';
+    var currentSelectedSortField = '';
+    var resPath = '{!$Resource.SDEFStyles}';
+    var sortOrderVal;
+    var stringToSearch = '';
+    var isModelLinkVisible = '{!displayModelLink}';
+    var lblSearch = '{!JSENCODE($Label.Search)}';
+</script>
+<head>
+  <style>
+    html{height:99%}
+    body {height:100%;min-width:500px !important;}
+	.x-form-empty-field {color: #004376 !important}
+  </style>
+</head>
+<apex:form styleClass="transactionForm">
+ <table border="0" width="100%">
+    <tr>
+        <td width="80%">
+            <div style="{!IF(status=='Pending','display:block', 'display:none')};" class="HeaderCls">
+                <input type="button" class="rf-btn" value="{!JSENCODE($Label.ApproveAndMapToExistingRule)}" id="MapExisting" onclick="MapSelectedData('Existing');" />
+                <input type="button" class="rf-btn" value="{!JSENCODE($Label.ApproveAndGenerateNewRule)}" id="NewRule" onclick="MapSelectedData('New');" />
+                <input type="button" class="rf-btn" value="{!JSENCODE($Label.GenerateIgnoreRule)}" id="IgnoreRule" onclick="MapSelectedData('IgnoreRule');"/>
+                <input type="button" class="rf-btn" value="{!JSENCODE($Label.Delete)}" id="Deletebtn" onclick="MapSelectedData('Delete');"/>  
+            </div>
+            <div style="{!IF(status!='Pending','display:block', 'display:none')};"  class="HeaderCls">
+            </div>
+        </td>
+        <td width="30%">
+            <div class="DivStyle" style="padding-right:10px;">
+				<table style=" float: right;" height="100%">
+					<tr>
+						<td>
+							<input style="float: right;" type="text"  class="rf-nr-text x-form-empty-field" onfocus="if (this.value == '{!$Label.Search}') this.value = '';" id="txtsearch" value="{!$Label.Search}" onblur="if (this.value == '') this.value = '{!$Label.Search}'" onkeypress="return searchOnEnter(event)" />
+						</td>
+						
+						<td>
+							<input    type="image" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_search.png" onClick="searchVariations();return false;" id="searchMapId" title="{!$Label.Search}" tabindex="0" />
+						</td>
+						
+						<td>
+							<input    type="image" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_clear_search.png" onClick="resetMappingGrid();return false;"   id="resetMapId" title="{!$Label.Reset}" tabindex="0" />	
+						</td>
+						
+        				<td>
+							 <div  style="float: left;display: inline-flex;">
+							   <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif" onClick="prevRecord();"  id="prevBtnId" title="{!$Label.PreviousPage}" style="float:left"/>
+							   <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif" onClick="nextRecord();"  id="nextBtnId" title="{!$Label.NextPage}" style="float:left;"/>
+							</div>
+						</td>
+					</tr>
+				</table>
+            </div>
+        </td>
+    </tr>
+</table>
+<table style="margin-top: 10px;"  width="100%">
+<tr>
+    <td width="300">
+        <apex:outputLabel value="{!$Label.bmcservicedesk__objectname}:" styleClass="rf-label-bold"/>
+        <apex:outputLabel value="{!ObjectNameLabel}" styleClass="clsInputCheckBoxLabel"/>
+    </td>
+    <td>
+        <apex:outputLabel value="{!$Label.bmcservicedesk__fieldname}:" styleclass="rf-label-bold"/>
+        <apex:outputLabel value="{!fieldNameLabel}" styleclass="clsInputCheckBoxLabel"/>
+    </td>
+</tr>
+	<tr><td colspan="2" height="10"></td></tr>
+</table>
+  <apex:outputPanel id="DisplayTable">  
+  <script> 
+  if(typeof(handleSortButton) != 'undefined')
+    handleSortButton();     
+   </script>
+    <apex:pageBlock >
+        <apex:pageblockTable value="{!TransactionWrapperList}" var="lst" rowClasses="even,odd" columnsWidth="{!ColumnWidth}" width="100%">
+            <apex:column headerClass="tableHeaderStyle" id="chkboxColumn" rendered="{!if (status=='Pending',true,false)}">
+                 <apex:facet name="header">
+                     <input type="checkbox" class="ChkBoxStyle" id="selectAllcheckBox" value="{!selectAllCheckBox}" onclick="setResetSelectAllJS(this.checked);"/>
+                 </apex:facet>                         
+                 <input type="checkbox" class="ChkBoxStyle" id="checkedId" name="{!lst.masterObj.Id}" value="{!lst.checked}" onclick="populateSelectedIds(this);"/>                                                 
+            </apex:column>              
+            <apex:column headerClass="tableHeaderStyle" styleClass="BorderStyle" value="{!lst.masterObj.BMCServiceDesk__Field_Value__c}">
+				<apex:facet name="header">
+					<div style=" vertical-align: middle;height: 100%;" onClick="sortColumn('Field_Value__c','NewValueHeader');return false;">
+						<label>{!$Label.ACRegistryNewValue}</label>
+						<input type="image"  id="NewValueHeader"  tabindex="0" />
+					</div>
+                </apex:facet> 
+            </apex:column>  
+            <apex:column headerClass="tableHeaderStyle" styleClass="BorderStyle"  value="{!lst.masterObj.FKCMDB_Class__r.BMCServiceDesk__ClassName__c}">
+				<apex:facet name="header">
+					<div   style=" vertical-align: middle;height: 100%;" onClick="sortColumn('FKCMDB_Class__r.ClassName__c','FKCMDBClassHeader');return false;">
+						<label>{!$ObjectType.Normalization_Transaction_Master__c.fields.FKCMDB_Class__c.label}</label>
+						<input type="image" id="FKCMDBClassHeader"  tabindex="0" />
+                    </div>
+                </apex:facet> 
+            </apex:column>
+            <apex:column headerClass="tableHeaderStyle" styleClass="BorderStyle" value="{!lst.masterObj.CreatedDate}">
+             <apex:facet name="header">
+				<div style=" vertical-align: middle; height: 100%;" onClick="sortColumn('CreatedDate','CreatedDateHeader');return false;">
+					<label>{!$ObjectType.Normalization_Transaction_Master__c.fields.CreatedDate.label}</label>
+					<input type="image" id="CreatedDateHeader"  tabindex="0" />
+                </div>
+            </apex:facet> 
+            </apex:column>
+            <apex:column headerClass="tableHeaderStyle" styleClass="BorderStyle"  value="{!lst.masterObj.BMCServiceDesk__Approved_By__c}" rendered="{!if (status=='Pending',false,true)}" onclick="return false;"/>
+            <apex:column headerClass="tableHeaderStyle" styleClass="BorderStyle"  value="{!lst.masterObj.BMCServiceDesk__Approved_DateTime__c}" rendered="{!if (status=='Pending',false,true)}"/>
+            <apex:column headerClass="tableHeaderStyle" styleClass="rf-link-col" rendered="{!if(AND(status=='Pending',displayModelLink),true,false)}">
+                <a href="" onclick="openModelForm('{!JSENCODE(lst.masterObj.BMCServiceDesk__Field_Value__c)}','{!JSENCODE(lst.masterObj.id)}','{!JSENCODE(lst.masterObj.FKCMDB_Class__r.BMCServiceDesk__ClassName__c)}');">{!JSENCODE($Label.bmcservicedesk__createnewmodel)}</a>
+            </apex:column>
+        </apex:pageBlockTable>
+    </apex:pageBlock> 
+  </apex:outputPanel>  
+    <apex:actionFunction action="{!CreateNewRule}" name="CreateNewRule" oncomplete="RefreshParentWindow();">
+            <apex:param assignTo="{!selectedValues}" name="selectedIds" value=""/>
+    </apex:actionFunction>  
+    <apex:actionFunction action="{!generateIgnoreRule}" name="generateIgnoreRule" oncomplete="RefreshParentWindow();">
+            <apex:param assignTo="{!selectedValues}" name="selectedIds" value=""/>
+    </apex:actionFunction>  
+    <apex:actionFunction action="{!updateNormTranc}" name="updateNormTranc" rerender="DisplayTable" oncomplete="hideLoadingMask();">
+            <apex:param assignTo="{!SelectedNormVal}" name="SelectedNormVal" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction action="{!deleteException}" name="deleteException" oncomplete="RefreshParentWindow();">
+            <apex:param assignTo="{!selectedValues}" name="selectedIds" value=""/>
+    </apex:actionFunction> 
+    <apex:actionFunction name="nextRec" action="{!next}" reRender="DisplayTable,updateNextPrev" onComplete="hideLoadingMask();enableNextPrevBtn();" />
+    <apex:actionFunction name="prevRec" action="{!Previous}" reRender="DisplayTable,updateNextPrev" onComplete="hideLoadingMask();enableNextPrevBtn();" />
+    
+    <apex:actionFunction name="searchMapping" action="{!searchMapping}" reRender="DisplayTable,updateNextPrev" onComplete="hideLoadingMask();enableNextPrevBtn();currentSelectedSortField= '';handleSortButton();">
+        <apex:param assignTo="{!searchString}" name="searchString" value="" />
+    </apex:actionFunction>
+    <apex:actionFunction name="resetMapping" action="{!resetMapping}" reRender="DisplayTable,updateNextPrev" onComplete="hideLoadingMask();enableNextPrevBtn();currentSelectedSortField= '';stringToSearch='';handleSortButton();"/>
+    
+    <apex:actionFunction name="sortColumnfunction" action="{!sortColumnfunction}" reRender="DisplayTable,updateNextPrev" onComplete="hideLoadingMask();enableNextPrevBtn();handleSortButton();alert('columnWidth::'+columnWidth);">
+		<apex:param assignTo="{!columnName}" name="columnName" value="" />
+        <apex:param assignTo="{!sortOrderVal}" name="sortOrderVal" value="" />
+        <apex:param assignTo="{!stringToSearch}" name="stringToSearch" value="" />
+    </apex:actionFunction>
+ </apex:form>
+ 
+ <apex:outputPanel id="updateNextPrev">
+<script>
+    var hasnext={!hasNext};
+    var hasPrevious={!hasPrevious};
+</script>
+</apex:outputPanel>
+ <script>
+    var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+    var objectName = "{!JSENCODE(ObjectName)}";
+    var fieldName = "{!JSENCODE(fieldName)}";
+    var NormRuleLabel = '{!JSENCODE($Label.Normalization_Rules)}';
+    var NonPrintChar = '¬';
+    var headerWinTab = '{!JSENCODE($ObjectType.Model__c.label)}';
+    var LoadingTxt ='{!JSENCODE($Label.SSLoading)}';   
+	var ReservedLabel1 = '{!JSENCODE($Label.ReservedLabel1)}';
+	var ReservedLabel2 = '{!JSENCODE($Label.ReservedLabel2)}';
+	var ReservedLabel3 = '{!JSENCODE($Label.ReservedLabel3)}';
+	var ReservedLabel4 = '{!JSENCODE($Label.ReservedLabel4)}';
+	var ReservedLabel5 = '{!JSENCODE($Label.ReservedLabel5)}';
+	var ReservedLabel6 = '{!JSENCODE($Label.ReservedLabel6)}';
+	var ReservedLabel7 = '{!JSENCODE($Label.ReservedLabel7)}';
+	var ReservedLabel8 = '{!JSENCODE($Label.ReservedLabel8)}';
+	var ReservedLabel9 = '{!JSENCODE($Label.ReservedLabel9)}';
+	var ReservedLabel10 = '{!JSENCODE($Label.ReservedLabel10)}';
+	var IgnoredValueRules = '{!JSENCODE($Label.IgnoredValueRules)}';
+	var IgnoredValue = '{!JSENCODE($Label.IgnoredValue)}';
+	var IgnoreRule = '{!JSENCODE($Label.IgnoreRule)}';
+	var _ObjectPermissions = {}
+	_ObjectPermissions.isNormExceptionDeletable = {!$ObjectType.BMCServiceDesk__Normalization_Transaction_Master__c.deletable};
+	
+ </script>
+  <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"/>
+  <script src="{!$Resource.SDEFCommonJS}/AdminNormalizationTransaction.js"  type="text/javascript"/>
+    </apex:page>

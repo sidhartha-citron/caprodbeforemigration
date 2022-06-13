@@ -1,0 +1,119 @@
+<apex:page controller="VMIReport" renderAs="pdf" applyBodyTag="false">
+    <head>
+        <style> 
+            @page {
+                /* Page spaces */
+                margin: 20px 30px 60px 30px ; 
+                padding: 0px 0px 0px 0px ;
+                /* Landscape orientation */ 
+                size:landscape;
+                /* Footer content */    
+                @bottom-right {
+                    content: "- " counter(page) " -";
+                }
+            }
+            table {
+                border-collapse: collapse;
+            }
+            table, th, td {
+                border: 0.5px solid black;
+            }
+            th, td {
+                padding: 5px;
+                text-align: left;
+            }
+            th {
+                font-size:10pt;
+                font-family:Arial,Helvetica;    
+            }
+            td {
+                font-size:10pt;
+                font-family:Arial,Helvetica;
+            }
+            .header{
+                font-size:14pt;
+                font-family:Arial,Helvetica;
+            }
+        </style>
+    </head>
+        <body>
+            <center><apex:image url="/sfc/servlet.shepherd/document/download/069f10000044kTIAAY" height="60" width="200"/></center>
+            <h1><center><p class="header"><b>VMI Stock Summary Report</b></p></center></h1>
+            <br/><br/>
+            <p>This report shows data for the duration starting from {!$CurrentPage.parameters.dtStart} to {!$CurrentPage.parameters.dtEnd}
+               further filtered by:
+            </p>
+            <ul style="list-style-type:disc;">
+                <li>Work Order Status: {!$CurrentPage.parameters.Status}</li>
+                <li>Service Resource: {!$CurrentPage.parameters.Res}</li>
+                <li>Service Territory: {!$CurrentPage.parameters.Ter} </li>
+            </ul>
+            
+        <apex:repeat value="{!VMIPDF}" var="lst">
+            <div style="page-break-before:always;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service Resource</th>
+                            <apex:variable var="v" value="1" rendered="{!isDtls}">
+                                <th>Account Name</th>
+                            </apex:variable>
+                            <apex:variable var="v" value="1" rendered="{!isDtls}">
+                                <th>Address</th>
+                            </apex:variable>
+                            <apex:variable var="v" value="1" rendered="{!isDtls}">
+                                <th>W.O. No</th>
+                            </apex:variable>
+                            <apex:variable var="v" value="1" rendered="{!isDtls}">
+                                <th>S.A. No</th>
+                            </apex:variable>
+                            <th>VMI Product Name</th>
+                            <th>Quantity Per Visit</th>
+                            <th>Par Level</th>
+                            <th>Quantity Sold During Last Visit</th>
+                            <th>Starting Truck Stock</th>
+                            <th>Quantity Picked</th>
+                            <th>Products Sold</th>
+                            <th>Remaining On Truck</th>
+                        </tr>
+                    </thead>
+                    
+                    <apex:repeat value="{!lst}" var="l">
+                        <tbody>
+                            <tr>
+                                <td rowspan="{!l.rowCount}" scope="rowgroup">{!l.srName}</td>
+                                <apex:variable var="v" value="1" rendered="{!isDtls}">
+                                    <td rowspan="{!l.rowCount}" scope="rowgroup">{!l.acctName}</td>
+                                </apex:variable>
+                                <apex:variable var="v" value="1" rendered="{!isDtls}">
+                                    <td rowspan="{!l.rowCount}" scope="rowgroup">{!l.address}</td>
+                                </apex:variable>
+                                <apex:variable var="v" value="1" rendered="{!isDtls}">
+                                    <td rowspan="{!l.rowCount}" scope="rowgroup">{!l.wrkordNo}</td>
+                                </apex:variable>
+                                <apex:variable var="v" value="1" rendered="{!isDtls}">
+                                    <td rowspan="{!l.rowCount}" scope="rowgroup">{!l.saNo}</td>
+                                </apex:variable>
+                            </tr>
+                            
+                            <apex:repeat value="{!l.vimList}" var="v">
+                                <tr>
+                                    <td scope="row">{!v.vmiProd}</td>
+                                    <td>{!v.Quantity}</td>
+                                    <td>{!v.parLevel}</td>
+                                    <td>{!v.QtyLV}</td>
+                                    <td>{!v.Starting_Truck_Stock}</td>
+                                    <td>{!v.QtyPicked}</td>
+                                    <td>{!v.Products_Sold}</td>
+                                    <td>{!v.Remaining_On_Truck}</td>
+                                </tr>
+                            </apex:repeat>
+                            
+                        </tbody>
+                    </apex:repeat>
+                    
+                </table>
+            </div>
+        </apex:repeat>
+      </body>
+ </apex:page>

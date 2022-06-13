@@ -1,0 +1,109 @@
+<!--
+- @FileName: ServicePlanManagerPlanList
+- @Description: Displays a table populated with a list of Service Plan records
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       11/15/2019         Created
+*************************************************************  
+-->
+
+<aura:component description="ServicePlanManagerPlanList"
+                controller="ServicePlanCtrl">
+
+    <ltng:require scripts="{!$Resource.LightningUtils}" />
+
+    <aura:attribute name="accountId" type="String" />
+    <aura:attribute name="dataWrapper" type="Map" />
+    <aura:attribute name="permissionLevel" type="String" />
+    <aura:attribute name="selectedPlan" type="Map" />
+
+    <aura:if isTrue="{!not(v.selectedPlan)}">
+        <p class="slds-text-heading_large slds-m-bottom_medium">Service Plans</p>
+
+        <aura:if isTrue="{!not(empty(v.dataWrapper.servicePlans))}">
+            <table class="slds-table slds-table_cell-buffer">
+                <thead>
+                <tr>
+                    <th scope="col">
+                        {!$Label.c.Service_Plan}
+                    </th>
+                    <th scope="col">
+                        {!$Label.c.Route_Technician}
+                    </th>
+                    <th scope="col">
+                        {!$Label.c.Job_Type}
+                    </th>
+                    <th scope="col">
+                        {!$Label.c.Line_of_Business}
+                    </th>
+                    <th scope="col">
+                        {!$Label.c.Frequency}
+                    </th>
+                    <th scope="col">
+                        {!$Label.c.Schedule}
+                    </th>
+                    <th scope="col">
+                        {!$Label.c.Anchor_Date}
+                    </th>
+                    <th scope="col">
+                        Order Item Count
+                    </th>
+                    <th scope="col">
+
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <aura:iteration items="{!v.dataWrapper.servicePlans}" var="plan">
+                    <tr>
+                        <td>
+                            {!plan.Name}
+                        </td>
+                        <td>
+                            {!plan.Route__r.Service_Resource__r.Name}
+                        </td>
+                        <td>
+                            {!plan.Job_Type__c}
+                        </td>
+                        <td>
+                            {!plan.Line_of_Business__c}
+                        </td>
+                        <td>
+                            {!plan.Frequency__c}
+                        </td>
+                        <td>
+                            {!plan.Schedule_Type__r.Name}
+                        </td>
+                        <td>
+                            {!plan.Effective_Date__c}
+                        </td>
+                        <td>
+                            {!plan.Count__c}
+                        </td>
+                        <td>
+                            <lightning:button variant="brand"
+                                              label="{!v.permissionLevel == 'Read/Write' ? $Label.c.Manage : $Label.c.Details}"
+                                              value="{!plan}"
+                                              onclick="{!c.selectPlan}" />
+                        </td>
+                    </tr>
+                </aura:iteration>
+                </tbody>
+            </table>
+
+            <aura:set attribute="else">
+                <p>{!$Label.c.SPM_No_Service_Plans}</p>
+            </aura:set>
+        </aura:if>
+
+        <aura:set attribute="else">
+            <c:ServicePlanManagerForm dataWrapper="{!v.dataWrapper}"
+                                      accountId="{!v.accountId}"
+                                      servicePlanRecord="{!v.selectedPlan}"
+                                      permissionLevel="{!v.permissionLevel}" />
+        </aura:set>
+    </aura:if>
+
+</aura:component>

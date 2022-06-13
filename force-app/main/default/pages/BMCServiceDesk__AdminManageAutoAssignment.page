@@ -1,0 +1,116 @@
+<apex:page controller="BMCServiceDesk.AdminManageAutoAssignmentController" showHeader="false" sidebar="false" standardStylesheets="false">
+	<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" /> 
+	<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script> 
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminManageAutoAssignment.css" />	
+	
+	<style>
+		.x-grid-checkheader {
+			height: 14px;
+			background-image: url('{!$Resource.ExtJS4_1_3}/resources/themes/images/default/grid/unchecked.gif');
+			background-position: 50% -2px;
+			background-repeat: no-repeat;
+			background-color: transparent;
+		}
+	
+		.x-grid-checkheader-checked {
+			background-image: url('{!$Resource.ExtJS4_1_3}/resources/themes/images/default/grid/checked.gif');
+		}	
+		
+		.staffAssignmentCls input[type="radio"]{
+            vertical-align: middle;
+        }
+	</style>
+	
+	<script>
+   		var qlist = {!queueList};
+        var bHrsList = {!businessHrsList};
+   		var staffList = {!staffListStr};
+   		var isNoQueueFound = {!isNoQueueFound};
+   		var isNoStaffFound = {!isNoStaffFound};
+		var autoStaffAssignmentEventVal = '{!JSENCODE(autoStaffAssignmentEventVal)}';
+		
+   		
+   		var saveLbl = '{!JSENCODE($Label.Save)}';
+        var queuesLbl = '{!JSENCODE($Label.IncidentQueue)}';
+   		var queueLbl = '{!JSENCODE($Label.Queue)}';
+        var selectBHrsLbl = '{!JSENCODE($Label.SelectBusinessHours)}';
+   		var autoAssignmentLbl = '{!JSENCODE($Label.Assign)}';
+   		var staffAutoAssignmentLbl = '{!JSENCODE($Label.StaffAutoAssignment)}'
+   		var staffLbl = '{!JSENCODE($Label.IncidentsStaff)}';
+   		var noRecordsFoundLbl = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+   		var navigationWarningLbl = '{!JSENCODE($Label.SF1NavigationWarningMsg)}';
+   		var savedSuccessfullyLbl = '{!JSENCODE($Label.SavedSuccessfully)}';
+   		var noteLbl = '{!JSENCODE($Label.AutomatedStaffAssignmentForIncident)}';
+        var headerNoteLbl = '{!JSENCODE($Label.StaffAssignmentInfo)}';
+        var businessHrsLbl = '{!$ObjectType.User.fields.Business_Hours__c.label}';
+        var staffByBusinessHourLbl= '{!JSENCODE($Label.staffByBusinessHour)}';
+        var defaultLbl= '{!JSENCODE($Label.Default)}';
+        var filterbyBHlbl= '{!JSENCODE($Label.FilterByBH)}';
+        var alllbl= '{!JSENCODE($Label.All)}';
+		
+   	</script>
+   	
+   	<apex:outputPanel id="reloadDataPanelId">
+   		<script>
+   			staffList = {!staffListStr};
+   			isNoStaffFound = {!isNoStaffFound};
+   		</script>
+   	</apex:outputPanel>
+	
+	<apex:form >
+    <apex:actionFunction name="populateStaffList" action="{!populateStaffList}" reRender="reloadDataPanelId" onComplete="refreshStaffList('{!assignmentOnBH}');" immediate="true">
+		<apex:param assignTo="{!selectedQueueId}" name="selectedQueueId" value=""/>
+	</apex:actionFunction>
+	
+	<apex:actionFunction name="saveConfig" action="{!saveConfig}" onComplete="afterSave();" immediate="true">
+		<apex:param assignTo="{!selectedQueueId}" name="selectedQueueId" value=""/>
+		<apex:param assignTo="{!staffConfigJsonStr}" name="staffConfigJsonStr" value=""/>
+        <apex:param assignTo="{!assignmentOnBH}" name="assignmentOnBH" value=""/>
+		<apex:param assignTo="{!autoStaffAssignmentEventVal}" name="autoStaffAssignmentEventVal" value=""/>
+	</apex:actionFunction>
+	<div style="min-width:1000px">
+		<div id="toolbarDiv"/>
+		<div id="helpDiv" class="clshelpDiv"></div>
+		<div id="AutoStaffAssignDiv">
+            <label id="AutoStaffAssignLabel" >{!JSENCODE($Label.AutomatedStaffAssignmentTitle)}</label>
+			<div class="staffAssignmentCls">
+                <apex:selectRadio style="display:inline;" value="{!autoStaffAssignmentEventVal}" id="staffAssignmentRadioSelect" layout="pageDirection" label="{!$Label.bmcservicedesk__autostaffassignmentoncreation}" onclick="handleStaffAssignmentSelection(this.value);">
+                    <apex:selectOptions value="{!StaffAssignmentoptions}"/>
+                </apex:selectRadio>
+            </div>
+			<br/>                
+        </div>
+		<div id="mainDiv" class="hbox">
+			<div id="qDiv"/>
+			
+			<div id="rightDiv">
+				<div id="rightTopDiv">
+					<label id="selectedQueueLblId"/>
+					
+					<div id="bHrsDiv"/>
+					<div id="headerDiv">   
+						<label id="headerLblId"/>
+					</div>
+				</div>
+				
+				<div id="staffDiv">
+				</div>
+			</div>
+		</div>
+		
+		<div id="footerDiv">
+			<label id="noteLblId"/>
+		</div> 
+	</div> 	
+    <script>
+	var wikiUrl='{!JSENCODE(wikiUrl)}';
+    parent.addHelpOnPage(document.getElementById('helpDiv'),'',wikiUrl);	
+	</script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+   	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminManageAutoAssignment.js"></script>
+   
+   	
+   	</apex:form>
+  
+</apex:page>

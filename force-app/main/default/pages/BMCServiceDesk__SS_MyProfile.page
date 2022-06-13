@@ -1,0 +1,125 @@
+<apex:page id="SS_MyProfile" controller="BMCServiceDesk.SSUserController" action="{!getUserProfile}" sidebar="false" showHeader="false" standardStylesheets="false">
+<div id="themeDiv"></div>
+<head>
+    <title><apex:outputText value="{!$Label.bmcservicedesk__ssbrowsertitle}"/></title>
+	<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+    <style>
+        .errorMsg {
+            margin: -15px 0 15px 0;
+        }
+    </style>
+<script>  
+
+var cookieName='broadcastCookieName';
+var UsercookieName =  cookieName+'{!JSENCODE($User.Username)}';
+var ScrollingSpeed;
+var adminspeedvar={!adminspeedvar};
+var isTickerEnable={!NOT(broadcasttickerenable)};
+var broadcastSpeedValue='{!JSENCODE($Component.SS_MyProfile.siteMyProfileForm.broadcastspeedid)}';
+showheadvar={!showHeader};
+var siteUrl='{!JSENCODE(siteUrl)}';
+var CloseWindowPage = '{!JSENCODE($Page.SSApprovalProcess)}';
+var platformUser='{!platformUser}';
+var isSSOLogin='{!isSSOLogin}';
+var ssMyProfileTitle='{!JSENCODE($Label.SSMyProfile)}';
+var lblMyProfileSavedSuccessfully='{!JSENCODE($Label.SavedSuccessfully)}';
+
+</script>
+ 
+</head>
+
+<apex:form id="siteMyProfileForm" forceSSL="true">
+<apex:outputPanel id="apexMessageErrorPanel" >
+<div id="apexMessageErrorPanelDiv" style="display:none;">
+            <apex:messages />
+        </div>
+</apex:outputPanel>        
+<apex:actionFunction action="{!saveProfile}" name="saveProfile" rerender="fs,apexMessageErrorPanel,msg" oncomplete="closeWin();" />
+   
+<apex:inputhidden value="{!BroadcastSpeed}" id="broadcastspeedid"/>  
+<div class="divToolBar">
+        <input type="button" id="btnSubmit" title="{!$Label.SS_ProfileSubmit} (Ctrl+Alt+S)" value="{!$Label.SSSubmit}" onclick="saveProfile();" Class="ssBtnCls"/>        
+        <input type="button" id="btnChangePassword" value="{!$Label.SSChangePassword}" title="{!$Label.SS_ProfilePasswordChange} (Ctrl+Alt+P)"  class="ssBtnCls" onclick="openChangePassword();" style="display:''" />
+        <input type="button" id="btnCancel" title="{!$Label.SS_ProfileCancel}" value="{!$Label.SSCancel}" class="ssBtnCls" onclick="window.parent.closeTab('rf-tile-MYPROFILE');" />
+</div>
+
+<div id="divBox">
+<apex:outputPanel id="fs" layout="block"> 
+    <table cellpadding="5px" cellspacing="0" >
+        <tr class="sshomeLoginResetBgStyle trHeight20">
+            <td valign="top" align="left" colspan="2">
+                <apex:outputText id="msg" style="color:Red;" value="{!displayMessage}" />
+            </td>
+        </tr>              
+        
+        <apex:repeat value="{!fields}" var="f">       
+      <apex:outputPanel rendered="{!$ObjectType.User.fields[f.fieldPath].Accessible}" layout="none">
+        <tr class="trHeight">
+            <td valign="top" align="left" width="120px">
+            <apex:outputlabel value="{!f.label}*" rendered="{!OR(f.required, f.dbrequired)}" styleClass="x-form-field" />          
+          	<apex:outputlabel value="{!f.label}" rendered="{!NOT(OR(f.required, f.dbrequired))}" styleClass="x-form-field"/> 
+            </td>
+            
+            <td valign="top" style="height:35px;" title="{!$ObjectType.User.fields[f].inlineHelpText}" >
+            <apex:inputField value="{!userobject[f.fieldPath]}" styleClass="clsInputTextBox InputTextBox300" style="margin-bottom:15px" required="{!OR(f.required, f.dbrequired)}" />
+            </td>            
+        </tr>
+            </apex:outputPanel> 
+        </apex:repeat> 
+       </table>
+         </apex:outputPanel>
+       
+        
+        <table cellpadding="5px" cellspacing="0" >        
+        <tr><td style="height:10px;" colspan="2"></td></tr>
+        <tr>
+            <td style="width:150px;padding-top:10px;border-top:solid 1px #6A7378; width/*\**/: 175px\9;">
+                <apex:outputLabel rendered="{!broadcasttickerenable}" styleClass="x-form-field">{!$Label.bmcservicedesk__broadcasttickerspeed}</apex:outputLabel>
+            </td>
+            <td style="border-top:solid 1px #6A7378;width:406px;"> 
+                <apex:outputPanel rendered="{!broadcasttickerenable}">
+                <br />
+                    <table style="padding-top:10px;">
+                        <tr>
+                            <td valign="middle" align="left" >  
+                                 <apex:outputLabel styleClass="x-form-field" style="margin-left: 1px;padding-left:12px;" value="{!$Label.bmcservicedesk__slow}" ></apex:outputLabel>
+                            </td> 
+                          	<td  valign="middle" style='padding-left:10px;'>
+                                 <div id="basic_slider"></div>
+                          	</td>
+                            <td class="width:10px;">&nbsp;&nbsp;</td>
+                            <td valign="middle" align="left" >
+                                 <apex:outputLabel styleClass="x-form-field"  value="{!$Label.bmcservicedesk__fast}"></apex:outputLabel> 
+                            </td>
+                        </tr>
+                    </table>
+                </apex:outputPanel>
+            </td>
+        </tr>
+        
+     
+    </table>
+</div>    
+   
+</apex:form>
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+<script src="{!$Resource.SSjs}/SelfServiceMyProfile.js" />
+<script>
+	if(Sarissa._SARISSA_IS_IE && ((navigator.userAgent.indexOf("Trident/5")>-1) || (navigator.userAgent.indexOf("Trident/6")>-1))){  
+		window.XMLSerializer = function(){};      
+		window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+</script> 
+<script type="text/javascript">         
+        var colorCodeList = '{!JSENCODE(themeColorCodeString)}'; 
+        var content = '{!JSENCODE(dynamicStyle)}';
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+</script>
+<script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" /> 
+<script>
+	if(window.parent.isRFHotkeysDisabled){
+		setTitle(document.getElementById('btnSubmit'),'{!JSENCODE($Label.SS_ProfileSubmit)}');
+		setTitle(document.getElementById('btnChangePassword'),'{!JSENCODE($Label.SS_ProfilePasswordChange)}');  
+	}
+</script>
+</apex:page>

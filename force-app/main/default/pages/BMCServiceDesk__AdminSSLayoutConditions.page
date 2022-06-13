@@ -1,0 +1,90 @@
+<apex:page controller="BMCServiceDesk.AdminSSLayoutConditionsCtrl" standardStylesheets="false" showHeader="false" sidebar="false">
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/RFAdminExt4Common.css"/> 
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSSLayoutConditions.css" />
+    <apex:outputPanel rendered="{!IF( userLanguage=='iw', true, false )}">
+              <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSSLayoutConditionsrtl.css" /> 
+    
+    </apex:outputPanel>
+    <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+       
+    <apex:form >
+        <script>
+        var userLanguage = '{!JSENCODE(userLanguage)}';
+        var Conditionslbl= '{!JSENCODE($Label.Conditions)}';
+        var saveToolTip = '{!JSENCODE($Label.BMCServiceDesk__save)}';
+        var clearAllLbl = '{!JSENCODE($Label.BMCServiceDesk__ClearAll)}';
+        var deleteToolTip = '{!JSENCODE($Label.BMCServiceDesk__delete)}';
+        var pleaseWaitLbl = '{!JSENCODE($Label.BMCServiceDesk__pleasewait)}';
+        var saveSuccessMsg = '{!JSENCODE($Label.BMCServiceDesk__recordsavedsuccessfuly)}';
+        var noOfCondsLbl = '{!JSENCODE($Label.BMCServiceDesk__conditionscount)}'; 
+        var MinimumOneConditionRequired= '{!JSENCODE($Label.BMCServiceDesk__minimumoneconditionrequired)}'; 
+        var MultiRecordsSave='{!JSENCODE($Label.BMCServiceDesk__multirecordssave)}';
+        var FieldLabel='{!JSENCODE($Label.BMCServiceDesk__fieldlabel)}';
+        var FieldType='{!JSENCODE($Label.BMCServiceDesk__cmdb_2_0_fieldtype)}';
+        var requiredLbl = '{!JSENCODE($Label.BMCServiceDesk__Required)}';
+        var dynamicDisplayLabel='{!JSENCODE($Label.BMCServiceDesk__dynamicdisplay)}';
+        //'({0} conditions)';
+        var fldData = '{!JSENCODE(layoutFlds)}';
+        var fldVSCondsMapJSON = '{!JSENCODE(fldVSCondsMapJSON)}';
+        var layoutName = '{!JSENCODE(layoutName)}';
+        var layoutlabel = '{!JSENCODE(layoutlabel)}';
+        var saveEnabled = {!saveEnabled};
+        var EF = '¶ऽӘф'; //Cyrillic character
+        var fldsAndCondtions = {};
+        var  FieldConditions='{!JSENCODE($Label.BMCServiceDesk__fieldconditions)}';
+		var wikiUrl = '{!JSENCODE(wikiUrl)}';
+		var helpLbl = '{!JSENCODE($Label.TooltipHelp)}';
+		var ObjectName= '{!JSENCODE(Objectname)}';
+        </script>
+        
+        <apex:outputPanel id="savePanelId">
+            <script>
+                var errorMsg = '{!JSENCODE(errorMsg)}';
+            </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="reloadPanelId">
+            <script>
+                saveEnabled = {!saveEnabled};
+                errorMsg = '{!JSENCODE(errorMsg)}';
+                fldData = '{!JSENCODE(layoutFlds)}';
+                fldVSCondsMapJSON = '{!JSENCODE(fldVSCondsMapJSON)}';
+                fldsAndCondtions = {};
+          </script>
+        </apex:outputPanel>
+        
+        <apex:actionFunction action="{!saveFldsAndConditions}" name="saveFldsAndConditions" oncomplete="saveComplete();" reRender="savePanelId">
+            <apex:param assignTo="{!layoutFldsJSON}" name="layoutFldsJSON" value=""/>
+            <apex:param assignTo="{!conditionsJSON}" name="conditionsJSON" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!reloadGridData}" name="reloadGrid" oncomplete="reloadComplete();" reRender="reloadPanelId"></apex:actionFunction>
+        
+        <div id="tbar" style=""></div>
+        <div class="main-div1-cls">
+            <div class="main-div2-cls">
+            <span class="rf-float-left">
+                <apex:outputLabel styleClass="outputlabel" value="{!JSENCODE($Label.bmcservicedesk__fields_from_layout)}"></apex:outputLabel>
+                <apex:outputLabel styleClass="outputlabel" value="{!layoutlabel}"></apex:outputLabel>
+             </span>
+             <span class="rf-float-right">
+                <div id="bbar" ></div>
+                </span>
+            </div>
+            <div id="mainFieldsGridDivId"></div>
+        </div>
+    </apex:form>
+    <div id="SaveMessageDiv" class="d-notification d-notification_success d-notification_content" style="visibility:hidden; display: none;">
+                            <div class="d-notification__icon d-icon-left-check"></div>
+                            <div class="d-notification__supporting-text">
+                                <h3 class="d-notification__item"><apex:outputText value="{!$Label.bmcservicedesk__savedsuccessfully}" /></h3>
+                            </div>
+    </div>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js" />
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminSSLayoutConditions.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/JSCommon.js"></script>
+    </apex:page>

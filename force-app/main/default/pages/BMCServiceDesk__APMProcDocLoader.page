@@ -1,0 +1,78 @@
+<apex:page contentType="text/javascript" controller="BMCServiceDesk.APMPageController">
+	var userLang = '{!userLanguage}';
+	var docName = '';
+    var dwnldBtn = document.getElementsByName("Download")[0];
+    if(dwnldBtn == null || dwnldBtn == 'undefined' || dwnldBtn == undefined || typeof(dwnldBtn) == 'undefined'){ 
+    	//do nothing. Done because using 'and' logical operator throws error during compilation
+    }	
+    else{   
+	    var hrefStr = dwnldBtn.parentElement.href;
+	    docName = getDocName(hrefStr);
+	    if(docName == null || docName == '' || userLang == null){
+	    	//do nothing. Done because using 'and' logical operator throws error during compilation
+	    }
+	    else{
+			if(userLang != ''){
+		    	if(userLang == 'DE' || userLang == 'de')
+		        	dwnldBtn.parentElement.href = '{!$Resource.ProcessDocuments_de}/' + docName;
+				else if(userLang == 'ES' || userLang == 'es')
+		             	dwnldBtn.parentElement.href = '{!$Resource.ProcessDocuments_es}/' + docName;
+				else if(userLang == 'FR' || userLang == 'fr')
+		        	dwnldBtn.parentElement.href = '{!$Resource.ProcessDocuments_fr}/' + docName;
+		        else if(userLang == 'JA' || userLang == 'ja')
+		        	dwnldBtn.parentElement.href = '{!$Resource.ProcessDocuments_ja}/' + docName;
+				else if(userLang == 'pt_BR' || userLang == 'pt_br' || userLang == 'PT_BR')
+		        	dwnldBtn.parentElement.href = '{!$Resource.ProcessDocuments_pt_BR}/' + docName;
+			}
+		}
+    	if(dwnldBtn.parentElement != undefined  )
+    		if(dwnldBtn.parentElement.style != undefined  )
+				dwnldBtn.parentElement.style.pointerEvents='auto';
+	}
+				
+    var catTmpl = document.getElementsByName("CatTmpl")[0];
+    var slaTmpl = document.getElementsByName("SLATmpl")[0];
+	var scoreCardTmpl = document.getElementsByName("ScoreCardTmpl")[0];
+	
+	updateHref(catTmpl);
+	updateHref(slaTmpl);
+	updateHref(scoreCardTmpl);
+	
+	function getDocName(hrefStr){
+		var retDocName = '';
+		if(hrefStr == null || hrefStr == '')
+			return retDocName;
+		var pos1 = hrefStr!=''?(hrefStr.indexOf('/ProcessDocuments/') + 18):-1;
+		if(pos1 != -1)
+        	retDocName = hrefStr.substring(pos1, hrefStr.length);
+		return retDocName;
+	}
+	
+	function updateHref(elem){
+		if(elem == null || elem == 'undefined' || elem == undefined || typeof(elem) == 'undefined'){
+			//do nothing. Done because using 'and' logical operator throws error during compilation
+		}
+		else
+		{
+			var hrefStr = elem.href;
+	    	docName = getDocName(hrefStr);
+	    	if(docName == null || docName == '' || userLang == null){
+	    		//do nothing. Done because using 'and' logical operator throws error during compilation
+	    	}
+	    	else{
+				if(userLang != ''){
+		    		if(userLang == 'DE' || userLang == 'de')
+		        		elem.href = '{!$Resource.ProcessDocuments_de}/' + docName;
+					else if(userLang == 'ES' || userLang == 'es')
+		             	elem.href = '{!$Resource.ProcessDocuments_es}/' + docName;
+					else if(userLang == 'FR' || userLang == 'fr')
+		        		elem.href = '{!$Resource.ProcessDocuments_fr}/' + docName;
+		        	else if(userLang == 'JA' || userLang == 'ja')
+		        		elem.href = '{!$Resource.ProcessDocuments_ja}/' + docName;
+					else if(userLang == 'pt_BR' || userLang == 'pt_br' || userLang == 'PT_BR')
+						elem.href = '{!$Resource.ProcessDocuments_pt_BR}/' + docName;
+				}
+			}
+		}
+	}
+</apex:page>

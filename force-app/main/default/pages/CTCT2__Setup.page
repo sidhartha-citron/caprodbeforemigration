@@ -1,0 +1,208 @@
+<apex:page controller="CTCT2.Setup_Controller"  action="{!InitPage}" sidebar="false" tabstyle="Setup__tab">
+
+    <style>
+    .forgot { font-size:8pt; }
+    .message {margin-bottom:10px;} /* Add some space after the pageMessages component */
+    </style>
+    <apex:sectionHeader title="Constant Contact for Salesforce"  subtitle="Setup"/>
+    <apex:pageMessages id="errors" />
+    <script type="text/javascript">var errors = document.getElementById('{!$Component.errors}');</script>
+    
+    <!-- Start of View Mode -->
+    <apex:outputPanel id="ViewMode" rendered="{!Mode=='view'}">
+        <apex:pageBlock id="creds" title="Authentication Settings" helpTitle="Help for this page" helpUrl="{!helpURL.helpurlAuthentication}">
+        <table>
+        <tr>
+        <td style="width:450px;">
+            <apex:form >    
+                <table>
+                <tr style="vertical-align:bottom;">
+                    <th>
+                        <apex:outputLabel value="User Name:" />
+                    </th>
+                    <td  style="vertical-align:bottom;">
+                        <apex:outputText value="{!username}" />
+                        <apex:outputText value=" (none)" rendered="{!username==null}" />
+                    </td>
+                </tr>
+                </table>
+                
+                <div style="text-align:right;width:400px;"> 
+                </div>
+        
+            <div style="text-align:right;width:400px;"> 
+                <apex:commandButton value="Edit" action="{!DoEditMode}" />
+            </div>
+    
+            </apex:form>
+        </td>
+        <td style="border-left:2px solid #DBDBDB;padding-left:20px;" > 
+                  <b>Don't have a Constant Contact account?</b><br />
+                  <a href="{!$PAGE.SignUp}?sfdc.tabName={!tabName}" class="forgot">Create one now</a>.
+                  <br />&nbsp;
+                  <br />&nbsp;
+        </td>
+        </tr>
+        </table>
+        </apex:pageBlock>
+    </apex:outputPanel>
+    <!-- End of View Mode -->
+
+
+    <!-- Start of Edit Mode -->
+    <apex:outputPanel id="EditMode" rendered="{!Mode=='edit'}">
+        <apex:form >    
+        <apex:pageBlock id="creds" title="Authentication Settings" helpTitle="Help for this page" helpUrl="{!helpURL.helpurlAuthentication}">
+            <table>
+            <tr style="vertical-align:middle;" >
+            <td style="width:450px;">
+                <apex:actionRegion >
+                <table>
+                <tr>
+                    <td colspan="3">
+                        Login with your Constant Contact username and password<br />&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <apex:outputLabel value="User Name:" />
+                    </th>
+                    <td>
+                        <apex:inputText value="{!username}" style="width:200px;" onchange="loginStatusChanged();"/>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th>
+                        <apex:outputLabel value="Password:" />
+                    </th>
+                    <td>
+                        <input type="password" id="fldPassword" value="{!password}" style="width:200px;" onchange="loginStatusChanged();"/>
+                        <div style="visibility:hidden;display:none;"><apex:inputText id="thePassword" value="{!password}" /></div> 
+                        &nbsp;
+                    </td>
+                    <td>
+                        <input type="button" value="Test Login" class="btn" onClick="doLogin();" />
+                        &nbsp;
+                        <apex:outputPanel id="imgLoginResults" >
+                            <apex:image value="{!$Resource.CTCT2__positive}" rendered="{!loginStatus='Success'}" />
+                        </apex:outputPanel>
+    
+                        <br />
+                       <script type="text/javascript">
+                       var imgLoginResults = document.getElementById('{!$Component.imgLoginResults}');
+                       
+                       function loginStatusChanged() {
+                            imgLoginResults.style.display = 'none';
+                            imgLoginResults.style.visibility = 'hidden';
+                       }
+                       
+                        // Get the password from the HTML field and stuff it into the VF field
+                        // so our action methods can find it.
+                        function stashPassword() {
+                            var elemFldPassword = document.getElementById('fldPassword');
+                            var elemThePassword = document.getElementById('{!$Component.thePassword}');
+                            elemThePassword.value = elemFldPassword.value;
+                        }
+                        </script>
+                    </td>
+                </tr>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td colspan="2">
+                        <apex:outputPanel style="color:red;font-size:8pt;" rendered="{!loginStatus=='Failure'}" >
+                        <div style="padding-bottom:10px;">
+                            Invalid User Name and / or Password.  Please try again. 
+                        </div>
+                        </apex:outputPanel>
+                        
+                        <div style="padding-bottom:5px;padding-top:5px;">
+                        <a target="ctctwin" href="http://ui.constantcontact.com/rnavmap/em/site/recoverUsername" class="forgot" >
+                        Forgot your Username?
+                        </a>
+                        </div>
+                        <div>
+                        <a target="ctctwin" href="https://ui.constantcontact.com/rnavmap/em/site/passwordReset" class="forgot">
+                        Forgot your Password?
+                        </a>
+                        </div>
+                    </td>
+                </tr>
+                </table>
+                </apex:actionRegion>
+            </td>
+            <td style="border-left:2px solid #DBDBDB;padding-left:20px;" > 
+                   <b>
+                    Don't have a Constant Contact account?
+                   </b><br />
+                  <a target="ctctwin" href="{!$PAGE.SignUp}?sfdc.tabName={!tabName}" class="forgot">
+                  Create one now</a>.
+                   <br />&nbsp;
+                   <br />&nbsp;
+            </td>
+            </tr>
+            </table>
+            
+        </apex:pageBlock>
+    
+    
+            <div style="text-align:right;width:400px;"> 
+                <apex:commandButton value="Save"   onClick="doSaveSetupTab();return false;" />
+                <apex:commandButton value="Cancel" action="{!Cancel}" immediate="true"/>
+            </div>
+    
+            <apex:outputPanel id="setupResults" rendered="false">
+                <textarea style="width:100%;height:200px;">{!dbg}</textarea>
+            </apex:outputPanel>
+
+            <apex:actionFunction name="login" action="{!LogIn}" rerender="EditMode" />
+            <apex:actionFunction name="SaveSetupTab" action="{!SaveSetupTab}" />
+            <apex:actionFunction name="DoCancel" action="{!Cancel}" immediate="true" />
+    
+           <script type="text/javascript">
+
+            // Attempt to log in with the information the user provided.
+            function doLogin() {
+                // Get the password from the HTML field and stuff it into the VF field
+                stashPassword();
+
+                // Clear error message at top of the page (if present).
+                errors.innerHTML = '';
+                
+                // Send the info up to Salesforce
+                login();
+            }
+            
+            // Save the user's changes
+            function doSaveSetupTab() {
+
+                // Get the password from the HTML field and stuff it into the VF field
+                stashPassword();
+                
+                // Send the info up to Salesforce
+                SaveSetupTab();
+            }
+           </script>
+        </apex:form>
+    </apex:outputPanel>
+    <!-- End of Edit Mode -->
+    
+    <apex:pageBlock title="Upload Mappings">
+        <apex:form >
+            <apex:outputPanel layout="none" rendered="{!canAccessContactMappings}">
+                <apex:commandButton value="Contact Mappings" action="{!contactMappings}"/>
+            </apex:outputPanel>
+            <apex:outputPanel layout="none" rendered="{!NOT(canAccessContactMappings)}">
+                <apex:commandButton value="Contact Mappings" action="{!contactMappings}" onclick="alert('You must have read access to Contacts and create, read and edit access to Mappings.'); return false;"/>
+            </apex:outputPanel>
+            &nbsp;&nbsp;
+            <apex:outputPanel layout="none" rendered="{!canAccessLeadMappings}">
+                <apex:commandButton value="Lead Mappings" action="{!leadMappings}"/>
+            </apex:outputPanel>
+            <apex:outputPanel layout="none" rendered="{!NOT(canAccessLeadMappings)}">
+                <apex:commandButton value="Lead Mappings" action="{!leadMappings}" onclick="alert('You must have read access to Leads and create, read and edit access to Mappings.'); return false;"/>
+            </apex:outputPanel>
+        </apex:form>
+    </apex:pageBlock>
+    
+</apex:page>

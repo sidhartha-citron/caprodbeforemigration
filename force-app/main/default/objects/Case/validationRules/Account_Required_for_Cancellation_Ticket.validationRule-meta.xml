@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Account_Required_for_Cancellation_Ticket</fullName>
+    <active>true</active>
+    <description>validation that prevents users from saving a cancellation ticket record without account name.  Cancellation ticket assignment logic for &apos;Sales&apos; cancellation tickets looks at ticket.account owner, and will return an error if ticket Account Name is null.</description>
+    <errorConditionFormula>AND(
+ISNEW(),
+CASESAFEID(RecordType.Id)  = $Setup.Field_Service_Settings__c.Cancellation_Ticket_Record_Type__c,
+ISNULL(AccountId)
+)</errorConditionFormula>
+    <errorMessage>Account Name required. Cancellation tickets must be created using the button on the Account page.  Account &gt; &quot;Ticket - Cancellation&quot; button.</errorMessage>
+</ValidationRule>

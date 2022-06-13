@@ -1,0 +1,2342 @@
+<apex:page title="MapAnything Settings" controller="sma.MapAnythingBaseObjects" extensions="sma.MARemoteFunctions,sma.MAAdminAJAXResources" sidebar="false" setup="false">
+    <apex:slds />
+    <apex:outputPanel rendered="{!hasMapAnythingLiveLicense}">
+        <script type='text/javascript'>
+            if (typeof $ == 'undefined')
+            {
+                document.write("<script type='text/javascript' src='{!URLFOR($Resource.MapAnything, 'jquery/jquery-3.4.1.min.js')}'></script"+">");
+                document.write("<script type='text/javascript' src='{!URLFOR($Resource.MapAnything, 'jquery/jquery-ui.min.js')}'></script"+">");
+                document.write("<link rel='stylesheet' type='text/css' href='{!URLFOR($Resource.MapAnything, 'jquery/jquery-ui.css')}'></link"+">");
+                document.write("<script type='text/javascript' src='{!URLFOR($Resource.MapAnything, 'jstree/jquery.jstree2.js')}'></script"+">");
+            }
+        </script>
+        
+        <script> 
+            var MARemoting = {
+                processAJAXRequest : '{!$RemoteAction.MARemoteFunctions.processAJAXRequest}',
+                AdminStartUpAction: '{!$RemoteAction.MAAdminAJAXResources.AdminStartUpAction}'
+            }
+        </script>
+        
+        <!-- jQuery Combo Box (depends on jQuery UI) -->
+        <script src="{!URLFOR($Resource.AdminSettings, 'js/combobox/jquery.combobox.js')}" type="text/javascript"></script>
+        <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.AdminSettings, 'js/combobox/jquery.combobox.css')}" />
+        
+        <!-- jQuery Multiselect (depends on jQuery UI) -->
+        <script src="{!URLFOR($Resource.AdminSettings, 'js/multiselect/jquery.multiselect.min.js')}" type="text/javascript"></script>
+        <script src="{!URLFOR($Resource.AdminSettings, 'js/multiselect/jquery.multiselect.filter.js')}" type="text/javascript"></script>
+        <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.AdminSettings, 'js/multiselect/jquery.multiselect.css')}" />
+        <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.AdminSettings, 'js/multiselect/jquery.multiselect.filter.css')}" />
+        <script type="text/javascript" src="{!URLFOR($Resource.MapAnything, 'toastr/toastr.min.js')}"></script>
+        <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.MapAnything, 'toastr/toastr.min.css')}"></link>   
+            
+        <!-- JS Color -->
+        <apex:includeScript value="{!URLFOR($Resource.sma__MapAnything, 'jscolor/jscolor.js')}"/>
+    
+        <!-- Glyphicons -->
+        <apex:stylesheet value="{!URLFOR($Resource.sma__MapAnything, 'css/MapAnything.css')}"/>
+        
+        <!-- JS Zip -->
+        <apex:includeScript value="{!URLFOR($Resource.sma__AdminSettings, 'js/jszip/jszip.js')}"/>
+    	<apex:includeScript value="{!URLFOR($Resource.sma__AdminSettings, 'js/jszip/jszip-load.js')}"/>
+    	<apex:includeScript value="{!URLFOR($Resource.sma__AdminSettings, 'js/jszip/jszip-deflate.js')}"/>
+    	<apex:includeScript value="{!URLFOR($Resource.sma__AdminSettings, 'js/jszip/jszip-inflate.js')}"/>
+        
+        <!-- Helpers -->
+        <script type='text/javascript' src="{!URLFOR($Resource.MapAnythingJS, 'JSHelperFunctions.js')}"></script>
+        <c:CSSHelperBlue />
+    
+        <!-- CSS -->
+        <apex:stylesheet value="{!URLFOR($Resource.sma__MapAnything, 'css/style.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.sma__MapAnything, 'style.css')}"/>
+        
+        <!-- Lightning Design System 2.3.0 -->
+        <!-- <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.MapAnythingJS, 'styles/css/salesforce-lightning-design-system-2.4.6_scoped.min.css')}" /> -->
+        
+        <!-- icon-font -->
+        <apex:stylesheet value="{!URLFOR($Resource.sma__MapAnythingJS, 'styles/styles.css')}"/>
+        <!-- MapAnything Configuration Page Styling -->
+        <apex:stylesheet value="{!URLFOR($Resource.sma__MapAnythingJS, 'styles/css/ma-configuration-ui.css')}"/>
+
+        <apex:outputPanel layout="none" rendered="{!(PendoEnabled == 'true')}">
+            <script>
+                (function(apiKey){
+                    (function(p,e,n,d,o){var v,w,x,y,z;o=p[d]=p[d]||{};o._q=[];
+                    v=['initialize','identify','updateOptions','pageLoad'];for(w=0,x=v.length;w<x;++w)(function(m){
+                    o[m]=o[m]||function(){o._q[m===v[0]?'unshift':'push']([m].concat([].slice.call(arguments,0)));};})(v[w]);
+                    y=e.createElement(n);y.async=!0;y.src='https://cdn.pendo.io/agent/static/'+apiKey+'/pendo.js';
+                    z=e.getElementsByTagName(n)[0];z.parentNode.insertBefore(y,z);})(window,document,'script','pendo');
+
+                    // Call this whenever information about your visitors becomes available
+                    // Please use Strings, Numbers, or Bools for value types.
+                    pendo.initialize({
+                        visitor: { 
+                            id: '{!JSENCODE($User.Id)}',
+                            email: '{!JSENCODE($User.Email)}',
+                            firstName: '{!JSENCODE($User.FirstName)}',
+                            lastName: '{!JSENCODE($User.LastName)}',
+                            userName: '{!JSENCODE($User.Username)}',
+                            userAgent: window.navigator.userAgent
+                        },
+
+                        account: { 
+                            id: '{!JSENCODE($Organization.Id)}', // Highly recommended
+                            name: '{!JSENCODE($Organization.Name)}'
+                            // planLevel:    // Optional
+                            // planPrice:    // Optional
+                            // creationDate: // Optional
+
+                            // You can add any additional account level key-values here,
+                            // as long as it's not one of the above reserved names.
+                        }
+                    });
+                })('3678d139-e89d-4a02-78a2-9822552912f0');
+            </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel layout="none" rendered="{! $User.UIThemeDisplayed == 'Theme4d' || $User.UIThemeDisplayed == 'Theme4u' }">
+            <script type='text/javascript'>
+                $.ajaxSetup({
+                    dataFilter: function (rawData,type)
+                    {
+                        try
+                        {
+                            if (rawData != undefined  && rawData != '')
+                            {
+                                if (type === 'JSON' || type == 'JSONP' || type=='json' || type =='jsonp')
+                                {
+                                    return rawData.replace(/<script.*?>.*?<\/script>/igm, '');
+                                }
+                            }
+                        }
+                        catch (ex)
+                        {
+                            
+                        }
+                    }
+                });
+            
+                jQuery.ajaxSetup({
+                    dataFilter: function (rawData,type)
+                    {
+                        try
+                        {
+                            if (rawData != undefined  && rawData != '')
+                            {
+                                if (type === 'JSON' || type == 'JSONP' || type=='json' || type =='jsonp')
+                                {
+                                    return rawData.replace(/<script.*?>.*?<\/script>/igm, '');
+                                }
+                            }
+                        }
+                        catch (ex)
+                        {
+                            
+                        }
+                    }
+                });
+        
+            </script>
+        </apex:outputPanel>
+        
+        <style type='text/css' class='adminsettings-css'>
+    
+            .modal-layer {
+                display: none;
+                position: absolute;
+                z-index: 1;
+                width: 100%;
+                height: 100%;
+                background-color: #000000;
+                opacity: 0.5;
+                -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity = 50);
+                filter: alpha(opacity = 50);
+            }
+        
+            /* Basics */                
+            #adminsettings-error {
+                padding: 15px;
+                width: 800px;
+                overflow: hidden;
+            
+                {! IF(pageState != 'error', 'display: none;', '') }
+            }
+            #adminsettings-error h3 {
+                display: block;
+                margin: 10px 0;
+                color: #757575;
+            }
+            #adminsettings {
+                overflow: hidden;
+                
+                {! IF(pageState != 'edit', 'display: none;', '') }
+            }
+            #adminsettings .availableobject-settings {            
+                width: 100%;
+                overflow: hidden;
+                display: none;
+            }
+            #adminsettings .baseobject-settings {            
+                width: 100%;
+                overflow: hidden;
+                display: none;
+            }
+            #adminsettings .baseobject-settings .mapitdescription {
+                color: #757575; 
+                font-weight: bold;        
+            }
+            #adminsettings-templates {
+                display: none;
+            }
+            span.link
+            {
+                color: blue;
+                cursor: pointer;
+            }
+            span.link.small
+            {
+                font-size: 10px;
+                font-weight: bold;
+            }
+            .warning-box {
+                min-height: 80px;
+                border: 1px solid #faebcc;
+                color: #8a6d3b;
+                background-color: #fcf8e3;
+            }
+            .dateliteralpicker
+            {
+                cursor: pointer;
+            }
+            .value input.invalid
+            {
+                background: transparent url({!URLFOR($Resource.QueryEditor, 'images/icons/badge-circle-cross-16.png')}) no-repeat right center;
+            }
+            .ui-autocomplete
+            {
+                z-index: 99999 !important;
+                max-height: 300px !important;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+            .PICKLIST > ul, .filterbyowner ul
+            {
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+            }
+            .PICKLIST li, .filterbyowner li
+            {
+                padding: 0;
+                margin: 0;
+            }
+            #adminsettings tr > td.actions > div, #adminsettings tr > td.crossfilteractions > div, #adminsettings tr > td.activitysubfilteractions > div
+            {
+                display: none;
+            }
+            #adminsettings tr:hover > td.actions > div, #adminsettings tr:hover > td.crossfilteractions > div, #adminsettings tr:hover > td.activitysubfilteractions > div
+            {
+                display: block;
+            }        
+            
+            /* Tabs */
+            #adminsettings .BottomTabs
+            {
+                background: none;
+                border: none;
+            }
+            #adminsettings .BottomTabs > ul
+            {
+                width: auto;
+                padding: 0 8px;
+                background: none;
+                border: none;
+                border-bottom: 1px solid #CCC;
+                border-top-right-radius: 0;
+                border-top-left-radius: 0;
+                border-bottom-right-radius: 0;
+                border-bottom-left-radius: 0;
+            }
+            #adminsettings .BottomTabs > ul .ui-state-default
+            {
+                background: #3684c5;
+                border: medium none;
+                border-radius: 0 0 0 0;
+                border: 1px solid #19508C;
+                box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset, 0 0 4px rgba(255, 255, 255, 0.2) inset;
+                margin: 0 0 0 0;
+            }
+            #adminsettings .BottomTabs > ul li.ui-tabs-active
+            {
+                border: 1px solid #CCC;
+                background: white;
+                color: #222;
+            }
+            #adminsettings .BottomTabs > ul li a
+            {
+                color: #ffffff;
+                font-size: 10px;
+                outline: none;
+            }
+            #adminsettings .BottomTabs > ul li.ui-tabs-active a
+            {
+                color: #3684c5;
+            }
+            #adminsettings .BottomTabs > .ui-tabs-panel
+            {
+                padding: 15px;
+            }
+            
+            /* Boxes */
+            #adminsettings .box.gray {
+                border: 1px solid #C7C7C7;
+                padding:5px;
+                margin:5px 0 10px 0;
+                background:#efefef;
+            }
+            
+            /* Sections */
+            #adminsettings .section {
+                position: relative;
+            }
+            #adminsettings .section .section-header {
+                color: #2265BB;
+            }
+            #adminsettings .section .section-buttons {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+            }
+            #adminsettings .section .section-buttons .section-button {
+                padding-left: 18px;
+                height: 16px;
+                line-height: 18px;
+                font-size: 10px;
+                cursor: pointer;
+            }
+            #adminsettings .section .section-buttons .section-button.add {
+                background: transparent url("{!URLFOR($Resource.QueryEditor, 'images/icons/badge-circle-plus-16.png')}") left center no-repeat;
+            }
+            
+            /* Forms */
+            #adminsettings table.form td:first-child {
+                font-weight: bold;
+                padding-right: 15px;
+            }
+                    
+            /* Buttons */
+            /* #adminsettings .buttons {
+                padding: 0 10px;
+            }        
+            #adminsettings .buttons-create {
+                padding: 0 10px;
+            }        
+            #adminsettings .buttons-edit {
+                padding: 0 10px;
+            }
+            #adminsettings .buttons-delete {
+                padding: 0 10px;
+            }
+            #adminsettings .btn {
+                width: 70px;
+            }
+            #adminsettings .btn2 {
+                width: 150px;
+            } */
+            
+            /* Comboboxes */
+            #adminsettings .ui-combobox
+            {
+                padding-right: 0;
+            }
+            #adminsettings .ui-combobox input
+            {
+                background-color: white;
+                background: white;
+                padding-right: 30px;
+                font-weight: bold;
+            }
+            #adminsettings .ui-combobox a
+            {
+                background: transparent;
+                border: none;
+                position: absolute;
+                right: 0;
+            }
+            #adminsettings .ui-combobox a .ui-button-icon-primary
+            {
+                background: transparent url("{!URLFOR($Resource.QueryEditor, 'images/icons/combobox-arrow-16.png')}") no-repeat center;
+            }
+            
+            .crossobjectoptions input.ui-autocomplete-input {
+                width: 300px;
+            }
+            
+            /* Date pickers */
+            #adminsettings .ui-datepicker {
+                z-index: 9999999999 !important;
+            }
+            
+            /* Create Fields, Buttons, and Workflows Popups */
+            /* Edit Page Layouts and List Views Popups */
+            #dialog-createfields-table-wrapper th span.link, #dialog-createpurgeworkflows-table-wrapper th span.link, #dialog-deletepurgeworkflows-table-wrapper th span.link, #dialog-addmapitbuttonstolayout-table-wrapper th span.link, #dialog-deletemapitbuttonsfromlayout-table-wrapper th span.link{
+            	color: white;
+            }
+            .createablefield-row .createablefield-exists {
+            	text-align: center;
+            }
+            
+            /* Fix jsTree checkbox images */
+            .jstree-default .jstree-unchecked > a > .jstree-checkbox:hover {
+                background-position: -2px -41px;
+            }
+            .jstree-default .jstree-checked > a > .jstree-checkbox {
+                background-position: -50px -19px;
+            }
+            .jstree-default .jstree-checked > a > .jstree-checkbox:hover {
+                background-position: -50px -41px;
+            }
+            .jstree-default .jstree-undetermined > a > .jstree-checkbox {
+                background-position: -26px -21px;
+            }
+            .jstree-default .jstree-undetermined > a > .jstree-checkbox:hover {
+                background-position: -26px -42px;
+            }
+            
+            /* Temporary fix for header links divider */
+            span.divider {
+            	float: none;
+    			display: inline;
+    			background: none;
+    			margin: 0;
+            }
+            .chatter-post-merge-fields td
+            {
+                color: #757575;
+            }
+           
+        </style>
+        
+        <c:MA />
+        
+        <script>       
+        	var batchFailures = 0;
+    		var requestsOut = 0;
+         	var creationFailures = 0;
+    		var lastError = '';
+    		var statusCode;
+    		
+    		var SelectedSavedQueries = '';
+          
+            $(function() { 
+                $( "#adminsettings .BottomTabs" ).tabs();
+                
+                FillBaseObjectComboBoxes();
+                
+                //comboboxes
+                $('body').on('focus', '.ui-autocomplete-input', function () { var $me = $(this); setTimeout(function () {$me.select();}, 100); });
+                $('.combobox').combobox();       
+                
+                //Initialize Saved Query tree popup dialog for Map It
+                $( "#dialog-SQTree").dialog({
+                    autoOpen: false,
+                    height: 600,
+                    width: 450,
+                    modal: true,
+                    resizable:true,
+                    buttons: {
+                        "Submit": function() {
+                            SelectedSavedQueries = '';   
+                            var SavedQueries = new Array();
+                            $('#SQTree').jstree("get_checked",null,true).each(
+                                function(index,element)
+                                {
+                                    if($(element).attr("nodetype") ===  "PersonalSavedQuery" || $(element).attr("nodetype") ===  "CorporateSavedQuery")
+                                    {                                
+                                        SavedQueries.push($(element).attr("id"));
+                                    }
+                                }
+                            );
+                             
+                            SelectedSavedQueries = SavedQueries.join(',');
+                            $('#dialog-SQTree').dialog( "close" );
+                            BuildMapItURL();
+                        },
+                         "Cancel": function() {                        
+                            $('#dialog-SQTree').dialog( "close" );
+                        }
+                    }           
+                });
+                
+                //Initialize Saved Query tree for Map It
+                $("#SQTree").jstree({
+                    "json_data" : {
+                        "data": "",
+                        "ajax" : {
+                            "url" : "/apex/MapAnythingTree2",
+                            "data" : function (n) { 
+                                
+                                return { 
+                                    id : n.attr ? n.attr("id") : 0, 
+                                    rand : new Date().getTime(),
+                                    type: n.attr ? n.attr("NodeType") : 0
+                                }; 
+                            }
+                        }
+                    },
+                    "types" : {     
+                        "types" : {
+                            "savedquery" : {
+                                "icon" : { 
+                                    "image" : "{!URLFOR($Resource.MapAnything, 'jstree/themes/default/d.png')}" 
+                                }
+                            }
+                        }
+                    },
+                    "core": { 
+                        "animation" : 10, 
+                        "strings": 
+                            {
+                                "loading" : "Loading...",
+                                "new_node" : "New Folder" 
+                            }
+                    
+                    },
+                    "plugins" : ["themes","json_data","ui","crrm","types","checkbox"]
+                                    
+                }); //End jstree
+                
+                /* Handle new Base Object onchange event */
+                $('#adminsettings select.availableobject').change(function() {                
+                    var bObject = $(this).val();
+                    if(bObject === '--None--')
+                    {
+                        $( '#adminsettings .availableobject-settings' ).hide();
+                    }
+                    else
+                    {                    
+                        //show loading
+                        $('.availableobject-settings .combobox').next().prepend("<div class='loadmask'></div>").find('input').val('Loading...');
+    
+                        //Populate available fields
+                        var processData = {
+            				action	: 'populate_available_fields',
+            				object : bObject,
+            				type : 'live'
+                        };
+                        
+                        Visualforce.remoting.Manager.invokeAction(MARemoting.AdminStartUpAction,
+                            processData,
+                            function(json, event){
+                                if(json.success)
+                                { 
+                                    // address location
+                                    var $addressloc = $("select.newbaseobjectdetails[data='addressloc']");
+                                    
+                                    $addressloc.find('option').remove();        
+                                    $('<option></option>').text('--None--').attr('selected',true).appendTo($addressloc);     
+                                    
+                                    $.each(json.RelationshipFields, function (i, record) 
+                                    {
+                                        if(record.value === 'SAME')
+                                        {
+                                            $('<option selected="true"></option>').attr('value', record.value).text(record.name).appendTo($addressloc); 
+                                        }
+                                        else
+                                        {
+                                            $('<option></option>').attr('value', record.value).text(record.name).appendTo($addressloc); 
+                                        }
+                                                           
+                                    });
+                                    $addressloc.removeAttr('disabled').find('option:first-child').text('--None--');
+                                    $addressloc.each(function(i, obj) {                          
+                                        $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                    });
+                                    $addressloc.combobox();
+                                    
+                                    
+                                    // device fields
+                                    var $devicefield = $("select.newbaseobjectdetails[data='devicefield']");
+                                    
+                                    $devicefield.find('option').remove();        
+                                    $('<option></option>').text('--Please Choose--').attr('selected',true).appendTo($devicefield);
+                                    
+                                    $.each(json.AddressFields, function (i, record) 
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($devicefield);                
+                                    }); 
+                                    $devicefield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);;                          
+                                    $devicefield.each(function(i, obj) {                          
+                                        $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                    });
+                                    $devicefield.combobox();
+                                   
+                                   
+                                    // address fields
+                                    var $addressfield = $("select.newbaseobjectdetails[data='addressfield']");
+                                    
+                                    $addressfield.find('option').remove();        
+                                    $('<option value=""></option>').text('--None--').attr('selected',true).appendTo($addressfield);
+                                    
+                                    $.each(json.AddressFields, function (i, record) 
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($addressfield);                
+                                    }); 
+                                    $addressfield.removeAttr('disabled').find('option:first-child').text('--None--').attr('selected',true);                          
+                                    $addressfield.each(function(i, obj) {                          
+                                        $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                    });
+                                    $addressfield.combobox();
+        
+                                    
+                                    // record type fields
+                                    var $recordTypeField = $('select.newbaseobjectdetails[data="recordtypefield"]');
+                                    $recordTypeField.find('option:not(:first-child)').remove();
+                                    $.each(json.RecordTypes, function (i, record) 
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($recordTypeField);
+                                    }); 
+                                    $recordTypeField.removeAttr('disabled').find('option:first-child').text('--All--').attr('selected',true);                          
+                                    $recordTypeField.each(function(i, obj) {
+                                        $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                    });
+                                    $recordTypeField.combobox();
+        
+                                    var $datetimeField = $('select.newbaseobjectdetails[data="datetime"]');
+                                    $datetimeField.find('option:not(:first-child)').remove();
+                                    $.each(json.DatetimeFields, function (i, record)
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($datetimeField);
+                                    });
+                                    $datetimeField.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);                          
+                                    $datetimeField.each(function(i, obj) {                          
+                                        $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                    });
+                                    $datetimeField.combobox();
+        
+                                    var $booleanField = $('select.newbaseobjectdetails[data="boolean"]');
+                                    $booleanField.find('option:not(:first-child)').remove();
+                                    $.each(json.BooleanFields, function (i, record)
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($booleanField);
+                                    });
+                                    $booleanField.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);                          
+                                    $booleanField.each(function(i, obj) {                          
+                                        $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                    });
+                                    $booleanField.combobox();
+                                    
+                                    //Check In Settings
+                                    $('.newbaseobjectdetails .checkin-postto').val('Chatter|Task').next().find('input').val('Chatter & Task');
+                                    $('.newbaseobjectdetails .chatter-body').val('Check In @ {tooltip1} ({distance} meters from destination, {lat} / {long})');
+                                    $('.newbaseobjectdetails .verification-distance').val('');
+                                    $('.newbaseobjectdetails .verification-unit').val('ft').next().find('input').val('Feet');
+                                    $('.newbaseobjectdetails .verification-required').prop('checked', false);
+                                    
+                                    var $coordinatefield = $("select.newbaseobjectdetails[data='coordinatefield']");
+                                    $coordinatefield.find('option:not(:first-child)').remove();                    
+                                    $.each(json.CoordinateFields, function (i, record) 
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($coordinatefield);                
+                                    }); 
+                                    $coordinatefield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);
+                                    $coordinatefield.each(function(i, obj) {                          
+                                        $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                    });
+                                    $coordinatefield.combobox();
+                                    
+                                    var $qualityfield = $("select.newbaseobjectdetails[data='qualityfield']");
+                                    $qualityfield.find('option:not(:first-child)').remove();                    
+                                    $.each(json.QualityFields, function (i, record) 
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($qualityfield);                
+                                    }); 
+                                    $qualityfield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);
+                                    $qualityfield.each(function(i, obj) {                          
+                                        $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                    });
+                                    $qualityfield.combobox();
+                                    
+                                    var $similarityfield = $("select.newbaseobjectdetails[data='similarityfield']");
+                                    $similarityfield.find('option:not(:first-child)').remove();                    
+                                    $.each(json.SimilarityFields, function (i, record) 
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($similarityfield);                
+                                    }); 
+                                    $similarityfield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);                            
+                                    $similarityfield.each(function(i, obj) {                          
+                                        $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                    });
+                                    $similarityfield.combobox();
+                                    
+                                    //hide loading
+                                    $('.availableobject-settings .combobox').next().find('input').closest('.ui-combobox').find('.loadmask').remove();
+                                    
+                                    $('#adminsettings .buttons-create').show();
+                                }
+                                else
+                                {
+                                    $('#adminsettings .buttons-create .msgs').html('<b>Error retrieving Available fields</b>: Please try again').show();
+                                }
+                            },{buffer:false,escape:false}
+                        );
+                        
+                        $( '#adminsettings .availableobject-settings' ).show();
+                    }
+                });
+                
+                /* Handle new Base Object Address location onchange event */
+                $("select.newbaseobjectdetails[data='addressloc']").change(function() { 
+                    //show loading
+                    $('.availableobject-settings .combobox:not([data="addressloc"])').next().prepend("<div class='loadmask'></div>").find('input').val('Loading...');
+                    
+                    var AddressLocation = $(this).val();
+                    var bObject = $('#adminsettings select.availableobject').val();
+                    
+                    //Repopulate available objects  (due to Address Location change)
+                    var processData = {
+        				action	: 'repopulate_available_fields',
+        				object : bObject,
+        				addressloc : AddressLocation
+                    };
+                    
+                    Visualforce.remoting.Manager.invokeAction(MARemoting.AdminStartUpAction,
+                        processData,
+                        function(json, event){
+                            if(json.success)
+                            { 
+                                // device fields
+                                var $devicefield = $("select.newbaseobjectdetails[data='devicefield']");
+                                
+                                $devicefield.find('option').remove();        
+                                $('<option></option>').text('--Please Choose--').attr('selected',true).appendTo($devicefield);   
+                                
+                                $.each(json.AddressFields, function (i, record) 
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($devicefield);                
+                                }); 
+                                $devicefield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);
+                                $devicefield.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                
+                                // address fields
+                                var $addressfield = $("select.newbaseobjectdetails[data='addressfield']");
+                                
+                                $addressfield.find('option').remove();        
+                                $('<option value=""></option>').text('--None--').attr('selected',true).appendTo($addressfield);
+                                
+                                $.each(json.AddressFields, function (i, record) 
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($addressfield);                
+                                }); 
+                                $addressfield.removeAttr('disabled').find('option:first-child').text('--None--').attr('selected',true);
+                                $addressfield.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+        
+                                //record types
+                                var $recordTypeField = $('select.newbaseobjectdetails[data="recordtypefield"]');
+                                $recordTypeField.find('option:not(:first-child)').remove();
+                                $.each(json.RecordTypes, function (i, record) 
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($recordTypeField);                
+                                }); 
+                                $recordTypeField.removeAttr('disabled').find('option:first-child').text('--All--').attr('selected',true);                          
+                                $recordTypeField.each(function(i, obj) {
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+        
+                                var $datetimeField = $('select.newbaseobjectdetails[data="datetime"]');
+                                $datetimeField.find('option:not(:first-child)').remove();
+                                $.each(json.DatetimeFields, function (i, record)
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($datetimeField);
+                                });
+                                $datetimeField.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);                          
+                                $datetimeField.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+        
+                                var $booleanField = $('select.newbaseobjectdetails[data="boolean"]');
+                                $booleanField.find('option:not(:first-child)').remove();
+                                $.each(json.BooleanFields, function (i, record)
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($booleanField);
+                                });
+                                $booleanField.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);                          
+                                $booleanField.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                var $coordinatefield = $("select.newbaseobjectdetails[data='coordinatefield']");
+                                $coordinatefield.find('option:not(:first-child)').remove();              
+                                $.each(json.CoordinateFields, function (i, record) 
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($coordinatefield);                
+                                }); 
+                                $coordinatefield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);
+                                $coordinatefield.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                var $qualityfield = $("select.newbaseobjectdetails[data='qualityfield']");
+                                $qualityfield.find('option:not(:first-child)').remove();                
+                                $.each(json.QualityFields, function (i, record) 
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($qualityfield);                
+                                }); 
+                                $qualityfield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);
+                                $qualityfield.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                var $similarityfield = $("select.newbaseobjectdetails[data='similarityfield']");
+                                $similarityfield.find('option:not(:first-child)').remove();              
+                                $.each(json.SimilarityFields, function (i, record) 
+                                {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($similarityfield);                
+                                }); 
+                                $similarityfield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);
+                                $similarityfield.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                //Check In Settings
+                                $('.newbaseobjectdetails .checkin-postto').val('Chatter|Task').next().find('input').val('Chatter & Task');
+                                $('.newbaseobjectdetails .chatter-body').val('Check In @ {tooltip1} ({distance} meters from destination, {lat} / {long})');
+                                $('.newbaseobjectdetails .verification-distance').val('');
+                                $('.newbaseobjectdetails .verification-unit').val('ft').next().find('input').val('Feet');
+                                $('.newbaseobjectdetails .verification-required').prop('checked', false);
+                                    
+                                //hide loading
+                                $('.availableobject-settings .combobox:not([data="addressloc"])').next().find('.loadmask').remove();
+                                
+                                $('#adminsettings .buttons-create').show();
+                            }
+                            else
+                            {
+                                $('#adminsettings .buttons-create .msgs').html('<b>Error retrieving Available fields</b>: Please try again').show();
+                            }
+                        },{buffer:false,escape:false}
+                    );
+                    
+                });
+    
+                $('#adminsettings').on('change','.editbaseobjectdetails[data="addressfield"]',function() {
+                    var thisId = $(this).attr('id');
+                    var thisVal = $(this).val();
+                    //loop over select options
+                    $('#adminsettings .editbaseobjectdetails[data="addressfield"]').each(function(i,row) {
+                        var val = $(row).val();
+                        var rowId = $(row).attr('id');
+                        if(val != '--Please Choose--' && thisId != rowId) {
+                            if(thisVal == val) {
+                                $('#warningBox.edit').show();
+                                return false;
+                            }
+                            else {
+                                $('#warningBox.edit').hide();
+                            }
+                        }
+                    });
+                });
+                
+                /* Handle edit Base Object onchange event */
+                $('#adminsettings select.baseobject').change(function() {
+                    //show loading
+                    $('.baseobject-settings .combobox').next().prepend("<div class='loadmask'></div>").find('input').val('Loading...');
+                                    
+                    var bObject = $(this).val();
+                    if(bObject === '--None--')
+                    {
+                        $( '#adminsettings .baseobject-settings' ).hide();
+                    }
+                    else
+                    {
+                        //Populate available fields and query existing Base Object
+                        var processData = { 
+                            action	: 'get_existing_object',
+            				object : bObject,
+            				type: 'live',
+                        };
+
+                        Visualforce.remoting.Manager.invokeAction(MARemoting.AdminStartUpAction,
+                            processData,
+                            function(json, event){
+                                if(json.success)
+                                {   
+                                	//namespace removal
+                                	removeNamespace('{!namespace}', json.BaseObject);
+                                
+                                    //Set Read-Only Base Object output
+                                    $('input.editname').html('<b>' + htmlEncode(json.BaseObject.Name) + '</b>');
+                                    $('input.editname').attr('disabled', 'disabled');
+                                    
+                                    // populate device origin combobox
+                                    var $addressloc = $("select.editbaseobjectdetails[data='addressloc']");
+                                    $addressloc.find('option').remove();
+                                    $('<option></option>').attr('value', '').text('Loading...').appendTo($addressloc);                      
+                                    $.each(json.RelationshipFields, function (i, record) 
+                                    {
+                                        
+                                        if(record.value === json.BaseObject.AddressObject__c)
+                                        {
+                                            $('<option selected="true"></option>').attr('value', record.value).text(record.name).appendTo($addressloc);
+        
+                                        }
+                                        else
+                                        {
+                                            $('<option></option>').attr('value', record.value).text(record.name).appendTo($addressloc);
+                                        }
+                                                        
+                                    }); 
+                                    $addressloc.removeAttr('disabled').find('option:first-child').remove();
+                                    //Set default value(s)
+                                    $addressloc.each(function(i, obj) {                          
+                                        $(this).next().find('.ui-autocomplete-input').val($addressloc.find('option:selected').text());                         
+                                    });
+                                    $addressloc.combobox();
+                                    
+                                    
+                                    // populate record type combo box
+                                    var $recordTypeEditCombo = $("select.editbaseobjectdetails[data='recordtypefield']");
+                                    // $recordTypeEditCombo.find('option').remove();
+                                    $('<option></option>').attr('value', '').text('Loading...').appendTo($recordTypeEditCombo);                      
+                                    $.each(json.RecordTypes, function (i, record) 
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($recordTypeEditCombo);
+                                    }); 
+                                    $recordTypeEditCombo.removeAttr('disabled').find('option:first-child').remove();
+                                    $recordTypeEditCombo.next().find('.ui-autocomplete-input').val($recordTypeEditCombo.find('option:first-child').text());
+        
+        
+                                    // populate device fields combobox
+                                    var $devicefield = $("select.editbaseobjectdetails[data='devicefield']");
+                                    
+                                    $devicefield.find('option').remove();        
+                                    $('<option></option>').text('--Please Choose--').attr('selected',true).appendTo($devicefield);
+                                    
+                                    $.each(json.AddressFields, function (i, record) 
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($devicefield);    
+        
+                                    }); 
+                                    $devicefield.removeAttr('disabled').find('option:first-child').text('--Please Choose--'); 
+                                    $devicefield.combobox();
+                                    
+                                    
+                                    // populate address fields combobox
+                                    var $addressfield = $("select.editbaseobjectdetails[data='addressfield']");
+                                    $addressfield.find('option').remove();        
+                                    $('<option value=""></option>').text('--None--').attr('selected',true).appendTo($addressfield);
+                                    
+                                    $.each(json.AddressFields, function (i, record) 
+                                    {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($addressfield);    
+        
+                                    }); 
+                                    $addressfield.removeAttr('disabled').find('option:first-child').text('--None--'); 
+                                    $addressfield.combobox();
+                                  
+                                  
+                                    //record types
+                                    var $recordTypeField = $('select.editbaseobjectdetails[data="recordtypefield"]');
+                                    $recordTypeField.find('option').remove();
+                                    $('<option></option>').text('--All--').attr('selected',true).appendTo($recordTypeField);
+                                    $.each(json.RecordTypes, function (i, record) 
+                                    {
+                                        if(record.value === json.BaseObject.sma__RecordTypeId__c)
+                                        {
+                                            $('<option selected="true"></option>').attr('value', record.value).text(record.name).appendTo($recordTypeField); 
+                                        }
+                                        else
+                                        {
+                                            $('<option></option>').attr('value', record.value).text(record.name).appendTo($recordTypeField); 
+                                        }
+                                    }); 
+                                    $recordTypeField.removeAttr('disabled').find('option:first-child').text('--All--');
+                                    
+                                    
+                                    //Set device fields comboboxes default value(s)
+                                    // load device fields data
+                                    $('#adminsettings input.editname').val(json.BaseObject.Name__c).next().find('.ui-autocomplete-input').val(json.BaseObject.Name__c);
+                                    $('#editrecordtype').val(json.BaseObject.RecordTypeId__c).next().find('.ui-autocomplete-input').val($('#editrecordtype option:selected').text());
+                                    $('#editdeviceid').val(json.BaseObject.DeviceId__c).next().find('.ui-autocomplete-input').val($('#editdeviceid option:selected').text());
+                                    $('#editdevicetype').val(json.BaseObject.DeviceType__c).next().find('.ui-autocomplete-input').val($('#editdevicetype option:selected').text());
+                                    $('#editdevicevendor').val(json.BaseObject.DeviceVendor__c).next().find('.ui-autocomplete-input').val($('#editdevicevendor option:selected').text());
+                                    
+                                    // load address fields data
+                                    $('#editstreet').val(json.BaseObject.Street__c).next().find('.ui-autocomplete-input').val($('#editstreet option:selected').text());
+                                    $('#editcity').val(json.BaseObject.City__c).next().find('.ui-autocomplete-input').val($('#editcity option:selected').text());
+                                    $('#editstate').val(json.BaseObject.State__c).next().find('.ui-autocomplete-input').val($('#editstate option:selected').text());
+                                    $('#editpostalcode').val(json.BaseObject.PostalCode__c).next().find('.ui-autocomplete-input').val($('#editpostalcode option:selected').text());
+                                    $('#editcountry').val(json.BaseObject.Country__c).next().find('.ui-autocomplete-input').val($('#editcountry option:selected').text());
+                                      
+                                    
+                                    //check in settings
+                                    try { 
+                                    	var settings = JSON.parse(json.BaseObject.Settings__c);
+                                    	$('.editbaseobjectdetails .checkin-postto').val(settings.CheckInPostTo).next().find('input').val($('.editbaseobjectdetails .checkin-postto').find('option:selected').text());
+                                    	$('.editbaseobjectdetails .chatter-body').val(settings.ChatterBody || 'Check In @ {tooltip1} ({distance} meters from destination, {lat} / {long})');
+                                    	$('.editbaseobjectdetails .verification-distance').val(settings.VerificationDistance);
+                                   		$('.editbaseobjectdetails .verification-unit').val(settings.VerificationUnit).next().find('input').val($('.editbaseobjectdetails .verification-unit').find('option:selected').text());
+                                   		$('.editbaseobjectdetails .verification-required').prop('checked', settings.VerificationRequired ? true : false);
+                                    } 
+                                    catch (err) { 
+                                    	$('.editbaseobjectdetails .checkin-postto').val('Chatter|Task').next().find('input').val($('.editbaseobjectdetails .checkin-postto').find('option:selected').text());
+                                    	$('.editbaseobjectdetails .chatter-body').val('Check In @ {tooltip1} ({distance} meters from destination, {lat} / {long})');
+                                    	$('.editbaseobjectdetails .verification-distance').val('');
+                                   		$('.editbaseobjectdetails .verification-unit').val('ft').next().find('input').val($('.editbaseobjectdetails .verification-unit').find('option:selected').text());
+                                   		$('.editbaseobjectdetails .verification-required').prop('checked', false);
+                                    }
+        
+                                    //hide loading
+                                    $('.baseobject-settings .combobox').next().find('input').closest('.ui-combobox').find('.loadmask').remove();
+                                    
+                                    $('#adminsettings .buttons-edit').show();
+                                }
+                                else
+                                {
+                                    $('#adminsettings .buttons-edit .msgs').html('<b>Error retrieving Available fields</b>: Please try again').show();
+                                }
+                            },{buffer:false,escape:false}
+                        );
+                        
+                        $( '#adminsettings .baseobject-settings' ).show();
+                    }
+                });
+                
+                /* Handle edit Base Object Address location onchange event */
+                $("select.editbaseobjectdetails[data='addressloc']").change(function() { 
+                    //show loading
+                    $('.baseobject-settings .combobox:not([data="addressloc"])').next().prepend("<div class='loadmask'></div>").find('input').val('Loading...');
+                    
+                    var AddressLocation = $(this).val();
+                    var bObject = $('#adminsettings select.baseobject').val();
+                    
+                    //Repopulate available objects  (due to Address Location change)
+                    var processData = {
+        				action	: 'repopulate_edit_available_fields',
+        				object : bObject,
+        				addressloc : AddressLocation
+                    };
+                    
+                    Visualforce.remoting.Manager.invokeAction(MARemoting.AdminStartUpAction,
+                        processData,
+                        function(json, event){
+                            if(json.success)
+                            {   
+                                // repopulate device fields
+                                var $devicefield = $("select.editbaseobjectdetails[data='devicefield']");
+                                
+                                $devicefield.find('option').remove();        
+                                $('<option></option>').text('--Please Choose--').attr('selected',true).appendTo($devicefield);   
+                                
+                                $.each(json.AddressFields, function (i, record) 
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($devicefield);                
+                                }); 
+                                $devicefield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);
+                                $devicefield.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                
+                                // repopulate address fields
+                                var $addressfield = $("select.editbaseobjectdetails[data='addressfield']");
+                                
+                                $addressfield.find('option').remove();        
+                                $('<option value=""></option>').text('--None--').attr('selected',true).appendTo($addressfield);   
+                                
+                                $.each(json.AddressFields, function (i, record) 
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($addressfield);                
+                                }); 
+                                $addressfield.removeAttr('disabled').find('option:first-child').text('--None--').attr('selected',true);
+                                $addressfield.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                
+                                // coordinate fields
+                                var $coordinatefield = $("select.editbaseobjectdetails[data='coordinatefield']");
+                                $coordinatefield.find('option:not(:first-child)').remove();              
+                                $.each(json.CoordinateFields, function (i, record) 
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($coordinatefield);                
+                                }); 
+                                $coordinatefield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);
+                                $coordinatefield.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                var $qualityfield = $("select.editbaseobjectdetails[data='qualityfield']");
+                                $qualityfield.find('option:not(:first-child)').remove();                
+                                $.each(json.QualityFields, function (i, record) 
+                                {
+                                    $('<option></option>').attr('value', record.value).text(record.name).appendTo($qualityfield);                
+                                }); 
+                                $qualityfield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);
+                                $qualityfield.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                var $similarityfield = $("select.editbaseobjectdetails[data='similarityfield']");
+                                $similarityfield.find('option:not(:first-child)').remove();              
+                                $.each(json.SimilarityFields, function (i, record) 
+                                {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($similarityfield);                
+                                }); 
+                                $similarityfield.removeAttr('disabled').find('option:first-child').text('--Please Choose--').attr('selected',true);
+                                $similarityfield.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                // record type fields
+                                var $recordTypeFieldRepopulate = $("select.editbaseobjectdetails[data='recordtypefield']");
+                                $recordTypeFieldRepopulate.find('option').remove();
+                                $('<option></option>').text('--All--').attr('selected',true).appendTo($recordTypeFieldRepopulate);
+                                $.each(json.RecordTypes, function (i, record) 
+                                {
+                                        $('<option></option>').attr('value', record.value).text(record.name).appendTo($recordTypeFieldRepopulate);                
+                                }); 
+                                $recordTypeFieldRepopulate.removeAttr('disabled'); //find('option:first-child').text('--All--').attr('selected',true);
+                                $recordTypeFieldRepopulate.each(function(i, obj) {                          
+                                    $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                                });
+                                
+                                
+                                //check in settings
+                                $('.editbaseobjectdetails .checkin-postto').val('Chatter|Task').next().find('input').val('Chatter & Task');
+                                $('.editbaseobjectdetails .chatter-body').val('Check In @ {tooltip1} ({distance} meters from destination, {lat} / {long})');
+                                $('.editbaseobjectdetails .verification-distance').val('');
+                                $('.editbaseobjectdetails .verification-unit').val('ft').next().find('input').val('Feet');
+                                $('.editbaseobjectdetails .verification-required').prop('checked', false);
+                                    
+                                    
+                                //hide loading
+                                $('.baseobject-settings .combobox:not([data="addressloc"])').next().find('.loadmask').remove();
+                                
+                                $('#adminsettings .buttons-edit').show();
+                            }
+                            else
+                            {
+                                $('#adminsettings .buttons-edit .msgs').html('<b>Error retrieving Available fields</b>: Please try again').show();
+                            }
+                        },{buffer:false,escape:false}
+                    );
+                    
+                });
+                
+                /* Handle remove Base Object onchange event */
+                $('#adminsettings select.deletebaseobject').change(function() {                
+                    var Object = $(this).val();
+                    if(Object === '--None--')
+                    {
+                        $('#adminsettings .buttons-delete').hide();
+                    }
+                    else
+                    {
+                        $('#adminsettings .buttons-delete').show();
+                    }
+                });
+                
+                //handle button type onchange event
+                $('#buttonType').change(function() {
+                	if($('#buttonType').val() == 'massActionButton')
+               		{
+    	           		$('.buttonLayouts').hide();
+    	           		$('.massActionLayouts').show();
+    	           	}
+    	           	else if($('#buttonType').val() == 'button')
+               		{
+    	           		$('.buttonLayouts').show();
+    	           		$('.massActionLayouts').hide();
+    	           	}
+    	        });
+                
+                //handle selecting all/none when adding map it buttons to page layouts, creating workflows or creating fields
+                $('#dialog-addmapitbuttonstolayout-table-wrapper th span.link, #dialog-createpurgeworkflows-table-wrapper th span.link, #dialog-createfields-table-wrapper th span.link').click(function () {
+                	if ($(this).is('.selectall')) {
+                		$('input.createablefield-create').prop('checked', true);
+                	}
+                	else if ($(this).is('.selectnone')) {
+                		$('input.createablefield-create').prop('checked', false);
+                	}
+                });
+                
+                //Suggest fields
+                $('#adminsettings .buttons-create .suggestbtn, #adminsettings .buttons-edit .suggestbtn').click(function () 
+                {
+                	var prefix = $(this).is('.buttons-create .suggestbtn') ? 'create' : 'edit';
+                	
+                    //Handle regular address fields
+                    $('#'+prefix+'street > option').each(function() {
+                        var FieldNameLowered = this.value.toLowerCase();                    
+                        if (FieldNameLowered.indexOf('street') !== -1 && !FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'street').val() == '--Please Choose--' || $('#'+prefix+'street').val() == ''))
+                        {
+                           $('#'+prefix+'street').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }                   
+                        else if (FieldNameLowered.indexOf('city') !== -1 && !FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'city').val() == '--Please Choose--' || $('#'+prefix+'city').val() == ''))
+                        {
+                           $('#'+prefix+'city').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if (FieldNameLowered.indexOf('state') !== -1 && !FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'state').val() == '--Please Choose--' || $('#'+prefix+'state').val() == ''))
+                        {
+                           $('#'+prefix+'state').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if (FieldNameLowered.indexOf('postalcode') !== -1 && !FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'postalcode').val() == '--Please Choose--' || $('#'+prefix+'postalcode').val() == ''))
+                        {
+                           $('#'+prefix+'postalcode').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if (FieldNameLowered.indexOf('country') !== -1 && !FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'country').val() == '--Please Choose--' || $('#'+prefix+'country').val() == ''))
+                        {
+                           $('#'+prefix+'country').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                    });
+                    
+                    //Handle Coordinate fields
+                    $('#'+prefix+'latitude > option').each(function() {
+                        var FieldNameLowered = this.value.toLowerCase();
+                        if (FieldNameLowered.indexOf('latitude') !== -1 && FieldNameLowered.indexOf('verified') !== -1 && ($('#'+prefix+'verifiedlatitude').val() == '--Please Choose--' || $('#'+prefix+'verifiedlatitude').val() == ''))
+                        {
+                           $('#'+prefix+'verifiedlatitude').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if (FieldNameLowered.indexOf('longitude') !== -1 && FieldNameLowered.indexOf('verified') !== -1 && ($('#'+prefix+'verifiedlongitude').val() == '--Please Choose--' || $('#'+prefix+'verifiedlongitude').val() == ''))
+                        {
+                           $('#'+prefix+'verifiedlongitude').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if (FieldNameLowered.indexOf('latitude') !== -1 && ($('#'+prefix+'latitude').val() == '--Please Choose--' || $('#'+prefix+'latitude').val() == ''))
+                        {
+                           $('#'+prefix+'latitude').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if (FieldNameLowered.indexOf('longitude') !== -1 && ($('#'+prefix+'longitude').val() == '--Please Choose--' || $('#'+prefix+'longitude').val() == ''))
+                        {
+                           $('#'+prefix+'longitude').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }                    
+                    });
+                    
+                    //Handle clean address fields
+                    $('#'+prefix+'cleanstreet > option').each(function() {
+                        var FieldNameLowered = this.value.toLowerCase();                    
+                        if (FieldNameLowered.indexOf('street') !== -1 && FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'cleanstreet').val() == '--Please Choose--' || $('#'+prefix+'cleanstreet').val() == ''))
+                        {
+                           $('#'+prefix+'cleanstreet').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }                   
+                        else if (FieldNameLowered.indexOf('city') !== -1 && FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'cleancity').val() == '--Please Choose--' || $('#'+prefix+'cleancity').val() == ''))
+                        {
+                           $('#'+prefix+'cleancity').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if (FieldNameLowered.indexOf('state') !== -1 && FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'cleanstate').val() == '--Please Choose--' || $('#'+prefix+'cleanstate').val() == ''))
+                        {
+                           $('#'+prefix+'cleanstate').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if ((FieldNameLowered.indexOf('postalcode') !== -1 || (FieldNameLowered.indexOf('postal') !== -1 && FieldNameLowered.indexOf('code') !== -1)) && FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'cleanzip').val() == '--Please Choose--' || $('#'+prefix+'cleanzip').val() == ''))
+                        {
+                           $('#'+prefix+'cleanzip').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if (FieldNameLowered.indexOf('country') !== -1 && FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'cleancountry').val() == '--Please Choose--' || $('#'+prefix+'cleancountry').val() == ''))
+                        {
+                           $('#'+prefix+'cleancountry').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if (FieldNameLowered.indexOf('county') !== -1 && FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'cleancounty').val() == '--Please Choose--' || $('#'+prefix+'cleancounty').val() == ''))
+                        {
+                           $('#'+prefix+'cleancounty').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                        else if (FieldNameLowered.indexOf('district') !== -1 && FieldNameLowered.indexOf('clean') !== -1 && ($('#'+prefix+'cleandistrict').val() == '--Please Choose--' || $('#'+prefix+'cleandistrict').val() == ''))
+                        {
+                           $('#'+prefix+'cleandistrict').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }
+                    });    
+                    
+                    //Handle Quality fields
+                    $('#'+prefix+'quality > option').each(function() {
+                        var FieldNameLowered = this.value.toLowerCase();                    
+                        if (FieldNameLowered.indexOf('quality') !== -1 && ($('#'+prefix+'quality').val() == '--Please Choose--' || $('#'+prefix+'quality').val() == ''))
+                        {
+                           $('#'+prefix+'quality').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }                 
+                    });
+                    
+                    //Handle Similarity fields
+                    $('#'+prefix+'similarity > option').each(function() {
+                        var FieldNameLowered = this.value.toLowerCase();                    
+                        if (FieldNameLowered.indexOf('similarity') !== -1 && ($('#'+prefix+'similarity').val() == '--Please Choose--' || $('#'+prefix+'similarity').val() == ''))
+                        {
+                           $('#'+prefix+'similarity').val(this.value).next().find('.ui-autocomplete-input').val(this.text);
+                        }                 
+                    });                        
+                });
+                
+                /*****************
+                * Map It Functions
+                ******************/
+    
+                /****************************
+                *  DML Ajax Handler Functions
+                ****************************/            
+                
+                //Handle Create New Save
+                $('#adminsettings .buttons-create .savebtn').click(function () 
+                {
+                    //build settings objects
+                    var settings = {
+                    	CheckInPostTo			: $('.newbaseobjectdetails .checkin-postto').val(),
+                    	ChatterBody				: $('.newbaseobjectdetails .chatter-body').val(),
+                    	VerificationDistance	: $('.newbaseobjectdetails .verification-distance').val(),
+                    	VerificationUnit		: $('.newbaseobjectdetails .verification-unit').val(),
+                    	VerificationRequired	: $('.newbaseobjectdetails .verification-required').is(':checked')
+                    };
+                    
+                    var badBaseObjectValRegex = /(--)|(\.\.)/ig; // matches any textt with --text-- or Loading...
+                    
+                    var BaseObject = {
+                        DeviceId__c :              badBaseObjectValRegex.test($('#createdeviceid').val() || '')             ? null : $('#createdeviceid').val().trim(),
+                        DeviceType__c :            badBaseObjectValRegex.test($('#createdevicetype').val() || '')           ? null : $('#createdevicetype').val().trim(),
+                        DeviceVendor__c :          badBaseObjectValRegex.test($('#createdevicevendor').val() || '')         ? null : $('#createdevicevendor').val().trim(),
+                        
+                        RecordTypeId__c:           $('#createrecordtype').val(),
+                        
+                        AddressObject__c:           badBaseObjectValRegex.test($("select.newbaseobjectdetails[data='addressloc").val() || '..') ? null : $("select.newbaseobjectdetails[data='addressloc").val().trim(),
+                        
+                        Name__c :                   typeof $('#adminsettings input.createname').val() == 'string'          ? $('#adminsettings input.createname').val().trim()       : null,
+                        Name :                      typeof $('#adminsettings .availableobject').val() == 'string'          ? $('#adminsettings .availableobject').val().trim()       : null,
+                        Description__c :            typeof $('#adminsettings #createdescription').val() == 'string'        ? $('#adminsettings #createdescription').val().trim()     : null,
+                        
+                        // address fields
+                        Street__c:                  badBaseObjectValRegex.test($('#createstreet').val() || '')         ? null : $('#createstreet').val().trim(),
+                        City__c:                    badBaseObjectValRegex.test($('#createcity').val() || '')           ? null : $('#createcity').val().trim(),
+                        State__c:                   badBaseObjectValRegex.test($('#createstate').val() || '')          ? null : $('#createstate').val().trim(),
+                        PostalCode__c:              badBaseObjectValRegex.test($('#createpostalcode').val() || '')     ? null : $('#createpostalcode').val().trim(),
+                        Country__c:                 badBaseObjectValRegex.test($('#createcountry').val() || '')        ? null : $('#createcountry').val().trim(),
+                        
+                        Type__c :                   'Live',
+                        Settings__c : 			    JSON.stringify(settings)
+                    };
+
+                    //
+                    if
+                     (  // BaseObject.Type__c             &&    typeof BaseObject.Type__c == 'string'                &&     String(BaseObject.Type__c).trim() == 'Live' && 
+                        BaseObject.Name                &&    typeof BaseObject.Name == 'string'                   &&     String(BaseObject.Name).trim() != '' && 
+                        BaseObject.Name__c             &&    typeof BaseObject.Name__c == 'string'                &&     String(BaseObject.Name__c).trim() != '' && 
+                        BaseObject.DeviceId__c         &&    typeof BaseObject.DeviceId__c == 'string'            &&     String(BaseObject.DeviceId__c).trim() != '' && 
+                        BaseObject.DeviceVendor__c     &&    typeof BaseObject.DeviceVendor__c == 'string'        &&     String(BaseObject.DeviceVendor__c).trim() && 
+                        // BaseObject.DeviceType__c       &&    typeof BaseObject.DeviceType__c == 'string'          &&     String(BaseObject.DeviceType__c).trim() != '' &&
+                        BaseObject.AddressObject__c    &&    typeof BaseObject.AddressObject__c == 'string'       &&     String(BaseObject.AddressObject__c).trim() != ''
+                     )
+                    {
+                        //add saving indicator
+                        var $tab = showLoading($(this).closest('.ui-tabs-panel'), 'Saving...');
+                        // send request
+                        var processData = {
+            				action	: 'save_base_object',
+            				BaseObject: JSON.stringify(addNamespace('{!namespace}', BaseObject)),
+            				type : 'live;'
+                        };
+                        
+                        Visualforce.remoting.Manager.invokeAction(MARemoting.AdminStartUpAction,
+                            processData,
+                            function(json, event){
+                                hideMessage($tab);
+                                if (json.success)
+                                {
+                                    MAToastMessages.showSuccess({message: 'Save Successful', timeOut: 10000});
+                                    FillBaseObjectComboBoxes();
+                                    HideAll();
+                                }
+                                else
+                                {
+                                    //show error message
+                                    var errMsg = json.details || 'Save Error: Please try again';
+                                    MAToastMessages.showError({message: 'Save Error', subMessage: errMsg, timeOut: 0, extendedTimeOut: 0, closeButton: true});
+                                    // showError($tab, errMsg);
+                                }
+                            },{buffer:false,escape:false}
+                        );     
+                    }
+                    else
+                    {
+                        MAToastMessages.showError({message: 'Save Error', subMessage: 'Make sure you have entered the base object <b>Name</b>, <b>Device ID</b> and <b>Device Vendor</b> fields', timeOut: 0, extendedTimeOut: 0, closeButton:true});
+                        // showError($(this).closest('.ui-tabs-panel'), 'Save Error: Make sure you have entered the base object <b>Name</b>, <b>Device ID</b> and <b>Device Vendor</b> fields');
+                    }
+                            
+                });    
+                
+                //Handle Edit Existing Save
+                $('#adminsettings .buttons-edit .savebtn').click(function () 
+                {
+                    //build settings objects
+                    var settings = {
+                    	CheckInPostTo			: $('.editbaseobjectdetails .checkin-postto').val(),
+                    	ChatterBody				: $('.editbaseobjectdetails .chatter-body').val(),
+                    	VerificationDistance	: $('.editbaseobjectdetails .verification-distance').val(),
+                    	VerificationUnit		: $('.editbaseobjectdetails .verification-unit').val(),
+                    	VerificationRequired	: $('.editbaseobjectdetails .verification-required').is(':checked')
+                    };
+                    
+                    var badBaseObjectValRegex = /(--)|(\.\.)/ig; // matches any textt with --text-- or Loading...
+                    
+                    
+                    var BaseObject = {
+                        Id:                         $('#adminsettings select.baseobject').val(),    
+                        
+                        // device fields
+                        DeviceId__c :              badBaseObjectValRegex.test( ($('#editdeviceid').val() || '').trim() )             ? null : $('#editdeviceid').val(),
+                        DeviceType__c :            badBaseObjectValRegex.test( ($('#editdevicetype').val() || '').trim() )           ? null : $('#editdevicetype').val(),
+                        DeviceVendor__c :          badBaseObjectValRegex.test( ($('#editdevicevendor').val() || '').trim() )         ? null : $('#editdevicevendor').val(),
+                        
+                        RecordTypeId__c:            $('#editrecordtype').val(),
+                        AddressObject__c:           badBaseObjectValRegex.test( ($('select.editbaseobjectdetails[data="addressloc"').val() || '..').trim() ) ? null : $('select.editbaseobjectdetails[data="addressloc"').val().trim(),
+                        Name__c :                   $('#adminsettings input.editname').val(),
+                        Description__c :            $('#adminsettings #createdescription').val(),
+                        
+                        // address fields
+                        Street__c:                  badBaseObjectValRegex.test( ($('#editstreet').val() || '').trim() )              ? null : $('#editstreet').val(),
+                        City__c:                    badBaseObjectValRegex.test( ($('#editcity').val() || '').trim() )                ? null : $('#editcity').val(),
+                        State__c:                   badBaseObjectValRegex.test( ($('#editstate').val() || '').trim() )               ? null : $('#editstate').val(),
+                        PostalCode__c:              badBaseObjectValRegex.test( ($('#editpostalcode').val() || '').trim() )          ? null : $('#editpostalcode').val(),
+                        Country__c:                 badBaseObjectValRegex.test( ($('#editcountry').val() || '').trim() )             ? null : $('#editcountry').val(),
+                        
+                        Type__c :                   'Live',
+                        Settings__c : 			    JSON.stringify(settings)
+                    };
+                    //
+                    // make sure we have all the required fields filled in
+                    if
+                     (  // BaseObject.Type__c             &&    typeof BaseObject.Type__c == 'string'                &&     String(BaseObject.Type__c).trim() == 'Live' && 
+                        BaseObject.Name__c             &&    typeof BaseObject.Name__c == 'string'                &&     String(BaseObject.Name__c).trim() != '' && 
+                        BaseObject.DeviceId__c         &&    typeof BaseObject.DeviceId__c == 'string'            &&     String(BaseObject.DeviceId__c).trim() != '' && 
+                        BaseObject.DeviceVendor__c     &&    typeof BaseObject.DeviceVendor__c == 'string'        &&     String(BaseObject.DeviceVendor__c).trim() && 
+                        // BaseObject.DeviceType__c       &&    typeof BaseObject.DeviceType__c == 'string'          &&     String(BaseObject.DeviceType__c).trim() != '' &&
+                        BaseObject.AddressObject__c    &&    typeof BaseObject.AddressObject__c == 'string'       &&     String(BaseObject.AddressObject__c).trim() != ''
+                     )
+                    {
+                        //add saving indicator
+                        var $tab = showLoading($(this).closest('.ui-tabs-panel'), 'Saving...');
+                
+                        var processData = {
+            				action	: 'save_base_object',
+                            BaseObject: JSON.stringify(addNamespace('{!namespace}', BaseObject)),
+            				type : 'live;'
+                        };
+                        
+                        Visualforce.remoting.Manager.invokeAction(MARemoting.AdminStartUpAction,
+                            processData,
+                            function(json, event){
+                                hideMessage($tab);
+                                if (json.success)
+                                {
+                                    MAToastMessages.showSuccess({message: 'Update Successful', timeOut: 10000});
+                                	// showSuccess($tab, 'Edit Successful', 1500, function () {
+                                		//FillBaseObjectComboBoxes();
+                                    	//HideAll();
+                                	// });
+                                }
+                                else
+                                {
+                                    //show error message
+                                    var errMsg = json.details || 'Save Error: Please try again';
+                                    // showError($tab, errMsg);
+                                    MAToastMessages.showError({message: 'Save Error', subMessage: errMsg, timeOut: 0, extendedTimeOut: 0, closeButton: true});
+                                }
+                            },{buffer:false,escape:false}
+                        );     
+                    }
+                    else
+                    {
+                        // showError($(this).closest('.ui-tabs-panel'), 'Save Error: Make sure you have entered the base object <b>Name</b>, <b>Device ID</b> and <b>Device Vendor</b> fields');
+                        MAToastMessages.showError({message: 'Save Error', subMessage: 'Make sure you have entered the base object <b>Name</b>, <b>Device ID</b> and <b>Device Vendor</b> fields', timeOut: 0, extendedTimeOut: 0, closeButton:true});
+                    }
+                            
+                });
+                            
+                //Handle Delete
+                $('#adminsettings .buttons-delete .deletebtn').click(function () 
+                { 
+                    //add delete indicator
+                    var $tab = showLoading($(this).closest('.ui-tabs-panel'), 'Deleting...');
+                    
+                    var processData = {
+        				action	: 'delete_base_object',
+                        object: $('#adminsettings select.deletebaseobject').val(),
+                    };
+                    
+                    Visualforce.remoting.Manager.invokeAction(MARemoting.AdminStartUpAction,
+                        processData,
+                        function(json, event){
+                            hideMessage($tab);
+                            if(json.success)
+                            {
+                                 // showSuccess($tab, 'Delete Successful', 1500, function () {
+                                 	// FillBaseObjectComboBoxes();
+                                 	// HideAll();
+                                 // });
+                                 MAToastMessages.showSuccess({message: 'Delete Successful', timeOut: 10000});
+                                 FillBaseObjectComboBoxes();
+                                 HideAll();
+                            }
+                            else
+                            {  
+                                // showError($tab, 'Save Error: Please try again');
+                                MAToastMessages.showError({message: 'Delete Error', subMessage: 'Please try again.', timeOut: 0, extendedTimeOut: 0, closeButton: true});
+                            }
+                        },{buffer:false,escape:false}
+                    );
+                });                  
+            });
+            
+            function FillBaseObjectComboBoxes()
+            {
+                //Clear options and set first child Loading indicator
+                var $availableobject = $('select.availableobject');
+                var showAllObjectsToggle = $('#availableObjectsLimit').prop('checked') || false;
+                $availableobject.find('option:first-child').text('Loading...');
+                $availableobject.find('option:not(:first-child)').remove();            
+                var $baseobject = $('select.existingbaseobject[data="baseobject"]');
+                $baseobject.find('option:first-child').text('Loading...');
+                $baseobject.find('option:not(:first-child)').remove(); 
+                var showAllObjects = $('#viewAll-created').prop('checked') || false;
+                      
+                //Get Base Object for comboboxes
+                var processData = { 
+                    showAllObjects : showAllObjectsToggle,
+    				action	: 'populate_base_objects',
+                    type: 'live',
+                    showAllObjects: showAllObjects
+                };
+                
+                Visualforce.remoting.Manager.invokeAction(MARemoting.AdminStartUpAction,
+                    processData,
+                    function(json, event){
+                        if(json.success)
+                        {        
+                            $.each(json.available, function (i, record) 
+                            {
+                                    $('<option></option>').attr('value', record.label).text(record.name).appendTo($availableobject);                
+                            }); 
+                            $availableobject.removeAttr('disabled').find('option:first-child').text('--None--').attr('selected',true);
+                            $availableobject.each(function(i, obj) {                          
+                                $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                            });
+                            $availableobject.combobox();                    
+        
+                            $.each(json.existing, function (i, record) 
+                            {
+                            	//namespace removal
+                            	removeNamespace('{!namespace}', record);
+                            	
+                                $('<option></option>').attr('value', record.Id).text(record.Name__c).appendTo($baseobject);                
+                            }); 
+                            $baseobject.removeAttr('disabled').find('option:first-child').text('--None--').attr('selected',true);
+                            $baseobject.each(function(i, obj) {                          
+                                $(this).next().find('.ui-autocomplete-input').val($(this).find('option:selected').text());                            
+                            });
+                            $baseobject.combobox();
+                        }
+                        else
+                        {
+                            $('#adminsettings .buttons-create .msgs').html('<b>Error retrieving Base Object list</b>: Please try again').show();
+                        }
+                    },{buffer:false,escape:false}
+                );
+            }
+            
+            function HideAll()
+            {
+                //Hide Tabs and Buttons
+                $('.availableobject-settings').hide();
+                $('.baseobject-settings').hide();
+                $('.buttons-create').hide();
+                $('.buttons-edit').hide();
+                $('.buttons-delete').hide();            
+               
+                //Hide error messages
+                $('#adminsettings .buttons-create .msgs').hide();
+                $('#adminsettings .buttons-edit .msgs').hide();
+                $('#adminsettings .buttons-delete .msgs').hide();
+                
+                ClearAll();
+            }
+            
+            function ClearAll()
+            {
+                //Clear Name fields
+                $('#adminsettings input.createname').val('');
+                $('#adminsettings #createdescription').val('');
+                
+                
+                $('#adminsettings input.editname').val('');
+                $('#adminsettings #editdescription').val('');
+                
+                //Clear Read-Only Base Object
+                $("span.readonlybaseobject").html('');
+            }
+            
+            function loadCreateableFields(baseObject)
+            {
+            	//show loading
+               	var $dialog = showLoading($('#dialog-createfields').closest('.ui-dialog'), 'Loading...');
+               	
+               	//send request to get createable fields
+                var processData = {
+               		action			: 'get_createable_fields',
+               		baseObject		: baseObject
+                };
+                
+                Visualforce.remoting.Manager.invokeAction(MARemoting.AdminStartUpAction,
+                    processData,
+                    function(response, event){
+                        if(event.status) {
+                       		//populate the createable fields table
+                       		$('#dialog-createfields-table .createablefield-row').remove();
+                       		$.each(response.createableFields, function (index, createableField) {
+                       		
+                       			//basic fields
+                       			var $createableFieldRow = $('#templates .createablefield-row').clone().attr('data-name', createableField.name).data('createableField', createableField);
+                       			$createableFieldRow.find('.createablefield-label').text(createableField.label);
+                       			
+                       			//does this field exist?
+                       			if (createableField.exists)
+                       			{
+                       				$createableFieldRow.find('.createablefield-exists').html("<img src='{!URLFOR($Resource.MapAnything, 'images/check-22.png')}' />");
+                       				
+                       				//if this is the skip geocoding field, make sure the checkbox for it is visible
+                       				if (createableField.name == 'MASkipGeocoding__c') {
+                       					$('#editskipfailedgeocodes').show().next().hide();
+                       				}
+                       			}
+                       			else
+                       			{
+                       				$createableFieldRow.find('.createablefield-exists').html("<input type='checkbox' class='createablefield-create' checked='checked' />")
+                       			}
+                       			
+                       			//render the row
+                       			$('#dialog-createfields-table').append($createableFieldRow);
+                       		});
+                       		
+                       		//hide loading
+                       		hideMessage($dialog);
+                       	}
+                       	else
+                       	{
+                       	}
+                    },{buffer:false,escape:false}
+                );
+            }
+        </script>
+        
+        <div class="slds-scope slds-scrollable" style="height: 100%;">
+            <div class="flex-column full-height">
+                <div class="flex-row flex-grow-1">
+                    <div class="flex-shrink-0">
+                        <!--navigation-->
+                        <c:MAAdminHeader activeTab="liveBaseObjects" />
+                    </div>
+                    <div class="slds-brand-band slds-brand-band_cover slds-brand-band_medium slds-p-around_medium">
+                        <div class="slds-is-relative slds-p-bottom_small">
+                            <!-- Header -->
+                            <div class="slds-page-header">
+                                <div class="slds-grid">
+                                    <div class="slds-col slds-has-flexi-truncate">
+                                        <div class="slds-media slds-no-space slds-grow">
+                                            <div class="slds-media__figure ma-slds-media__figure">
+                                                <span class="slds-icon ma-icon ma-icon-mapanything"></span>
+                                            </div>
+                                            <div class="slds-media__body">
+                                                <p class="slds-text-title--caps slds-line-height--reset">MapAnything Configuration</p>
+                                                <h1 class="slds-page-header__title slds-m-right--small slds-align-middle slds-truncate" title="this should match the Record Title">Live Base Object</h1>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card slds-box">  
+                            <!-- Error State -->
+                            <div id='adminsettings-error'>
+                            
+                                <!-- Title -->
+                                <h2>{!$Label.MA_Error}</h2>
+                                <h3>{!$Label.MA_EQ_Error_Message}</h3>
+                            
+                                <!-- Message -->
+                                <div></div>        
+                            </div>
+                        
+                            <!-- Non-Error State -->
+                            <div id='adminsettings'>
+                                <div class="BottomTabs">
+                                    <ul>
+                                        <li><a href="#BottomTabs-1">{!$Label.MA_Create_New}</a></li>
+                                        <li><a href="#BottomTabs-2">{!$Label.MA_Edit_Existing}</a></li>
+                                        <li><a href="#BottomTabs-3">{!$Label.MA_Remove_Existing}</a></li>
+                                    </ul>
+                                    <div id="BottomTabs-1">
+                                        <div>
+                                            <div class="slds-grid slds-grid_vertical-align-end">
+                                                <div>
+                                                    <div class="slds-form-element">
+                                                        <label class="slds-form-element__label" for="">{!$Label.MA_Base_Object}</label>
+                                                        <div class="slds-form-element__control">
+                                                            <div class="">
+                                                                <select class='availableobject' data='baseobject' disabled='disabled'>
+                                                                    <option value=''>{!$Label.MA_Loading}...</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="slds-p-left_small">
+                                                    <div class="slds-form-element__control">
+                                                        <span class="slds-checkbox">
+                                                            <input
+                                                                type="checkbox"
+                                                                name="options"
+                                                                id="viewAll-created"
+                                                                onchange="FillBaseObjectComboBoxes()"
+                                                            />
+                                                            <label
+                                                                class="slds-checkbox__label"
+                                                                for="viewAll-created"
+                                                            >
+                                                                <span class="slds-checkbox_faux"></span>
+                                                                <span class="slds-form-element__label">View All Salesforce Objects</span>
+                                                            </label>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class='availableobject-settings'>
+                                            <!-- Base Object Details -->
+                                            <div class='slds-section slds-m-bottom_large slds-is-open newbaseobjectdetails'>
+                                                <div class='slds-section__title slds-theme--shade'>
+                                                    <span class="section-header-title slds-p-horizontal--small slds-truncate">{!$Label.MA_Base_Object_Details}</span>
+                                                </div>
+                                                <div class='slds-section__content section__content'>
+                                                    <div class="slds-grid">
+                                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-4">
+                                                            <div class="slds-form slds-form_compound">
+                                                                <fieldset class="slds-form-element">
+                                                                    <div class="slds-form-element__group">
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2 slds-p-right_small">
+                                                                                <label class="slds-form-element__label">{!$Label.MA_Name}</label>
+                                                                                <div class="slds-form-element__control">
+                                                                                    <input type='text' class='createname slds-input' />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="createaddressloc">Device Origin</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="createaddressloc" class='newbaseobjectdetails combobox' data='addressloc' disabled='disabled'>
+                                                                                        <option value=''>{!$Label.MA_Loading}...</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2 slds-p-right_small">
+                                                                                <label class="slds-form-element__label" for="createdescription">{!$Label.MA_Description}</label>
+                                                                                <div class="slds-form-element__control">
+                                                                                    <textarea id='createdescription' class="slds-textarea" />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="createrecordtype">{!$Label.MA_Record_Type}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="createrecordtype" class='newbaseobjectdetails combobox' data='recordtypefield' disabled='disabled'>
+                                                                                        <option value=''>{!$Label.MA_Loading}...</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </fieldset>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div> 
+                                            <!-- Device Fields -->
+                                            <div class='slds-section slds-m-bottom_large slds-is-open newbaseobjectdetails'>
+                                                <div class='slds-section__title slds-theme--shade'>
+                                                    <span class="section-header-title slds-p-horizontal--small slds-truncate">Device Fields</span>
+                                                </div>
+                                                <div class='slds-section__content section__content'>
+                                                    <div class="slds-grid">
+                                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-4">
+                                                            <div class="slds-form slds-form_compound">
+                                                                <fieldset class="slds-form-element">
+                                                                    <div class="slds-form-element__group">
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="createdevicevendor"><span class="required-field-asterick">*</span>Device Vendor</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="createdevicevendor" class='newbaseobjectdetails combobox' data='devicefield' disabled='disabled'>
+                                                                                        <option value=''>{!$Label.MA_Loading}...</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="createdeviceid"><span class="required-field-asterick">*</span>Device ID</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="createdeviceid" class='newbaseobjectdetails combobox' data='devicefield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div style="display:none;" class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="createdevicetype">Device Type</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="createdevicetype" class='newbaseobjectdetails combobox' data='devicefield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </fieldset>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div> 
+                                            <!-- Address Fields (Live) -->
+                                            <div class='slds-section slds-m-bottom_large slds-is-open newbaseobjectdetails'>
+                                                <div class='slds-section__title slds-theme--shade'>
+                                                    <span class="section-header-title slds-p-horizontal--small slds-truncate">{!$Label.MA_Address_Fields}</span>
+                                                </div>
+                                                <div class='slds-section__content section__content'>
+                                                    <div class="slds-grid">
+                                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-4">
+                                                            <div class="slds-form slds-form_compound">
+                                                                <fieldset class="slds-form-element">
+                                                                    <div class="slds-form-element__group">
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="createstreet">{!$Label.MA_Street}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="createstreet" class='newbaseobjectdetails combobox' data='addressfield' disabled='disabled'>
+                                                                                        <option value=''>{!$Label.MA_Loading}...</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="createpostalcode">{!$Label.MA_Postal_Code}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="createpostalcode" class='newbaseobjectdetails combobox' data='addressfield' disabled='disabled'>
+                                                                                        <option value=''>{!$Label.MA_Loading}...</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="createcity">{!$Label.MA_City}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="createcity" class='newbaseobjectdetails combobox' data='addressfield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="createcountry">{!$Label.MA_Country}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="createcountry" class='newbaseobjectdetails combobox' data='addressfield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="createstate">{!$Label.MA_State}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="createstate" class='newbaseobjectdetails combobox' data='addressfield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </fieldset>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Check In Settings -->
+                                            <div class='slds-section slds-m-bottom_large slds-is-open newbaseobjectdetails'>
+                                                <div class='slds-section__title slds-theme--shade'>
+                                                    <span class="section-header-title slds-p-horizontal--small slds-truncate">{!$Label.MA_Check_In_Settings}</span>
+                                                </div>
+                                                <div class='slds-section__content section__content'>
+                                                    <div class="slds-grid">
+                                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-4">
+                                                            <div class="slds-form slds-form_compound">
+                                                                <fieldset class="slds-form-element">
+                                                                    <div class="slds-form-element__group">
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2 slds-p-right_small">
+                                                                                <label class="slds-form-element__label">{!$Label.MA_Post_To}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select class='checkin-postto combobox'>
+                                                                                        <option value='Chatter'>{!$Label.MA_Chatter}</option>
+                                                                                        <option value='Task'>{!$Label.MA_Task}</option>
+                                                                                        <option value='Event'>Event</option>
+                                                                                        <option value='Chatter|Task'>{!$Label.MA_Chatter_Task}</option>
+                                                                                        <option value='Chatter|Event'>Chatter &amp; Event</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="">{!$Label.MA_Verification_Distance}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <div class="slds-grid">
+                                                                                        <div class="slds-col slds-size_1-of-3 slds-m-right_x-small">
+                                                                                            <input type='text' class='slds-input verification-distance' />
+                                                                                        </div>
+                                                                                        <div class="slds-col slds-size_2-of-3">
+                                                                                            <select class='verification-unit combobox'>
+                                                                                                <option value='ft'>{!$Label.MA_Feet}</option>
+                                                                                                <option value='m'>{!$Label.MA_Meters}</option>
+                                                                                                <option value='km'>{!$Label.MARoutes_Kilometers}</option>
+                                                                                                <option value='mi'>{!$Label.MARoutes_Miles}</option>
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2 slds-p-right_small">
+                                                                                <label class="slds-form-element__label" for="createdescription">{!$Label.MA_Chatter_Body}</label>
+                                                                                <div class="slds-form-element__control">
+                                                                                    <textarea class="chatter-body slds-textarea" />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <div class="slds-form-element__control">
+                                                                                    <span class="slds-checkbox">
+                                                                                        <input type='checkbox' class='verification-required' id="verification-required"></input>
+                                                                                        <label class="slds-checkbox__label" for="verification-required">
+                                                                                            <span class="slds-checkbox_faux"></span>
+                                                                                            <span class="slds-form-element__label">{!$Label.MA_Verification_Required}</span>
+                                                                                        </label>
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </fieldset>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="slds-grid slds-m-top_medium chatter-post-merge-fields">
+                                                        <div class="slds-col">
+                                                            <div class="slds-text-body_small">{tooltip1} = Value of Tooltip 1</div>
+                                                            <div class="slds-text-body_small">{lat} = Latitude on Check In</div>
+                                                            <div class="slds-text-body_small">{long} = Longitude on Check In</div>
+                                                            <div class="slds-text-body_small">{distance} = Distance in Meters</div>
+                                                        </div>
+                                                        <div class="slds-col">
+                                                            <div class="slds-text-body_small">{distance-meters} = Distance in Meters (Same as {distance})</div>
+                                                            <div class="slds-text-body_small">{distance-kilometers}	= Distance in Kilometers</div>
+                                                            <div class="slds-text-body_small">{distance-miles} = Distance in Miles</div>
+                                                            <div class="slds-text-body_small">{distance-feet} = Distance in Feet</div>
+                                                            <div class="slds-text-body_small">{distance-yards} = Distance in Yards</div>
+                                                        </div>
+                                                        <div class="slds-col">
+                                                            <div class="slds-text-body_small">{accuracy-meters} = Accuracy in Meters</div>
+                                                            <div class="slds-text-body_small">{accuracy-kilometers} = Accuracy in Kilometers</div>
+                                                            <div class="slds-text-body_small">{accuracy-miles} = Accuracy in Miles</div>
+                                                            <div class="slds-text-body_small">{accuracy-feet} = Accuracy in Feet</div>
+                                                            <div class="slds-text-body_small">{accuracy-yards} = Accuracy in Yards</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="slds-m-vertical_medium slds-text-body_small">* All distances are rounded to 2 decimal places</div>
+                                                </div>
+                                                <div id="warningBox_old" style="display:none;" class="warning-box new">
+                                                    <div style="display:inline-block;">
+                                                        <span style="font-size: 30px;padding: 25px 20px;" class="MAIcon ion-android-warning"></span>
+                                                    </div>
+                                                    <div style="display:inline-block; font-weight:bold;">
+                                                        <div>{!$Label.MA_Settings_Warning}</div>
+                                                        <a href="http://wiki.cloudbilt.com/mapanything/clean-address-fields/" target="_blank">More Info</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Buttons  -->
+                                        <div class='buttons-create' style='display:none;'>
+                                            <input type='button' class='savebtn MAbutton button-blue slds-button slds-button_brand' value='Save' />
+                                            <!--<input type='button' class='suggestbtn MAbutton button-blue' value='Suggest' />-->
+                                            <!--<input type='button' class='createfieldsbtn MAbutton button-blue' value='Create Fields...' style='width: 125px;' />-->              
+                                            <span class='msgs' style='color: red; font-size: 10px; display: none;'></span>
+                                        </div>
+                                    </div>
+                                    <div id="BottomTabs-2">
+                                        <div>
+                                            <div class="slds-grid slds-grid_vertical-align-end">
+                                                <div class="slds-col slds-size_2-of-3">
+                                                    <div class="slds-form-element">
+                                                        <label class="slds-form-element__label" for="">{!$Label.MA_Base_Object}</label>
+                                                        <div class="slds-form-element__control">
+                                                            <div class="">
+                                                                <select class='existingbaseobject baseobject' data='baseobject' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class='baseobject-settings'>
+                                            <!-- Base Object Details -->
+                                            <div class='slds-section slds-m-bottom_large slds-is-open editbaseobjectdetails'>
+                                            <div class='slds-section__title slds-theme--shade'>
+                                                <span class="section-header-title slds-p-horizontal--small slds-truncate">{!$Label.MA_Base_Object_Details}</span>
+                                            </div>
+                                            <div class='slds-section__content section__content'>
+                                                <div class="slds-grid">
+                                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-4">
+                                                        <div class="slds-form slds-form_compound">
+                                                            <fieldset class="slds-form-element">
+                                                                <div class="slds-form-element__group">
+                                                                    <div class="slds-form-element__row">
+                                                                        <div class="slds-form-element slds-size_1-of-2 slds-p-right_small">
+                                                                            <label class="slds-form-element__label">{!$Label.MA_Name}</label>
+                                                                            <div class="slds-form-element__control">
+                                                                                <input type='text' class='editname slds-input' />
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="editaddressloc">Device Origin</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="editaddressloc" class='editbaseobjectdetails combobox' data='addressloc' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2 slds-p-right_small">
+                                                                                <label class="slds-form-element__label" for="">{!$Label.MA_Related_Object}</label>
+                                                                                <div class="slds-form-element__control">
+                                                                                    <span class='editbaseobjectdetails readonlybaseobject' style='width: 200px;' />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2 slds-p-right_small">
+                                                                                <label class="slds-form-element__label" for="editdescription">{!$Label.MA_Description}</label>
+                                                                                <div class="slds-form-element__control">
+                                                                                    <textarea id='editdescription' class="slds-textarea" />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="editrecordtype">{!$Label.MA_Record_Type}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="editrecordtype" class='editbaseobjectdetails combobox' data='recordtypefield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </fieldset>                                                           
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div> 
+                                            <!-- Device Fields -->
+                                            <div class='slds-section slds-m-bottom_large slds-is-open newbaseobjectdetails'>
+                                                <div class='slds-section__title slds-theme--shade'>
+                                                    <span class="section-header-title slds-p-horizontal--small slds-truncate">Device Fields</span>
+                                                </div>
+                                                <div class='slds-section__content section__content'>
+                                                    <div class="slds-grid">
+                                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-4">
+                                                            <div class="slds-form slds-form_compound">
+                                                                <fieldset class="slds-form-element">
+                                                                    <div class="slds-form-element__group">
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="editdevicevendor"><span class="required-field-asterick">*</span>Device Vendor</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="editdevicevendor" class='editbaseobjectdetails combobox' data='devicefield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="editdeviceid"><span class="required-field-asterick">*</span>Device ID</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="editdeviceid" class='editbaseobjectdetails combobox' data='devicefield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div style="display:none;" class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="editdevicetype">Device Type</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="editdevicetype" class='editbaseobjectdetails combobox' data='devicefield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </fieldset>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div> 
+                                            <!-- Address Fields (Live) -->
+                                            <div class='slds-section slds-m-bottom_large slds-is-open newbaseobjectdetails'>
+                                                <div class='slds-section__title slds-theme--shade'>
+                                                    <span class="section-header-title slds-p-horizontal--small slds-truncate">{!$Label.MA_Address_Fields}</span>
+                                                </div>
+                                                <div class='slds-section__content section__content'>
+                                                    <div class="slds-grid">
+                                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-4">
+                                                            <div class="slds-form slds-form_compound">
+                                                                <fieldset class="slds-form-element">
+                                                                    <div class="slds-form-element__group">
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="editstreet">{!$Label.MA_Street}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="editstreet" class='editbaseobjectdetails combobox' data='addressfield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="editpostalcode">{!$Label.MA_Postal_Code}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="editpostalcode" class='editbaseobjectdetails combobox' data='addressfield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="editcity">{!$Label.MA_City}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="editcity" class='editbaseobjectdetails combobox' data='addressfield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="editcountry">{!$Label.MA_Country}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="editcountry" class='editbaseobjectdetails combobox' data='addressfield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="editstate">{!$Label.MA_State}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select id="editstate" class='editbaseobjectdetails combobox' data='addressfield' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </fieldset>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Check In Settings -->
+                                            <div class='slds-section slds-m-bottom_large slds-is-open newbaseobjectdetails'>
+                                                <div class='slds-section__title slds-theme--shade'>
+                                                    <span class="section-header-title slds-p-horizontal--small slds-truncate">{!$Label.MA_Check_In_Settings}</span>
+                                                </div>
+                                                <div class='slds-section__content section__content'>
+                                                    <div class="slds-grid">
+                                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-4">
+                                                            <div class="slds-form slds-form_compound">
+                                                                <fieldset class="slds-form-element">
+                                                                    <div class="slds-form-element__group">
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2 slds-p-right_small">
+                                                                                <label class="slds-form-element__label">{!$Label.MA_Post_To}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <select class='checkin-postto combobox'>
+                                                                                        <option value='Chatter'>{!$Label.MA_Chatter}</option>
+                                                                                        <option value='Task'>{!$Label.MA_Task}</option>
+                                                                                        <option value='Event'>Event</option>
+                                                                                        <option value='Chatter|Task'>{!$Label.MA_Chatter_Task}</option>
+                                                                                        <option value='Chatter|Event'>Chatter &amp; Event</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <label class="slds-form-element__label" for="">{!$Label.MA_Verification_Distance}</label>
+                                                                                <div class="slds-form__control">
+                                                                                    <div class="slds-grid">
+                                                                                        <div class="slds-col slds-size_1-of-3 slds-m-right_x-small">
+                                                                                            <input type='text' class='slds-input verification-distance' />
+                                                                                        </div>
+                                                                                        <div class="slds-col slds-size_2-of-3">
+                                                                                            <select class='verification-unit combobox'>
+                                                                                                <option value='ft'>{!$Label.MA_Feet}</option>
+                                                                                                <option value='m'>{!$Label.MA_Meters}</option>
+                                                                                                <option value='km'>{!$Label.MARoutes_Kilometers}</option>
+                                                                                                <option value='mi'>{!$Label.MARoutes_Miles}</option>
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-form-element__row">
+                                                                            <div class="slds-form-element slds-size_1-of-2 slds-p-right_small">
+                                                                                <label class="slds-form-element__label" for="">{!$Label.MA_Chatter_Body}</label>
+                                                                                <div class="slds-form-element__control">
+                                                                                    <textarea class="chatter-body slds-textarea" />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="slds-form-element slds-size_1-of-2">
+                                                                                <div class="slds-form-element__control">
+                                                                                    <span class="slds-checkbox">
+                                                                                        <input type='checkbox' class='verification-required' id="verification-required"></input>
+                                                                                        <label class="slds-checkbox__label" for="verification-required">
+                                                                                            <span class="slds-checkbox_faux"></span>
+                                                                                            <span class="slds-form-element__label">{!$Label.MA_Verification_Required}</span>
+                                                                                        </label>
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </fieldset>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="slds-grid slds-m-top_medium chatter-post-merge-fields">
+                                                        <div class="slds-col">
+                                                            <div class="slds-text-body_small">{tooltip1} = Value of Tooltip 1</div>
+                                                            <div class="slds-text-body_small">{lat} = Latitude on Check In</div>
+                                                            <div class="slds-text-body_small">{long} = Longitude on Check In</div>
+                                                            <div class="slds-text-body_small">{distance} = Distance in Meters</div>
+                                                        </div>
+                                                        <div class="slds-col">
+                                                            <div class="slds-text-body_small">{distance-meters} = Distance in Meters (Same as {distance})</div>
+                                                            <div class="slds-text-body_small">{distance-kilometers}	= Distance in Kilometers</div>
+                                                            <div class="slds-text-body_small">{distance-miles} = Distance in Miles</div>
+                                                            <div class="slds-text-body_small">{distance-feet} = Distance in Feet</div>
+                                                            <div class="slds-text-body_small">{distance-yards} = Distance in Yards</div>
+                                                        </div>
+                                                        <div class="slds-col">
+                                                            <div class="slds-text-body_small">{accuracy-meters} = Accuracy in Meters</div>
+                                                            <div class="slds-text-body_small">{accuracy-kilometers} = Accuracy in Kilometers</div>
+                                                            <div class="slds-text-body_small">{accuracy-miles} = Accuracy in Miles</div>
+                                                            <div class="slds-text-body_small">{accuracy-feet} = Accuracy in Feet</div>
+                                                            <div class="slds-text-body_small">{accuracy-yards} = Accuracy in Yards</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="slds-m-vertical_medium slds-text-body_small">* All distances are rounded to 2 decimal places</div>
+                                                </div>
+                                                <div id="warningBox_old" style="display:none;" class="warning-box new">
+                                                    <div style="display:inline-block;">
+                                                        <span style="font-size: 30px;padding: 25px 20px;" class="MAIcon ion-android-warning"></span>
+                                                    </div>
+                                                    <div style="display:inline-block; font-weight:bold;">
+                                                        <div>{!$Label.MA_Settings_Warning}</div>
+                                                        <a href="http://wiki.cloudbilt.com/mapanything/clean-address-fields/" target="_blank">More Info</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Buttons  -->
+                                        <div class='buttons-edit' style='display:none;'>
+                                            <input type='button' class='savebtn MAbutton button-blue' value='Save' />
+                                            <span class='msgs' style='color: red; font-size: 10px; display: none;'></span>
+                                        </div>
+                                    </div>
+
+
+                                    </div>
+                                    
+                                    <div id="BottomTabs-3">
+                                        <div>
+                                            <div class="slds-grid slds-grid_vertical-align-end">
+                                                <div class="slds-col slds-size_2-of-3">
+                                                    <div class="slds-form-element">
+                                                        <label class="slds-form-element__label" for="">{!$Label.MA_Base_Object}</label>
+                                                        <div class="slds-form-element__control">
+                                                            <div class="">
+                                                                <select class='existingbaseobject deletebaseobject' data='baseobject' disabled='disabled'><option value=''>{!$Label.MA_Loading}...</option></select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Buttons  -->
+                                        <div class='buttons-delete slds-p-top_small' style='display:none; padding-left: 0;'>
+                                            <input type='button' class='deletebtn MAbutton button-red' value='Delete' />
+                                            <span class='msgs' style='color: red; font-size: 10px; display: none;'></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="dialog-SQTree" title="Saved Queries" style="display:none;" >
+            <div id="SQTree" style="padding-top:3px;width:95%;height:auto;"></div>
+        </div>
+        
+        <!-- Create Purge Workflows Popup -->
+        <div id='dialog-createpurgeworkflows' style='display: none;'>
+        	
+        	<!-- Header -->
+        	<h2>Delete Purge Workflows</h2>
+        	
+        	<!-- Spacer -->
+        	<div style='height: 10px;'>&nbsp;</div>
+        	
+        	<!-- Deleteable Workflows Table -->
+        	<div id='dialog-deletepurgeworkflows-table-wrapper' class='loadmask-wrapper' style="padding-bottom: 50px;">
+        		<table id='dialog-deletepurgeworkflows-table' class='grid-blue'>
+        			<tr>
+        				<th>Existing Purge Workflows</th>
+        				<th style='text-align: center;'></th>
+        			</tr>
+        		</table>
+        	</div>
+        	
+        	<!-- Header -->
+        	<h2>{!$Label.MA_Create_Purg_Workflows}</h2>
+        	
+        	<!-- Spacer -->
+        	<div style='height: 10px;'>&nbsp;</div>
+        	
+        	<!-- Createable Workflows Table -->
+        	<div id='dialog-createpurgeworkflows-table-wrapper' class='loadmask-wrapper'>
+        		<table id='dialog-createpurgeworkflows-table' class='grid-blue'>
+        			<tr>
+        				<th>{!$Label.MA_Createable_Purge_Workflows}</th>
+        				<th style='text-align: center;'><span class='link selectall'>{!$Label.MA_All}</span> | <span class='link selectnone'>{!$Label.MA_None}</span></th>
+        			</tr>
+        		</table>
+        	</div>
+        	
+        </div>
+        
+        <!-- Templates -->
+        <div id='templates' style='display: none;'>
+        	
+        	<!-- Row Templates -->
+        	<table>
+        		<tr class='createablefield-row'>
+        			<td class='createablefield-label'></td>
+        			<td class='createablefield-exists'></td>
+        		</tr>
+        	</table>
+        	
+        </div>
+    </apex:outputPanel>
+    
+    
+     <div style="{!IF(hasMapAnythingLiveLicense,'display: none;','')}">
+        <h3>This Saleforce organization has no MapAnything Live license</h3>
+    </div>
+    
+</apex:page>

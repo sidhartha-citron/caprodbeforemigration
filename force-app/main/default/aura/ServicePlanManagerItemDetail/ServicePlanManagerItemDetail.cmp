@@ -1,0 +1,143 @@
+<!--
+- @FileName: ServicePlanManagerItemDetail
+- @Description: Component to display individual line items for an asset
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       12/6/2019         Created
+*************************************************************  
+-->
+
+<aura:component description="ServicePlanManagerItemDetail">
+    <aura:attribute name="servicePlanId" type="String" />
+    <aura:attribute name="asset" type="Map" />
+    <aura:attribute name="permissionLevel" type="String" />
+
+    <aura:registerEvent name="ServicePlanManagerItemDetailConfirm" type="c:ServicePlanManagerItemDetailConfirmEvt" />
+
+    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading" aria-modal="true" aria-describedby="modal-content" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container citron-modal">
+            <header class="slds-modal__header">
+                <div>
+                    <h1 id="modal-heading" class="slds-modal__title slds-text-align_center">{!v.asset.item.Product_Name__c}</h1>
+                </div>
+            </header>
+            <div class="slds-modal__content slds-scrollable_y slds-p-around_medium" id="modal-content">
+                <aura:if isTrue="{!not(empty(v.asset.items))}" >
+                    <table class="slds-table slds-table_cell-buffer">
+                        <thead>
+                        <tr class="slds-text-title_caps">
+                            <aura:if isTrue="{!not(v.variety == 'Unassigned')}">
+                                <th scope="col">
+                                    <div class="slds-truncate" title="">
+                                        <lightning:input aura:id="checkboxAll"
+                                                         type="checkbox"
+                                                         label=""
+                                                         onchange="{!c.selectAll}"
+                                                         disabled="{!v.permissionLevel == 'Read Only'}" />
+                                    </div>
+                                </th>
+                            </aura:if>
+
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.Product_Name}">{!$Label.c.Product_Name}</div>
+                            </th>
+
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.Survey_Location}">{!$Label.c.Survey_Location}</div>
+                            </th>
+
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.Frequency}">{!$Label.c.Frequency}</div>
+                            </th>
+
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.OrderNumber}">{!$Label.c.OrderNumber}</div>
+                            </th>
+
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.Product_Quantity}">{!$Label.c.Product_Quantity}</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.Last_Service_Plan}">{!$Label.c.Last_Service_Plan}</div>
+                            </th>                            
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <aura:iteration items="{!v.asset.items}" var="itemWrapper" >
+                            <tr>
+                                <aura:if isTrue="{!not(v.variety == 'Unassigned')}">
+                                    <td>
+                                        <div class="slds-truncate" title="">
+                                            <lightning:input aura:id="checkbox"
+                                                             type="checkbox"
+                                                             label=""
+                                                             checked="{!itemWrapper.selected}"
+                                                             disabled="{!v.permissionLevel == 'Read Only'}" />
+                                        </div>
+                                    </td>
+                                </aura:if>
+
+                                <td>
+                                    <div class="slds-truncate" title="{!v.asset.item.Product_Name__c}">
+                                        {!v.asset.item.Product_Name__c}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="slds-truncate" title="{!itemWrapper.surveyLocations}">
+                                        {!itemWrapper.surveyLocations}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="slds-truncate" title="{!v.asset.item.Frequency__c}">
+                                        {!v.asset.item.Frequency__c}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="slds-truncate" title="{!v.asset.item.Order_Number__c}">
+                                        {!v.asset.item.Order_Number__c}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="slds-truncate" title="{!itemWrapper.quantity}">
+                                        {!itemWrapper.quantity}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="slds-truncate" title="{!v.asset.item.Last_Service_Plan_Name__c}">
+                                        {!itemWrapper.LastSPName}
+                                    </div>
+                                </td>                                
+                                
+                            </tr>
+                        </aura:iteration>
+                        </tbody>
+                    </table>
+
+                    <aura:set attribute="else">
+                        <p class="slds-m-top_small">{!$Label.c.SPM_No_Line_Items}</p>
+                    </aura:set>
+                </aura:if>
+            </div>
+            <footer class="slds-modal__footer">
+                <lightning:button variant="neutral"
+                                  label="{!$Label.c.Cancel_Label}"
+                                  value="{!$Label.c.Cancelled}"
+                                  onclick="{!c.cancel}" />
+
+                <aura:if isTrue="{!v.permissionLevel == 'Read/Write'}">
+                    <lightning:button variant="brand"
+                                      label="{!$Label.c.Continue}"
+                                      value="{!$Label.c.Confirmed}"
+                                      onclick="{!c.confirm}" />
+                </aura:if>
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</aura:component>

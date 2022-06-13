@@ -1,0 +1,8 @@
+<apex:page controller="BMCServiceDesk.ReleaseManifestController" cache="true" contentType="{!csvContentType}" showHeader="false" readOnly="true">{!bom} 
+<apex:outputText value="CRUDFLSCHECK# False Positive: Since this is part of Remedyforce functional process which is expected to work outside of FLS and CRUD permission on this field/object." rendered="false"/>
+<apex:outputText value="{!parentObjName}: {!parentObjTitle}" />
+"{!JSENCODE(ItemHeader)}","{!JSENCODE($Label.bmcservicedesk__itemid)}","{!JSENCODE($Label.bmcservicedesk__description)}","{!JSENCODE($Label.bmcservicedesk__status)}","{!JSENCODE($Label.bmcservicedesk__duedateheader)}","{!JSENCODE($Label.bmcservicedesk__priorityheader)}","{!JSENCODE($Label.bmcservicedesk__assignedto)}","{!JSENCODE(StatusHeader)}","{!JSENCODE($Label.bmcservicedesk__order)}"
+<apex:repeat value="{!listTobeExported}" var="item">
+{!item.parentElementType},{!item.parentElement},{!item.description},{!item.status},{!item.dueDate},{!item.priority},{!item.assignedTo},{!IF(RELEASE==objectName,item.manifest.FKStatus__r.Name, IF(INCIDENT==objectName,item.incidentManifest.FKStatus__r.Name,IF(CHANGE==objectName,item.changeManifest.FKStatus__r.Name,IF(PROBLEM==objectName,item.problemManifest.FKStatus__r.Name,''))))},{!IF(RELEASE==objectName,item.manifest.BMCServiceDesk__Order__c, IF(INCIDENT==objectName,item.incidentManifest.BMCServiceDesk__Order__c,IF(CHANGE==objectName,item.changeManifest.BMCServiceDesk__Order__c,IF(PROBLEM==objectName,item.problemManifest.BMCServiceDesk__Order__c,''))))}
+</apex:repeat>
+</apex:page>

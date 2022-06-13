@@ -1,0 +1,251 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.StandardResolutionController" standardStylesheets="false">
+   <c:CommonIncludes />
+<!--<script type="text/javascript" src="{!$Resource.ExtJS}/ext-all-debug.js"></script>-->
+   
+   <script>
+   var errormsg;
+
+   function callNewPage(){
+        window.parent.addTab("StandardResolutionPage","{!JSENCODE($Label.StandardResolution1)}","{!JSENCODE($Label.StandardResolution1)}");
+    }
+    var isLookup = "{!JSENCODE($CurrentPage.parameters.islookup)}";
+    if(isLookup){
+      window.parent.changePopUpTitle('{!objLabel}');
+    }
+     function saveRecords(){
+        if(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}'){
+            if(isLookup){       
+              window.parent.refreshDocs();
+              window.parent.closePopupRF();
+           }
+         }
+     }
+       
+    function enableSaveButton() {
+        Ext.getCmp('saveId').setDisabled(false);
+    } 
+     var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+        function closeWindow(){
+	        if(errormsg == null || errormsg == '')
+	        {
+	            if(isLookup){
+	              window.parent.refreshDocs();                
+	              window.parent.closePopupRF();
+	           }else{
+	                window.parent.refreshList();
+	                window.parent.closeTab(wid);
+	           }
+	        }
+        }   
+        var disableTrue = true;
+        Ext.onReady(function(){
+   
+         Ext.QuickTips.init(); 
+         if(isLookup){
+            disableTrue = true;
+          }else{ 
+          disableTrue = false; }
+
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event){  callNewPage();  };
+        var SaveBtnHandler = function(button,event) {  
+            Ext.getCmp('saveId').setDisabled(true);
+            waitbox(0);
+            chkBoxValue=Ext.getCmp('idInactive').getValue();
+            save(chkBoxValue); };
+        var CopyBtnHandler = function(button,event) {  /*alert('Copy!');*/ };
+        var DeleteBtnHandler = function(button,event) {  Ext.MessageBox.confirm('{!JSENCODE($Label.Delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}', function(btn){
+                                                           if(btn === 'yes'){
+                                                                  deleteStandardResolution();
+                                                           }});
+                                                      };
+        
+        var ClearBtnHandler = function(button,event){ /* clearStandardDescription(); */ }
+        var NextBtnHandler = function (button,event) { };
+        var PreviuosBtnHandler = function (button,event) { };  
+        
+        var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+          new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.New)}',
+                iconCls: 'bmcNew',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },
+                handler:NewBtnHandler
+            },' ',{
+                scale: 'medium',
+                id:'saveId',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.Save)}',
+                iconCls: 'bmcSave',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.Copy)}',
+                iconCls: 'bmcCopy',
+                disabled:'true',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.Delete)}',
+                iconCls: 'bmcDelete',
+                id:'deleteSRId' ,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.Clear)}',
+                iconCls: 'bmcClear',
+                disabled:'true',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },
+                handler:ClearBtnHandler
+            },
+            new Ext.Toolbar.Fill(), 
+            {
+                  id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               align:'top',
+               checked: false,               
+               cls:'chkStyle',
+               boxLabel:'<span class="checkboxLabelCls">{!JSENCODE($ObjectType.StandardResolution__c.fields.inactive__c.label)}</span>'
+            }
+            ] 
+        });
+        new Ext.ToolTip({
+            target: 'idInactive',   
+            anchor: 'left', 
+            html: '{!JSENCODE($ObjectType.StandardResolution__c.fields.inactive__c.label)}' 
+        });
+      
+        Ext.getCmp('idInactive').setValue('{!standardResolution.inactive__c}');
+        
+        var srId = '{!JSENCODE(standardResolution.Id)}';    
+        if(isLookup&&(srId == null || srId == '')){Ext.getCmp('idInactive').setDisabled(true);}    
+        if(srId == null || srId == ''){                
+        Ext.getCmp('deleteSRId').setDisabled(true);
+        Ext.getCmp('deleteSRId').setIconClass('bmcDeleteDisable');
+        document.getElementById('{!$Component.stdResolnForm.StandardResolution_Id}').focus();
+        }
+        
+    });
+
+
+    </script>  
+     
+    <apex:outputPanel id="errorId">
+        <script>
+           errormsg = '{!JSENCODE(messageString)}';               
+        </script>
+    </apex:outputPanel>
+
+    <apex:outputPanel >
+    <apex:form id="stdResolnForm">
+    <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+        
+     <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,errorId" reRender="validationComponent,errorId" oncomplete="waitMsg.hide();enableSaveButton();showError();saveRecords();">
+       <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+       </apex:actionFunction>
+     <apex:actionFunction action="{!newStdResolution}" name="newStdResolution" reRender="resolutionPanel,headerId"/>
+      <apex:actionFunction action="{!deleteStandardResolution}" name="deleteStandardResolution" reRender="validationComponent,errorId" onComplete="showError();closeWindow();"/>
+     
+      <div id="capsule" class="CapsuleDiv1" style="background:#FFFFFF" height="600">
+             <table class="clsMainTable" cellspacing="0" cellpadding="0">
+                
+                <tr class="clsRowGreyBg">
+                    <td>
+                        <div id="btnToolbar"></div>
+                    </td>
+                </tr>  
+            
+                                   
+                             
+                             <tr>
+                                   <td class="clsInputBoldLabelTDI" >
+                                      <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__StandardResolution__c.fields.BMCServiceDesk__resolution__c.label}"/></td>
+                             </tr>
+                             <tr>
+                                   <td class="clsInputTextAreaTD">
+                                   <apex:outputPanel id="resolutionPanel"> 
+                                            <apex:inputTextarea title="{!$ObjectType.BMCServiceDesk__StandardResolution__c.fields.BMCServiceDesk__resolution__c.InlineHelpText}" id="StandardResolution_Id" value="{!standardResolution.BMCServiceDesk__resolution__c}" styleClass="clsInputTextAreaPgWoSidePanel" />
+                                   </apex:outputPanel>
+                                   </td>
+                            </tr>
+                            <tr>
+                                   <td><div class="div13pxVspacing"/></td><td></td>
+                             </tr>
+                              
+                       <tr class="clsRowGreyBg" valign="middle" width="5%">
+                                <td valign="middle" style="width: 100%">
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tr>
+                                            <td>
+                                                &nbsp;
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                         </tr>  
+                         
+                   </table>
+                    
+
+        </div>
+                           
+          </apex:form>                           
+    </apex:outputPanel>
+   
+    
+   
+</apex:page>

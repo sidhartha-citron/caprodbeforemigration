@@ -1,0 +1,116 @@
+<apex:page standardController="WM4SF3__WalkMeLicense__c" extensions="WM4SF3.vf_LicenseController" sidebar="false">
+<script type="text/javascript">(function() {var walkme = document.createElement('script'); walkme.type = 'text/javascript'; walkme.async = true; walkme.src = 'https://d3b3ehuo35wzeh.cloudfront.net/users/1410e199b0104bcb8a43a950c4bea4c7/walkme_1410e199b0104bcb8a43a950c4bea4c7_https.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(walkme, s);})();</script>
+
+<script id="custom-js" type="text/javascript" src=""></script>
+<script>
+              
+    function loadFile(id, fileName, env, attrType){
+
+        var elem = document.getElementById(id);
+        var path;
+        
+        if (env == 'local'){
+        
+            path = 'https://localhost/Plugins/salesforce/WM4SF_v2/pages/';
+        }
+        else if (env == 'qa'){
+                
+            path = 'https://d3fqyenyxfs83e.cloudfront.net/wm4sf/v2/';
+        }
+        
+        else{
+        
+            path = 'https://d3b3ehuo35wzeh.cloudfront.net/wm4sf/v2/';
+        }
+        
+        fileName = path + fileName;
+                
+        if (attrType=='src'){
+            
+            elem.src = fileName;
+        }
+        else if (attrType=='href'){
+        
+            elem.href = fileName;
+        }
+    }
+    
+    var env = "{!JSENCODE(WalkMeLicense.mode__c)}";
+    if ("{!WalkMeLicense.QA_Mode__c}" == 'true'){
+        
+        env = 'qa';
+    }
+    
+    loadFile('custom-js', 'Advanced.js', env, 'src');
+
+</script>
+<style>
+a {text-decoration: none; color: #1797c0}
+
+tr {height: 25px}
+
+.walkme-inner input[type="text"], .walkme-inner textarea {
+    border: 1px solid #c7ccce;
+    border-radius: 3px;
+    background: white;
+    -webkit-box-shadow: inset 0px 2px 5px 0px rgba(50, 50, 50, 0.1);
+    -moz-box-shadow:    inset 0px 2px 5px 0px rgba(50, 50, 50, 0.1);
+    box-shadow:         inset 0px 2px 5px 0px rgba(50, 50, 50, 0.1);        
+}
+
+.walkme-inner input[type="text"] {width: 255px; padding: 5px}
+
+.noSidebarCell {padding:0}
+.walkme-inner {
+    padding: 0 20px;
+    background: url('https://na15.salesforce.com/resource/WM4SF3__WalkMeLogo') no-repeat 724px 5px;    
+}
+
+.bold-head {font-size:14px;font-weight:bold;}
+
+</style>
+
+<apex:form rendered="{!Not(EditMode)}">
+<apex:pageMessages />
+   <b><apex:outputText value="WalkMe For Salesforce - Advanced Features" style="font-size:18px; background: #f8efdf; display:block; padding: 12px 20px"/></b><br/>
+    
+
+<div class="walkme-inner">
+<div class="bold-head"> Environment: </div>
+<div style="font-size:11px"> Choose the environemnt that matches your editor environemnt. </div>
+<div>
+ <div class="SnippetEnv">
+                <apex:selectRadio id="Env" value="{!WalkMeLicense.WM4SF3__Env__c}"  layout="pageDirection" style="font-size:13px" >
+                    <apex:selectoptions value="{!EnvChoices}"></apex:selectoptions>
+                </apex:selectRadio>
+            </div>
+            <div class="EnvInput" style="font-size:13px;margin-left:90px;margin-top:-36px">
+            <apex:inputField value="{!WalkMeLicense.WM4SF3__CusEnv__c}" required="false"/>
+            </div>
+       </div>
+       <div style="margin-top:20px;float:none;">
+       <!--    <div class="bold-head">Saleforce Variables:</div> 
+           <div style="font-size:11px;">Enable variables for WalkMe to access</div>
+           <div style="margin-top:10px;"><apex:inputTextarea style="width:350px" id="Params" rows="5" cols="20" value="{!WalkMeLicense.Param__c}"/></div> -->
+       </div>
+        <div style="margin-top:25px">
+        <apex:commandButton image="{!URLFOR($Resource.WM4SF3__Save_button)}"  action="{!UpdateMethod}" style="text-align:right:22px; border-color:white; background:transparent; width:71px; height:29px;"  />
+       </div>
+</div>
+</apex:form>
+
+ <script>
+ var t = document.getElementsByTagName("textarea");
+t[0].value = t[0].value.replace(/\ /g,'\n');
+ </script>
+
+
+<apex:form rendered="{!(EditMode)}">
+    
+    <b><apex:outputText value="WalkMe For Salesforce - Advanced Features" style="font-size:18px; background: #f8efdf; display:block; padding: 12px 20px"/></b><br/>
+
+    <apex:outputText value="You are using the WalkMe demo account. Use your own account to access the WalkMe for Salesforce advanced features. " style="font-size:14px; padding: 12px 20px"/>
+    </apex:form>
+
+
+</apex:page>

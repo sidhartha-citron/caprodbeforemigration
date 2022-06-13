@@ -1,0 +1,222 @@
+<apex:page id="ssMyProfilePage" controller="BMCServiceDesk.SSUserController" action="{!getUserProfile}" sidebar="false" showHeader="false" standardStylesheets="false">
+<head><title><apex:outputText value="{!$Label.bmcservicedesk__ssbrowsertitle}"/></title></head>
+<c:SelfServiceCommonIncludes />
+<script src="{!$Resource.SSjs}/SSMyProfile.js"/>
+
+<style>
+
+
+.ssClsRowBlueBgPanel {
+    
+    height: 25px;
+    padding-left: 10px;
+    text-align: center;
+    vertical-align: middle;
+    width: 680px;
+}
+
+.trHeight {
+    height: 30px;
+}
+
+.tableBgWhite {
+    background-color: #FFFFFF;
+    width: 100%;
+}
+
+</style>
+<script>  
+var cookieName='broadcastCookieName';
+var UsercookieName =  cookieName+'{!JSENCODE($User.Username)}';
+var ScrollingSpeed;
+var adminspeedvar={!adminspeedvar};
+var isTickerEnable={!NOT(broadcasttickerenable)};
+var broadcastSpeedValue='{!JSENCODE($Component.ssMyProfilePage.SSUserTemplate.siteMyProfileForm.broadcastspeedid)}';
+showheadvar={!showHeader};
+ 
+
+
+
+</script>
+    <apex:composition template="BMCServiceDesk__SSUserTemplate"> 
+    <apex:define name="body">
+                <apex:outputPanel id="breadCrumbPanel">
+                <div class="ext-gecko ext-gecko3 x-border-ssbclayout-ct">
+                    <table width="100%">
+                    <tr>
+                    <td valign="top" align="left">
+                    <apex:outputLink value="{!$Page.BMCServiceDesk__SelfServiceHome}" id="homeLink" style="font-weight:bold;" styleClass="clsCmdLink">
+                        <apex:outputText value="{!$Label.bmcservicedesk__sshelpdeskhome}" styleClass="ssMyProfileLeftStyle"/> 
+                    </apex:outputLink>
+                        <apex:outputText value="&nbsp;>&nbsp;" styleClass="ssMyProfileStyle"/>
+                    <apex:outputLink value="#" id="registerLink" style="font-weight:bold;" styleClass="clsCmdLink"> 
+                        <apex:outputText value="{!$Label.bmcservicedesk__ssmyprofile}" styleClass="ssMyProfileStyle"/>
+                    </apex:outputLink>  
+                    </td>
+                    <td valign="top" align="right">
+                        <apex:outputText value="{!TodayDate}" styleClass="sshomebcStyle" style="font-weight:bold;" escape="false" />
+                    </td>   
+                    </tr>
+                    </table>
+                </div>        
+                </apex:outputPanel>
+    <apex:outputPanel id="siteRegisterPanel">
+    <div class="ext-gecko ext-gecko3 x-border-ssbodylayout-ct divBgColor" id="divBg">   
+    <apex:form id="siteMyProfileForm" forceSSL="true">
+      <apex:inputhidden value="{!BroadcastSpeed}" id="broadcastspeedid"/>  
+    <table style="width:680px;">
+    <tr>
+        <td colspan="2"><div class="div15pxVspacing"/></td>
+    </tr>
+    <tr>
+    <td><div class="div15pxHspacing"/></td>
+    <td>
+    <apex:panelBar headerClass="ssClsRowBlueBgPanel" switchType="ajax" id="pbarId" width="100%" height="100%" style="border-color:#6A7378 #6A7378 #6A7378 #6A7378; border-width:thin;">
+             <apex:panelBarItem label="{!$Label.bmcservicedesk__ssmyprofile}" expanded="true" id="helpTextID" headerClass="ssClsRowBlueBgPanel" >
+                                        
+    <table class="tableBgWhite" cellspacing="0" >
+        <tr class="sshomeLoginResetBgStyle trHeight">
+        <td valign="top" align="center" width="180px"></td>
+        <td valign="top" align="left" width="500px">
+        <apex:outputText rendered="{!IF(!ISNULL(displayMessage),true,false)}" style="color:Red;" value="{!displayMessage}" />
+        </td>
+        </tr>       
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">
+        <apex:outputText value="{!$ObjectType.User.fields.FirstName.label}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>*
+        </td>
+        <td valign="top" align="left" width="40px">
+        <apex:inputText id="userFirstNameValue" value="{!userFirstName}" styleClass="txtBoxCls" title="{!JSENCODE($Label.bmcservicedesk__ssfirstnamehelptext)}" />
+        </td>
+       
+        </tr>
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">                    
+        <apex:outputText value="{!$ObjectType.User.fields.LastName.label}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>*
+        </td>
+        <td valign="top" align="left" width="40px">     
+        <apex:inputText id="userLastNameValue" value="{!userLastName}" styleClass="txtBoxCls" title="{!JSENCODE($Label.bmcservicedesk__sslastnamehelptext)}" />
+        </td>
+        </tr>
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">                    
+        <apex:outputText value="{!$Label.bmcservicedesk__email}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>*
+        </td>
+        <td valign="top" align="left" width="40px">     
+        <apex:inputText id="userEmailValue" value="{!userEmail}" styleClass="txtBoxCls" title="{!JSENCODE($Label.bmcservicedesk__ssemailaddresshelptext)}" />
+        </td>
+        </tr>
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">                    
+        <apex:outputText value="{!$ObjectType.User.fields.TimeZoneSidKey.label}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>*
+        </td>
+        <td valign="top" align="left" width="40px">     
+        <apex:selectList value="{!userTimeZone}" size="1" styleClass="comboBoxCls"  title="{!JSENCODE($Label.bmcservicedesk__sstimezonehelptext)}" > 
+            <apex:selectOptions value="{!timeZoneList}"/>
+        </apex:selectList>                      
+        </td>
+        </tr>
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">                    
+        <apex:outputText value="{!$ObjectType.User.fields.LocaleSidKey.label}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>*
+        </td>
+        <td valign="top" align="left" width="40px">     
+        <apex:selectList value="{!userLocale}" size="1"  styleClass="comboBoxCls" title="{!JSENCODE($Label.bmcservicedesk__sslocalehelptext)}" > 
+            <apex:selectOptions value="{!localeList}"/>
+        </apex:selectList>      
+        </td>
+        </tr>
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">                    
+        <apex:outputText value="{!$ObjectType.User.fields.LanguageLocaleKey.label}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>*
+        </td>
+        <td valign="top" align="left" width="40px">     
+        <apex:selectList value="{!userLanguage}" size="1" styleClass="comboBoxCls" title="{!JSENCODE($Label.bmcservicedesk__sslanguagehelptext)}" > 
+            <apex:selectOptions value="{!languageList}"/>
+        </apex:selectList>              
+        </td>
+        </tr>
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">                    
+        <apex:outputText value="{!$ObjectType.User.fields.Phone.label}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>
+        </td>
+        <td valign="top" align="left" width="40px">     
+        <apex:inputText id="userPhoneValue" value="{!userPhone}" styleClass="txtBoxCls" title="{!JSENCODE($Label.bmcservicedesk__ssphonehelptext)}" />
+        </td>
+        </tr>       
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">                    
+        <apex:outputText value="{!$ObjectType.User.fields.Street.label}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>
+        </td>
+        <td valign="top" align="left" width="40px">     
+        <apex:inputText id="userStreetValue" value="{!userStreet}" styleClass="txtBoxCls" title="{!JSENCODE($Label.bmcservicedesk__ssstreethelptext)}" />
+        </td>
+        </tr>
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">                    
+        <apex:outputText value="{!$ObjectType.User.fields.City.label}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>
+        </td>
+        <td valign="top" align="left" width="40px">     
+        <apex:inputText id="userCityValue" value="{!userCity}" styleClass="txtBoxCls" title="{!JSENCODE($Label.bmcservicedesk__sscityhelptext)}" />
+        </td>
+        </tr>
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">                    
+        <apex:outputText value="{!$ObjectType.User.fields.State.label}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>
+        </td>
+        <td valign="top" align="left" width="40px">     
+        <apex:inputText id="userStateProvinceValue" value="{!userStateProvince}" styleClass="txtBoxCls" title="{!JSENCODE($Label.bmcservicedesk__ssstateprovincehelptext)}" />
+        </td>
+        </tr>
+        <tr class="trHeight">
+        <td valign="top" align="left" width="120px">                    
+        <apex:outputText value="{!$ObjectType.User.fields.PostalCode.label}" styleClass="fontClsLabel" styleClass="fontClsLabel"/>
+        </td>
+        <td valign="top" align="left" width="40px">     
+        <apex:inputText id="userPostalCodeValue" value="{!userPostalCode}"  styleClass="txtBoxCls" title="{!JSENCODE($Label.bmcservicedesk__sszippostalcodehelptext)}" />
+        </td>
+        </tr>
+         <tr>
+            <td style="width:180px;padding-top:10px;border-top:solid 1px #6A7378; " >
+                <apex:outputLabel rendered="{!broadcasttickerenable}" styleClass="fontClsLabel" styleClass="fontClsLabel">{!$Label.bmcservicedesk__broadcasttickerspeed}</apex:outputLabel>
+            </td>
+            <td style="border-top:solid 1px #6A7378;"> 
+            <apex:outputPanel rendered="{!broadcasttickerenable}">
+                <table style="padding-top:10px;">
+                    <tr>
+                         <td valign="middle" align="left" >  
+                             <apex:outputLabel styleClass="defaultFont" style="margin-left: 1px;" value="{!$Label.bmcservicedesk__slow}" ></apex:outputLabel>
+                         </td> 
+                         <td  valign="middle" style='padding-left:5px'>
+                             <div id="basic_slider"></div>
+                        </td>
+                        <td class="div5pxHspcing"></td>
+                         <td valign="middle" align="left" >
+                             <apex:outputLabel styleClass="defaultFont"  value="{!$Label.bmcservicedesk__fast}"></apex:outputLabel> 
+                        </td>
+                    </tr>
+                </table>
+             </apex:outputPanel>
+            </td>
+        </tr>
+        <tr  >
+            <td colspan="2" class="div10pxVspacing"></td>
+        </tr>
+        <tr class="trBgColor">
+        <td valign="top" align="left" colspan="2">
+        <apex:commandButton value="{!$Label.bmcservicedesk__sssubmit}" action="{!saveUserProfile}" styleClass="btnGrey"/>   
+        <apex:commandButton value="{!$Label.bmcservicedesk__sscancel}" action="{!homePage}" styleClass="btnGrey"/>
+        </td>
+        </tr>
+    </table>
+        </apex:panelBarItem>
+    </apex:panelBar>
+    </td>
+    </tr>
+    </table>
+    </apex:form>
+    </div>
+    </apex:outputPanel>
+    </apex:define>
+    </apex:composition>
+</apex:page>

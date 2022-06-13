@@ -1,0 +1,201 @@
+<apex:page cache="true" showHeader="false"  controller="BMCServiceDesk.ACConfiguration" standardStylesheets="false">
+<body marginheight="0" marginwidth="0">
+
+<c:CommonIncludes />
+<script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/Spinner.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/SpinnerField.js"></script>
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Spinner.css" />
+ <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ACConfigurationPage.css" />
+
+<script>
+	var errMsg='';
+	var acEnabled = {!enableAC};
+	var serName = "{!JSENCODE(ACServerName)}";
+	var serPort = "{!JSENCODE(ACServerPort)}";
+	var serUN = "{!JSENCODE(ACUserName)}";
+	var saveMsg = "{!JSENCODE($Label.SavedSuccessfully)}";	
+	var validCreds = '{!JSENCODE($Label.ValidAcCrdentials)}';
+	var acConfMissing = '{!JSENCODE($Label.ACconfigMissingError)}';
+	var orData = {!gridData};
+	var nonPrint = '¬';
+	var PE = 'П';
+	var	EF ='ф';
+	var gridrowIndex;
+	var mappingGridDataComponent='{!$Component.ACconfigForm.mappingGridData}';
+	var processorIntervalDataComp = '{!$Component.ACconfigForm.processorIntervalData}';
+    var ProcessorhourField;
+    var processorminuteField;
+    var processorButton;
+	var processordefaulthourvalue = '{!processorhours}';
+    var processordefaultminutevalue = '{!processorminutes}';
+    var buttontext='{!jobstatus}';
+    var jobstatusflag={!jobstatus}; 
+    var timeMandatoryError = '{!JSENCODE($Label.milestoneTimeMandatory)}';
+    var ORStatusLabel = '{!JSENCODE($Label.ORStatusLabel)}';
+	var	taskStatusLabel = '{!JSENCODE($Label.taskStatusLabel)}';
+	var startbuttontext='{!JSENCODE($Label.ORStartProcessor)}';
+    var stopbuttontext='{!JSENCODE($Label.ORStopProcessor)}';
+    var processorWarningMsg = '{!JSENCODE($Label.ACORStatusMappingErrorMessage)}';
+    
+</script>
+<apex:outputpanel id="AcErrPanel">
+	<script>
+		errMsg='{!JSENCODE(AcMsgString)}';
+		
+	</script>
+</apex:outputpanel>
+<apex:outputpanel id="JobStatusPanel">
+	<script>
+		
+		jobstatusflag={!jobstatus};
+    	
+    	function onCompleteStart(){
+    		if(!jobstatusflag){
+				Ext.MessageBox.show({ msg:'{!JSENCODE($Label.OR_Scheduled_Job_Exception)}' , buttons: Ext.MessageBox.OK});
+		  	}
+		  	Ext.getCmp('processorbutton').setDisabled(false);
+		}
+		
+		function onCompleteStop(){
+			Ext.getCmp('processorbutton').setDisabled(false);
+		}
+	</script>
+</apex:outputpanel>
+<apex:form id="ACconfigForm">
+	<apex:actionFunction action="{!saveAcConfig}" name="saveAcConfig" rerender="AcErrPanel" oncomplete="onSaveComplete();"/>
+	<apex:actionFunction action="{!upsertEnableAC}" name="upsertEnableAC" rerender="AcErrPanel" oncomplete="onSaveComplete();"/>
+	<apex:actionFunction action="{!validateACcreds}" name="validateACcreds" rerender="AcErrPanel" onComplete="showValidationMsg();"/>
+	<apex:actionFunction action="{!saveAcMapping}" name="saveAcMapping" rerender="AcErrPanel" oncomplete="onSaveComplete();"/>
+	<apex:actionfunction name="ScheduleJob" action="{!scheduleJob}" reRender="JobStatusPanel" oncomplete="onCompleteStart()"/>
+ 	<apex:actionfunction name="StopJob" action="{!stopJob}" reRender="JobStatusPanel" oncomplete="onCompleteStop()"/>    
+	
+	<table height="100%" width="100%" cellspacing="0" cellpadding="0" border="0" >
+	<tr>
+      <td class="clsInputLabelTD paddingRight15Cls" colspan="2">
+        <apex:outputLabel value="{!($Label.bmcservicedesk__achelptext)}" /><br/><br/>
+		<a onclick="window.open(window.parent.getSetupMenuUrl('REMOTE_SITE_SETTINGS'));" style="color:blue;text-decoration:underline;cursor:pointer;">{!JSENCODE($Label.sfremotesitesetting)}</a>
+		<br/><br/>
+		<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__example + ':  ')}" />
+		<apex:outputLabel value="https://<server name>:<server port>" style="color: blue;text-decoration: underline;" />	 
+	  </td>
+    </tr>
+    <tr>
+    	<td height="10"></td>
+    </tr>
+   </table>
+   <hr style="color: #aebac1;"/>
+    <table height="100%" width="100%" cellspacing="0" cellpadding="0" border="0" >
+    	<tr>
+      	<td class="clsInputLabelTD" colspan="2">
+      		<apex:inputCheckBox value="{!enableAC}" id="enableAC" onclick="toggleAC(this.checked)" style="margin:0px;" onblur="chkToEnableValidateBtn();" onchange="isChanged=true;chkToEnableValidateBtn();" />
+      		<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__enableac)}" styleClass="clsPanelCheckBoxLabel"/> 
+	  	</td>
+    	</tr>
+    	<tr height="10"><td> </td></tr>
+        <tr>
+            <td class="clsInputLabelTD paddingRight15Cls">
+                <apex:outputLabel value="{!($Label.bmcservicedesk__acservername)}" />
+			</td>
+			<td class="clsInputTextBoxTD">
+				<apex:inputText id="acServerName" value="{!ACServerName}" styleClass="clsInputTextBox" style="width:300px;" maxlength="255" onkeyup="chkToEnableValidateBtn();" onblur="isChanged=true;chkToEnableValidateBtn();" onchange="isChanged=true;"/>
+			</td>
+        </tr>
+        <tr>
+            <td class="clsInputLabelTD paddingRight15Cls">
+                <apex:outputLabel value="{!($Label.bmcservicedesk__acserverport)}"/>
+			</td>
+			<td class="clsInputTextBoxTD">
+				<apex:inputText id="acServerPort" value="{!ACServerPort}" styleClass="clsInputTextBox" style="width:30px;" maxlength="5" onkeypress="return checkNumbers(event);" onkeyup="isChanged=true;chkToEnableValidateBtn();" onblur="chkToEnableValidateBtn();" onchange="isChanged=true;"/>
+			</td>
+        </tr>
+        <tr>
+            <td class="clsInputLabelTD paddingRight15Cls">
+                <apex:outputLabel value="{!($Label.bmcservicedesk__acusername)}"/>
+			</td>
+			<td class="clsInputTextBoxTD">
+				<apex:inputText id="acUserName" value="{!ACUserName}" styleClass="clsInputTextBox" maxlength="64" onkeyup="isChanged=true;chkToEnableValidateBtn();" onblur="chkToEnableValidateBtn();" onchange="isChanged=true;"/>
+			</td>
+        </tr>
+        <tr>
+            <td class="clsInputLabelTD paddingRight15Cls">
+                <apex:outputLabel value="{!($Label.bmcservicedesk__acpassword)}" />
+			</td>
+			<td class="clsInputTextBoxTD">
+				<apex:inputSecret id="acPassword" value="{!ACPassword}" styleClass="clsInputTextBox" redisplay="false" maxlength="127" onkeyup="isChanged=true;chkToEnableValidateBtn();" onblur="chkToEnableValidateBtn();" onchange="isChanged=true;"/> 
+			</td>
+        </tr>
+        <tr height="5"><td> </td></tr>
+        <tr>
+	    <td></td>
+	    <td>
+	    <input type="button" disabled="true" value="{!JSENCODE($Label.ValidateCredentials)}" onclick="validateACcredsJS();" id="validateCredentialsBtn" class="validateACbtn" style="font-weight: normal;color:#808080;"/>
+	    </td></tr>
+    </table>
+    <div class="div15pxVspacing"/>
+     <hr style="color: #aebac1;"/>
+    <apex:outputLabel id="ORStatusMapHeader" styleClass="clsInputBoldLabelTDI" value="{!JSENCODE($Label.bmcservicedesk__orstatusmappingheader)}"/>
+     <div style="height: 10px"/>
+   	<apex:outputLabel id="ORNote1" styleClass="clsInputLabelTD" value="{!JSENCODE($Label.bmcservicedesk__acornote)}"/>
+    <div class="div15pxVspacing"/>
+     <div id="mappingGrid" class="clsTemplateGridPanel"/>
+     <apex:inputHidden id="mappingGridData" value="{!gridDataMap}"/>
+     <apex:inputHidden id="processorIntervalData" value="{!processorInterval}"/>
+    <div class="div15pxVspacing"/>
+    <apex:outputLabel id="ORjobprocessorHeader" styleClass="clsInputBoldLabelTDI" value="{!JSENCODE($Label.bmcservicedesk__orjobprocessorheader)}"/>
+     <div style="height: 10px"/>
+   	<apex:outputLabel id="ORNote2" styleClass="clsInputLabelTD" value="{!JSENCODE($Label.bmcservicedesk__acprocessornote)}"/>
+    <div id = "orPanelDiv" style="width:645px;">
+        <table style="width:auto;*width:645px;"> 
+                <tr>
+                    <td class="TD10pxHeightCls"></td>
+                </tr>
+                
+                <tr>
+                    <td colspan="6">
+                        <div id="processMilestone" class="clsInputLabelTD clsprocessMilestonelabel" style="width:18%;">{!$Label.ACProcessOpRuleEvery}</div>
+                        <div class="clsComboStyle clsdatetimeLabel" id="processorhourFieldTD"></div>
+                        <div id="processorhourLabelTD" class="clsInputLabelTD clsmilestonedateField" style="width:8%;">{!$Label.HoursLabel}</div>
+                    
+                        <div class="clsComboStyle clsdatetimeLabel" id="processorminuteFieldTD"></div>
+                        <div id="processorminLabelTD" class="clsInputLabelTD clsmilestonedateField" style="width:8%;">{!$Label.MinutesLabel}</div>
+                   
+                        <div id="processorButtonTD" class="clsmilestonebtnLabelTD"></div>    
+                     
+                    </td>
+                </tr>
+                <tr>
+                    <td class="TD10pxHeightCls"></td>
+                </tr>
+                
+          </table>
+     </div>
+</apex:form>
+<script>
+	function getAcServerNameEle(){
+		return document.getElementById('{!$Component.ACconfigForm.acServerName}');
+	}
+	function getACPortEle(){
+		return document.getElementById('{!$Component.ACconfigForm.acServerPort}');
+	}
+	function getACUserNameEle(){
+		return document.getElementById('{!$Component.ACconfigForm.acUserName}');
+	}
+	function getACPwdEle(){
+		return document.getElementById('{!$Component.ACconfigForm.acPassword}');
+	}
+	function getACEnableEle(){
+		return document.getElementById('{!$Component.ACconfigForm.enableAC}');
+	}
+	function showExtJSmessage(ACmsg){
+		window.parent.showACErrMsg(ACmsg);
+	}
+	</script>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ACconfig.js" id="ACconfigJs"/>
+	<script>
+	var enableAC = getACEnableEle();
+    	
+    document.getElementById('{!$Component.ACconfigForm}').setAttribute('autocomplete','off');
+    getACPwdEle().setAttribute('autocomplete','off');
+</script>
+</body>
+</apex:page>

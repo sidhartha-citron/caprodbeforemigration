@@ -1,0 +1,92 @@
+<aura:component controller="EDW_ConfigureAppointmentController">
+    <aura:attribute type="Boolean" name="isComponentLoaded" default="false" />
+    <aura:attribute type="String" name="orderId" />
+    <aura:attribute type="EDW_ViewModels.MainViewModel" name="initData" />
+    <aura:attribute type="Decimal" name="numberOfResources" />
+    <aura:attribute type="Date" name="effectiveDate" default="{!v.initData.order.EffectiveDate}" />
+    <aura:attribute type="Date" name="previousEffectiveDate" />
+    <aura:attribute type="Time" name="effectiveTime" default="{!v.initData.order.Service_Appointment_Scheduled_Start_Time__c}" />
+    <aura:attribute type="Time" name="previousEffectiveTime" />
+    <aura:attribute type="Integer[]" name="resourceRange" />
+    <aura:attribute type="String" name="description" />
+    <aura:attribute type="String" name="orderName" />
+    <aura:attribute type="Decimal" name="componentEstimatedDuration" default="{!v.initData.defaultEstimatedDuration}" />
+    <aura:attribute type="String" name="poNumber" />
+    <aura:attribute type="Time" name="minValidTime" default="{!v.initData.minOperatingHoursTime}" />
+    <aura:attribute type="Time" name="maxValidTime" default="{!v.initData.maxOperatingHoursTime}" />
+    
+    <aura:handler name="change" value="{!v.initData.workTypeEstimatedDuration}" action="{!c.workTypeEstimatedDurationListener}"/>
+    
+	<div class="ch-section-wrapper slds-container--fluid">
+        <div class="ch-section-header slds-page-header__title">
+            <div class="section-icon" data-collapsetarget="customer-information" onclick="{!c.expandContractSection}">
+                <lightning:buttonIcon class="button-icon" iconName="utility:down" variant="bare" alternativeText="Down" />
+            </div>
+            <c:EDW_ConfigureAppointmentSectionTitlesComponent iconName="standard:account" iconAlternativeText="Account" iconSize="medium" sectionTitle="{!$Label.c.Account_Information}" />
+        </div>
+        <div aura:id="customer-information" class="ch-section-body">
+            <div class="slds-grid ch-grid slds-gutters">
+                <div class="slds-col slds-size_1-of-2 slds-large-size_3-of-4">
+                    <div class="ch-field-label-pair">
+                        <div class="slds-text-title_bold ch-label">{!$Label.c.Account_Name}:</div>
+                        <div class="ch-field">{!v.initData.account.Name}</div>
+                    </div>
+                    <div class="ch-field-label-pair">
+                        <div class="slds-text-title_bold ch-label">{!$Label.c.AccPac_Number}:</div>
+                        <div class="ch-field">{!v.initData.account.AccPac_Account__c}</div>
+                    </div>
+                    <div class="ch-field-label-pair">
+                        <div class="slds-text-title_bold ch-label">{!$Label.c.Account_Type}:</div>
+                        <div class="ch-field">{!v.initData.account.Is_Multi_Res__c ? $Label.c.Multi_Res : $Label.c.Commercial}</div>
+                    </div>
+                    <div class="ch-field-label-pair">
+                        <div class="slds-text-title_bold ch-label">{!$Label.c.PO_Required_for_Orders}:</div>
+                        <div class="ch-field">{!v.initData.account.PO_Required_for_Orders__c == null ? 'PO Not Required' : v.initData.account.PO_Required_for_Orders__c}</div>
+                    </div>
+                    <div class="ch-field-label-pair">
+                        <div class="slds-text-title_bold ch-label">{!$Label.c.PO_Required_on_Line_Item}:</div>
+                        <div class="ch-field">{!v.initData.account.PO_Required_on_Line_Item__c}</div>
+                    </div>
+                    <div class="ch-field-label-pair">
+                        <div class="slds-text-title_bold ch-label">{!$Label.c.Contact_Name}:</div>
+                        <div class="ch-field">{!v.initData.contact.Name}</div>
+                    </div>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 ch-col_special">
+                    <lightning:input label="Order Name" value="{!v.orderName}" required="true" onblur="{!c.saveOrderName}" maxlength="80" />
+                    
+                    <fieldset class="slds-form-element slds-form-element_compound ch-date-row">
+                        <!--<legend class="slds-form-element__legend slds-form-element__label">{!$Label.c.Order_Start}</legend>-->
+                        <div class="slds-form-element__control">
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_4-of-12">
+                                    <lightning:input type="date" label="{!$Label.c.Order_Start_Date}" value="{!v.effectiveDate}" required="true" dateStyle="short" onchange="{!c.changeEffectiveDate}" />
+                                </div>
+                                <div class="slds-size_4-of-12">
+                                    <lightning:input type="time" label="{!$Label.c.Order_Start_Time}" value="{!v.effectiveTime}" required="true" dateStyle="short" onchange="{!c.changeEffectiveTime}" aura:id="orderStartTime" />
+                                </div>
+                                <div class="slds-size_4-of-12">
+                                    <lightning:input type="checkbox" checked="{!v.initData.order.Override_Account_Operating_Hours__c}" label="{!$Label.c.Override_Operating_Hours}" onchange="{!c.switchOperatingHoursRequirement}" aura:id="chkOHOverride" />
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <div>
+                    	<lightning:input step="0.01" min="0" type="Number" class="slds-p-vertical_xx-small" label="{!$Label.c.Estimated_Duration_Hours}" aura:id="estimatedDuration" value="{!v.componentEstimatedDuration}" onblur="{!c.validateDuration}" />
+                    	<lightning:icon iconName="utility:warning" alternativeText="Warning!" variant="warning" size="small" aura:id="iconWarning" class="warning-icon slds-hide" title="{!$Label.c.Estimated_Duration_Warning_Message}" />
+                    </div>
+                    <lightning:select name="numOfResources" aura:id="numOfResources" label="{!$Label.c.Number_of_Resources}" value="{!v.numberOfResources}" onchange="{!c.changeNumberOfResources}">
+                        <aura:iteration items="{!v.resourceRange}" var="num">
+                            <option value="{!num}" selected="{!v.numberOfResources == num}">{!num}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                    <aura:if isTrue="{!!v.initData.account.PO_Required_on_Line_Item__c}">
+                    	<lightning:input class="slds-p-vertical_xx-small" label="PO Number" aura:id="txtPoNumber" value="{!v.poNumber}" onblur="{!c.savePONumber}" />
+                    </aura:if>
+                    <lightning:textArea label="Description" onblur="{!c.saveDescription}" aura:id="txtDescription" value="{!v.description}" />
+                </div>
+            </div>
+        </div>
+    </div>
+</aura:component>

@@ -1,0 +1,33 @@
+<div class="modal-header Branding-Title_bar-background_color Branding-Title_bar-broadcast_text_color">
+	<h1 class="modal-header__title" id="modal-header__title">{{$root.selfServiceLabels.close}}</h1>
+</div>
+<div class="modal-body" id="modal-header__description">
+	<loading-spinner overlay="true" if="srModel.cancelingRequest"></loading-spinner>
+	<p class="modal-header__text" ng-if="options.isTicket">{{$root.selfServiceLabels.closeMessage}}</p>
+	<p class="modal-header__text" ng-if="options.isRequest">{{$root.selfServiceLabels.closeRequestMessage}}</p>
+	<div  style="overflow:auto;">
+		<div class="srd-question-label-container__left" style="margin-left:18px;" ng-if="options.isTicket">
+			<h5 class="srd-question-label">{{$root.selfServiceLabels.resolution}}</h5>
+		</div>
+	</div>
+	<textarea class="srd-question-textarea" 
+			  ng-model="resolution" style="margin-left:18px;width:90%;"
+			  rows="5" ng-required="isResolutionMandatory" id="ticketCloseResolution" ng-if="options.isTicket && !hasResolution">
+	</textarea>
+	<div ng-if="options.isTicket && hasResolution" class="disbaledDivCls srd-modal-resolution-read-only" >
+		<span class="wrapContents"> {{resolution}}</span>
+	</div>
+	<div ng-show="showError">
+		<span style="margin-left:18px;" class="srd-question-error_message">{{ $root.selfServiceLabels.resolutionRequires }}</span>
+	</div>
+</div>
+<div class="modal-footer">
+	<div class="modal-footer__btn-container">
+		<button type="button" class="btn btn-primary Branding-Right_Panel-default_button Branding-Right_Panel-button_outline" 
+				ng-click="cancelSR()" 
+				ng-disabled="srModel.cancelingRequest">
+			{{$root.selfServiceLabels.close}}
+		</button>
+		<button type="button" class="btn Branding-Right_Panel-button_outline" ng-click="close()" ng-disabled="srModel.cancelingRequest">{{$root.selfServiceLabels.cancel}}</button>
+	</div>
+</div>

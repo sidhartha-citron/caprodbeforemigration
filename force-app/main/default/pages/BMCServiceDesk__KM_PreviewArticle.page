@@ -1,0 +1,261 @@
+<apex:page standardController="BMCServiceDesk__KM_KnowledgeArticle__c" extensions="BMCServiceDesk.KnowledgeManagementController" sidebar="false" showHeader="false" action="{!previewArticle}">
+<div id="themeDiv"></div> 
+	<apex:outputPanel id="ArticleContentsPanel" rendered="{!isforembeddedpage}">
+		<apex:outputPanel rendered="{!isfromSS}">     
+			<apex:stylesheet value="{!$Resource.BMCServiceDesk__Themes}/{!activenow}/SkywalkerStyleSheet.css" />
+			<apex:stylesheet value="{!$Resource.BMCServiceDesk__Themes}/{!activenow}/SSCore.css" />
+		</apex:outputPanel>
+
+		<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/KMArticleView.css"/>
+	    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+	    
+		<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+    	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ext-all.js" id="ext-all-js"/>
+		
+			<style>
+			.sfdc_richtext {
+				color: #000000;
+				font-family: 'Arial','Helvetica',sans-serif;
+			    margin: 0;
+			    padding-left: 4px;
+			    font-size:12px !important;
+			}
+			html,body {
+				overflow-x: hidden;
+			}
+			strong {
+				font-weight: bold !important;
+			}
+			
+			em{
+			    font-style:italic !important;
+			}
+			
+			.clsfieldValue {
+				*width: 100% !important;
+				width /*\**/: : 100% \9 ;
+			}
+			
+			.x-grid3-hd-row TD {
+				width: 99% !important;
+			}
+			
+			.x-grid3, .x-grid3-header {
+				width: 100% !important;
+				/*width: 97% \0/ !important; */
+			}
+			
+			.x-grid3-header-inner {
+				width: 100% !important;
+				width: 100% \0/ !important;
+			}
+			
+			body {
+				font-size: 12px !important;
+			}
+			
+			.clsInputTextFeedback {
+				width: 68% !important;
+				width: 93% \9  !important;
+				width: 68% \0/  !important;
+				height:20px;
+			}
+			
+			.clsRequestHelpBtn2 {
+				background-image:
+					url("{!$Resource.Themes}/SSDarkYellowTheme/images/en_US/SS_Service_Request_16.png")
+					!important;
+				background-position: 3px 50% !important;
+				background-repeat: no-repeat !important;
+				height: 22px !important;
+				padding-left:20px !important;
+				margin-top: 3px;
+				min-width: 70px;
+				border-color: #CCCCCC #666666 #666666 #CCCCCC;
+				border-style: solid;
+				border-width: 1px;
+				cursor: pointer;
+				font-family: Tahoma, MS Sans Serif;
+				font-size: 11px;
+				font-weight: normal;
+				margin-left: 5px;
+				margin-bottom: 5px\9;
+				text-align: right !important;
+				margin-right: 15px;
+			}
+			
+			.copyRadio label {
+				padding-right: 10px !important;
+				vertical-align: top !important;
+				vertical-align /*\**/: middle\9  ;
+				vertical-align: top \0/ !important;
+			}
+			
+			.copyRadio {
+				margin-left: 5px !important;
+			}
+			
+			.AddButton {
+				min-width: 48px !important;
+				background-image: none !important;
+				background-color: #F0F0F0 !important;
+				
+			}
+			.AddButtonOff{
+				min-width: 48px !important;
+			}
+			
+			.x-form-field {
+				font: 11px tahoma, arial, helvetica, sans-serif !important;
+			}
+			
+			#otherInfo {
+				margin-left: 7px !important;
+				margin-right: 5px !important;
+				margin-bottom: 5px;
+			}
+			
+			.x-grid3-row,.x-grid3-header-offset,.x-grid3-header-offset table {
+				width: 100% !important;
+			}
+			
+			.x-grid3-body,.x-grid3-row-table,.x-grid3-col {
+				width: 99% !important;
+				width: 99% \0/ !important;
+			}
+			
+			.ext-ie8 {
+				margin-right: - \0/ !important;
+			}
+			
+			.TextboxPopupIcon {
+				margin-left: 0 !important;
+				height: 20px  !important;	
+				display:inline;
+				margin-top: 11px !important;
+				*margin-top: 12px !important;
+				margin-top: 12px \0/ !important;
+			}
+			
+			#attachmentDiv .x-panel-bwrap .x-panel-body {
+				width:100% !important;
+				width: 99% \0/ !important;
+			}
+			
+			.x-grid3 {
+				width: 100% \0/ !important;
+			}
+			#attachment_grid .x-grid3-scroller{
+				/*height:35px !important;*/
+				width: 100% !important;
+			}
+			#ratingPicklist
+			{
+				color:#000000;
+			}
+			.clsfieldValue{
+				*width:99% !important;
+			}			
+			.x-panel-header
+            {
+                *height:15px !important;
+            }
+			</style>		
+		    <script>
+		    	var FieldCount ={!KaDetailsList.size}; 	
+				var filedids=[];
+				var fieldSize;
+				if(FieldCount < 3)
+					fieldSize=140;
+				else
+					fieldSize=112;
+		    </script>
+		    <apex:form id="kmformArticleContents">
+		      <apex:outputPanel id="outerPanel" rendered="{!showArticle}">		
+					<apex:outputpanel id="KADetailsPanel">
+						<apex:repeat value="{!KaDetailsList}" var="ArticleData" id="FieldData">
+							<apex:variable var="fieldaccess" value="{!IF($ObjectType.BMCServiceDesk__KM_KnowledgeArticle__c.fields[ArticleData.name]!=null,$ObjectType.BMCServiceDesk__KM_KnowledgeArticle__c.fields[ArticleData.name].Accessible,false)}" />
+							<apex:outputPanel rendered="{!IF(not(isNewSS) && fieldaccess,true,false)}">
+								<div class="x-panel-header headerBackColor" style="height: 15px;"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__KM_KnowledgeArticle__c.fields[ArticleData.name].label}" /></div>
+                        	</apex:outputPanel>    
+                        	<apex:outputPanel rendered="{!IF(isNewSS && fieldaccess,true,false)}" > 
+                            	<table frame="box" height="28px" width="100%" class="gradientBar" border="0">
+                                	<tr> <th> <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__KM_KnowledgeArticle__c.fields[ArticleData.name].label}" styleClass="headerStyle"/> </th> </tr>
+                            	</table>
+                        	</apex:outputPanel> 
+							<div class="clsfieldValue" id="{!ArticleData.name}" style="{!IF(fieldaccess,'display:block','display:none')};">
+							<apex:outputField value="{!articleObj[ArticleData.name]}" rendered="{!NOT(ArticleData.isImageBase64)}"></apex:outputField>
+							<apex:outputText value="CRUDFLSCHECK# Both CRUD & FLS check required and performed" rendered="false"/> 
+							 <apex:outputText value="{!articleObj[ArticleData.name]}" escape="false" rendered="{!fieldaccess && ArticleData.isImageBase64}"/>
+							</div>
+							<script>
+								document.getElementById('{!ArticleData.name}').style.height=fieldSize+"px";
+								filedids.push('{!ArticleData.name}');
+							</script>
+						</apex:repeat>
+					</apex:outputPanel>
+			  </apex:outputPanel>
+		  </apex:form>  
+		</apex:outputPanel>
+		        <script type="text/javascript">         
+            var colorCodeList = '{!JSENCODE(themeColorCodeString)}'; 
+            var content = '{!JSENCODE(dynamicStyle)}';
+            var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+			Ext.onReady(function(){
+            	var iframeinstance=window.parent.document.getElementById('ArticleContents');
+            	if(typeof(iframeinstance)!=null && typeof(iframeinstance)!='undefined'){
+				var iframeheight,SSPage;
+            	if(Ext.isChrome || Ext.isSafari)
+				iframeheight=document.getElementById('{!$Component.kmformArticleContents}').offsetHeight;
+ 				else
+				iframeheight=document.getElementById('{!$Component.ArticleContentsPanel}').offsetHeight;	
+				iframeinstance.style.height=iframeheight + "px";
+				var SSKMArticleForm=window.parent;
+				if(typeof(SSKMArticleForm)!=null && typeof(SSKMArticleForm)!='undefined' && typeof(SSKMArticleForm.FormEleId)!=null && typeof(SSKMArticleForm.FormEleId)!='undefined'){
+            				var TitleHeight=SSKMArticleForm.document.getElementById('KMTitle').offsetHeight;
+            				var FeedbackDetailsHeight=SSKMArticleForm.document.getElementById('feedbackDetails').offsetHeight;
+            				var pageheight=iframeheight+TitleHeight+FeedbackDetailsHeight+30;
+            				SSKMArticleForm.FormEleId.style.height =pageheight+ "px";
+            				SSPage = SSKMArticleForm.parent;
+            				if(typeof(SSPage)!=null && typeof(SSPage)!='undefined' && SSPage.location.pathname.indexOf('SSLandingPage')!='-1'){
+            					SSPage.ssTabPanel.getActiveTab().setHeight(pageheight+60);
+            					SSPage.StdSelfServiceHomeHTML.style.height=(pageheight+180) + "px";           					
+        	}}}});
+        	
+        	function resizeinputs(InputsHeight){
+        		
+        		for (i = 0; i < filedids.length; i++) { 
+				    document.getElementById(filedids[i]).style.height=(InputsHeight/filedids.length-25)+"px";
+				}
+        	}
+        	
+        	document.onreadystatechange = function(){
+			     if(document.readyState === 'complete'){
+			       	if(window.parent && window.parent.settingKASizeJS)
+			       		window.parent.settingKASizeJS();
+			       
+			     var Cheight = "innerHeight" in window 
+		               ? window.innerHeight
+		               : document.documentElement.offsetHeight; 
+					var ua = navigator.userAgent.toLowerCase(); 
+                    if (ua.indexOf('safari') !== -1) { 
+                        if (ua.indexOf('chrome') > -1) {
+                            resizeinputs(Cheight); 
+                        } 
+                    }
+                    else {
+                        resizeinputs(Cheight); 
+                    }
+			     }
+			}
+			
+			var articleFieldTags = document.getElementsByClassName('clsfieldValue');
+            for(var i = 0; i < articleFieldTags.length; i++) {
+                var anchorElem = articleFieldTags[i].getElementsByTagName('a');
+                for(var j=0; j < anchorElem.length; j++) {
+                    anchorElem[j].setAttribute('target',"_blank");
+                }
+            }
+        </script>
+        <script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" /> 
+</apex:page>

@@ -1,0 +1,90 @@
+<div ng-hide="(!data.isVisible)"> 
+	<style type="text/css">
+		.ul-dropdown-list {
+		    list-style-type: none;
+		    margin-left: -23px;
+    		margin-bottom: 5px;
+    		font-size: 13px!important;
+    		color: black;
+		}
+		.span-margin {
+			margin-left: 5px;
+        }
+        .span-empty-margin {
+            margin-left: 15px;
+        }
+        .span-empty-margin-child {
+            margin-left: 10px;
+        }
+        .span-child-margin {
+            margin-top: 5px;
+        }
+        .div-margin {
+			margin-left: 0px;
+        }
+        .div-empty-margin {
+            margin-left: 16px;
+        }
+		.category-lookup-filter-message {
+			padding: 2px 13px 2px 32px;
+			background: #F2F2F2;
+			cursor: default;
+			font-size: 14px !important;
+			margin-top: -5px;
+		}
+	</style>
+	<srd-question-header question-data="data" ></srd-question-header>
+	<div class="srd-question-on-behalf-search fullwidth" ng-readonly="(!data.isUpdateable && !data.isSRInput)">
+		<div>
+			<input class="srd-question-on-behalf-search-field fullwidth srd-question-input" type="text" ng-model="searchText" aria-labelledby="{{data.isSRInput ? data.Id+' '+data.Id+'errorMsg' : data.id+' '+data.id+'errorMsg'}}" ng-focus="enableEditAndLoadData()" ng-disabled="!data.isUpdateable && !data.isSRInput"
+			  ng-required="data.IsRequired && data.isVisible" title="{{data.InlineHelp}}" ng-blur="clearData()" arrow-selector/>
+			<input type="text" ng-model="data.Value" name="formField" 
+				id="{{ data.isSRInput? data.Id : data.apiName}}"
+				ng-required="data.IsRequired && data.isVisible" ng-hide="true" 
+			/>  
+			<div class="search-remove-btn-input search-remove-btn-dpl" ng-show="loadData" ng-mouseover ="fireBlurEvent = false;" ng-mouseleave="fireBlurEvent = true;" ng-click="cancelSelection(true)">
+				<span class="d-icon-cross"/>
+			</div>
+		</div>		
+		<div class="srd-question-reference__dropdown" ng-mouseover ="fireBlurEvent = false;" ng-mouseleave="fireBlurEvent = true;" ng-show="loadData" arrow-selector>
+			<div class="srd-question-reference-container" style="max-height: 250px;overflow-y: scroll;" tabindex="-1" ng-blur="clearData()">
+				<div set-modal-scrolltop-for-lookup ng-repeat="optionVal in searchResults" class="span-child-margin">
+		            <ul class="ul-dropdown-list category-lookup-filter-message" ng-if="optionVal.id == 'toggleButton'">
+						<li>
+							<div>
+								<div class="srd-question-reference__result-item_filterToggleText">
+									<span ng-bind-html="optionVal.itemName">
+									</span>
+									<a ng-click="toggleFilter(optionVal)" class="srd-question-on-behalf-search__result-item_filterToggleLink" ng-bind-html="optionVal.extraInfo"></a>
+								</div>
+							</div>
+		                </li>
+		            </ul>
+					<ul class="ul-dropdown-list" ng-if="optionVal.id != 'toggleButton'">
+		              	<li>
+		              		<div class="srd-question-reference__dropdown-item ellipsisText">
+		              			<div style="float: left;width: 10px;">
+			              			<span ng-show="optionVal.showLoader">
+			                            <loading-spinner if="true" inline="true" ></loading-spinner>
+			                		</span>
+			                		<span ng-class="optionVal.className" ng-click="showChildren(optionVal);" ng-if="!optionVal.leaf" ng-show="!optionVal.showLoader"></span>
+			                	</div>
+		                		<span title="{{optionVal.text}}" ng-class="{ 'span-empty-margin': optionVal.leaf, 'span-margin': !optionVal.leaf}" ng-bind="optionVal.text" ng-click="selectOptionVal(optionVal);" tooltip></span>
+		            		</div>
+	            			<div ng-show="optionVal.showChilds" class="span-child-margin">
+	            				<srd-children-category child-data="optionVal.children" searchText="searchText" data="data" select-action="selectOptionVal(selectedCategory)" for-sr="forSr"></srd-children-category>
+	            			</div>
+		                </li>
+		            </ul>
+				</div>	
+			</div>
+			<div class="srd-question-on-behalf-search__message" ng-if="searchResultsAreLoading">
+				<loading-spinner if="true" inline="true"></loading-spinner>
+				Loading
+			</div>
+			<div class="srd-question-on-behalf-search__message" ng-if="!searchResultsAreLoading && (searchResults.length == 0)">
+				{{$root.selfServiceLabels.noResults}}
+			</div>				
+		</div>
+	</div>
+</div>	

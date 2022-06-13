@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Purchase_Price_Not_Allowed_For_Services</fullName>
+    <active>true</active>
+    <description>We created this validation rule in response to users entering a purchase price for Installation &amp; PPSA products, because of an error downstream when Order Products are created during site survey approval.</description>
+    <errorConditionFormula>AND(
+Product2.Item_Type__c=&apos;Service&apos;,
+NOT(ISBLANK( Purchase_Price__c )), 
+NOT(CONTAINS(Product2.Name, &apos;PPSA&apos;)),
+NOT(CONTAINS(Product2.Name, &apos;Delivery&apos;)) 
+)</errorConditionFormula>
+    <errorMessage>Purchase price is not allowed for this product.</errorMessage>
+</ValidationRule>

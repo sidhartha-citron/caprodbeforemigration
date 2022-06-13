@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Installation_Ticket_Closure_Permission</fullName>
+    <active>true</active>
+    <description>Only CS and Billing Team users can close the installation ticket</description>
+    <errorConditionFormula>AND(
+CASESAFEID(RecordTypeId ) = $Setup.Field_Service_Settings__c.Invoice_Information_Case_RecordTypeId__c,
+ISCHANGED(Status),
+$Profile.Name &lt;&gt; &quot;Customer Service &amp; Order Entry&quot;,
+$Profile.Name &lt;&gt; &quot;Billing Team&quot;,
+$Profile.Name &lt;&gt; &quot;New Master Data&quot;,
+ISPICKVAL(Status,&apos;Closed&apos;),
+IsInstallationTicket__c = true
+)</errorConditionFormula>
+    <errorMessage>You cannot close the ticket</errorMessage>
+</ValidationRule>

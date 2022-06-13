@@ -1,0 +1,128 @@
+<apex:page id="SSDocumentationPage" controller="BMCServiceDesk.SSAttachmentsController" sidebar="false" showHeader="false" standardStylesheets="false">
+<c:SelfServiceCommonIncludes />
+<apex:stylesheet value="{!$Resource.BMCServiceDesk__Themes}/SSDefaultTheme/BMCStyleSheet.css" />
+<style>
+.bgBtnGrey{margin-left:5px; padding:1px 5px 1px 5px;}
+</style>
+<apex:form id="attachmentsForm">
+       <apex:outputPanel id="validationMessages" layout="block" style="padding-left: 10px; color:red;">
+           <div id="errorDiv" style="color:red">   {!validateUrlAndAttachment} </div>
+            <div id="errorDivMsg" style="color:red"> <apex:messages rendered="{!OR(validateUrlAndAttachment==null,validateUrlAndAttachment=='')}" /> </div>
+       </apex:outputPanel>
+       
+        <!-- apex:panelGrid columns="3"-->
+        <table>
+            <tr>
+                <td class="clsPanelInputLabelTD" style="vertical-align: middle;">
+                    <input type="radio" id="fileRadio" name="group1" onclick="SDF.attachments.checkValidation();" checked="true"/>
+                </td>
+                <td class="clsPanelInputLabelTD" style="vertical-align: middle;">
+                    <apex:outputText value="{!$Label.bmcservicedesk__file}"/>
+                </td>
+                <td class="clsPanelInputLabelTD" style="vertical-align: middle;">
+                    <apex:inputFile fileName="{!attachment.name}" id="inputFile" fileSize="{!filesize}" value="{!attachment.body}" onchange="SDF.attachments.validateFile();" size="51" style="height:22px" />
+                    
+                </td>
+
+            </tr>
+            <tr>
+                <td class="clsPanelInputLabelTD" style="vertical-align: middle;">
+                    <input type="radio" id="urlRadio" name="group1" onclick="SDF.attachments.checkValidation();"/>
+                </td>
+                <td class="clsPanelInputLabelTD" style="vertical-align: middle;">
+                    <apex:outputText value="{!$Label.bmcservicedesk__url}"/>
+                </td>
+                <td class="clsPanelInputLabelTD" style="vertical-align: middle;">
+                    <apex:inputtext id="inputURL" onchange="SDF.attachments.validateFile();" onblur="SDF.attachments.validateFile();" onkeyup="SDF.attachments.validateFile();" value="{!url}" style="font-family:Tahoma, MS Sans Serif;font-size:11px;" size="51"/>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-top: 18px;">
+                </td>
+                <td style="padding-top: 18px;" >
+                </td>
+                <td align="right"  style="padding-top: 18px;">
+                    <apex:commandButton action="{!attachFile}" id="okBtn" value="{!$Label.bmcservicedesk__ok}" styleClass="bgBtnGrey" onClick="okBtnClick()" />
+                    <apex:commandButton id="closeBtn" value="{!$Label.bmcservicedesk__cancel}" styleClass="bgBtnGrey" onClick="SDF.attachments.closePopup();"/>
+                </td>
+            </tr>
+        </table>
+
+        <!-- /apex:panelGrid -->
+        <script type="text/javascript">
+        document.getElementById('{!$Component.inputURL}').disabled=true;
+            Ext.ns('SDF.attachments');
+
+            SDF.attachments.closePopup = function() {
+                window.parent.SDF.incident.attachmentPopup.close();
+            };
+
+            SDF.attachments.checkValidation = function() {
+                var checkFile = document.getElementById('fileRadio').checked;
+                var checkUrl = document.getElementById('urlRadio').checked;
+                document.getElementById('errorDiv').innerText = '';
+                document.getElementById('errorDivMsg').innerText = '';
+                if(checkFile){
+                    document.getElementById('SSDocumentationPage:attachmentsForm:inputURL').disabled = true;
+                    document.getElementById('SSDocumentationPage:attachmentsForm:inputURL').value = '';
+                    document.getElementsByName('SSDocumentationPage:attachmentsForm:inputFile:inputFile:file')[0].disabled = false;
+                } else if(checkUrl){
+                    document.getElementsByName('SSDocumentationPage:attachmentsForm:inputFile:inputFile:file')[0].disabled = true;
+                    document.getElementsByName('SSDocumentationPage:attachmentsForm:inputFile:inputFile:file')[0].value = null;
+                    document.getElementById('SSDocumentationPage:attachmentsForm:inputURL').disabled = false;
+                }
+            };
+
+            SDF.attachments.validateFile = function() {
+                var url = document.getElementById('SSDocumentationPage:attachmentsForm:inputURL').value;
+                var file = document.getElementsByName('SSDocumentationPage:attachmentsForm:inputFile:inputFile:file')[0].value;
+                 
+                if((url != null && url != '' && url != 'null') ||(file != null && file != '' && file != 'null')){
+                        document.getElementById('SSDocumentationPage:attachmentsForm:okBtn').disabled=false;
+						var fileupload = document.getElementsByName('SSDocumentationPage:attachmentsForm:inputFile:inputFile:file')[0];
+                        var v = document.getElementsByName('SSDocumentationPage:attachmentsForm:inputFile:inputFile:file')[0].value;
+                        var filename = v.replace(/^.*\\/, '') ;
+						
+						var size=0;
+                        var isOk = true;						
+						try{
+								if((typeof(fileupload.value) != 'undefined') && (typeof(fileupload.value) != 'undefined')){
+									if(fileupload.files[0] != null && fileupload.files[0]!=undefined)
+										size = fileupload.files[0].size;
+									isOk = {!MaxAttachmentSize} >= size;
+								}
+								else
+									isOk=true;
+						}catch(e){
+						isOk=true;
+						}
+
+						if (!isOk)
+						{
+							alert('{!JSENCODE($Label.SS_AttachmentLimit)}');
+                            document.getElementById('SSDocumentationPage:attachmentsForm:okBtn').disabled=true;
+                    		document.getElementsByName('SSDocumentationPage:attachmentsForm:inputFile:inputFile:file')[0].value=null;
+						}
+						
+                        var fileLength=filename.length;
+                        if(fileLength > 255){
+                            document.getElementById('errorDiv').innerText = '{!JSENCODE($Label.FileNameLimitExceeded)}';
+                            document.getElementById('SSDocumentationPage:attachmentsForm:okBtn').disabled=true;
+                    		document.getElementsByName('SSDocumentationPage:attachmentsForm:inputFile:inputFile:file')[0].value=null;
+                        }else{
+                            document.getElementById('errorDiv').innerText = '';
+                            document.getElementById('SSDocumentationPage:attachmentsForm:okBtn').disabled=false;
+                    	}
+                    }
+            };
+			 function okBtnClick(){
+				var okBtnObj= document.getElementById('SSDocumentationPage:attachmentsForm:okBtn');
+				if(okBtnObj!= null && okBtnObj!=undefined){
+				   okBtnObj.style.color="#CCCCCC";
+				   okBtnObj.style.borderColor="#CCCCCC";
+				}
+            }
+        </script>
+</apex:form>
+
+</apex:page>

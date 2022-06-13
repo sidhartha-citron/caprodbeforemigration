@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebLink xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Loop__LOOP_It_Detail</fullName>
+    <availability>online</availability>
+    <displayType>button</displayType>
+    <linkType>javascript</linkType>
+    <masterLabel>LOOP It</masterLabel>
+    <openType>onClickJavaScript</openType>
+    <protected>false</protected>
+    <url>{!REQUIRESCRIPT(&quot;/soap/ajax/8.0/connection.js&quot;)}
+
+var id = &quot;{!Loop__Document_Request__c.Id}&quot;;
+var docId = &quot;{!Loop__Document_Request__c.Loop__Document_Id__c}&quot;;
+var request = new sforce.SObject(&quot;Loop__Document_Request__c&quot;);
+request.Id = id;
+request.Loop__Status__c = &quot;Looped&quot;;
+try {
+    sforce.connection.update([request]);
+} catch(e) {
+    alert(&apos;Error updating request status. Please try again.&apos;);
+}
+window.parent.location = &quot;/apex/loop__loopit?eid=&quot; + id + &quot;&amp;docIds=&quot; + docId;</url>
+</WebLink>

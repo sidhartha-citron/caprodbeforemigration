@@ -1,0 +1,119 @@
+<div id="srdForm" ng-cloak class="srd-questions-placeholder" style="display: block; overflow-y: scroll;" set-Height="setNewSrFormHeight">
+	<loading-spinner overlay="true" if="supportModel.isSrCreating || supportModel.dataLoading"></loading-spinner>
+	
+	<div id="instructionsDiv" aria-tabindex="0" style="width: 100%; border: 1px solid; border-color: #3cb6ce; margin-top: 10px; margin-bottom: 10px;" ng-if="supportModel.config.instructions" ng-click="supportModel.clickedOnInstructions()">
+		<table style="width: 100%; border-color: #3cb6ce;table-layout: fixed;">
+			<tr>
+				<td style="width: 52px;background-color: #3cb6ce;">
+					<span class="d-icon-exclamation_circle" style="color:#ffffff;width: 30px;font-size: 30px;height: 30px;vertical-align: middle;padding: 10px;"></span>
+				</td>
+				<td style="padding: 10px;">
+					<div class="{{supportModel.config.ellipsisCls}}" ng-if="supportModel.config.isRichTextInstr==false"  ng-bind-html="supportModel.config.actualInstr | createAnchors"></div>
+					<div id="richTextInstrDiv" class="{{supportModel.config.instructionCls}} support-request__instruction-content"
+							ng-if="supportModel.config.isRichTextInstr"  ng-bind-html="trustedHtml(supportModel.config.actualInstr)" style="overflow-y: scroll;">
+					</div>
+				</td>
+			</tr>
+		</table>
+			<div ng-if="supportModel.displayShowMoreShowLess()">
+				<a class="support-request__expandcollapse-links Branding-Right_Panel-hyperlink" style="padding-right:0px"
+					ng-if="supportModel.config.showCollapsedInstruction" 
+					ng-click="supportModel.toggleUserInstruction()">{{$root.selfServiceLabels.ShowMore}}
+				</a>
+				<a class="support-request__expandcollapse-links Branding-Right_Panel-hyperlink" style="padding-right:0px"
+					ng-if="supportModel.config.showCollapsedInstruction==false" 
+					ng-click="supportModel.toggleUserInstruction()">{{$root.selfServiceLabels.ShowLess}}
+				</a>
+			</div>
+	</div>
+	
+	<srd-on-behalf-of-question ng-show="!supportModel.dataLoading" on-behalf-of-enabled="srdDetailsCtrlState.onBehalfOfEnabled" requested-for="srdDetailsCtrlState.requestedFor"></srd-on-behalf-of-question>
+	<div ng-if="supportModel.srData.SRColumnLayoutForSS3 != 2" ng-repeat="displayOption in supportModel.srData.SRDisplayFields.fields  | removeUndefined:'Label'">
+		<div ng-if="displayOption.Name != 'requestFor' || !userModel.isOnBehalfOfEnabled" ng-include="supportModel.srData.resourceUrl+'views/support/SRStaticOptionFields.html'"></div>
+	</div>
+	<div class="srd-question-wrapper">
+		<div class="row" ng-if="supportModel.srData.SRColumnLayoutForSS3 == 2">
+			<div class="col-md-6 modalLayoutWidth">				
+				<div ng-repeat="displayOption in supportModel.srData.SRDisplayFields.fields  | removeUndefined:'Label' | filterEditableFields:userModel.isOnBehalfOfEnabled" ng-if="$even">	
+					<div ng-include="supportModel.srData.resourceUrl+'views/support/SRStaticOptionFields.html'"></div>	
+					
+				</div>				
+			</div>			
+			
+			<div class="col-md-6 modalLayoutWidth floatLeftRtl" style="float:right">
+				<div ng-repeat="displayOption in supportModel.srData.SRDisplayFields.fields  | removeUndefined:'Label' | filterEditableFields:userModel.isOnBehalfOfEnabled" ng-if="$odd">
+					<div ng-include="supportModel.srData.resourceUrl+'views/support/SRStaticOptionFields.html'"></div>
+			</div>
+		</div>						
+	</div>	
+		<div class="row" ng-if="supportModel.srData.SRColumnLayoutForSS3 == 2">
+			<div class="col-md-6 modalLayoutWidth">				
+				<div ng-show="$even" ng-repeat="displayOption in supportModel.srData.SRDisplayFields.fields  | removeUndefined:'Label' | filterNonEditableFields">
+					<div ng-include="supportModel.srData.resourceUrl+'views/support/SRStaticOptionFields.html'"></div>
+				</div>				
+			</div>			
+			<div class="col-md-6 modalLayoutWidth floatLeftRtl" style="float:right">
+				<div ng-show="$odd" ng-repeat="displayOption in supportModel.srData.SRDisplayFields.fields  | removeUndefined:'Label' | filterNonEditableFields">
+					<div ng-include="supportModel.srData.resourceUrl+'views/support/SRStaticOptionFields.html'"></div>
+				</div>
+			</div>						
+		</div>
+	</div>	
+
+	<div ng-if="supportModel.srData.SRColumnLayoutForSS3 != 2">
+		<div ng-repeat="fieldArray in supportModel.srData.SRLeftRightPanelFields.fields">
+			<div class="srd-question" ng-repeat="field in fieldArray" data-id="{{field.apiName}}" data-answer="{{field.Value}}" title="" data-visibility="{{field.isVisible}}">
+				<div ng-include="supportModel.srData.resourceUrl+'views/support/RequestDetailFieldsetFields.html'"></div>
+	</div>
+		</div>
+	</div>
+
+	<div ng-if="supportModel.srData.SRColumnLayoutForSS3 == 2">
+		<div class="row srd-question" ng-repeat="fieldArray in supportModel.srData.SRLeftRightPanelFields.fields">
+			<div ng-repeat="field in fieldArray">
+				<div class="col-md-6 modalLayoutWidth" ng-class="field.DisplayColumn == 2 ? 'srd-rightfield-align' : 'srd-leftfield-align'" data-id="{{field.apiName}}" data-answer="{{field.Value}}" title="" data-visibility="{{field.isVisible}}">
+					<div ng-include="supportModel.srData.resourceUrl+'views/support/RequestDetailFieldsetFields.html'"></div> <!-- i.e. fields are coming from Service Request Left Panel field set -->
+			</div>
+			</div>
+		</div>
+	</div>
+	<div id="clearDiv" class="Branding-Right_Panel-separator" style="padding-top: 10px; padding-bottom: 15px;  height: 1px; margin-bottom: 25px;" ng-if="supportModel.srData.SRInputs"></div>	
+	<div class="srd-question"
+		 ng-repeat="question in supportModel.srData.SRInputs | orderObjectBy: 'Order'"
+		 data-id="{{question.id}}"
+		 data-answer="{{question.Value}}"
+		 data-visibility="{{question.isVisible}}"
+		 ng-if="supportModel.srData.SRColumnLayoutForSS3 != 2"
+		 ng-cloak
+		>
+			<div ng-include="supportModel.srData.resourceUrl+'views/support/SRInputFields.html'"></div>
+		</div>
+
+	 	<div ng-if="supportModel.srData.SRColumnLayoutForSS3 == 2" ng-repeat="header in supportModel.srData.headers | orderObjectBy: 'Order'">
+			<div class="row" ng-repeat="arr in header">  
+				<div ng-repeat="question in arr">
+					<div ng-if="question.headerId != 'tempRootHeaderId' && question.Type == 'header section'">
+						<div ng-hide="!question.isVisible && question.isSRInput" tabindex="0">
+							<div style="margin-bottom: 10px;" data-id="{{question.Id}}" data-answer="{{question.Value}}" ng-switch="question.Type"  ng-if="question.isVisible==true">
+					<ng-form name="subFormInputs">
+						<srd-header-section ng-switch-when="header section" data="question"></srd-header-section>
+					</ng-form>
+				</div>	
+			</div>
+					</div>
+							
+					<div ng-if="question.Type == 'richtextarea' && question.DisplayInFullSpan && question.isVisible==true" class="col-md-12 srd-question" data-id="{{question.Id}}"  data-answer="{{question.value}}" ng-switch="question.Type">
+						<div  ng-include="supportModel.srData.resourceUrl+'views/support/SRInputFields.html'"></div>
+					</div>
+
+					<div ng-if="!question.DisplayInFullSpan && question.Type != 'header section' && question.isVisible==true" class="col-md-6 modalLayoutWidth srd-question" ng-class="question.DisplayInSecondColumn ? 'srd-rightfield-align' : 'srd-leftfield-align'" data-id="{{question.Id}}" data-answer="{{question.value}}" ng-switch="question.Type">
+						<div  ng-include="supportModel.srData.resourceUrl+'views/support/SRInputFields.html'"></div>
+					</div>
+				</div>
+			</div>
+			</div>			
+	<hr class="Branding-Right_Panel-separator" />
+	
+	<srd-attachments data="supportModel.attachmentData" max-attachments="3" ng-show="supportModel.attachmentData.canHaveAttachments && !supportModel.dataLoading"></srd-attachments>	
+</div>
+

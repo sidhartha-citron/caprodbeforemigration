@@ -1,0 +1,283 @@
+<apex:page id="AdminManagePage" showHeader="false" Controller="BMCServiceDesk.ManageController" standardStylesheets="false">
+<c:CommonIncludes />
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSelfService.css"/>
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+<style>
+    #typeCombo{    	
+        width:190px !important;
+    }
+    .x-combo-list-item{
+    	width:212px !important;
+    }
+   
+    .x-layer{
+    	width:212px !important;
+    }
+    .x-combo-list-inner{
+    	width:212px !important;
+    }
+</style>
+<apex:outputPanel id="manageRerender">
+<script>
+
+ var leftDataArr = new Array();
+ var rightDataArr = new Array();
+ var templeftDataArr = new Array();
+ var temprightDataArr = new Array();
+ var tempTemplateDataArr = new Array();
+ var tempSRDDataArr = new Array();
+ var tempDataArr = new Array();
+ var srdDataArr = new Array();
+ var leftDataStore;
+ var rightDataStore;
+ var tempDataStore;
+ var srdDataStore;
+ var leftParam = '';
+ var rightParam = '';
+ var topReqStoreParam = '';
+ var leftParamLabel = '';
+ var rightParamLabel = '';
+ var paramLabel = '';
+ var SaveBtnHandler = function(button,event) {setParams();};
+ var undoBtnHandler = function(button,event) {undoChanges();};
+ var toMultiSelectObj;
+ var fromMultiSelectObj;
+ var upImg;
+ var dowmImg;
+ var topImg;
+ var bottomImg;
+ var queryParam = '{!JSENCODE($CurrentPage.parameters.manageId)}';
+ var templateLabel = 'Template';
+ var srdLabel = 'SRD';
+ var type = templateLabel;
+ var prefix = '\u2022';  
+ var lsname, lslabel;
+ var leftStoreVal = '{!JSENCODE(leftStore)}';
+ var leftStoreLabelVal = Ext.util.Format.htmlEncode('{!JSENCODE(leftStoreLabel)}');
+ var rightStoreVal = '{!JSENCODE(rightStore)}';
+ var rightStoreLabelVal = Ext.util.Format.htmlEncode('{!JSENCODE(rightStoreLabel)}');
+ var typeSeparatorVal = '{!typeSeparator}';
+ var SeparatorVal = '{!Separator}';
+ var rightStoreTypeVal = '{!rightStoreType}';
+ var manufacturerName = '{!JSENCODE($Label.manufacturerName)}';
+ var saveLabel = '{!JSENCODE($Label.save)}';
+ var undoLabel = '{!JSENCODE($Label.Reset)}';  
+ var path='{!$Resource.SDEFStyles}/SDEFbuttons/';
+ var upImage='{!upImage}';
+ var downImage= '{!downImage}';
+ var topImage='{!topImage}';
+ var bottomImage= '{!bottomImage}';
+ var spaceChar = '&nbsp;&nbsp;';
+ var defaultStatuses; //will be undefined by default and not to be initialized here.
+ Ext.onReady(function(){
+		Ext.QuickTips.init();      
+		onReadyRender();
+ }); 
+ 
+
+</script>
+</apex:outputPanel>
+<apex:form id="ManageRequestForm" >
+
+<apex:outputPanel id="fID" >
+<div id="btnToolbar"></div>
+<div id="helpDiv" class="clshelpDiv"></div>
+
+        <table class="mainPanel" >                       
+                                <tr>
+                               		
+                                    <td colspan="2">
+                                    	<apex:outputPanel rendered="{!if(manageId=='Categories',true,false)}" >
+                                         	<table>
+                                         		<tr>
+                                           			<td class="tdwidth200px">
+                                            			<apex:outputLabel value="{!$Label.bmcservicedesk__availablecategories}" />
+                                             		</td>
+                                            		<td style="width:40px;">
+                                            		</td>
+                                            		<td class="tdwidth200px">
+                                            			<apex:outputLabel value="{!$Label.bmcservicedesk__selectedcategories}" />
+                                           			</td>
+                                          		</tr>
+                                          	</table>
+                                        </apex:outputPanel> 
+                                        <apex:outputPanel rendered="{!if(manageId=='Top Requests',true,false)}">
+                                            <table>
+                                                <tr>
+                                                    <td class="tdwidth200px">
+                                                        <apex:outputLabel value="{!$Label.bmcservicedesk__availablecommonrequests}" styleClass="headerMessageOnPage"/>
+                                                    </td>
+                                                    <td style="width:25px;"/>
+                                                    <td class="tdwidth200px">
+                                                        <apex:outputLabel value="{!$Label.bmcservicedesk__selectedcommonrequests}" styleClass="headerMessageOnPage" />
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td> 
+                                                        <div class="5pxVspacing" />
+                                                        <div id="typeComboDiv" class="typeCombo"/>
+                                                         <apex:outputPanel >
+                                                            <style>.clsInputBoldLabelTableFirstRowTD{padding-left:0}</style>
+                                                            <script>
+                                                              // array store for selecting type in top requests
+                                                                var typeStore = new Ext.data.ArrayStore({
+                                                                    fields: ['id', 'label'],
+                                                                    data : [[templateLabel,'{!JSENCODE($Label.IncidentTemplates)}'],
+                                                                           [srdLabel,'{!JSENCODE($ObjectType.SRM_RequestDefinition__c.LabelPlural)}']]
+                                                                    }); 
+                                                                   var TypeCombo = new Ext.form.ComboBox({
+                                                                    renderTo:'typeComboDiv',
+                                                                    store: typeStore,
+                                                                    displayField:'label',
+                                                                    id:'typeCombo',
+                                                                    cls: 'picklistval',
+                                                                    emptyClass: 'color: #004376',
+                                                                    typeAhead: true,
+                                                                    width:212,
+                                                                    mode: 'local',
+                                                                    triggerAction: 'all',
+                                                                    valueField:'id',
+                                                                    readOnly: true,
+                                                                    forceSelection: true,
+                                                                    emptyText:'{!JSENCODE($Label.IncidentTemplates)}',
+                                                                    selectOnFocus:true,
+                                                                    editable: false,
+                                                                    listeners:{
+                                                                        select: function(combo, record, index) {
+                                                                            selectedvalue = record.get(combo.valueField);
+                                                                            type=selectedvalue;
+                                                                            refreshDataStore(selectedvalue);
+                                                                        }
+                                                                   }
+                                                                });
+                                                                </script>
+                                                            </apex:outputPanel>
+                                                        </td>    
+                                                        <td style="width:25px;"/>
+                                                        <td class="tdwidth200px"/>      
+                                                </tr>
+                                            </table>
+                                        </apex:outputPanel> 
+                                        <apex:outputPanel rendered="{!if(manageId=='FAQs',true,false)}" >
+                                        	 <table>
+                                         		<tr>
+                                           			<td class="tdwidth200px">
+                                            			<apex:outputLabel value="{!$Label.bmcservicedesk__availablefaqs}"/>
+                                            		</td>
+                                            		<td style="width:40px;">
+                                            		</td>
+                                            		<td class="tdwidth200px">
+                                            			<apex:outputLabel value="{!$Label.bmcservicedesk__selectedfaqs}" />
+                                               		</td>
+                                          		</tr>
+                                          	 </table>
+                                        </apex:outputPanel> 
+                                     </td>                                       
+                                        
+                                        
+                               </tr>
+                                <tr>
+                                        <td colspan="2">
+                                                <div id="multiSelectDiv"></div> 
+                                        </td>
+                               </tr>
+                               <tr>
+                                   <td colspan="3">
+                                       <apex:outputPanel rendered="{!if(manageId=='Top Requests',true,false)}">
+                                           <table>
+                                                <tr>
+                                                    <td class="tdwidth200px"/>
+                                                    <td style="width:45px;"/>
+                                                    <td class="tdwidth200px">
+                                                        <apex:outputLabel id="legend" value="{!$Label.bmcservicedesk__incidenttemplates}" styleClass="legendCls"/>
+                                                        <script> 
+                                                            window.onDomReady=showLegend();
+                                                            function showLegend(){
+                                                                var legendTxt=RemedyForceHTMLProcessor.getText(document.getElementById("AdminManagePage:ManageRequestForm:legend"));
+                                                                RemedyForceHTMLProcessor.setText(document.getElementById("AdminManagePage:ManageRequestForm:legend"), prefix+legendTxt);
+                                                            }
+                                                       </script>
+                                                    </td>
+                                                </tr>
+                                           </table>
+                                       </apex:outputPanel>   
+                                   </td>
+                               </tr>
+                               <tr>
+                                   <td colspan="3" class="legendTDCls"/>
+                               </tr>
+        </table>  
+    </apex:outputPanel>     
+<apex:actionFunction action="{!searchParentRightCat}" name="searchParentRightCat" rerender="manageRerender,fID" >
+<apex:param name="leftParam" assignTo="{!idList}" value="" />
+
+</apex:actionFunction>
+
+<apex:actionFunction action="{!searchParentLeftCat}" name="searchParentLeftCat" rerender="manageRerender,fID" >
+<apex:param name="leftParam" assignTo="{!idList}" value="" />
+
+</apex:actionFunction>
+<apex:actionFunction action="{!selectFaqCats}" name="selectFaqCats" rerender="manageRerender,fID" onComplete="showErrorMsg();">
+<apex:param name="leftParam" assignTo="{!idList}" value="" />
+</apex:actionFunction>
+
+<apex:actionFunction name="upadteStores" rerender="manageRerender,fID" >
+<apex:param name="leftParam" assignTo="{!leftStore}" value="" />
+<apex:param name="rightParam" assignTo="{!rightStore}" value="" />
+<apex:param name="leftParamLabel" assignTo="{!leftStoreLabel}" value="" />
+<apex:param name="rightParamLabel" assignTo="{!rightStoreLabel}" value="" />
+<apex:param name="rightParamType" assignTo="{!rightStoreType}" value="" />
+</apex:actionFunction>
+
+<apex:actionFunction action="{!save}" name="saveSettings" rerender="savepanel" onComplete="saveConfirmation();">
+<apex:param name="leftParam" assignTo="{!leftStore}" value="" />
+<apex:param name="rightParam" assignTo="{!rightStore}" value="" />
+<apex:param name="topReqStoreParam" assignTo="{!topRequestLeftStore}" value="" />
+</apex:actionFunction>
+<apex:actionFunction action="{!reset}" name="undoChanges" rerender="manageRerender,fID" />
+</apex:form>
+
+<apex:outputPanel id="savepanel">
+<script>
+function saveConfirmation(){
+    if(queryParam.toLowerCase()!= 'top requests'){
+        window.parent.refreshList();
+    }
+ var msg = '{!JSENCODE($Label.SavedSuccessfully)}';
+ if ('{!saveStatus}'=='false'){
+   msg = '{!JSENCODE(errorMessage)}';
+   icon = Ext.MessageBox.ERROR ;
+  }
+ Ext.Msg.show({
+            cls:'messagePopup',
+            title:'{!JSENCODE($Label.CommonRequests)}',
+            msg: msg,
+            buttons: Ext.Msg.OK,
+            width: 300,       
+            frame:false
+       });
+ 
+ }
+ function  showErrorMsg() {
+	if('{!existCat}'=='false'){
+	var msg='{!JSENCODE(errorMessage)}';
+	var msgIcon = Ext.MessageBox.WARNING;
+	Ext.Msg.show({
+	            cls:'messagePopup',
+	            title:'{!JSENCODE($Label.CommonRequests)}',
+	            msg: msg,
+	            buttons: Ext.Msg.OK,
+	            width: 400,       
+	            frame:false,
+	            icon: msgIcon
+	       });
+	}
+ }
+  var wikiUrl='{!wikiUrl}';
+ parent.addHelpOnPage(document.getElementById('helpDiv'),'common_requests.htm',wikiUrl);
+ </script>
+ </apex:outputPanel>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ManagePageItemselector.js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminManagePage.js"/>
+
+</apex:page>

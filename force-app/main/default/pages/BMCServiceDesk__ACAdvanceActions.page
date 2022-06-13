@@ -1,0 +1,197 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.AcActionsController" standardStylesheets="false">
+	<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+    <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/OpRulePopup_V2.js" id="OpRulePopup-js"/> 
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+	<link rel="stylesheet" href="{!$Resource.SDEFStyles}/ACCMDBActions.css" type="text/css" /> 
+	<style>
+        .x-tip {
+            
+            background: rgba(51, 51, 51, 0.80) !important;
+            text-decoration: none;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            box-shadow: 0 9px 12px 0 rgba(0, 0, 0, 0.2), 0 27px 30px 0 rgba(0, 0, 0, 0.12) !important;
+            border: none !important;
+            //background-color: #ffffff !important;
+        }
+    .ttipHeader2
+	{
+		font-weight:bold;
+        white-space:nowrap;
+		padding-right:5px;
+        vertical-align:top;
+	}
+    .x-tip-body {
+        padding: 10px 10px;
+        color: #fff !important;
+    	font-size: 12px !important;
+        font-family: Salesforce sans !important;
+    }
+    .TextEditorWindowCls .x-grid-header-ct {
+    	border: none !important;
+    }
+    #orPanel-body{
+    	border: none !important;
+    	border-bottom: 1px solid #BDBDBD !important;
+    }
+    
+    .x-grid-row-selected .x-grid-cell {
+        background-color: rgba(0, 167, 157, 0.1) !important;
+        background-image: none !important;
+        border-color: rgba(0, 167, 157, 0.1) !important;
+    }
+    .x-grid-row .x-grid-cell {
+        font-size: 12px !important;
+        font-family: Salesforce sans !important;
+        vertical-align: middle;
+    }
+    #OkBtn {
+        width: auto !important;
+        height: 22px;
+        padding: 0px 14px;
+        font-size: 12px;
+        line-height: 14px;
+        display: inline-block;
+        border-radius: 2px;
+        cursor: pointer;
+        vertical-align: middle;
+        white-space: nowrap;
+        background-image: none !important;
+        color: #ffffff !important;
+        border-width: 1px;
+        border-style: solid;
+        border-color: #f86e00 !important;
+        background-color: #F86E00 !important;
+    }
+    #OkBtn.x-btn-over{
+    	border-color: #df6300 !important;
+        background-color: #df6300 !important;
+    }
+    #OkBtn .x-btn-inner {
+        color: white;
+        
+    }
+    #CancleBtn {
+        width: auto !important;
+        height: 22px;
+        padding: 0px 10px;
+        font-size: 12px;
+        line-height: 14px;
+        display: inline-block;
+        color: #333;
+        border: 1px solid #A5A5A5 !important;
+        border-radius: 2px;
+        cursor: pointer;
+        vertical-align: middle;
+        white-space: nowrap;
+        background-image: none !important;
+        background-color: #ffffff !important;
+    }
+    #CancleBtn.x-btn-over{
+        background-color: #f2f2f2 !important;
+    }
+	</style>
+	
+	<Script> 
+		var label_SelectOpRule = '{!JSENCODE($Label.SelectOpRule)}';
+		var okBtnLabel = '{!JSENCODE($Label.OK)}';
+ 		var cancelBtnLabel= '{!JSENCODE($Label.Cancel)}';			
+		var page_CMDBJsonGenerator = '{!$Page.CMDBJsonGenerator}';
+		var incId = '{!JSENCODE($CurrentPage.parameters.IncId)}';
+		var acError  =  '{!JSENCODE(acErrMsg)}';
+		document.title='{!JSENCODE($Label.SelectOpRule)}';
+		var selectORError = '{!JSENCODE($Label.SelectORMessage)}';
+		tabOutImg = '{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif';
+    	var errTitle = '{!JSENCODE($Label.Error)}';
+    	var pleasewait = '{!JSENCODE($Label.PleaseWait)}';
+		isPopupFromAcAction=false; 
+		Ext.onReady(function(){
+			forAcAction = '{!JSENCODE($CurrentPage.parameters.forAdvAction)}';;
+			initParentPageDetails(); 
+			openOpRuleLookup();
+			Ext.QuickTips.init();  
+			
+			
+			var panel = new Ext.Panel({
+				items: [tree],
+				layout: 'anchor',
+				id: 'orPanel',
+				renderTo :'orbtnDiv',
+				buttonAlign :'right',
+				cls:'TextEditorWindowCls',
+				buttons: [CancleButton,OkButton],
+				forceLayout : true
+				
+			});
+		});
+		
+		function checkACError(){
+		if(isPopupFromAcAction)
+	  		{
+	  			if(acError !=''){
+	  				window.parent.msgStr=acError;
+	  				stopWaitMask();
+					window.parent.ShowMessageBox();
+	  			}
+	  			else
+	  			{
+	  				window.parent.msgStr=window.parent.AcORReqMsg;
+	  				stopWaitMask();
+					window.parent.ShowMessageBox();
+	  			}
+	  		}
+	  		else
+	  		{
+	  			if(acError !=''){
+			 		alert(acError);
+			 		hideWaitMsg();
+				}else{			
+					window.opener.refreshParent();
+					window.close();
+		 		}
+	  		}
+		}
+		var active_element;
+    	var bIsMSIE;
+		var ORWindowParent=new String(window.parent.parent.location.pathname);
+    	if(ORWindowParent.indexOf("apex/AcActions")== -1)
+    	{
+		if (Ext.isIE) {
+			document.onfocusout = closeWnd;
+			active_element = document.activeElement;
+			bIsMSIE = true;
+        }
+		else { window.onblur = closeWnd; }}
+		function closeWnd(){
+			if (bIsMSIE && (active_element != document.activeElement)) {
+            	active_element = document.activeElement;
+			}
+            else
+				window.close();
+		}
+	</Script>
+	<apex:outputpanel id="errorPanel">
+	 <script>
+		acError  =  '{!JSENCODE(acErrMsg)}';
+	 </script>
+	</apex:outputpanel>
+<apex:form >
+<apex:actionfunction action="{!applyAdvAction}" name="applyAction" rerender="errorPanel" oncomplete="checkACError();">
+	<apex:param name="actionContext" value=""/>
+	<apex:param name="orApproval" value=""/>
+	<apex:param name="orDescription" value=""/>
+	<apex:param name="SelectedDeviceId" value=""/>
+</apex:actionfunction>
+<table class="clsMainTableSI" >
+	<tr>
+		<td style='width:100%;'><div id="orbtnDiv" />
+		</td>
+	</tr>
+	
+</table>
+</apex:form>
+</apex:page>

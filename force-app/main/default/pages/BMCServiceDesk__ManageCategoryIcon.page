@@ -1,0 +1,129 @@
+<apex:page controller="BMCServiceDesk.ManageCategoryIconController" showHeader="false" id="CategoryPage" standardStylesheets="false">
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CategoryPage.css" />
+	<c:CommonIncludes />
+	<script>
+		var errormsg;
+		var folder = '{!folderId}';
+		var AddImage= '{!JSENCODE($Label.AddImage)}';
+		var savedSuccessfully = '{!JSENCODE($Label.SavedSuccessfully)}';
+		var imageIDComponent = '{!$Component.categoryForm.Image_Id}';
+		Ext.onReady(function(){
+			var SaveBtnHandler = function(button,event) {
+							Ext.getCmp('saveId').setDisabled(true);
+							waitbox(0); 
+							save();
+			}
+			 
+			var tabPanel = Ext.extend(Ext.Panel, {
+					renderTo: 'btnToolbar',
+					defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+			});
+				
+			new tabPanel({
+					title: '',
+					cls:'toolSpCls',
+					bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+					tbar: [
+					{
+						scale: 'medium',
+						iconCls: 'bmcSave',
+						tooltipType : 'title',
+						tooltip: '{!JSENCODE($Label.save)}',
+						id:'saveId',
+						listeners: {
+							mouseover: function(){
+							this.setIconClass('bmcSaveOn');    
+							 },
+							 mouseout: function(){
+							this.setIconClass('bmcSave');          
+							 }
+							 
+						},
+						handler:SaveBtnHandler
+					}
+					]
+					})
+		});
+	</script>
+	<apex:outputPanel id="errorId">
+        <script>      
+           errormsg = '{!JSENCODE(messageString)}';
+        </script>
+    </apex:outputPanel>
+	<apex:form id="categoryForm">
+		<table class="clsMainTableSI" cellspacing="0" cellpadding="0">
+			<tr class="clsRowGreyBg">
+                <td><div id="btnToolbar"></div></td>
+            </tr>
+			<tr>		
+				<tr>
+                    <td colspan="3">
+                        <div class="div15pxVspacing" />
+                    </td>
+                </tr>
+				<apex:outputPanel id="tablePanel">
+                    <table class="clsTable" cellspacing="0" cellpadding="0">
+						<tr>
+							<td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__selectdefaulticon}" /></td>
+							<td>
+								<table cellpadding="0" cellspacing="0" width="100%">
+									<tr>
+										<td width="15%" class = "clsBottomPadTD">
+											<table cellpadding="0" cellspacing="0">
+												<tr>
+													<td class="clsImageTD">
+														<div id="enclosingDiv"  >
+														<apex:image value="{!IF(defaultIconImage != null,URLFOR($Action.Document.Download,defaultIconImage,[retURL='']),'')}"  id="Image_Id" height="90" width="111px"  />
+														<image id="someImage" src="" class="clsImage" onError="ImgError(this)"/>
+														<apex:image id="Resource_Image_Id" url="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI,'SelfService/styles/img/default_category_icon.svg')}" height="90" width="111px" style="display:{!if(defaultIconImage=='','','none')} !important"/>
+														</div> 
+														<script>
+															document.getElementById('someImage').src='/';
+															setCatIconImageDisplay('{!defaultIconImage}');
+														</script>
+													</td>
+												</tr>
+											</table>        
+										</td>
+										<td  class = "clsBottomPadTD1">
+											<table cellpadding="0" cellspacing="0" width="100%">
+												<tr>
+													<td valign="Top">
+														<table>
+															<tr>
+																<td valign="Top">
+																	<input type="radio" name="selectRadio" id="radioCom" onclick="document.getElementById('radioSF').checked = false;"/>
+																	<apex:outputLabel styleClass="clsInputLabelTD" style="display:inline-block;" value="{!$Label.bmcservicedesk__selectfromcomputer}" />
+																</td>
+															</tr>
+															<tr>
+																<td ><input type="radio" checked="true" name="selectRadio" id="radioSF" onclick="document.getElementById('radioCom').checked = false;" />
+																<apex:outputLabel styleClass="clsInputLabelTD" style="display:inline-block;" value="{!$Label.bmcservicedesk__selectfromsalesforce}"/>
+																</td>
+															</tr>
+															<tr>
+																<td> 
+																<input class="selectBtnCls" style="height: 21px; padding-bottom: 4px; padding-left: 6px; padding-right: 6px; cursor: pointer;" type="button" value="{!$Label.SelectButton}" onclick="openImagePopup();"/>
+																</td>
+															</tr>
+                                            
+														</table>
+													</td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+					<apex:actionFunction action="{!setImageIcon}" name="setImageIcon" rerender="Resource_Image_Id,Image_Id" oncomplete="">
+						<apex:param assignTo="{!savedImgID}" name="savedImgID" value="" />
+					</apex:actionFunction>
+					<apex:actionFunction action="{!save}" name="save"  rerender="errorId" oncomplete="waitMsg.hide();showMessage();enableSaveButton();"/>
+				</apex:outputPanel>
+			</tr>
+		</table>
+	</apex:form>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CategoryIcon.js" />
+</apex:page>

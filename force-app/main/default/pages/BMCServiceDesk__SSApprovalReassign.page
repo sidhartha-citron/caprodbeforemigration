@@ -1,0 +1,149 @@
+<apex:page id="SSApprovalReassgin" controller="BMCServiceDesk.SSApprovalReassignController" sidebar="false" showHeader="false" standardStylesheets="false" >
+<div id="themeDiv"></div>
+<head> 
+    <title>{!HTMLENCODE($Label.SSBrowserTitle)}</title>
+    <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+    
+<style>
+FORM 
+{
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+body
+{
+     background-color: #FFFFFF; /*DFE8F6;*/
+}
+
+.clsMainTable {
+    width: 100%;
+    padding: 0px;
+    background:#FFFFFF;
+}
+
+.clsTable {
+    border: 0;
+    cellpadding: 0;
+    cellspacing: 0;
+    width: 100%;
+    background:#FFFFFF;
+}
+
+.clsButtonBar {
+    vertical-align: middle;
+    height:30px;
+     
+}
+
+.InputTextBox200
+{
+    width:200px;
+}
+
+</style>
+<script type="text/javascript">
+  
+var selectedUserId;
+var comment='';
+
+function openUserLookup(){
+    //url='../_ui/common/data/LookupPage?lkfm=editPage&lknm=Actor&lktp=StandardUserLookup&lksrch=';
+    //win=window.open(url,'appUserlookup','left=350,top=50,width=500,height=500,location=0,directories=0,scrollbars=0,status=0,menubar=0,toolbar=0,resizable=0');
+    
+	baseURL = "SearchPage?text=" + 'c';
+	baseURL = baseURL + "&frm=" + "&isLookup=true&popupId=Client&additional_columns=id,name&filterClause=UserType=\'Standard\'&IsActive=true&childName=user&isFromSS=false";
+		
+	this.parent.openUserLookupPopup(baseURL, "Approver", 410, 700, "width=350,height=480,toolbar=no,status=no,left=300,top=10,directories=no,menubar=no,resizable=yes,scrollable=no", true,'{!JSENCODE($Label.SelectFrom)}'+' '+'{!JSENCODE($Label.User)}');
+}
+
+function actionReassign() {
+    //comment = document.getElementById("comment").value;
+    callReassign(selectedUserId,comment);
+}
+
+function callbackReassign() {
+    window.parent.reassignRefreshPage();
+}
+
+function actionClose() {
+    window.parent.closeApprovalReassign();
+}
+document.onkeydown = function(e) {
+    e = e || window.event;
+    if(typeof(e) == 'undefined' || e == 'null')
+        return; 
+    k = e.which || e.charCode || e.keyCode;
+    if(k==27){
+         window.parent.closeApprovalReassign();
+    }
+}
+
+function closePopup()
+{
+ 	if ((window.parent) && (window.parent.closePopup)) window.parent.closePopup();
+}
+
+</script>
+</head>
+
+<body>
+<apex:form >
+    <apex:actionFunction name="callReassign" action="{!callReassign}" oncomplete="callbackReassign();">
+        <apex:param name="selectedUserId" assignTo="{!userId}" value="" />
+        <apex:param name="comment" assignTo="{!comment}" value=""/>
+    </apex:actionFunction>
+ 
+ 
+ <table cellpadding="0" cellspacing="0" class="clsMainTable">
+                
+             <tr>
+                <td style="vertical-align: top;"> 
+                   <table cellpadding="0" cellspacing="0" class="clsTable">
+                        <tr><td style="height:15px;"></td></tr>
+                        <tr>
+                            <td colspan="2">
+                                <table  cellspacing="0" cellpadding="2" border="0">
+                                    <tr>
+                                        <td><apex:outputLabel value="{!$Label.bmcservicedesk__ssapprovalapprover}" styleClass="x-form-field" />:</td>
+                                        <td>
+                                            &nbsp;<input type="text" id="Approver" title="{!JSENCODE($Label.SSApprovalApprover)}" readonly="true" class="clsInputTextBox InputTextBox200" />&nbsp;
+                                        </td>
+                                        <td class="lookupIconTD">
+                                                <div class="lookUpIconDiv">
+                                                <input type="button" class="customLookupIconOn" id="Lookup_Id" onclick="openUserLookup();" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>            
+                            </td>
+                        </tr>
+                        <tr><td style="height:15px;"></td></tr>
+                    </table>
+                </td>
+                </tr>
+            <tr><td style="height:20px;"></td></tr>
+            <tr>
+                <td align="right" class="clsButtonBar">
+                    <input disabled="true" type="button" id="btnReassign" value="{!JSENCODE($Label.Reassign)}" title="{!JSENCODE($Label.Reassign)}" onclick="actionReassign()" class="ssBtnCls" style="color:#CCCCCC !important;font-family: arial; font-size: 12px;  height:24px "  />&nbsp;<input type="button" id="btnCancel" value="{!JSENCODE($Label.SSCancel)}" title="{!JSENCODE($Label.SSCancel)}" onclick="actionClose()" class="ssBtnCls" style="font-family: arial; font-size: 12px;  height:24px; "  />
+                </td>
+            </tr>
+        </table>
+
+</apex:form>
+<script>
+	document.getElementById('Approver').focus();
+    if(Sarissa._SARISSA_IS_IE && (navigator.userAgent.indexOf("Trident/6")>-1)) {  
+      window.XMLSerializer = function(){};      
+      window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+</script>
+<script type="text/javascript">         
+        var colorCodeList = '{!JSENCODE(themeColorCodeString)}'; 
+        var content = '{!JSENCODE(dynamicStyle)}';
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+</script>
+<script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" /> 
+</body>
+</apex:page>

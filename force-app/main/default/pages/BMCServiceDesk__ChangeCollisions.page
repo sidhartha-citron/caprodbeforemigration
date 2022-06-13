@@ -1,0 +1,82 @@
+<apex:page controller="BMCServiceDesk.ChangeCollisionsController" standardStylesheets="false" showHeader="false"  action="{!DetectCollisions}">
+<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/ChangeCollisions.css" type="text/css" />
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js" />
+
+<script>
+	var wikiUrl = '{!wikiUrl}';
+    var collisions = JSON.parse('{!JSENCODE(CollisionList)}');
+    var selected_states = '{!JSENCODE(SelectedStates)}';
+    var serverLocalOffset = {!serverLocalOffset};
+    var ExtJSUserDateFormat = '{!ExtJSUserDateFormat}';
+    var current_change_id = '{!JSENCODE(CurrentChange.id)}'
+    var changeCollisionsPageURL = '{!$Page.ChangeCollisions}';
+    var SaveData_Remote = "{!$RemoteAction.ChangeCollisionsController.SaveData}";
+	var helpResource;
+        var installversion = {!installversion};
+        userLanguage = '{!userLanguage}';
+        var showJapaneseHelp = '{!showJapaneseHelp}';
+        if (userLanguage == 'ja' && showJapaneseHelp.toLowerCase() == 'true'){
+            helpResource = '{!$Resource.StdFormHelp_JA}';
+	    }else{
+			helpResource = '{!$Resource.StdFormHelp}';
+	    }
+	var imageHelp='{!$Resource.SDEFStyles}';
+	
+	var labels = {};
+	labels.CollidingChangeNo="{!JSENCODE($Label.CollidingChangeNo)}";
+	labels.CollisionState="{!JSENCODE($Label.CollisionState)}";
+	labels.ScheduledStart="{!JSENCODE($Label.ScheduledStart)}";
+	labels.ScheduledEnd="{!JSENCODE($Label.ScheduledEnd)}";
+	labels.DetectCollisions="{!JSENCODE($Label.Apply)}";
+	labels.DetectCollisionsTooltip = "{!JSENCODE($Label.DetectCollisionsTooltip)}";
+	labels.IncludeCollisionState="{!JSENCODE($Label.IncludeCollisionState)}";
+
+	labels.Detected="{!JSENCODE($Label.CollisionState_Detected)}";
+	labels.Investigating="{!JSENCODE($Label.CollisionState_Investigating)}";
+	labels.Ignored="{!JSENCODE($Label.CollisionState_Ignored)}";
+	labels.Resolved="{!JSENCODE($Label.CollisionState_Resolved)}";
+	labels.ScheduledStartDate="{!JSENCODE($Label.ScheduledStartDate)}";
+	labels.ScheduledEndDate="{!JSENCODE($Label.ScheduledEndDate)}";
+
+	labels.Save="{!JSENCODE($Label.Save)}";
+	labels.Close="{!JSENCODE($Label.Close)}";
+	labels.WaitMaskMsg="{!JSENCODE($Label.PleaseWait)}...";
+	labels.SavedSuccessfully = "{!JSENCODE($Label.SavedSuccessfully)}";
+	labels.ConfigurationItem="{!JSENCODE($Label.CIExpConfigurationItem)}";
+	labels.NoRecordFoundMsg="{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}";
+	labels.CollisonsWindowName="{!JSENCODE($Label.CollisonsWindowName)}";
+	labels.Help="{!JSENCODE($Label.TooltipHelp)}";
+	document.title=labels.CollisonsWindowName;
+	var filename="collision_detection";
+	
+</script>
+
+<div id="grid-div"></div>
+<div id="change_details_div">
+	
+	&nbsp;<b>{!JSENCODE($ObjectType.Change_Request__c.label)} </b> 
+	<br/>
+	&nbsp;{!JSENCODE(CurrentChange.Name)}
+	
+	<div style="display:{!if($ObjectType.BMCServiceDesk__Change_Request__c.fields.BMCServiceDesk__Scheduled_Start_Date__c.Accessible,"","none")};">
+        <br/><br/>
+		&nbsp;<b>Scheduled Start Date</b>
+        <br></br>
+    </div>
+    &nbsp;<apex:outputText value="{!CurrentChangeScheduledStartDate}" rendered="{!$ObjectType.BMCServiceDesk__Change_Request__c.fields.BMCServiceDesk__Scheduled_Start_Date__c.Accessible}"></apex:outputText>
+    
+    
+    <div style="display:{!if($ObjectType.BMCServiceDesk__Change_Request__c.fields.BMCServiceDesk__Scheduled_End_Date__c.Accessible,"","none")};">
+        <br/><br/>
+		&nbsp;<b>Scheduled End Date</b>
+        <br></br>
+    </div>
+	&nbsp;<apex:outputText value="{!CurrentChangeScheduledEndDate}" rendered="{!$ObjectType.BMCServiceDesk__Change_Request__c.fields.BMCServiceDesk__Scheduled_End_Date__c.Accessible}"></apex:outputText>
+</div>
+
+<script src="{!$Resource.ExtJS4_1_3}/ext-all.js" type="text/javascript" />
+
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ChangeCollisions.js"></script>
+
+</apex:page>

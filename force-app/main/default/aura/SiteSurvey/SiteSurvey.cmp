@@ -1,0 +1,104 @@
+<aura:component controller="SiteSurveySettingsController" implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickActionWithoutHeader" access="global" >
+    
+    <lightning:workspaceAPI aura:id="workspace"/><!-- case 21530 -->
+    
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="siteSurveyId" type="String" />
+    <aura:attribute name="siteSurvey" type="Site_Survey__c"/>
+    <aura:attribute name="mainRecord" type="SiteSurveySettingsController.MainRecord"/>
+    <aura:attribute name="opportunity" type="Opportunity"/>
+    <aura:attribute name="order" type="Order"/>
+    <aura:attribute name="hasAccessToSkillTab" type="Boolean"/>
+    <aura:attribute name="queryParams" type="String[]" default="['Id, AccountId, Site_Survey__c, Account.Site_Survey__c']"/>
+    
+    <!-- 2021-08-17 line below commented to fix component error when launching from Service Console -->
+    <!-- <aura:handler event="lightning:tabCreated" action="{! c.onTabCreated }"/> -->
+    
+    <aura:attribute name="title" type="String" default="{!$Label.c.Site_Survey_Title}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+    
+    <aura:handler name="savedEvent" event="c:SiteSurveyRecordSaveEvent" action="{!c.handleSiteSurveySavedEvent}"/>
+    
+    <div class="slds-page-header">
+        <div class="slds-grid">
+            <div class="slds-col slds-has-flexi-truncate">
+                <div class="slds-media slds-no-space slds-grow">
+                    <div class="slds-media__figure">
+                        <span class="slds-icon_container slds-icon-standard-note" title="{!v.title}">
+                        	<lightning:icon iconName="standard:note" />  
+                        </span>
+                    </div>
+                    <div class="slds-media__body">
+                        <nav>
+                            <ol class="slds-breadcrumb slds-line-height_reset">
+                                <li class="slds-breadcrumb__item">
+                                    <span>{!v.title}</span>
+                            		<ui:outputURL value="{!'/one/one.app?#/sObject/'+v.siteSurvey.Id+'/view'}" target="_blank" title="View Site Survey" label="{!v.siteSurvey.Name}"/>
+                                </li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-col slds-no-flex slds-grid slds-align-top">
+                <div class="slds-button-group" role="group">
+                    <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeFocusedTab}" />
+                </div>
+            </div>
+        </div>
+        <ul class="slds-grid slds-page-header__detail-row">
+            <li class="slds-page-header__detail-block">
+                <p class="slds-text-title slds-truncate slds-m-bottom_xx-small" title="">
+                    <aura:if isTrue="{!v.mainRecord.isOpportunity}">
+                        {!$Label.c.Site_Survey_Opportunity}
+                        <aura:set attribute="else">
+                            {!$Label.c.Site_Survey_Order} 
+                        </aura:set>
+                    </aura:if> 
+                </p>
+                <p class="slds-text-body_regular slds-truncate" title="">
+                    <aura:if isTrue="{!v.mainRecord.isOpportunity}">
+                        {!v.opportunity.Name}
+                        <aura:set attribute="else">
+                            {!v.order.OrderNumber}
+                        </aura:set>
+                    </aura:if> 
+                </p>
+            </li>
+            <li class="slds-page-header__detail-block">
+                <p class="slds-text-title slds-truncate slds-m-bottom_xx-small" title="{!$Label.c.Site_Survey_Account_Name}">{!$Label.c.Site_Survey_Account_Name}</p>
+                <p class="slds-text-body_regular slds-truncate" title="{!$Label.c.Site_Survey_Account_Name}">
+                    <ui:outputURL value="{!'/one/one.app?#/sObject/'+v.siteSurvey.Account__c+'/view'}" target="_blank" title="{!$Label.c.Site_Survey_Account_Name}" label="{!v.siteSurvey.Account__r.Name}"/>
+                </p>
+            </li>
+            <li class="slds-page-header__detail-block">
+                <p class="slds-text-title slds-truncate slds-m-bottom_xx-small" title="{!$Label.c.Site_Survey_Accpac_Account}">{!$Label.c.Site_Survey_Accpac_Account}</p>
+                <p class="slds-text-body_regular">{!v.siteSurvey.Account__r.AccPac_Account__c}</p>
+            </li>
+            <li class="slds-page-header__detail-block">
+                <p class="slds-text-title slds-truncate slds-m-bottom_xx-small" title="{!$Label.c.Site_Survey_Shipping_Address}">{!$Label.c.Site_Survey_Shipping_Address}</p>
+                <p class="slds-text-body_regular">{!v.siteSurvey.Account__r.Shipping_Address__c}</p>
+            </li>
+            <li class="slds-page-header__detail-block">
+                <p class="slds-text-title slds-truncate slds-m-bottom_xx-small" title="{!$Label.c.Site_Survey_Number_of_Rooms}">{!$Label.c.Site_Survey_Number_of_Rooms}</p>
+                <p title="Description (2-line truncation—must use JS to truncate).">{!v.siteSurvey.Number_of_Rooms__c}</p>
+            </li>
+        </ul>
+	</div>
+    
+    <div class="slds-scrollable slds-box">
+        <lightning:tabset selectedTabId="{!$Label.c.Site_Survey_Tab_Allocate_products}">
+            <lightning:tab label="{!$Label.c.Site_Survey_Tab_Allocate_products}" onactive="{!c.handleActive}" id="{!$Label.c.Site_Survey_Tab_Allocate_products}">
+                <c:SurveyAssetAllocation recordId="{!v.recordId}" locationsPerPage="{!v.mainRecord.locationsPerPage}" />
+            </lightning:tab> 
+            <lightning:tab label="{!$Label.c.Site_Survey_Tab_Preferences}" onactive="{!c.handleActive}" id="{!$Label.c.Site_Survey_Tab_Preferences}">
+            </lightning:tab>
+            <aura:if isTrue="{!v.mainRecord.hasAccessToSkillTab}">
+                <lightning:tab label="{!$Label.c.Site_Survey_Skill_Requirements}" onactive="{!c.handleActive}" id="{!$Label.c.Site_Survey_Skill_Requirements}" onblur="{!c.handleBlur}">
+                </lightning:tab>
+            </aura:if>
+            <lightning:tab label="{!$Label.c.Site_Survey_VMI_Products}" onactive="{!c.handleActive}" id="{!$Label.c.Site_Survey_VMI_Products}">
+            </lightning:tab>
+        </lightning:tabset>
+    </div>
+</aura:component>

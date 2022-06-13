@@ -1,0 +1,135 @@
+<template>
+    <lightning-card title={rowdetails.companyname} class="slds-text-body_regular">
+        <template if:true={rowdetails}>
+            <lightning-layout multiple-rows>
+                <lightning-layout-item size=6 padding="around-small">
+                    <lightning-input type="text" label="Name" value={rowdetails.companyname} readonly>
+                    </lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size=6 padding="around-small">
+                    <lightning-input type="phone" label="Phone" value={rowdetails.phonetodisplay} readonly>
+                    </lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size=12 padding="around-small">
+                    <template if:true={showpicklist}>
+                        <lightning-combobox label="Reaction" name="Reaction" options={controllingPicklist}
+                            value={selectedControlling} onchange={fetchDependentValue} required>
+                        </lightning-combobox>
+                    </template>
+                </lightning-layout-item>
+                <lightning-layout-item size=12 padding="around-small">
+                    <template if:true={showdependent}>
+                        <lightning-combobox label="Call Disposition" name="Call Disposition" options={finalDependentVal}
+                            value={selectedControlling} disabled={dependentDisabled} required
+                            onchange={getcalldisposition}>
+                        </lightning-combobox>
+                    </template>
+                </lightning-layout-item>
+                <lightning-layout-item size=12 padding="around-small">
+                    <!-- <template if:false={editSubject}>
+                        <span style="border-bottom: 1px dotted black">{strSubj}
+                            <lightning-button-icon class="slds-float_right" icon-name="utility:edit" alternative-text=""
+                                title="" variant="bare" size="medium" onclick={handleSubjectEdit}>
+                            </lightning-button-icon>
+                        </span>
+                    </template> 
+                    <template if:true={editSubject}>-->
+                    <template if:true={isPostive}>
+                        <lightning-input name="Subject" value={strSubj} label="Event Subject"
+                            onchange={handleSubjectChange}>
+                        </lightning-input>
+                    </template>
+                    <!-- </template> -->
+                </lightning-layout-item>
+                <lightning-layout-item size=12 padding="around-small">
+                    <template if:true={isPostive}>
+                        <label class="slds-form-element__label">Event Start Date & Time</label>
+                        <lightning-input variant="label-hidden" class="slds-m-bottom_medium evtdate" type="datetime"
+                            onchange={getStartdatetimehandle} value={datetimevalue} required>
+                        </lightning-input>
+                        <label class="slds-form-element__label">Event End Date & Time</label>
+                        <lightning-input variant="label-hidden" class="slds-m-bottom_medium evtenddate" type="datetime"
+                            onchange={getEnddatetimehandle} value={evtEndTime} required>
+                        </lightning-input>
+                        <lightning-input type="email" onchange={getemailhandle} label="Change  Email" value={emailvalue}
+                            required>
+                        </lightning-input>
+                    </template>
+                    <template if:true={showLeadDisqualify}>
+                        <template if:true={isleaddisqualify}>
+                            <lightning-combobox name="Lead Disqualify Reason" label="Lead Disqualify Reason"
+                                value={disqualifyvalue} options={disqualifypicklist.data.values}
+                                onchange={handledisqualifyChange} required>
+                            </lightning-combobox>
+                        </template>
+                    </template>
+                </lightning-layout-item>
+                <lightning-layout-item size=12 padding="around-small">
+                    <template if:true={isfollowup}>
+                        <lightning-input label="Schedule Follow Up on Next Call Block" value={followupcheck}
+                            type="checkbox" onchange={handleFollowUpChange} checked={followupcheck}>
+                        </lightning-input>
+                    </template>
+                </lightning-layout-item>
+                <lightning-layout-item size=12 padding="around-small">
+                    <template if:true={isPostive}>
+                        <lightning-textarea label="Event Invitee Message" value={inputInternalNoteValue}
+                            onchange={handleInternalNoteChange} required={isNotesRequired}
+                            field-level-help={label.inviteeMessage}>
+                        </lightning-textarea>
+                    </template>
+                </lightning-layout-item>
+                <lightning-layout-item size=12 padding="around-small">
+                    <lightning-textarea field-level-help={label.internalnotes} label="Notes" value={inputNoteValue}
+                        onchange={handleNoteChange}>
+                    </lightning-textarea>
+                </lightning-layout-item>
+                <lightning-layout-item size=6 padding="around-small">
+                    <lightning-button onclick={handleCancel} label="Cancel" variant="brand">
+                    </lightning-button>
+                </lightning-layout-item>
+                <template if:true={showSaveNContinue}>
+                    <lightning-layout-item size=6 padding="around-small">
+                        <lightning-button onclick={handlesave} label="Save & Continue" variant="brand">
+                        </lightning-button>
+                    </lightning-layout-item>
+                </template>
+                <template if:true={isLead}>
+                    <template if:true={showSaveNConvert}>
+                        <lightning-layout-item size=6 padding="around-small">
+                            <lightning-button onclick={saveNconvert} label="Save & Convert" variant="brand">
+                            </lightning-button>
+                        </lightning-layout-item>
+                    </template>
+                </template>
+            </lightning-layout>
+        </template>
+        <template if:true={isLoaded}>
+            <lightning-spinner variant="brand" alternative-text="Loading Tasks" size="medium">
+            </lightning-spinner>
+        </template>
+    </lightning-card>
+    <!--   <lightning-card class="slds-m-top_medium slds-text-body_regular" title="Activity History">
+        <template if:true={timelineGroups}>
+            <lightning-button variant="base" label={toggleLabel} title={toggleLabel} onclick={handleClick}
+                class="slds-m-left_x-small"></lightning-button>
+            <div class="scrollContainer" onscroll={handleScroll}>
+                <div class="scrollArea">
+                    <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+                        <template for:each={timelineGroups} for:item="activityGroup">
+                            <lightning-accordion-section name={activityGroup.sectionName} label={activityGroup.name}
+                                key={activityGroup.items}>
+                                <ul class="slds-timeline">
+                                    <template for:each={activityGroup.items} for:item="item" for:index="index">
+                                        <c-activitylineitem key={item} item={item} isexpanded={item.isExpanded}>
+                                        </c-activitylineitem>
+                                    </template>
+                                </ul>
+                            </lightning-accordion-section>
+                        </template>
+                    </lightning-accordion>
+                </div>
+            </div>
+        </template>
+    </lightning-card> -->
+</template>

@@ -1,0 +1,264 @@
+<apex:page standardStylesheets="false" showHeader="false" controller="BMCServiceDesk.AdminEmailConversation" >
+<c:CommonIncludes />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminConversationSetting.css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/itemselector.js"/>   
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/HTML_ENCODE_DECODE.js"/>
+<apex:stylesheet value="{!$Resource.BMCServiceDesk__SDEFStyles}/itemselector.css" />
+
+<apex:form >
+<apex:actionFunction name="SaveSettings" action="{!SaveNewSettings}" onComplete="onComplete();" reRender="onCompleteSaved">
+<apex:param assignTo="{!selectedOrgWideEmailValue}" name="selectedOrgWideEmailAddress" value=""/>
+<apex:param assignTo="{!setEmailAsDefaultValue}" name="setEmailAsDefault" value=""/>
+<apex:param assignTo="{!isSetToAllProfilesValue}" name="isSetToAllProfiles" value=""/>
+<apex:param assignTo="{!propEnableEmailConvToFld}" name="propEnableEmailConvToFld" value=""/>
+<apex:param assignTo="{!propEnableEmailConvBccFld}" name="propEnableEmailConvBccFld" value=""/>
+<apex:param assignTo="{!propEnableEmailSignature}" name="propEnableEmailSignature" value=""/>
+<apex:param assignTo="{!propEnableEmailConvTempl}" name="propEnableEmailConvTempl" value=""/> 
+<apex:param assignTo="{!propEnableEmailBodyForTemplate}" name="propEnableEmailBodyForTemplate" value=""/>
+<apex:param assignTo="{!propEnableEmailTemplatePreview}" name="propEnableEmailTemplatePreview" value=""/> 
+<apex:param assignTo="{!selctedProfilesValue}" name="selctedProfiles" value=""/> 
+<apex:param assignTo="{!selectedEmailTemplateFolder}" name="selectedEmailTemplateFolder" value=""/>
+<apex:param assignTo="{!selectedEmailRecordLinkFor}" name="selectedEmailRecordLinkFor" value=""/>
+<apex:param assignTo="{!isEmailAttachmentNamesToIgnore}" name="isEmailAttachmentNamesToIgnore" value=""/>
+<apex:param assignTo="{!emailAttachmentNamesToIgnore}" name="emailAttachmentNamesToIgnore" value=""/>
+<apex:param assignTo="{!isEmailAttachmentSizeToIgnore}" name="isEmailAttachmentSizeToIgnore" value=""/>
+<apex:param assignTo="{!emailAttachmentSizeToIgnore}" name="emailAttachmentSizeToIgnore" value=""/>
+<apex:param assignTo="{!subjectLineForSelectedModule}" name="SubjectLine" value=""/>
+</apex:actionFunction>
+ <apex:actionFunction Name="setDataSourceName" action="{!getProfiles}" reRender="loadformAssignments,mainDiv" onComplete="setData();rerenderRadiobtn();">
+ <apex:param assignTo="{!selectedOrgWideEmailValue}" name="selectedOrgWideEmailAddress" value=""/>
+       </apex:actionFunction>
+    <apex:actionFunction Name="getFields" action="{!getFields}" reRender="fieldPanel,mainDiv" onComplete="setFieldData();">
+ <apex:param assignTo="{!objectName}" name="objectName" value=""/>
+       </apex:actionFunction>
+      
+
+
+<apex:outputPanel id="onCompleteSaved">
+     <script>
+	/*------------------------------------------------------------------
+	onComplete(): Called when actionFunction 'SaveSettings' is completed 
+	--------------------------------------------------------------------*/
+	function onComplete(){
+	        var msg;
+            if(selectedmailId!='')
+                setDataSourceName(selectedmailId);
+	        if('{!status}' == 'success') 
+	            msg = '{!JSENCODE($Label.SavedSuccessfully)}';
+	        else
+	            msg = '{!JSENCODE($Label.MsgSaveError)}';
+	            
+	        showMessage(msg);
+    }
+    </script>
+</apex:outputPanel>
+    <div id="mainDiv" style=""></div>
+    
+    <script> 
+	var enableWalkthroughFlow =parent.enableWalkthroughFlow;
+	var isLightningExperience = '{!isLightningExperience}';
+    var userLanguage = parent.userLanguage;
+	var wikiUrl = '{!wikiUrl}';
+    var DataNotSavedMsg= '{!JSENCODE($Label.DataNotSavedMsg)}';
+    var isDataChanged=false;
+    var imgRightArrow = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_R_new.gif';
+    var imgLeftArrow = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_L_disable_custom.gif';
+    var imgDisableRight = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_R_disable_custom.gif';  
+    var imgDownArrowLeftNew = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_L_new.gif';
+    var path='{!$Resource.SDEFStyles}/SDEFimages/';
+    var path1='{!$Resource.SDEFStyles}/SDEFbuttons/' ;
+    var resourcePath = '{!$Resource.SSThemes}';
+    var profilesList= new Array();
+    var selectedProfilesList= new Array();
+    var dataSourceData = new Array();
+    setDataSourceName('');
+    function setData(){
+        dsprofilesList.loadData(profilesList);
+        dsselectedProfilesList.loadData(selectedProfilesList);
+    }
+    var selectedmailId='';enableEmailToField = false,enableEmailBccField = false, enableEmailSignatureField =false, enableEmailTemplateField = false,enableEmailBodyForTemplate=false,enableEmailTemplatePreview=false;isSetEmailAsDefault=false; isSetToAllProfiles=false;
+    var isEmailAttachmentNamesToIgnore ={!isEmailAttachmentNamesToIgnore};
+    var isEmailAttachmentSizeToIgnore ={!isEmailAttachmentSizeToIgnore};
+    var emailAttachmentSizeToIgnore  = {!emailAttachmentSizeToIgnore};
+    var emailAttachmentNamesToIgnore = '{!JSENCODE(emailAttachmentNamesToIgnore)}';
+    var emailAttachmentTypesToIgnore = '{!JSENCODE(emailAttachmentTypesToIgnore)}'
+    if(typeof emailAttachmentTypesToIgnore != 'undefined') {
+        emailAttachmentTypesToIgnore = emailAttachmentTypesToIgnore.toUpperCase();
+    }
+    if('{!JSENCODE(propEnableEmailConvToFld)}'=='TRUE'){
+        enableEmailToField = true;
+    }
+    if('{!JSENCODE(setEmailAsDefaultValue)}'=='TRUE'){
+        isSetEmailAsDefault=true;
+    }else{
+        isSetEmailAsDefault=false;
+    }   
+    if('{!JSENCODE(isSetToAllProfilesValue)}'=='TRUE'){
+        isSetToAllProfiles=true;
+    }else{
+        isSetToAllProfiles=false;
+    }   
+    if('{!JSENCODE(propEnableEmailConvBccFld)}'=='TRUE'){
+        enableEmailBccField = true;
+    } 
+    if('{!JSENCODE(propEnableEmailSignature)}'=='TRUE'){
+        enableEmailSignatureField = true;
+    }   
+    if('{!JSENCODE(propEnableEmailConvTempl)}'=='TRUE'){
+        enableEmailTemplateField = true; 
+    }
+    if('{!JSENCODE(propEnableEmailBodyForTemplate)}'=='TRUE'){
+        enableEmailBodyForTemplate= true; 
+    }
+    if('{!JSENCODE(propEnableEmailTemplatePreview)}'=='TRUE'){
+        enableEmailTemplatePreview = true; 
+    }
+    
+     var waitMsg =   new Ext.Window({ 
+                                height:100, 
+                                width:200, 
+                                resizable:false, 
+                                closable : false, 
+                                header:false,
+                                frame:false, 
+                                shadow :false, 
+                                modal:true,
+                                items:[{ 
+                                    xtype:'panel', 
+                                    height:100, 
+                                    width:200, 
+                                    bodyStyle:'background-color:transparent;border:none;', 
+                                    html:'<div align="center"><img src="{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif" /></div>' 
+                                }] 
+                     });
+    dsprofilesList = new Ext.data.ArrayStore({
+        data: profilesList,
+        fields: ['ProfileId','profileLabel'],
+        sortInfo: {
+            field: 'profileLabel',
+            direction: 'ASC'
+        }
+    });
+
+    dsselectedProfilesList = new Ext.data.ArrayStore({
+        data: selectedProfilesList,
+        fields: ['ProfileId','profileLabel'],
+        sortInfo: {
+            field: 'profileLabel',
+            direction: 'ASC'
+        }
+    });
+	</script>   
+   <apex:outputPanel id="loadformAssignments">
+    <script>
+    var profilesList= new Array();
+    var selectedProfilesList= new Array();
+    var i=0;
+    if('{!JSENCODE(setEmailAsDefaultValue)}'=='TRUE'){
+        isSetEmailAsDefault=true;
+    }else{
+        isSetEmailAsDefault=false;
+    }  
+    if('{!JSENCODE(isSetToAllProfilesValue)}'=='TRUE'){
+        isSetToAllProfiles=true;
+    }else{
+        isSetToAllProfiles=false;
+    }    
+   <apex:repeat value="{!profilesList}" var="plist">
+        profilesList[i++] = ['{!plist.id}', '{!JSINHTMLENCODE(plist.name)}'];
+    </apex:repeat>
+    i=0;
+    <apex:repeat value="{!selectedProfilesList}" var="selectedList">
+        selectedProfilesList[i++] = ['{!selectedList.id}', '{!JSINHTMLENCODE(selectedList.name)}'];
+    </apex:repeat>
+ 
+ 
+</script>   
+</apex:outputPanel>
+   
+	</apex:form>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminEmailConversation.js" />
+	<script>
+    var existingOrgWideId = "{!JSENCODE(selectedOrgWideEmailValue)}";
+    var emailConversationText = '{!JSENCODE($Label.ApplicationSetting_EmailConversation)}';
+    var AdminEmailAvailableProfiles ='{!JSENCODE($Label.AdminEmailAvailableProfiles )}';
+    var EmailFromAddress ='{!JSENCODE($Label.EmailFromAddress)}';
+    var orgWideEmailDescText = '{!JSENCODE($Label.EmailFromAddress)}';
+    var enableEmailToFieldLabel = '{!JSENCODE($Label.EmailConvToFieldEnabled)}';
+    var enableEmailBccFieldLabel = '{!JSENCODE($Label.EmailConvBccFieldEnabled)}';
+    var enableEmailSignatureLabel = '{!JSENCODE($Label.EmailConvSignatureFieldEnabled)}';
+    var enableEmailSignatureTooltipLabel = '{!JSENCODE($Label.EnableEmailSignatureTooltip)}';
+    var enableEmailTemplateFieldLabel = '{!JSENCODE($Label.EmailConvEmailTemplEnabled)}';
+    var savelabel =  '{!JSENCODE($Label.Save)}';
+    var cancelLabel= '{!JSENCODE($Label.Cancel)}';
+    var OrgWideEmailString='{!OrgWideEmailList}';
+    OrgWideEmailString = RemedyForceHTMLProcessor.htmlDecoder(OrgWideEmailString);
+    var lblMsgTitle = '{!JSENCODE($Label.EmailConversationSetting)}';
+	var enableEmailBodyForTemplateLabel='{!JSENCODE($Label.EmailAdditionalInfoCheckbox)}';
+	var enableEmailTemplatePreviewLabel='{!JSENCODE($Label.EmailConvEmailTemplPreviewEnabled)}';
+	var EmailAdditionalInfoCheckboxTooltip='{!JSENCODE($Label.EmailAdditionalInfoCheckboxTooltip)}';
+    var ByAllProfiles=  '{!JSENCODE($Label.ByAllProfiles)}';
+    var BySelectedProfiles=  '{!JSENCODE($Label.BySelectedProfiles)}';
+    var SetAsDefault=  '{!JSENCODE($Label.SetAsDefault)}';
+    var SelectedProfile=  '{!JSENCODE($Label.SelectedProfile)}';
+    var AvailableProfile=  '{!JSENCODE($Label.AvailableProfile)}';
+    var emailRequiredMessage=  '{!JSENCODE($Label.emailRequiredMessage)}';
+    var profilesNotSelected=  '{!JSENCODE($Label.profilesNotSelected)}'; 
+    var SelectOption='{!JSENCODE($Label.SelectOption)}'; 
+    var selectEmailTemplateFolder = '{!JSENCODE($Label.selectEmailTemplateFolder)}';
+    var selectedEmailFolder = '{!JSENCODE(selectedEmailTemplateFolder)}';
+    var EmailTemplateFoldersListJson = '{!JSENCODE(EmailTemplateFoldersListJson)}';
+    
+    var EmailRecordLinkListJson = '{!JSENCODE(EmailRecordLinkListJson)}';
+    var strEmailRecordLinkLabel = '{!JSENCODE($Label.EmailRecordLinksFor)}';
+    var selectedEmailRecordLinkFor = '{!JSENCODE(selectedEmailRecordLinkFor)}';
+
+    var SignatureFilterRuleHeaderLabel = '{!JSENCODE($Label.EmailAttachmentFilterRuleHeaderLabel)}';
+    var SignatureFilterRuleLabel = '{!JSENCODE($Label.EmailAttachmentFilterRuleLabel)}';
+    var SignatureFileNameCheckBoxLabel = '{!JSENCODE($Label.EmailAttachmentNamesToIgnoreFlagLabel)}';
+    var SignatureFileSizeCheckBoxLabel = '{!JSENCODE($Label.EmailAttachmentSizeToIgnoreFlagLabel)}';
+    var SignatureImageFileSizeKBLabel = '{!JSENCODE($Label.KB)}';
+    var SignatureFilterRuletooltipLabel = '{!JSENCODE($Label.EmailAttachmentFilterRuleTooltipLabel)}';
+    var SignatureFileExtensionTooltipLabel = '{!JSENCODE($Label.EmailAttachmentTypesToIgnoreTooltipLabel)}';
+    var emailAttachmentIgnoreFileNamesPlaceholder = '{!JSENCODE($Label.EmailAttachmentIgnoreFileNamesPlaceholder)}';
+    var emailAttachmentFileNameWildcardNotAllowed = '{!JSENCODE($Label.EmailAttachmentFilterFileNameWildcardNotAllowed)}';
+    var selectObjectLabel = '{!JSENCODE($Label.SelectObject)}';
+    var selectFieldLabel = '{!JSENCODE($Label.SelectField)}';
+    var subjectLabel = '{!JSENCODE($Label.Subject)}';
+    var insertLabel = '{!JSENCODE($Label.Insert)}';
+    var emailSubLabel = '{!JSENCODE($Label.EmailSubject)}'; 
+    var EmailSubjectValidation = '{!JSENCODE($Label.EmailSubjectValidation)}';  
+    var fieldLbl = '{!JSENCODE($Label.CIExpField)}'; 
+    var supportedobjectsForSubjectLine = [["Incident__c","{!JSENCODE($Label.Navigator_Incidents)}"],["SR", "{!JSENCODE($Label.serviceRequestPortletHeader)}"],["Task__c", "{!JSENCODE($Label.Navigator_Tasks)}"],["Problem__c","{!JSENCODE($Label.Navigator_Problems)}"],["Change_Request__c","{!JSENCODE($Label.ChangeRequests)}"]];
+    
+    function setFieldData(){
+  			EmailSelectFieldStore.loadData(fieldList);
+        	subjectTextBox.value = Ext.util.Format.htmlDecode(subjectLineForSelectedModule);
+        }
+   
+    </script>
+    <apex:outputPanel id="fieldPanel">
+        <script>
+        var fieldList;  
+        var subjectLineForSelectedModule;
+        prepareFieldMap();
+        function getFieldList(objName){
+            getFields(objName); 
+            prepareFieldMap();
+        }
+        
+        function prepareFieldMap(){
+        subjectLineForSelectedModule = '';
+        fieldList = new Array(); 
+        var i=0;
+        <apex:repeat value="{!fieldList}" var="flist">
+        fieldList[i++] = ['{!JSINHTMLENCODE(flist.label)}', '{!JSINHTMLENCODE(flist.name)}','{!JSINHTMLENCODE(flist.fieldType)}','{!JSINHTMLENCODE(flist.relationshipName)}','{!JSINHTMLENCODE(flist.refereceObjName)}'];
+        </apex:repeat>  
+        console.log('{!JSINHTMLENCODE(subjectLineForSelectedModule)}');
+        subjectLineForSelectedModule = '{!JSINHTMLENCODE(subjectLineForSelectedModule)}'; 
+    }
+        </script>
+    </apex:outputPanel>
+ 
+</apex:page>

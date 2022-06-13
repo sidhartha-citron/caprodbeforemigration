@@ -1,0 +1,48 @@
+<apex:page sidebar="false" showHeader="false" controller="BMCServiceDesk.CheckInOptionController" standardStylesheets="false">
+<c:CommonIncludes />
+    <apex:outputPanel id="varPanelId">
+        <script>
+            var keepCheckedOut = "{!JSENCODE(selectedOption)}";
+        </script>
+    </apex:outputPanel>
+    <script>        
+        function checkInKA(){
+            window.onbeforeunload = null;
+            if(Ext.isIE){
+                var parentObj = window.dialogArguments;
+                parentObj.checkInArticleJS(keepCheckedOut);
+            }else{
+                window.parent.opener.checkInArticleJS(keepCheckedOut);
+            }
+            window.close();
+        }
+    </script>
+    <apex:outputPanel >
+        <apex:form >        
+            <apex:actionFunction name="fetchLatestSelectedOption" action="{!fetchLatestSelectedOption}" rerender="varPanelId" oncomplete="checkInKA();"/>       
+            
+            <table width="100%" cellpadding="5" style="border-color:red;"> 
+                <tr>
+                    <td><div class="div9pxVspacing"/></td>
+                </tr>
+                <tr>
+                    <td class="clsInputLabelTD">
+                        <apex:selectRadio id="checkInOptn" layout="pageDirection" value="{!selectedOption}" styleClass="checkLabel" style="padding-bottom:10px;">
+                            <apex:selectOptions value="{!items}"/>
+                        </apex:selectRadio>
+                    </td>
+                </tr>
+                <tr>
+                    <td><div class="div9pxVspacing"/></td>
+                </tr>
+                <tr>
+                    <td> 
+                        <input type="button" id="btnOk" value="{!JSENCODE($Label.Ok)}" onclick="fetchLatestSelectedOption();" style="margin-left:5pt;width:30pt;height:20pt;"/>
+                        &nbsp;&nbsp;
+                        <input type="button" id="btnCancel" value="{!JSENCODE($Label.Cancel)}" onclick="window.close()" style="width:35pt;height:20pt;"/>
+                    </td>
+                </tr>
+            </table>
+        </apex:form>
+    </apex:outputPanel>
+</apex:page>

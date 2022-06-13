@@ -1,0 +1,27 @@
+<div id="draftsList" ng-if="draftService.savedDrafts.length !== 0" aria-listnavigation class="support-request-container" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'draftsList');" tabindex="0" role="listbox" list="draft">
+   <div class="support-request padding5px-enhance" 
+      ng-if="draftService.savedDrafts.length > 0"
+      ng-repeat="item in draftService.savedDrafts" ng-click="selectDraft(item);$event.stopPropagation();" selectable tabindex="-1" role="option">
+      <div>
+         <div class="support-request__icon support-request-draft__icon">
+            <div class="i {{ item.icon }}" ng-class="{'SRFilterIcon-32px': $root.isSwitchToEnhancedUI}" ng-if="!item.calculatedIcon"></div>
+            <img src="{{item.calculatedIcon}}" ng-if="item.calculatedIcon" class="support-request__icon"/>
+         </div>
+         <div class="support-request__title bold-text support-request__draft-title-description srdraft-descriptionenhance" ng-bind-html="item.title" ng-if="!item.name"></div>
+         <div class="support-request__title bold-text support-request__draft-title-description srdraft-descriptionenhance" ng-bind-html="item.name" ng-if="item.name"></div>
+         <div class="draft-field-inline-div">
+			<label class="activity-item__labels">{{selfServiceLabels.RequestFor}}</label>
+			<label class="activity-item__values support-request__draft-value" ng-bind-html="item.requestedFor"></label>
+         </div>
+         <div class="draft-field-inline-div">
+			<label class="activity-item__labels">{{selfServiceLabels.LastModifiedDate}}</label>
+			<label class="activity-item__values support-request__draft-value" ng-bind-html="item.lastModifiedDate"></label>
+		</div>
+      </div>
+      <div class="d-icon-right-trash btn-draft-delete-icon" ng-click="deleteDraft(item.id, $event)" title= {{$root.selfServiceLabels.SSDeleteDraft}} aria-label="{{$root.selfServiceLabels.deleteInfo}}"></div>
+   </div>
+   <loading-spinner centered="true" if="draftService.data.loading"></loading-spinner>
+</div>
+<div ng-if="draftService.savedDrafts.length == 0" role="alert" aria-live="polite" class="Branding-Right_Panel-activity">
+   <div tabindex="0" class="support-results__message activity-item-no-reocrd__labels ng-binding">{{selfServiceLabels.noResults}}.</div>
+</div>

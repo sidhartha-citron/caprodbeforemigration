@@ -1,0 +1,98 @@
+<div ng-hide="(!data.isVisible)">
+	<srd-question-header question-data="data" show-required-label-if-default="true"></srd-question-header>	
+	<div ng-if="!(!data.isUpdateable && !data.isSRInput)" title="{{data.InlineHelp}}">
+		<input type="text" class="srd-question-input"
+				   id="{{ data.isSRInput? data.Id : data.apiName}}"
+				   ng-model="data.Value"
+				   ng-if="data.Type === 'textfield' || data.Type === 'phone' || data.Type === 'string'"
+				   ng-readonly="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				   ng-disabled="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				   ng-minlength="{{data.Validations.MinValue}}"
+				   ng-maxlength="{{data.FieldLength}}"
+				   name="formField"
+				   ng-required="data.IsRequired && (data.isVisible || !data.isSRInput)" 
+				   value="{{data.Value}}"
+				   aria-label="{{data.Text}}"
+				   aria-labelledby="{{data.isSRInput ? data.Id+' '+data.Id+'errorMsg' : data.id+' '+data.id+'errorMsg'}}" />
+
+		<input type="email" class="srd-question-input"
+				   id="{{ data.isSRInput? data.Id : data.apiName}}"
+				   ng-model="data.Value"
+				   ng-if="data.Type === 'email'"
+				   ng-readonly="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				   ng-disabled="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				   ng-maxlength="{{data.FieldLength}}"
+				   name="formField"
+				   ng-required="data.IsRequired && (data.isVisible || !data.isSRInput)" 
+				   value="{{data.Value}}"
+				   aria-label="{{data.Text}}" 
+				   aria-labelledby="{{data.isSRInput ? data.Id+' '+data.Id+'errorMsg' : data.id+' '+data.id+'errorMsg'}}" />
+
+		<input type="url" class="srd-question-input"
+				   id="{{ data.isSRInput? data.Id : data.apiName}}"
+				   ng-model="data.Value"
+				   ng-if="data.Type === 'url'"
+				   ng-readonly="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				   ng-disabled="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				   ng-maxlength="{{data.FieldLength}}"
+				   name="formField"
+				   ng-required="data.IsRequired && (data.isVisible || !data.isSRInput)" 
+				   value="{{data.Value}}"
+				   aria-label="{{data.Text}}"
+				   aria-labelledby="{{data.isSRInput ? data.Id+' '+data.Id+'errorMsg' : data.id+' '+data.id+'errorMsg'}}" />
+				   
+		<input type="password" class="srd-question-input"
+				   id="{{ data.isSRInput? data.Id : data.apiName}}"
+				   ng-model="data.Value"
+				   ng-if="data.Type === 'encryptedstring'"
+				   ng-readonly="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				   ng-disabled="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				   ng-maxlength="{{data.FieldLength}}"
+				   name="formField"
+				   ng-required="data.IsRequired && (data.isVisible || !data.isSRInput)" 
+				   value="{{data.Value}}"
+				   aria-label="{{data.Text}}"
+				   aria-labelledby="{{data.isSRInput ? data.Id+' '+data.Id+'errorMsg' : data.id+' '+data.id+'errorMsg'}}" />
+
+		<textarea class="srd-question-textarea srd-question-textarea_rtl" 
+				  ng-readonly="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				  ng-disabled="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				  ng-model="data.Value" 
+				  ng-if="data.Type === 'textarea'"
+				  id="{{ data.isSRInput? data.Id : data.apiName}}"
+				  name="formField" 
+				  ng-minlength="{{data.Validations.MinValue}}"
+				  ng-maxlength="{{data.FieldLength}}"
+				  ng-required="data.IsRequired && (data.isVisible || !data.isSRInput)" 
+				  rows="3"
+				  style="resize:vertical;"
+				  value="{{data.Value}}"
+				  aria-label="{{data.Text}}"
+				  aria-labelledby="{{data.isSRInput ? data.Id+' '+data.Id+'errorMsg' : data.id+' '+data.id+'errorMsg'}}" >
+		</textarea>
+
+		<textarea id="{{ data.isSRInput? data.Id : data.apiName}}" srd-rich-text
+					class="srd-question-textarea srd-question-textarea_rtl" 
+				  ng-readonly="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				  ng-disabled="(!data.isUpdateable && !data.isSRInput) || data.DefaultValueReadOnly"
+				  ng-model="data.Value" 
+				  ng-if="data.Type === 'richtextarea'"
+				  name="formField" 
+				  ng-minlength="{{data.Validations.MinValue}}"
+				  ng-maxlength="{{data.FieldLength}}"
+				  ng-required="data.IsRequired && (data.isVisible)" 
+				  rows="{{data.numLines}}"
+				  value="{{data.Value}}"
+				  aria-label="{{data.Text}}"
+				  aria-labelledby="{{data.isSRInput ? data.Id+' '+data.Id+'errorMsg' : data.id+' '+data.id+'errorMsg'}}" >
+		</textarea>
+	</div>
+	<div ng-if="!data.isUpdateable && !data.isSRInput" class="disbaledDivCls" title="{{data.InlineHelp}}">
+		<span ng-if="data.Type === 'richtextarea'" style="white-space: pre-wrap;" ng-bind-html="data.Value" title="{{data.InlineHelp}}"></span>
+		<span ng-if="data.Type != 'richtextarea' && !data.isFormula" style="white-space: pre-wrap;" ng-bind="data.Value" title="{{data.InlineHelp}}"></span>
+		<span ng-if="data.isFormula && data.Value.toString().indexOf('<script') == -1" style="white-space: pre-wrap;" ng-bind-html="data.Value" title="{{data.InlineHelp}}"></span>
+		<span ng-if="data.isFormula && data.Value.toString().indexOf('<script') != -1" style="white-space: pre-wrap;" ng-bind="data.Value" title="{{data.InlineHelp}}"></span>
+	</div>
+
+	
+</div>

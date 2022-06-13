@@ -1,0 +1,74 @@
+<!--
+ - Created by timothychiang on 2020-05-09.
+ -->
+
+<!-- Cpq 2 Table Body Order -->
+<template>
+	<template if:true={showTable}>
+		<div class="slds-p-horizontal_small">
+			<table class="slds-table slds-table_bordered">
+				<thead>
+				<tr class="slds-line-height_reset">
+					<th scope="col"
+						class="slds-cell-shrink">
+					</th>
+					<template
+						for:each={colHeaders}
+						for:item="header"
+						for:index="headerIndex">
+
+						<th key={header.id} scope="col" class={header.class}>
+							<div
+								class="slds-truncate"
+								title={header.name}>{header.name}
+							</div>
+						</th>
+					</template>
+				</tr>
+				</thead>
+				<tbody>
+				<template
+					for:each={lineItems}
+					for:item="lineItem">
+					<template if:false={lineItem.isDeleted}>
+						<template if:true={showConsumables}>
+							<c-cpq-2-table-row-order-consumables
+								class="valid-row"
+								key={lineItem.key}
+								line-item={lineItem}
+								has-access-to-approval={hasAccessToApproval}
+								onlinechange= {relayLineChange}
+								ondeleteline={replayDeleteEvent}
+								onstalescore={replayStaleScore}>
+							</c-cpq-2-table-row-order-consumables>
+						</template>
+						<template if:true={showService}>
+							<c-cpq-2-table-row-order-service
+								class="valid-row"
+								key={lineItem.key}
+								line-item={lineItem}
+								has-access-to-approval={hasAccessToApproval}
+								frequency-map={frequencyMap}
+								onlinechange={relayLineChange}
+								ondeleteline={replayDeleteEvent}
+								onstalescore={replayStaleScore}>
+							</c-cpq-2-table-row-order-service>
+						</template>
+						<template if:true={showEquipment}>
+							<c-cpq-2-table-row-order-equipment
+								class="valid-row"
+								key={lineItem.key}
+								line-item={lineItem}
+								has-access-to-approval={hasAccessToApproval}
+								onlinechange= {relayLineChange}
+								ondeleteline={replayDeleteEvent}
+								onstalescore={replayStaleScore}>
+							</c-cpq-2-table-row-order-equipment>
+						</template>
+					</template>
+				</template>
+				</tbody>
+			</table>
+		</div>
+	</template>
+</template>

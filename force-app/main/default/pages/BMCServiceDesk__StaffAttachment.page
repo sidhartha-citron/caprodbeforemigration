@@ -1,0 +1,259 @@
+<apex:page controller="BMCServiceDesk.StaffAttachmentController" sidebar="false" showHeader="false">
+<head>
+  <title>{!HTMLENCODE($Label.AttachViewFiles)}</title>
+  <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+  <link rel="stylesheet" type="text/css" href="{!$Resource.BMCRFSDEFStyles}/LinkMultipleCIPage.css" /> 
+  <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+  <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+  <link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" /> 
+  <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />              
+  <link href="{!$Resource.BMCRFSDEFStyles}/Images" />
+  <script src="{!$Resource.SDEFCommonJS}/forcetk.js"  type="text/javascript" ></script>
+  <script type="text/javascript">var __sfdcSessionId = '{!GETSESSIONID()}';</script>
+  <script src="/soap/ajax/40.0/connection.js" type="text/javascript"></script>
+    
+</head>
+<script>
+      window.onunload = refreshParent;
+	  function refreshParent() {
+            if(parentID != null && parentID != '' && refreshParentWin) {
+                  window.opener.refreshRelatedLists();
+            }
+      }
+</script>
+
+<style>
+#file-add-btn{margin-left:40px;}
+.progressbar-cls{
+    background: url("{!$Resource.SDEFStyles}/SDEFimages/custom-bar-orange.png") repeat-x scroll 0 0 #f86e00 !important;
+    border: none !important;
+    border-radius: 9px !important;
+}
+.fileNameColumn{max-width:490px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.bPageBlock {
+    border-top: none !important;
+}
+
+body .bRelatedList .pbBody table.list, body .apexp .pbBody table.list {
+    border: 1px solid #c9c9c9;
+}
+.border1px {
+    border-width: 1px !important ;
+    margin-top: 65px !important;
+    border-style: solid;
+    border-color: #c9c9c9 !important;
+    background: none !important;
+}
+
+body .bPageBlock, body .secondaryPalette.bPageBlock{
+    background-color: transparent !important;
+    border : none !important;
+   
+}
+
+.textnoWrap{
+    max-width: 160px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#toolbarDiv {
+    background-color: #f2f2f2 !important;
+	height: 30px !important;
+}
+
+.firstPageEnableClass , .firstPageDisableClass , .previousPageEnableClass ,  .previousPageDisableClass ,  .nextPageEnableClass , .nextPageDisableClass  ,  .lastPageEnableClass , .lastPageDisableClass, .paginationSeperator {
+    vertical-align: middle !important;
+}
+
+.previousNextEnabledLabel , .previousNextDisabledLabel{
+    font-size: 12px !important;
+    vertical-align: middle !important; 
+ }
+.actionLink{
+	font-size: 12px !important;
+	text-decoration: none;
+}
+
+
+</style>
+  <apex:form id="mainFormId" style="height: 439px;" >
+        <apex:actionFunction name="attachFile"  action="{!attachFile}" />
+		<apex:actionFunction name="insertChatMessage"  action="{!insertChatMessage}" reRender="">
+            <apex:param name="contentDocumentId" assignTo="{!contentDocumentId}" value=""/>
+            <apex:param name="fileName" assignTo="{!fileName}" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="refreshGrid"  action="{!refreshGrid}"   />
+		<apex:actionFunction name="assignAttRefGeneratorID"  action="{!assignAttRefGeneratorID}"   rerender="none" oncomplete="refreshGrid()">
+        	<apex:param name="AttRefGeneratorID" assignTo="{!AttRefGeneratorID}" value=""/>
+        	</apex:actionFunction>
+        <apex:actionFunction name="first"  action="{!Beginning}" />
+        <apex:actionFunction name="previous"  action="{!Previous}" />  
+        <apex:actionFunction name="next"  action="{!Next}" /> 
+        <apex:actionFunction name="end"  action="{!End}"  /> 
+        <apex:actionFunction action="{!createAttRefGenerator}" name="createAttRefGenerator" />
+        <apex:actionRegion >
+        <apex:actionFunction action="{!deleteAttachment}" name="deleteAttachment" reRender="pBlock,pgeBlkId,refreshAfterDelete" oncomplete="triggerAttachmentCountEvent('{!total_size}')">
+          <apex:param name="attachId" assignTo="{!attachmentId}" value=""/>
+        </apex:actionFunction>
+        </apex:actionRegion>
+        <table border="0"  id="attacheHeaderId" class="tableDesign"> 
+          <tr>
+		    <td width="14" ></td>
+            <td width="30" ><img  id="file-info-icon" src="{!$Resource.BMCRFSDEFStyles}/Images/shape@2x.png" class="infoClass" title="{!IF(isFileEnabled, $Label.FileLimitInfo, $Label.SS_AttachmentLimit)}" /></td>
+            <td id="FileLabelTD" width="40" ><apex:outputLabel id="FileLabel" style="margin-left: -7px;" value="{!$Label.bmcservicedesk__file}"  /></td>
+            <td width="30" class="paddingForIEseparateBar"><span class="separateBar"/></td>
+            <td width="350" ><apex:inputFile id="inputFile" style="min-height:/*\**/20px\9; vertical-align: middle;margin-left: -12px;" fileName="{!attachment.name}"  fileSize="{!filesize}" value="{!attachment.body}"  size="40"  
+            				onchange="AddAttachment();" disabled="{!isReadonly}" rendered="{!NOT(isFileEnabled)}" />
+            				<apex:outputpanel rendered="{!isFileEnabled}">
+            					<input type="file" id="inputFileHtml" style="min-height:/*\**/20px\9; vertical-align: middle; margin-left: -12px;"  
+            								size="40"  onchange="AddAttachment();"></input>	
+            								
+            								
+            				</apex:outputpanel>
+            	</td>
+            <td class="paddingForIELoading">
+                <div id="loading_img" style="height:15px;display:none;width:20%;" class="progressbar-cls" />
+            </td>
+          </tr>
+        </table>
+	   <span class="rf-padding15Left"></span>
+       <span class="titleAttachment">{!attachmentHeader}</span>
+       <apex:pageBlock id="pBlock">
+       <apex:outputPanel layout="block" style="height: 270px;"  rendered="{!isParentObjectAccessible}">
+          <apex:pageBlockTable value="{!AttachmentData}" var="item" style="width:100%;" id="pgeBlkId" columnsWidth="20%,30%,20%,30%">
+            <apex:column headerValue="{!JSENCODE($Label.bmcservicedesk__action)}">
+               <a href="{!if(item.isFile,'/'+item.contentDocumentId,'/servlet/servlet.FileDownload?file='+item.Id)}" style="color:#00a79d !important;" class="actionLink" onClick="return openAttchment('{!if(item.isFile,item.contentDocumentId,item.Id)}');" >{!JSENCODE($Label.View)}</a>
+              <apex:outputpanel rendered="{!IF(isReadonly == true,false,true)}"> <span style="color:#999999">|</span>
+              <a style="color:#00a79d !important;padding-right:5px;" class="actionLink" onClick="deleteAttachmentHandler('{!if(item.isFile,item.contentDocumentId,item.Id)}');" >{!JSENCODE($Label.Del)}</a>
+              </apex:outputpanel>
+              </apex:column>
+             
+              <apex:column headerValue="{!JSENCODE($Label.bmcservicedesk__file)}">
+                  <div class="fileNameColumn"><apex:outputText value="{!item.name}" title="{!item.name}"/></div>
+              </apex:column>        
+              <apex:column headerValue="{!JSENCODE($Label.bmcservicedesk__dateandtime)}" > 
+                  <div class="textnoWrap"><apex:outputText value="{!item.LastModifiedDateStr}" title="{!item.LastModifiedDateStr}"/></div>
+              </apex:column>  
+
+              
+              <apex:column headerValue="{!JSENCODE($Label.bmcservicedesk__createdby)}">
+                <div class="textnoWrap"><a  style="color:#00a79d !important;" href="/{!item.CreatedById}" class="actionLink" >{!item.CreatedByName}</a></div>
+              </apex:column>
+          </apex:pageBlockTable>
+    </apex:outputPanel>
+        <div id="toolbarDiv"  class="border1px" style="padding: 5px;">  
+            <div id="paginationBar" style="float: left;">
+                <span >
+                     <apex:outputPanel rendered="{!IF(!disablePrevious == true,true,false)}">
+                        <span class="d-icon-angles_left firstPageEnableClass" title="{!$Label.FirstPage}" onClick="first();"/>&nbsp; 
+                        <span class="d-icon-angle_left previousPageEnableClass" title="{!$Label.PreviousPage}" onClick="return previous();"/>&nbsp;&nbsp;&nbsp;&nbsp; 
+                        <span class="previousNextEnabledLabel" onClick="return previous();">{!$Label.Previous}</span>&nbsp;&nbsp; 
+                    </apex:outputPanel>
+                    <!-- &nbsp;&nbsp;<span class="paginationSeperator"/>&nbsp;&nbsp;  -->
+                    <apex:outputPanel rendered="{!IF(!disablePrevious == false,true,false)}">
+                            <span class="d-icon-angles_left firstPageDisableClass" title="{!$Label.FirstPage}"/>&nbsp; 
+                            <span class="d-icon-angle_left previousPageDisableClass" title="{!$Label.PreviousPage}"/>&nbsp;&nbsp;&nbsp;&nbsp; 
+                            <span class="previousNextDisabledLabel" title="{!$Label.PreviousPage}">{!$Label.Previous}</span>&nbsp;&nbsp; 
+                    </apex:outputPanel>
+                    &nbsp;&nbsp;<span class="paginationSeperator"/>&nbsp;&nbsp;&nbsp;&nbsp;  
+                </span >
+            
+                <span>
+                  <apex:outputPanel rendered="{!IF(!disableNext == true,true,false)}">
+                          <span class="previousNextEnabledLabel" title="{!$Label.NextPage}" onClick="return next();">{!$Label.Next}</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                          <span class="d-icon-angle_right nextPageEnableClass" title="{!$Label.NextPage}" onClick="return next();"/>&nbsp;
+                          <span class="d-icon-angles_right lastPageEnableClass" title="{!$Label.LastPage}"   onClick="end();"/>&nbsp;&nbsp;  
+                  </apex:outputPanel>                  
+                  
+                  <apex:outputPanel rendered="{!IF(!disableNext == false,true,false)}">
+                          <span class="previousNextDisabledLabel" title="{!$Label.NextPage}">{!$Label.Next}</span>&nbsp;&nbsp;&nbsp;&nbsp;  
+                          <span class="d-icon-angle_right nextPageDisableClass" title="{!$Label.NextPage}" />&nbsp;
+                          <span class="d-icon-angles_right lastPageDisableClass" title="{!$Label.LastPage}" />&nbsp;&nbsp;
+                  </apex:outputPanel>
+                </span> 
+            </div>
+            
+            <div id="recordCount" style="float: right;">    
+                 <apex:outputPanel rendered="{!IF(total_size > 0 && !disablePrevious == false &&  !disableNext == true ,true,false)}">             
+                            <span >
+                       {!$Label.Files} 1 - {!page_size} {!$Label.of} {!total_size}                                       
+                       </span>
+                  </apex:outputPanel>
+
+                  <apex:outputPanel rendered="{!IF(total_size > 0 && !disablePrevious == false &&  !disableNext == false,true,false)}">               
+                            <span >
+                       {!$Label.Files} 1 - {!total_size} {!$Label.of} {!total_size}                                       
+                       </span>
+                  </apex:outputPanel>
+                
+                  <apex:outputPanel rendered="{!IF(total_size > 0 && !disableNext == true && !disablePrevious == true,true,false)}">            
+                            <span >
+                       {!$Label.Files} {!((currentpage-1) * page_size)+1} - {!(currentpage * page_size)} {!$Label.of} {!total_size}                                       
+                       </span>
+                  </apex:outputPanel>
+                  <apex:outputPanel rendered="{!IF(total_size > 0 && !disableNext == false && !disablePrevious == true,true,false)}">               
+                            <span >
+                        {!$Label.Files} {!((currentpage-1) * page_size)+1} - {!total_size} {!$Label.of} {!total_size}                                       
+                       </span>
+                  </apex:outputPanel>
+                  <apex:outputPanel rendered="{!IF(total_size == 0,true,false)}">           
+                            <span >
+                       {!$Label.cmdblistviewcustnorecordsfound}                           
+                       </span>
+                  </apex:outputPanel>
+            </div>
+        </div>
+      </apex:pageBlock> 
+    <script>
+      var userlocale = '{!JSENCODE(userlocale)}';
+    var FileLabelwidth = 40;
+    if( userlocale.startsWith('es') ) {
+    	FileLabelwidth = 50;
+    }
+    document.getElementById('FileLabelTD').width = FileLabelwidth;
+    
+    </script>
+    <apex:outputpanel id="refreshAttRefGeneratorId">
+        <script>
+        var message = '{!validateUrlAndAttachment}';
+        if(message != null && message != '')
+          alert(message);
+        var namespace = 'BMCServiceDesk__';
+        var confirmationMessage = '{!JSENCODE($Label.DeleteConfirmMessage)}';
+        var inputfileid = '{!$Component.mainFormId.inputFile}';
+        var isFileEnabled={!isFileEnabled};
+        var MaxSizeLimit = '{!JSENCODE($Label.SSDocumentSizeLimitExceedsMessage)}';
+        var MaxFileSizeLimit = '{!JSENCODE($Label.FileLimit)}';
+		var AttRefGeneratorID='{!JSENCODE(AttRefGeneratorID)}';
+		var error = "{!JSENCODE($Label.Error)}";
+        var parentID = '{!JSENCODE(parentId)}';
+        var isChatAttachment = Boolean('{!JSENCODE(IF(isChatAttachment==null || isChatAttachment == "" ,"","true"))}');
+        var maxAttachmentSizeInBytes = {!MaxAttachmentSize};
+		var maxFileSizeInBytes = {!MaxFileSize};
+        var fileUploadFailed = '{!JSENCODE($Label.FileUploadFailed)}';
+		var FileLengthZeroKB = '{!JSENCODE($Label.FileLengthZeroKB)}';
+        if(AttRefGeneratorID != null && AttRefGeneratorID != '')
+        {
+            window.opener.AttRefGeneratorID=AttRefGeneratorID;
+            window.opener.setAttRefGeneratorId(AttRefGeneratorID);
+        }
+        var client = new forcetk.Client();
+
+      	client.setSessionToken('{!$Api.Session_ID}');
+       </script>
+    </apex:outputpanel>
+      <apex:outputpanel id="refreshAfterDelete">
+      <script>
+      var refreshParentWin={!refreshParent};
+      </script>
+      </apex:outputpanel>
+  </apex:form>
+  <script src="{!$Resource.ExtJS4_1_3}/ext-all.js" type="text/javascript" />
+  <script src="{!$Resource.SDEFCommonJS}/StaffAttachment.js"  type="text/javascript" />
+  <script>
+    triggerAttachmentCountEvent('{!total_size}');
+  </script>
+</apex:page>

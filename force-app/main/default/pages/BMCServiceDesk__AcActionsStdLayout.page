@@ -1,0 +1,446 @@
+<apex:page showHeader="false"  cache="true" standardStylesheets="true" controller="BMCServiceDesk.AcActionsController" extensions="BMCServiceDesk.CMDBRemoteActions">
+<head><title>{!if(isACEnabled,JSENCODE($Label.ACActions),JSENCODE($Label.RFActions))}</title>
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+<style>
+	.clsHierarchySelectOption{
+		color: #000000;
+	    font-family: Salesforce sans !important;
+	    font-size: 13px;
+    	font-style: normal;
+    	font-weight: normal;
+    	text-decoration: none;
+    	width:340px;
+    	height:230px;
+	}
+	.clsMainTable{
+		margin: 0px;
+		padding-left: 15px;
+	}
+	.clsOutputLabel{
+		color: #000000;
+	    font-family: Salesforce sans !important;
+	    font-size: 12px;
+	    font-style: normal;
+    	font-weight: normal;
+	    padding: 2px 2px 2px 5px;
+	    vertical-align: top;
+	    width: 195px;
+	}
+	.clsLabelBold{
+    	color: #333333;
+	    font-family: Salesforce sans !important;
+	    font-size: 12px;
+	    font-style: normal;
+	    font-weight: bold;
+	    text-decoration: none;
+	    text-align:left;
+	}
+	.tbody{
+		padding: 0px;
+		margin: 0px;
+	}
+	.infoIconCls{
+		 background-image:"{!$Resource.SDEFStyles}/SDEFbuttons/status-11-information.gif";
+	}
+	.clsBtnBg{
+		background-color:#f2f2f2 ;
+		width:100%;
+		height: 100%;; 
+	}
+	.clsPadding10{
+		padding-left: 10px;
+	}
+	.btnwidth {
+		width:70px;
+	}
+    #goBtnId.btnDisabled {
+    	opacity: 0.6;
+    }
+    #goBtnId {
+    	height: 22px;
+        padding: 0px 14px;
+        font-size: 12px;
+    	font-family: Salesforce sans !important;
+        line-height: 14px;
+        display: inline-block;
+        border-radius: 2px;
+        cursor: pointer;
+        vertical-align: middle;
+        white-space: nowrap;
+        background-image: none !important;
+        color: #ffffff !important;
+        border-width: 1px;
+        border-style: solid;
+        border-color: #f86e00 !important;
+        background-color: #F86E00 !important
+    }
+    
+    #cancelBtnId, #closeBtnId {
+        height: 22px;
+        padding: 0px 10px;
+    	font-family: Salesforce sans !important;
+        font-size: 12px;
+        line-height: 14px;
+        display: inline-block;
+        color: #333;
+        border: 1px solid #A5A5A5 !important;
+        border-radius: 2px;
+        cursor: pointer;
+        vertical-align: middle;
+        white-space: nowrap;
+        background-image: none !important;
+        background-color: #ffffff !important;
+    }
+    .clsPadding10 label {
+    	font-family: Salesforce sans !important;
+        font-size: 12px;
+    }
+    
+	
+</style>
+</head>
+<body>
+<script>
+	var actionContext = '';
+	var acError  =  '{!JSENCODE(acErrMsg)}';
+    var deviceId = '{!JSENCODE(deviceId)}';
+    var isDiscoveryEnabled = {!isDiscoveryEnabled};
+    var isACEnabled = {!isACEnabled};
+    var isACCertified = {!isACCertified};
+    var baseURL = '{!JSENCODE(BCMbaseURL)}';
+    var isManualOSSelectionEnabled = {!manualOSSelectionEnabled};
+	var osCookieVal = '';
+	if(isManualOSSelectionEnabled && Ext.util.Cookies.get('apex__OSForBCMBinary')){
+        osCookieVal = Ext.util.Cookies.get('apex__OSForBCMBinary');
+    }
+    
+    var makeAPICallsFromServer = {!makeAPICallsFromServer};
+    if(!makeAPICallsFromServer && (!!navigator.userAgent.match(/Trident.*rv\:11\./))){
+        makeAPICallsFromServer = true;
+    }
+    
+</script>
+<apex:outputpanel id="dirConnErrPanel">
+	<script>
+   	acError =  '{!JSENCODE(acErrMsg)}';
+    </script>
+</apex:outputpanel>
+<apex:form id="ciActionsForm">
+          
+    <apex:outputpanel id="BCMBinaryPanelId">
+        <script>
+            var BCMBinaryResponse = '{!JSENCODE(BCMBinaryResponse)}';
+        </script>
+    </apex:outputpanel>
+	
+	<apex:actionregion >
+    	<apex:actionFunction name="directConnectACDevice" action="{!directConnectDevice}" rerender="dirConnErrPanel,counterStatus"  status="counterStatus" onComplete="checkACError();">
+    		<apex:param name="actionContext" value=""/>
+    	</apex:actionFunction>
+    </apex:actionregion>
+    
+    <apex:actionFunction name="getBinaryFileForBCMAction" action="{!getBinaryFileForBCMAction}" rerender="BCMBinaryPanelId" oncomplete="BCMBinaryOnComplete();">
+        <apex:param name="deviceId" assignTo="{!BCMdeviceId}" value=""/>
+        <apex:param name="action" assignTo="{!action}" value=""/>
+        <apex:param name="contextId" assignTo="{!contextId}" value=""/>
+        <apex:param name="os" assignTo="{!os}" value=""/>
+        <apex:param name="requestcontext" assignTo="{!requestcontext}" value=""/>
+    </apex:actionFunction>
+    
+    <apex:actionRegion >
+   		<apex:actionFunction name="launchConsole" action="{!launchConsole}" />
+    </apex:actionRegion>
+     <div id="capsule">
+     	<apex:outputpanel rendered="{!NOT(isACEnabled || isDiscoveryEnabled)}">
+     		<table class="clsMainTable">
+	         	<tr height="20"/>
+		        <tr>
+		        	<td><apex:image url="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'SDEFicons/AC_info_icon.png')}" /></td>
+		        	<td class="clsPadding10"><apex:outputlabel value="{!$Label.bmcservicedesk__acconfigmissing}"/><apex:outputlabel value="{!inc.FKBMC_BaseElement__r.BMCServiceDesk__InstanceID__c}"/></td>
+		        </tr>
+		        <tr height="20"/>
+	          </table>
+			  <table class="clsBtnBg">    
+	         	<tr height="35">
+	         		<td class="clsPadding10"><input type="button" class="btn" value="{!$Label.Close}" id="closeBtnId" onclick="window.close();"/></td>
+	         	</tr>
+	         	<tr height="5"/>
+		      </table>
+	         <script>
+	         		window.resizeTo(420,195);
+	         		window.document.title = '{!JSENCODE($Label.ACTitleNoActions)}';
+	         </script>	
+     	</apex:outputpanel>
+     	<apex:outputpanel rendered="{!OR(isACEnabled,isDiscoveryEnabled)}">
+     	<apex:outputpanel rendered="{!NOT(ISNULL(inc.BMCServiceDesk__FKBMC_BaseElement__c))}">
+     	<apex:outputpanel rendered="{!NOT(isFPLoginAvail)}">
+     		<script>
+     			var fpLoginScreenWidth = 476;
+				var fpLoginScreenHeight = 186;
+				function fpLoginScreenLeft(){
+				return parseInt((screen.availWidth/2) - (fpLoginScreenWidth/2));
+				}
+				function fpLoginScreenRight(){
+				return parseInt((screen.availWidth/2) - (fpLoginScreenHeight/2));
+				}
+				window.open('/apex/ACFPUserCredentialPage?standardLayout=true&stdForm=true&reqContextId={!CASESAFEID(inc.Id)}&objectType=Incident__c',null,"status=1,height="+fpLoginScreenHeight+",width="+fpLoginScreenWidth+",left="+fpLoginScreenLeft()+",top="+fpLoginScreenRight()+",resizable=1,scrollbars=no");  
+     		</script>
+     	</apex:outputpanel>
+     	</apex:outputpanel>
+     	<apex:outputpanel rendered="{!isFPLoginAvail}">
+     	<apex:outputpanel rendered="{!NOT(ISBLANK(acErrMsg))}">
+     		<table class="clsMainTable">
+	         	<tr height="20"/>
+		        <tr>
+		        	<td><apex:image url="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'SDEFicons/AC_info_icon.png')}" /></td>
+		        	<td class="clsPadding10"><apex:outputlabel value="{!acErrMsg}"/></td>
+		        </tr>
+		        <tr height="20"/>
+	          </table>
+			  <table class="clsBtnBg">    
+	         	<tr height="35">
+	         		<td class="clsPadding10"><input type="button" class="btn" value="{!$Label.Close}" id="closeBtnId" onclick="window.close();"/></td>
+	         	</tr>
+	         	<tr height="5"/>
+		      </table>
+	         <script>
+	         		window.resizeTo(420,195);
+	         		window.document.title = '{!JSENCODE($Label.Error)}';
+	         </script>
+     	</apex:outputpanel> 
+     	<apex:outputpanel rendered="{!ISBLANK(acErrMsg)}">
+     	<apex:outputpanel rendered="{!actionsAvailable}">
+         	<table cellspacing="0" cellpadding="0" class="clsMainTable">
+         	<tr height="20"></tr>
+         	<!-- 
+         	<tr>
+         		<apex:actionStatus startText=" (Loading...)"  id="counterStatus"/>
+         	</tr>
+         	 -->
+         	<tr>
+         		<td>
+         			<apex:outputlabel styleClass="clsLabelBold" value="{!$Label.bmcservicedesk__ciexpconfigurationitem}:"/>
+         			<apex:outputText id="BMC_BaseElement__c_id_InstanceID__c" styleClass="clsOutputLabel" value="{!inc.FKBMC_BaseElement__r.BMCServiceDesk__Name__c}"/>
+         		</td>
+         	</tr>
+         	<tr height="10"><td /></tr>
+         	<tr><td><apex:outputlabel styleClass="clsLabelBold" value="{!$Label.bmcservicedesk__acavailableactions}"></apex:outputlabel></td></tr>
+         	<tr height="10"><td /></tr>
+            <tr>
+                <td class="clsInputLabelTD1">
+                     <apex:selectList id="ciActionId" styleclass="clsHierarchySelectOption" value="{!ciAction}" size="10" onclick="actionContext=this.value;enableGoBtn();">
+                              <apex:selectOptions value="{!ciActionOptions}"/>                                                             
+                      </apex:selectList>
+                           
+                </td>
+            </tr>
+            <tr height="10"><td /></tr>
+            <apex:outputlabel rendered="{!renderNote}">
+            <tr>
+            	<td>
+            		<apex:outputlabel styleClass="clsLabelBold" value="{!$Label.bmcservicedesk__note}:"/>
+            		<apex:outputlabel value="{!DisabledText}" escape="false"/>
+            	</td>
+            </tr>
+            <tr height="10"><td /></tr>
+         	</apex:outputlabel>
+         </table>
+         <table class="clsBtnBg">
+         	<tr height="5"/>
+         	<tr>
+         		<td class="clsPadding10">
+                	<input type="button" disabled="disabled" class="btnDisabled btnwidth" value="{!$Label.ACGo}" id="goBtnId" onclick="performACAction();"/>
+               		<input type="button" class="btn btnwidth" value="{!$Label.Cancel}" id="cancelBtnId" onclick="window.close();"/>
+            	</td>
+         	</tr>
+         	<tr height="5"/>
+         </table>
+         </apex:outputpanel>
+         <apex:outputpanel rendered="{!AND(NOT(actionsAvailable),NOT(ISNULL(inc.BMCServiceDesk__FKBMC_BaseElement__c)))}">
+			 <table class="clsMainTable">
+	         	<tr height="20"/>
+		        <tr>
+		        	<td><apex:image url="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'SDEFicons/AC_info_icon.png')}" /></td>
+		        	<td class="clsPadding10"><apex:outputlabel value="{!$Label.bmcservicedesk__acnoactions}"/><apex:outputlabel value="{!inc.FKBMC_BaseElement__r.BMCServiceDesk__InstanceID__c}"/></td>
+		        </tr>
+		        <tr height="20"/>
+	          </table>
+			  <table class="clsBtnBg">    
+	         	<tr height="35">
+	         		<td class="clsPadding10"><input type="button" class="btn" value="{!$Label.Close}" id="closeBtnId" onclick="window.close();"/></td>
+	         	</tr>
+				 <tr height="5"/>
+		      </table>
+	         <script>
+	         		window.resizeTo(375,195);
+	         		window.document.title = '{!$Label.ACTitleNoActions}';
+	         </script>
+         </apex:outputpanel>
+         
+         </apex:outputpanel>
+         </apex:outputpanel>
+         <apex:outputpanel rendered="{!ISNULL(inc.BMCServiceDesk__FKBMC_BaseElement__c)}">
+         	<table class="clsMainTable">
+         		<tr height="20"/>
+	         	<tr>
+		         	<td><apex:image url="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'SDEFicons/AC_info_icon.png')}" /></td>
+		         	<td class="clsPadding10"><apex:outputlabel value="{!$Label.bmcservicedesk__acnolinkedci}"/></td>
+		         </tr>
+		         <tr height="20"/>
+		    </table>
+		    <table class="clsBtnBg">     
+	         	<tr height="35">
+	         		<td class="clsPadding10"><input type="button" class="btn" value="{!$Label.Close}" id="closeBtnId" onclick="window.close();"/></td>
+	         	</tr>
+	         	<tr height="5"/>
+         	</table>
+         	<script>
+         		window.document.title = '{!JSENCODE($Label.ACTitleNoCI)}';
+         	</script>
+         </apex:outputpanel>
+         
+         
+     	</apex:outputpanel>
+     </div>
+</apex:form>
+<script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}" />
+
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/CommonRFDiscovery.js"/>
+
+<script>
+	var devSummaryWidth = 700;
+	var devSummaryHeight = 650;
+	var jnlpWin = null;
+	var appVer = navigator.appVersion;
+	_RemotingActions={};
+	_RemotingActions.getWebConsoleUrl = "{!$RemoteAction.CMDBRemoteActions.getWebConsoleUrl}";
+	
+	function devSummaryScreenLeft(){
+		return parseInt((screen.availWidth/2) - (devSummaryWidth/2)); 	
+	}
+	function devSummaryScreenTop(){
+		return parseInt((screen.availHeight/2) - (devSummaryHeight/2));
+	}
+	function enableGoBtn(){
+		var goBtnEle = document.getElementById('goBtnId');
+		if(goBtnEle !=null){
+			goBtnEle.disabled=false; 
+			if(appVer.indexOf('MSIE 7.0') != -1){
+				goBtnEle.className = "btn btnwidth";
+			}else{
+			goBtnEle.setAttribute("class","btn btnwidth");
+		}
+	}
+	}
+	
+	function checkACError(){
+  		if(acError !=''){
+		 	alert(acError);
+		}else{
+			
+			if ((appVer.indexOf('MSIE 8.0') > 0) || (appVer.indexOf('MSIE 7.0') > 0) || (appVer.indexOf('Safari') > 0)) {
+				jnlpWin = window.location.assign('/apex/ACDirectConnectFromStd?actionContext='+actionContext+'&deviceId={!deviceId}&reqContexId={!URLENCODE($CurrentPage.parameters.reqContextId)}', '', 'top='+parseInt((screen.availHeight/2)-50)+',left='+parseInt((screen.availWidth/2)-50)+',height=1,width=1');
+				//setInterval(function(){if(jnlpWin!=null)jnlpWin.close()},3000);
+			} else {
+				launchConsole();
+			}
+			
+	 	}
+	}
+
+	function performACAction(){
+	 	if(actionContext != null && actionContext != ''){
+			if(actionContext == 'Registry' || actionContext == 'Events' || actionContext == 'Processes' || actionContext == 'Services' || actionContext == 'ConfigSummary'){
+                window.open('/apex/AcActions?incidentId={!inc.id}'+'&showJapaneseHelp=false&actionContext='+actionContext+'&selectedBEId={!inc.FKBMC_BaseElement__c}',null,"status=1,height="+devSummaryHeight+",width="+devSummaryWidth+",left="+devSummaryScreenLeft()+",top="+devSummaryScreenTop()+",resizable=1,scrollbars=yes");         
+            }
+	 		else if(actionContext=='Advance Action'){
+		 		var advActionheight;
+		 		if(appVer.indexOf('MSIE') > 0)
+		 			advActionheight = 455;
+		 	    else if(appVer.indexOf('Chrome')>0)
+		 	   		 advActionheight = 457;
+		 		else
+		 			advActionheight = 462;
+		 		var advActionTop = parseInt((screen.availHeight/2) - (advActionheight/2));
+		 		window.open('/apex/ACAdvanceActions?standardLayout=true&stdForm=true&forAdvAction=true&IncId='+'{!URLENCODE($CurrentPage.parameters.reqContextId)}',null,"status=1,height="+advActionheight+",width=700,left="+devSummaryScreenLeft()+",top="+advActionTop+",resizable=0,scrollbars=no");
+		 	}else{
+                if(actionContext != 'PerformAudit'){
+                    var action = actionContext;
+					if(action == 'RemoteControl'){
+						action = 'rcd';
+					}
+                    var deviceIdPrefix = 'AC:CS:-';
+                    if(deviceId.indexOf(deviceIdPrefix) != -1){
+                        deviceId = deviceId.substring(deviceIdPrefix.length, deviceId.length);
+                    }
+                    
+                    if(!makeAPICallsFromServer && (isDiscoveryEnabled || (isACEnabled && isACCertified))){
+                        context = 'SessionId';
+                    }else{
+                        context = 'CMDBAction';
+                    }
+                    var os = '';
+                    if((makeAPICallsFromServer) || (isACEnabled && !isACCertified)){
+                        os = getCurrentMachinesOS();
+                    }
+					
+                    var reqContextId='{!JSENCODE(inc.id)}';
+					if(actionContext == 'RemoteControl') {
+						Visualforce.remoting.Manager.invokeAction(_RemotingActions.getWebConsoleUrl,deviceId,actionContext,reqContextId,null, function(result, event){
+							if (result && !result.acErrorCode && result.responseBody && result.responseBody != ''){
+								var screenWidth = 1000;
+								var screenHeight = 600;
+								window.open(encodeURI(result.responseBody),"_blank","status = 1,height ="+screenHeight+",width ="+ screenWidth+",left="+devSummaryScreenLeft(screenWidth)+",top="+devSummaryScreenTop(screenHeight)+", resizable = yes, scrollbars=yes" );
+							} else {
+								getBinaryFileForBCMAction(deviceId, action, context, os,reqContextId);
+							}
+						},{escape:false});
+					} else {
+						getBinaryFileForBCMAction(deviceId, action, context, os,reqContextId);
+					}
+                }else{
+                    directConnectACDevice(actionContext);
+                }
+            }
+        }
+     }
+	 function refreshParent(){
+	    var iscalledfromconsole='{!URLENCODE($CurrentPage.parameters.isCalledFromConsole)}'
+	    if(iscalledfromconsole=='true')
+	    {
+	    	window.opener.refreshIncident();
+	    }
+	    else
+	    {
+	 	window.opener.location.href = '/{!URLENCODE($CurrentPage.parameters.reqContextId)}';
+	 	}
+	 	window.close();
+	 }
+	 if({!isFPLoginAvail}){
+	 	var active_element;
+    	var bIsMSIE;
+		if(appVer.indexOf('MSIE') > 0){
+			document.onfocusout = closeWnd;
+			active_element = document.activeElement;
+			bIsMSIE = true;
+        }
+		//else { window.onblur = closeWnd; }
+	 }
+	 
+		function closeWnd(){
+			if (bIsMSIE && (active_element != document.activeElement)) {
+            	active_element = document.activeElement;
+			}
+            else
+            {
+            	if (actionContext != 'Advance Action'){ 
+            		if(appVer.indexOf('Safari') > 0)
+            			setInterval(function(){window.close()},4000); 
+            		//else
+            		//window.close();
+            	}
+			}
+		}
+</script>
+</body>
+</apex:page>

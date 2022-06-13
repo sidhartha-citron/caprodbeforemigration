@@ -1,0 +1,87 @@
+<aura:component controller="ProductCatalog">
+    <aura:attribute name="record" type="ProductCatalog.CartItem"/>
+    <aura:attribute name="frequencyOptions" type="ProductCatalog.FrequencySelectOption[]"/>
+    <aura:attribute name="prevProds" type="Map"/>
+    <aura:attribute name="orderStatus" type="String"/>
+    <aura:attribute name="orderActiveStatus" type="String"/>
+    
+    <aura:registerEvent name="addProd" type="c:catalogItemEvent"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    
+    <div class="slds-hide" aura:id="theModal">
+        <div role="dialog" tabindex="-1" aria-labelledby="prompt-heading-id" aria-describedby="prompt-message-wrapper" class="slds-modal slds-fade-in-open slds-backdrop slds-modal--prompt">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <lightning:buttonIcon class="slds-button slds-modal__close" iconName="utility:close" variant="border-inverse" onclick="{!c.closeModal}" alternativeText="{!$Label.c.Close}" size="medium" />
+                </div>
+                
+                <div class="slds-modal__content slds-p-around--medium">
+					<section class="slds-popover slds-popover--walkthrough" role="dialog" aria-labelledby="dialog-heading-id-54" aria-describedby="dialog-body-id-54">
+                        <header class="slds-popover__header slds-p-vertical--small">
+                            {!v.record.name}
+                        </header>
+                        <div class="slds-popover__body" id="dialog-body-id-54">
+                            <img src="{!v.record.imageURL}" alt="No Image"/>
+                        </div>
+                        <ui:outputRichText value="{!v.record.prodRichText}"/>
+                    </section>
+                </div>
+                <div class="slds-modal__footer slds-theme--default" aura:id="divButtons">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <lightning:card class="slds-p-around--small slds-m-around--xx-small">
+        <aura:set attribute="title">
+            <div class="slds-media__figure slds-image">
+                <img src="{!v.record.imageURL}" alt="{!$Label.c.No_Image}" height="50" width="50" onclick="{!c.showModal}"/>
+                <div class="slds-hide slds-is-absolute" aura:id="imageModal">
+                    <section class="slds-popover slds-popover--walkthrough" role="dialog" aria-labelledby="dialog-heading-id-54" aria-describedby="dialog-body-id-54">
+                        <header class="slds-popover__header slds-p-vertical--small slds-truncate_container_66">
+                            {!v.record.name}
+                        </header> 
+                        <div class="slds-popover__body" id="dialog-body-id-54">
+                            <img src="{!v.record.imageURL}" alt="{!$Label.c.No_Image}"/>
+                        </div>
+                    </section>
+                </div> 
+            </div>
+        </aura:set>
+        <p class="slds-p-horizontal--small">
+            <div class="slds-media__body slds-m-left--xx-small" title="{!v.record.name}">
+                <div class="slds-truncate_container" style="color:#72bd42;">
+                    <div class="slds-truncate" title="{!v.record.name}">{!v.record.name}</div>
+                </div>
+            </div>
+        </p>
+
+        <div class="slds-p-horizontal_small prodFooter">
+            <ui:outputText value="{!$Label.c.Product_Quantity + ': '}" class="slds-float--left"/>
+            <!--<lightning:input type="number" value="{!v.record.quantity}" label="Quantity: " min="0" aura:id="qty" class="slds-align__absolute-center qtyInput" variant="label-hidden"/>-->
+            <ui:inputNumber aura:id="qty" value="{!v.record.quantity}" class="qtyInput" change="{!c.checkBounds}"/>
+            
+            <br/>
+            
+            <ui:outputText value="{!$Label.c.Product_Frequency + ': '}" class="slds-float--left slds-m-top--xx-small"/>
+            <!--<lightning:select value="{!v.record.item.Frequency__c}" label="Price: " class="slds-align__absolute-center qtyInput" variant="label-hidden" aura:id="prodFreq" onchange="{!c.changeFreq}">-->
+            <ui:inputselect value="{!v.record.item.Frequency__c}" class="qtyInput slds-m-top--xx-small" aura:id="prodFreq" change="{!c.changeFreq}">
+                <aura:iteration items="{!v.frequencyOptions}" var="o">
+                    <ui:inputSelectOption text="{!o.option.value}" label="{!o.option.label}" value="{!v.record.item.Frequency__c == o.option.value}"/>
+                </aura:iteration>
+            </ui:inputselect>
+            <!--</lightning:select>-->
+            <br/>
+            
+            <ui:outputText value="{!$Label.c.Unit_Price + ': '}" class="slds-float--left slds-m-top--xx-small"/>
+			<span class="slds-p-around__xx-small slds-m-top--small slds-m-bottom--xx-small unitPrice" aura:id="thePrice">
+                <ui:outputCurrency value="{!v.record.discountedPrice}"/>
+            </span>
+        </div>
+        <aura:if isTrue="{! not(v.orderStatus == v.orderActiveStatus)}">
+        	<lightning:button variant="brand" label="{!$Label.c.Add_to_Cart}" onclick="{!c.addButtonClick}" class="slds-align--absolute-center slds-m-top--xx-small" aura:id="theButton"/>
+        </aura:if>
+        
+    </lightning:card>
+</aura:component>

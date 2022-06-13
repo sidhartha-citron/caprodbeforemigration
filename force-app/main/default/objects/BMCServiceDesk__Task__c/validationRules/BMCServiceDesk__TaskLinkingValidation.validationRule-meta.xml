@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BMCServiceDesk__TaskLinkingValidation</fullName>
+    <active>true</active>
+    <description>Verifies that a task is linked to only one object (Incident, Change Request, or Problem or Release) at a time.</description>
+    <errorConditionFormula>OR(
+						AND (  NOT( ISBLANK ( BMCServiceDesk__FKChange__c ) ) , NOT( ISBLANK ( BMCServiceDesk__FKIncident__c )) ),
+						AND ( NOT( ISBLANK (  BMCServiceDesk__FKProblem__c  ) ) , NOT( ISBLANK ( BMCServiceDesk__FKChange__c ) ) ),
+						AND ( NOT( ISBLANK ( BMCServiceDesk__FKIncident__c ) ) , NOT( ISBLANK ( BMCServiceDesk__FKProblem__c ) ) ),
+						AND ( NOT( ISBLANK (  BMCServiceDesk__FKRelease__c  ) ) , NOT( ISBLANK ( BMCServiceDesk__FKChange__c ) ) ),
+						AND ( NOT( ISBLANK (  BMCServiceDesk__FKProblem__c  ) ) , NOT( ISBLANK ( BMCServiceDesk__FKRelease__c ) ) ),
+						AND ( NOT( ISBLANK (  BMCServiceDesk__FKIncident__c  ) ) , NOT( ISBLANK ( BMCServiceDesk__FKRelease__c ) ) ))</errorConditionFormula>
+    <errorMessage>A task can be linked to only one object (Incident or Change Request or Problem or Release) at a time</errorMessage>
+</ValidationRule>

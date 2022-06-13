@@ -1,0 +1,319 @@
+<apex:page standardStylesheets="false" showHeader="false" controller="BMCServiceDesk.AdminSelfServiceController" action="{!AdminSSIncidentInit}">
+  <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/> 
+  <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSSIncident.css" id="incidentCSS"/>
+  <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+  <style>    
+    .x-window-header-text {
+        font-size: 12px;
+    }
+    .clsheaderalign{
+		*margin-left:19px;
+		margin-left:10px\0/;
+		color: #004376;
+		font-size: 10pt;
+		font-weight: bold;
+		font-family: arial;
+	}
+    </style>  
+  <apex:form id="form">
+  
+
+  
+    <div id="toolbar"></div>
+    <div id="helpDiv" class="clshelpDiv"></div>
+    <apex:outputPanel id="mainOutputPanel"  styleClass="ClsContainer">
+    <div class="clsMainContainer">
+      
+         <table>
+                                        <tr>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <td class="clsInputLabelTD">
+                                                          <apex:outputLabel value="{!$Label.bmcservicedesk__incidentassignment}" /><span class="clsRequiredBlack">&nbsp;*</span>
+                                                        </td>
+                                                        <td  class="clsInputTextBoxTD">
+                                                          <apex:inputText id="assignValue"  value="{! selfServiceBean.Assigned_Queue_to_Incident}" title="{!$Label.bmcservicedesk__incidentdropbutton}"  styleClass="clsInputTextBoxReadOnly" onmouseover="setReadOnly();"  style="background-color:white;"/>
+                                                        </td>
+                                                        <td class="lookupIconTD">
+                                                          <div class="lookUpIconDiv">
+                                                              <apex:commandButton onclick="openQueueOnlyPopUp();"  reRender="dummy" styleClass="lookupIconOn" />
+                                                                <script>
+                                                                  function openQueueOnlyPopUp(){
+                                                                    openPopupRF('SearchPage?popupId=Queue&isQueurorUser=true&isLookup=true&queueFor=Incident__c&isOnlyQueueList=true&filterClause='+escape("sobjectType='" + objName +"'"), openQueuePopup, 580,600); 
+                                                                  }
+                                                                </script> 
+                                                            </div>  
+                                                         </td>
+                                                     </tr>
+                                                   </table>
+                                              </td>
+                                        </tr>
+                                        <tr>
+                                            <td><div class="div9pxVspacing"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <table  >
+                                                    <tr>
+                                                        <td class="clsInputCheckBox">
+                                                                <apex:inputCheckbox id="closeIncident" value="{!selfServiceBean.Allow_to_Close_Incident}" onClick="enableRadio();" />
+                                                        </td>
+                                                        <td>
+                                                                <apex:outputLabel value="{!$Label.bmcservicedesk__allowusertocloseincident}" styleClass="clsInputCheckBoxLabel"/>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                      <td class="clsTRHeight"></td><td></td></tr>
+                                                    <tr>
+                                                    
+                                                         <td style="padding-left:10px;">
+                                                           </td><td>
+                                                              <input type="radio" class="checkLabelST" id="required" name="resolution" value="required">{!JSENCODE($Label.IncidentResolutionRequired)}</input><br/>
+                                                              <div class="clsRadioSeprator"></div>
+                                  <input type="radio" class="checkLabelST" id="notRequired" name="resolution" value="notrequired">{!JSENCODE($Label.IncidentResolutionNotRequired)}</input>
+                                                           </td>
+                                                    
+                                                    </tr>
+                                                    <tr>
+                                                      <td class="clsTRHeight"></td><td></td>
+                                                    </tr>
+                                                    <apex:outputPanel rendered="{!isSSSwitchNewUI}" layout="none">       
+                                                    <tr>
+                                                        <td class="clsInputCheckBox">
+                                                            <apex:inputCheckbox id="copyIncident" value="{!selfServiceBean.Allow_to_Copy_Incident}"/>
+                                                        </td>
+                                                        <td>
+                                                            <apex:outputLabel value="{!$Label.bmcservicedesk__allowclientstocopyincidents}" styleClass="clsInputCheckBoxLabel"/>
+                                                        </td>
+                                                    </tr>
+                                                <tr>
+                                                      <td class="clsTRHeight"></td><td></td>
+                                                    </tr>
+                                                    </apex:outputPanel> 
+                                                    <tr>
+                                                        <td class="clsInputCheckBox">
+                                                            <apex:inputCheckbox id="reopenIncident" value="{!selfServiceBean.Allow_to_Reopen_Incident}"/>
+                                                        </td>
+                                                        <td>
+                                                            <apex:outputLabel value="{!$Label.bmcservicedesk__allowusertoreopenincident}" styleClass="clsInputCheckBoxLabel"/>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                      <td class="clsTRHeight"></td><td></td>
+                                                    </tr>
+                                                    <apex:outputPanel rendered="{!Not(disableSS2Settings)}"
+														layout="none">
+														<tr>
+															<td class="clsInputCheckBox"><apex:inputCheckbox id="submitNewIncidentSS2"
+																	value="{!selfServiceBean.submit_Incident}" /></td>
+															<td><apex:outputLabel value="{!IF(isSSSwitchNewUI,$Label.bmcservicedesk__showsubmitaticketlink,$Label.bmcservicedesk__shownewservicerequestbutton)}"
+																	styleClass="clsInputCheckBoxLabel" /></td>
+														</tr>
+														<tr>
+															<td class="clsTRHeight"></td>
+															<td></td>
+														</tr>
+													</apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!AND(isSSSwitchNewUI,Not(isFreshInstallWithoutSS2))}" layout="none">
+                                                    <tr> 
+                                                        <td class="clsInputCheckBox">
+                                                                <apex:inputCheckbox id="createInc" disabled="{!disableSS2Settings}"
+                                                                	value="{!selfServiceBean.CreateIncForBroadcast}"/>
+                                                        </td>
+                                                        <td>
+                                                                <apex:outputLabel value="{!$Label.bmcservicedesk__allowtosubmitincidentfrombroadcast}"  
+                                                                styleClass="clsInputCheckBoxLabel {!if(disableSS2Settings,'DisabledLabel','')}"/>
+                                                        </td>
+                                                     </tr>
+													  <tr>
+														<td class="clsTRHeight"></td><td></td>
+													  </tr>
+													  </apex:outputPanel>
+                                                    <tr> 
+                                                      <td class="clsInputCheckBox">
+                                                                <apex:inputCheckbox id="showNoteField" value="{!selfServiceBean.Show_Note_field}"/>
+                                                        </td>
+                                                        <td>
+                                                                <apex:outputLabel value="{!$Label.bmcservicedesk__allowusertoaddnotestotheirincidents}" styleClass="clsInputCheckBoxLabel"/>
+                                                        </td>
+                                                     </tr>
+                                                     <tr>
+                                                      <td class="clsTRHeight"></td><td></td>
+                                                     </tr>
+                                                </table>
+                                            </td>    
+                                        </tr>
+                                         <tr>
+                      <td>
+                                               <table >
+                                                    <tr> 
+                                                        <td class="clsInputCheckBox" >
+                                                            
+                                                            <apex:inputCheckbox id="limitClosedIncidents" value="{!selfServiceBean.Limit_Closed_Incidents}" onClick="enableCloseIncidentDays()"/>
+                                                            </td><td>
+                                                            <apex:outputLabel value="{!$Label.bmcservicedesk__incidenthistory}" styleClass="clsInputCheckBoxLabel"/>
+                                                        </td>                                                            
+                                                        <td class="clsInputCheckBox"  >
+                                                            <apex:inputText id="selectDays" maxlength="9"  styleClass=" clsSelectDays" value="{!days}"/>
+                                                        </td>
+                                                        
+                                                        <td class="clsInputCheckBox">
+                                                          <apex:outputLabel styleClass="clsInputCheckBoxLabel" style="padding-top:1px;" value="{!$Label.bmcservicedesk__incidenthistorydays}"/>
+                                                        </td>
+                                                   </tr>
+                                                  </table> 
+                                              </td>
+                                          </tr>
+                                          <tr>
+                                                <td class="clsTRHeight"></td><td></td>
+                                          </tr>
+                                          <tr>
+                                           <td>
+                                            <apex:outputLabel value="{!$Label.bmcservicedesk__enablefilterbystate}" /> 
+                                            <apex:selectRadio value="{!selfServiceBean.Enablefilter}"                                             		
+                                            		layout="pageDirection" styleClass="radioCls">                                 
+                                            <apex:selectOption itemValue="STATE" itemlabel="{!JSENCODE($Label.bmcservicedesk__state)}" />
+                      							<apex:selectOption itemValue="STATUS" itemlabel="{!JSENCODE($Label.bmcservicedesk__status)}"/>    
+                                            <apex:selectOption itemValue="BOTH" itemlabel="{!JSENCODE($Label.bmcservicedesk__stateandstatus)}" /> 
+                                            </apex:selectRadio>
+                                            </td>
+                                          </tr>
+                                          <tr>
+												<td class="clsTRHeight"></td>
+										  </tr>
+											<tr class="{!IF(disableSS2Settings,'','ss2Hide')}">
+												<td class="clsInputCheckBox">
+													<table>											
+														<tr>
+															<td class="clsInputLabelTD" colspan="2">
+																<apex:outputLabel value="{!$Label.bmcservicedesk__submitfromsuperboxsection}" />
+															</td>
+														</tr>														
+														 <tr>
+														 	<td style="margin-left:10px;"></td>
+														 	<td>
+														 		<table style="margin-left:10px">
+														 			<tr>
+														 				<td colspan="3">
+																	 		<div class="clsRadioSeprator"></div>
+																	 		
+																	 		<input type="radio" name="superBoxSubmitRadio" value="IN" id="showTicket" onClick="changeChildrenStatus('IN');" />
+			                                								<apex:outputLabel value="{!$Label.bmcservicedesk__ss_incidenthome}" styleClass="clsInputCheckBoxLabel" />
+		                                								</td>
+		                                							</tr>
+	                                								
+	                                								<tr><td>
+															 			<div class="clsRadioSeprator"></div>
+															 		
+																 		<input type="radio" name="superBoxSubmitRadio" value="SR" id="showRequest" onClick="changeChildrenStatus('SR');" />
+		                                								<apex:outputLabel value="{!$Label.bmcservicedesk__ss_submitrequest}" styleClass="clsInputCheckBoxLabel" />
+	                                								
+	                                									</td>
+					                      								<td class="clsInputTextBoxTD"> 				                      							
+			                                                          		<apex:inputText id="selectedSRValue"  value="{!catchAll_SR_Name}" styleClass="clsInputTextBoxReadOnly" onmouseover="setReadOnly();"  style="background-color:white;"/>
+			                                                          		<input type="text" id="selectSRID" value="" style="display:none;" />
+			                                                        	</td>
+				                                                        <td class="lookupIconTD">
+				                                                          <div class="lookUpIconDiv">
+				                                                              <apex:commandButton id="selectSRLookupBtn" onclick="openRequestDefinitionPopUp();" reRender="dummy" styleClass="lookupIconOn" />
+				                                                                <script>
+				                                                                  function openRequestDefinitionPopUp(){
+				                                                                    openLookupRF('SearchAndLink?txt={!JSENCODE($Component.selectedSRValue)}&frm={!JSENCODE($Component.form)}&parentName=AdminSSIncident&childName=SRM_RequestDefinition__c&isLookUp=SRM_RequestDefinition__c&filterId=&isCustomLookup=false', 600, 1000); 
+				                                                                  }
+				                                                                </script> 
+				                                                            </div>  
+				                                                         </td>
+		                                                         	</tr>
+			                                                        
+			                                                        <tr>
+			                                                        	<td colspan="3"> 
+			                                								<div class="clsRadioSeprator"></div>
+			                                								
+																	 		<input type="radio" name="superBoxSubmitRadio" value="NONE" id="showNone" onClick="changeChildrenStatus('NONE');" />
+			                                								<apex:outputLabel value="{!$Label.bmcservicedesk__none}" styleClass="clsInputCheckBoxLabel" />
+														 				</td>
+														 			</tr>
+														 		</table>
+														 	</td>
+														 </tr>												
+													</table>
+												</td>
+											</tr>
+											<tr class="{!IF(disableSS2Settings,'','ss2Hide')}">
+												<td class="clsTRHeight"></td>
+											</tr>
+										
+                                          <apex:outputPanel rendered="{!disableSS2Settings}" layout="none">
+                                          <tr>
+					                        <td class="clsInputCheckBox" colspan="2" align="left">
+					                            <apex:outputLabel value="{!$Label.bmcservicedesk__salesforce1}" styleClass="clsheaderalign"/>
+												</td> 
+											</tr>
+											<tr><td class="clsTRHeight"></td></tr>
+											</apex:outputPanel>
+											<apex:outputPanel rendered="{!disableSS2Settings}" layout="none">
+											<tr>
+												<td class="clsInputCheckBox" colspan="2" align="left">
+													<table>
+														<tr>
+															<td class="clsInputCheckBox"><apex:inputCheckbox id="submitNewIncident"
+																	value="{!selfServiceBean.submit_Incident}" /></td>
+															<td><apex:outputLabel value="{!IF(isSSSwitchNewUI,$Label.bmcservicedesk__showsubmitaticketlink,$Label.bmcservicedesk__shownewservicerequestbutton)}"
+																	styleClass="clsInputCheckBoxLabel" /></td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+											<tr>
+												<td class="clsTRHeight"></td>
+											</tr>
+										</apex:outputPanel>
+                                    </table>
+        </div>
+     </apex:outputPanel>
+
+  <apex:actionFunction name="save" action="{!saveIncident}"  rerender="" onComplete="showMessage('{!JSINHTMLENCODE(messageString)}');" >
+      <apex:param assignTo="{!selfServiceBean.Allow_incident_resolution}" name="isRequired" value=""/>
+	  <apex:param assignTo="{!selfServiceBean.Submit_IN_SR}" name="submitINSRValue" value=""/>
+	  <apex:param assignTo="{!selfServiceBean.CatchAll_SR_ID}" name="catchAllSRID" value=""/>
+  </apex:actionFunction>
+  <apex:actionFunction name="resetHandler" action="{!AdminSSIncidentInit}"  rerender="mainOutputPanel" onComplete="OnloadJavascript('{!selfServiceBean.Allow_Incident_Resolution}', '{!selfServiceBean.Submit_IN_SR}', '{!selfServiceBean.CatchAll_SR_ID}')" />
+  <apex:actionFunction name="assignIncidentTOQueue" action="{!assignIncidentTOQueue}"  rerender="assignValue" > 
+                     <apex:param assignTo="{!savedID}" name="savedName" value=""/>
+                     
+    </apex:actionFunction>
+      
+    
+    
+              <script>
+                var assignValuevar      = '{!JSENCODE($Component.form.assignValue)}';
+        var closeIncidentvar    = '{!JSENCODE($Component.form.closeIncident)}';
+        var selectDaysvariable    = '{!JSENCODE($Component.form.selectDays)}';
+        var selectDaysvariable    = '{!JSENCODE($Component.form.selectDays)}';
+        var limitClosedIncidentsvar = '{!JSENCODE($Component.form.limitClosedIncidents)}';
+        var objName         = '{!JSENCODE(objName)}';  
+        var savelabel         = '{!JSENCODE($Label.Save)}';
+        var SelectIncidentQueue   = '{!JSENCODE($Label.SelectIncidentAssignment)}';
+        var InvalidDaysMsg      = '{!JSENCODE($label.InvalidDaysMsg)}';
+          var resolutionvalue     = '{!SelfServiceSetting.Allow_incident_resolution__c}';  
+        var refreshLabel      = '{!JSENCODE($Label.Refresh)}'; 
+        var messagetitle            = '{!JSENCODE($Label.Navigator_Incidents)}';
+		
+		var ServiceRequestRequiredMsg      = '{!JSENCODE($Label.ServiceRequestRequiredMsg)}';
+        var selectedSRValueVar = '{!JSENCODE($Component.form.selectedSRValue)}';
+        var selectSRLookupBtnVar = '{!JSENCODE($Component.form.selectSRLookupBtn)}';
+        var submitINSRValue = '{!JSENCODE(selfServiceBean.Submit_IN_SR)}';
+        var catchAllSRID = '{!JSENCODE(selfServiceBean.CatchAll_SR_ID)}';
+        
+        OnloadJavascript(resolutionvalue, submitINSRValue, catchAllSRID);
+        var wikiUrl='{!wikiUrl}';
+                parent.addHelpOnPage(document.getElementById('helpDiv'),'incidents_SS_settings.htm',wikiUrl);
+              </script>
+</apex:form> 
+<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSCommon.js" id="JSCommon-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminSSIncident.js" id="incident-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/WikiHelp.js"/>
+  
+</apex:page>

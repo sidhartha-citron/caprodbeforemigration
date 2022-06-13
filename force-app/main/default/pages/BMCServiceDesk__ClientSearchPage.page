@@ -1,0 +1,752 @@
+<apex:page showHeader="false" sidebar="false" cache="false" contentType="text/html" standardStylesheets="false">
+    <c:CommonIncludes />
+    <script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/Spinner.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/SpinnerField.js"></script>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Spinner.css" /> 
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ext-all.js" id="ext-all-js"/>
+    <script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/PagingMemoryProxy.js"></script>    
+    <script src="https://www.google.com/jsapi" type="text/javascript"></script>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/Knowledge.css" />
+    <!-- added to fix the tooltip bug -->
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+    <!--  addition completed -->
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/Vtabpanel.js"></script>
+            <style>
+            .x-form-spinner-splitter{
+				overflow:hidden !important;
+            }
+            /*For defect #58137 */
+             #searchResults {
+			    height: 97%;
+			}
+			.clsInputCheckBoxseth{
+	
+	padding: left :10px !important;
+	font-family: Tahoma, MS Sans Serif;
+	font-size: 11px;
+	color: #555555;
+}
+	.ux-vertical-tabs .x-tab-panel-bwrap, .ux-vertical-tabs .x-tab-panel-body {
+			    height: 96%;
+			     width:auto !important;
+			     width /*\**/: 490px\9 !important;
+                             *width:490px !important;
+               
+			    
+			}
+			.ux-vertical-tabs  {
+			    height: 96%;
+			   
+               
+			    
+			}
+			.ux-vertical-tabs-left .x-tab-panel-body {
+			    border: 1px solid #AEBAC1;
+			}
+			 #searchResults .x-tab-panel .x-tab-panel-bwrap{
+		        
+		         margin-left: 0px !important;
+		    } 
+			/*syles for ie8*/
+		    #searchResults .x-tab-panel .x-tab-panel-bwrap{
+		        width /*\**/: 84%\9;
+		         margin-left/*\**/: 150px\9 !important;
+		    } 
+		
+		    /*syles for ie7*/
+		    html* #searchResults .x-tab-panel .x-tab-panel-bwrap{
+		        width: 84%;
+		        *margin-left:0px !important;
+		    }
+		    
+		    .x-form-invalid, textarea.x-form-invalid {
+			    background-color: #FFFFFF !important; 
+			    background-image: none !important;
+			    border-color: #AEBAC1 !important;
+			}
+			.toolSpCls .x-panel-bwrap .x-panel-body{
+            height: 0px !important;
+            }
+            
+             .x-grid3-scroller{
+             width:480px !important;
+             width /*\**/: 487px\9 !important;
+             *width:487px !important;
+             
+            }
+            </style>
+    
+    <body id="docBody">
+        <apex:outputPanel id="wholePage" rendered="true">
+                        
+            <script>
+            var Accountid = '{!JSENCODE($CurrentPageReference.parameters.account)}';
+            var SRTemplate = '{!JSENCODE($CurrentPageReference.parameters.srtempid)}';
+            var additional_columns = '{!JSENCODE($CurrentPageReference.parameters.additional_columns)}';
+			var KeywordLabel = '{!JSENCODE($Label.Keywords)}';
+            var showclearfilter; 
+            var labelforcheckbox;
+            //alert('Accountid' + Accountid);
+            //alert('SRTemplate' + SRTemplate);
+            if((Accountid != null && Accountid != '')||(SRTemplate != null && SRTemplate != ''))
+            {
+            	showclearfilter = true;
+            	if(Accountid != null && Accountid != '')
+            	{
+            		labelforcheckbox = '{!JSENCODE($Label.ClearFilterOnSelectedAccount)}';
+            	}
+            	else
+            	{
+            		labelforcheckbox =  '{!JSENCODE($Label.ClearFilterOnSelectedRequest)}';
+            	}
+            }
+            var Isearching = false;
+             Ext.QuickTips.init();
+             var classForSpinnerField = 'clsSpinnerField';
+		    var classForTextField = 'clsTextField';
+		    if(Ext.isIE8){
+	            classForSpinnerField = 'clsSpinnerFieldIE8';
+	            classForTextField = 'clsTextFieldIE8';		    
+		    }
+            var ksrProxy;
+            var Limitcount; 
+            /* the results xml doc */
+            var xmlData;
+            var text_to_search;
+            /* the result tabs */
+            var searchTabs;
+            
+            var MAX_ROWS_ON_PAGE=300;
+            
+            var RESULTS_GRID_PANEL_HEIGHT=300;
+            
+            var DEFAULT_HEADER_WIDTH=300;
+            
+            /*var contentSearch=true;
+            var documentSearch=true;
+            var webSearch=true;*/
+            var tabIndex = 0;
+            function msgbox(msg, title, icon, clickHandler){
+                var msgIcon = Ext.MessageBox.INFO;//Default
+                if(title==null) title=""; 
+                if(icon==3){
+                    msgIcon = Ext.MessageBox.QUESTION;
+                    if(title=="") title="{!JSENCODE($Label.Question)}"  
+                }else if(icon==2){
+                    msgIcon = Ext.MessageBox.WARNING;
+                    if(title=="") title="{!JSENCODE($Label.Warning)}"
+                }else if(icon==1){  
+                    msgIcon = Ext.MessageBox.ERROR;
+                    if(title=="") title="{!JSENCODE($Label.Error)}"
+                }
+                if(title=="") title="{!JSENCODE($Label.Information)}"
+                Ext.MessageBox.show({
+                   title: title,
+                   msg: msg,
+                   buttons: Ext.MessageBox.OK,
+                   fn: clkHandler,
+                   icon: msgIcon
+               });
+            }function clkHandler(btn){};
+            function ReplaceAll(Source,stringToFind,stringToReplace){
+				var reptemp = Source;
+				var repindex = reptemp.indexOf(stringToFind);
+				while(repindex != -1)
+				{
+					reptemp = reptemp.replace(stringToFind,stringToReplace);
+					repindex = reptemp.indexOf(stringToFind);
+				}
+				return reptemp;
+			}
+            function txtSearch(){
+            	if(Isearching)
+            	{
+            		
+            		//alert(Isearching);
+            		return;
+            	}
+            	Isearching = true;
+                text_to_search = document.getElementById("txtSrch").value;
+                text_to_search = ReplaceAll(text_to_search,"*"," ");
+                text_to_search = text_to_search.trim();
+               	if(text_to_search== KeywordLabel || (text_to_search.length < 2) ){
+                      window.parent.Ext.MessageBox.show({                                
+                                title: "{!JSENCODE($Label.Warning)}",
+                                msg:"{!JSENCODE($Label.GsErrorMsg)}" ,
+                                width:300,
+                                buttons: Ext.MessageBox.OK,
+                                fn: clkHandler
+                                
+                            });
+                      Isearching = false;      
+                      return;
+                }
+                Limitcount=document.getElementById("mresult").value;
+                if(Limitcount > 200)
+                {
+                	Limitcount = 200;
+                	document.getElementById("mresult").value = Limitcount;
+                	document.getElementById("txtSrch").value = text_to_search;
+                }
+                if(Limitcount < 10)
+                {
+                	Limitcount = 10;
+                	document.getElementById("mresult").value = Limitcount;
+                	document.getElementById("txtSrch").value = text_to_search;
+                }
+                doSearch();
+            } 
+            
+            function Dorefersh(){
+                document.getElementById("txtSrch").value=KeywordLabel;
+                if(ksrProxy != null){
+                    try{
+                    ksrProxy.destroy();
+                    }catch(e){
+                    }
+                }
+                if(searchTabs != null) searchTabs.destroy();
+                //location.reload(true);            
+            }
+            
+            function renderMenuBar(){
+                widthTxt =   parseInt((Ext.get('grid').getWidth() * 0.45), 10)
+                if (widthTxt < 100) widthTxt = 100;
+                
+                var tbarOptions1 = new Array(6);
+                var tbarOptions2 = new Array(1);
+                tbarOptions1[0]=new Ext.form.TextField({
+                    id: 'txtSrch',
+                    name: 'txtSrch',
+                    fieldLabel: 'Search',
+                    width: widthTxt,
+                    allowBlank: true,
+                    emptyText: '{!JSENCODE($Label.Keywords)}',
+                    listeners: {
+                            specialkey: function(field, e){
+                                if (e.getKey() == e.ENTER){
+                                        txtSearch();
+                                }
+                            },
+                            render: function(c) {
+                              Ext.QuickTips.register({
+                                target: c,
+                                text: '{!JSENCODE($Label.TooltipGlobalSearchSearch)}'
+                              });
+                            }
+
+                        }
+                });
+                
+                tbarOptions1[1]={id:'ks_search_btn', iconCls: 'bmcSearch', handler: txtSearch, tooltip:'{!JSENCODE($Label.search)}'};
+                tbarOptions1[2]={id:'ks_refresh_btn', scale: 'medium', iconCls: 'bmcRefresh', tooltip: '{!JSENCODE($Label.refresh)}', style:{align: 'left'},handler: Dorefersh};
+                tbarOptions1[3]='-';
+                
+                /*var filterMenus1 = new Array(3);
+                    filterMenus1[0]={id:'ks_settings_content', xtype:'checkbox', name: 'sopt1', group: 'soptg', checked: true, boxLabel: '{!JSENCODE($Label.SearchContent)}', inputValue:true, handler: function(item, checked){contentSearch=checked}};
+                    filterMenus1[1]={id:'ks_settings_document', xtype:'checkbox', name: 'sopt2', group: 'soptg', checked: true, boxLabel: '{!JSENCODE($Label.SearchDocuments)}', inputValue:true, handler: function(item, checked){documentSearch=checked}};
+                    filterMenus1[2]={id:'ks_settings_web', xtype:'checkbox', name: 'sopt3', group: 'soptg', checked: true, boxLabel: '{!JSENCODE($Label.SearchWeb)}', inputValue:true, handler: function(item, checked){webSearch=checked}};
+                tbarOptions1[4]={icon :'{!$Resource.SDEFStyles}/SDEFbuttons/b_settings_on.png', tooltip: '{!JSENCODE($Label.settings)}', tooltipType: 'title', menu: filterMenus1};
+                
+                tbarOptions1[5]='-';*/
+                tbarOptions1[4]=new Ext.form.Label({text: '{!JSENCODE($Label.MaximumResults)}'}); 
+                tbarOptions1[5]= new Ext.ux.form.SpinnerField({
+                    id: 'mresult',
+                    xtype: 'spinnerfield',
+                    fieldLabel: 'Maximum Results',
+                    name: 'mresult',
+                    minValue: 10,
+                    minValueText:'abcd',
+                    maxValue: 200,
+                    value:50,
+                    allowDecimals: false,
+                    incrementValue: 10,
+                    width:50,
+                    cls:classForSpinnerField,
+                    listeners: {
+                            
+                            render: function(c) {
+                              Ext.QuickTips.register({
+                                target: c,
+                                text: '{!JSENCODE($Label.TooltipGlobalSearchMaximumResults)}'
+                              });
+                            }
+
+                        }
+                });
+                if(showclearfilter)
+                {
+                	
+                	tbarOptions2[0]=new Ext.form.Checkbox({
+	                	boxLabel: labelforcheckbox,
+	                	id:'clearfilterchkbx',
+	                	cls: 'clsInputCheckBoxseth',
+	                	
+	                	
+	                	listeners: {
+                            
+                            check: function(c) {
+                              doSearch();
+                            }
+
+                        }
+	                }); 
+               	}
+               	var tb = new Ext.Toolbar({
+        		items:tbarOptions1
+        		});
+        		if(showclearfilter)
+        		{	
+        			var tb1 = new Ext.Toolbar({
+        			items:tbarOptions2
+        			});
+                }
+                // This function renders a block of buttons
+                var headerPanel =new Ext.Panel({
+                    id:'ks_header',
+                    renderTo: 'grid',
+                    cls:'toolSpCls',
+                    tbar: tb
+                    
+                });
+              if(showclearfilter)
+              {  
+                var headerPanel1 =new Ext.Panel({
+                    id:'ks_header1',
+                    renderTo: 'grid',
+                    cls:'toolSpCls',
+                    tbar: tb1
+                });
+              } 
+            }
+
+            function renderAdvSearch(){
+                if(showclearfilter)
+                {
+	                var viewport = new Ext.Viewport({
+	                    layout:'border',
+	                    renderTo: 'grid1',
+	                    listeners:{
+	                        resize:function(){
+	                            if(viewport){
+	                               
+	                            }
+	                        }  
+	                    },
+	                    items:[
+	                        { id: 'searchResults', 
+	                        region:'center', 
+	                        margins:'80 0 0 0', 
+	                        layout:'fit'}
+	                        
+	                        
+	                    ]
+	                });
+	             }
+	             else
+	             {
+	             	var viewport = new Ext.Viewport({
+	                    layout:'border',
+	                    renderTo: 'grid1',
+	                    listeners:{
+	                        resize:function(){
+	                            if(viewport){
+	                               
+	                            }
+	                        }  
+	                    },
+	                    items:[
+	                        { id: 'searchResults', 
+	                        region:'center', 
+	                        margins:'40 0 0 0', 
+	                        layout:'fit'}
+	                        
+	                        
+	                    ]
+	                });
+	             
+	             }
+            }
+
+            function extInit(){
+                renderMenuBar();  
+                renderAdvSearch();
+                autosearch(); 
+                document.getElementById('txtSrch').focus();
+                if (Ext.isIE)
+                {
+                	document.body.className = String(document.body.className).replace('x-border-layout-ct', ''); 
+                	var tds = document.getElementById("ks_header");
+                	if(tds != null)
+                	{
+            			var childelements = document.getElementById("ks_header").childNodes;
+            			if(childelements!= null && childelements.length > 0)
+            			{
+            				childelements[0].style.height = "40px";
+            			}
+            		}
+            	}		
+            }
+             function autosearch()
+            {
+                //Accountid = '{!JSENCODE($CurrentPageReference.parameters.account)}';
+                if ('{!JSENCODE($CurrentPageReference.parameters.str)}' == '') return;
+                document.getElementById('txtSrch').value = '{!JSENCODE($CurrentPageReference.parameters.str)}';
+				txtSearch();
+            }
+            function doSearch(){
+            //reset all vars
+                var searchtxt = text_to_search;
+                var filtercleared = Ext.getCmp('clearfilterchkbx');
+                var clearfiltersearch = false;
+                if(filtercleared != null && filtercleared != 'undefined')
+                {
+                	clearfiltersearch = filtercleared.getValue();
+                }
+                //alert(clearfiltersearch);
+                if(ksrProxy != null)
+                {
+                    try{
+                    ksrProxy.destroy();
+                    }catch(e){
+                    }
+                }
+                if(searchTabs != null) searchTabs=null;
+                xmlData = null;
+                
+                //1 : for a passed tab name (objectAPIName), fetch the headers for the tab in json
+                //2 : given an xml, extract a node using objectAPIName at specified position to get search results
+                //2 : alternatively, create a json with the data in the node such that it corresponds to the mapping of headers
+                //3 : create a grid with the above headers as column model and extracted node as store
+                //4 : configure the grid to use
+               var urlforsearch;
+               if(clearfiltersearch)
+               {
+                    urlforsearch = '/apex/ClientSearchResults?s='+encodeURIComponent(searchtxt)+'&l='+Limitcount+'&additional_columns='+additional_columns; 
+               }
+               else
+               {
+                    urlforsearch = '/apex/ClientSearchResults?s='+encodeURIComponent(searchtxt)+'&l='+Limitcount+'&actid='+Accountid+'&servtemp='+SRTemplate+'&additional_columns='+additional_columns; 
+               } 
+               
+                var conn = new Ext.data.Connection();
+                //alert('/apex/KnowledgeResults?s='+searchtxt+'&d='+documentSearch+'&i='+contentSearch+'&l='+Limitcount)
+                conn.request({
+                    url: urlforsearch,
+                    success: function(response) {
+        
+                        ksrProxy = new Ext.data.PagingMemoryProxy(response.responseXML);
+        				//alert(ksrProxy);
+                        var tabs = new Ext.data.Store({
+                            // load using HTTP
+                            proxy: ksrProxy,
+                            reader: new Ext.data.XmlReader({
+                                record: 'TabColumns',
+                                id: '@objectAPIName',
+                                totalRecords: '@total'
+                                }, [
+                                    '@pageRef','@objectAPIName', '@objectDisplayName', '@resultCount'
+                                   ],
+                                {useSimpleXPath: false, debug: true})
+                        });
+        
+                        tabs.on('load',fireCreateAllTabs, this, true);
+                        
+                        tabs.load();
+                        //alert(tabs.getCount());
+                        if(tabs.getCount()==0)
+                        {
+                            google_search();
+                            searchTabs.setActiveTab(tabIndex);
+                            Isearching = false;
+                        }
+        
+                    },
+                    failure: function() {
+                        Ext.Msg.alert('Status', '{!JSENCODE($Label.Error)}');
+                    }
+                });
+            }
+        
+            /* callback on tab data load */
+            function fireCreateAllTabs(tabs){
+        		
+                for (var i = 0; i < tabs.getCount(); i++) {
+                    var rec = tabs.getAt(i);
+                    var objectAPIName = rec.get('@objectAPIName');
+                    var objectDisplayName = rec.get('@objectDisplayName');
+                    var resultCount = rec.get('@resultCount');
+                    var pageRef = rec.get('@pageRef');
+                   
+                    fireCreateTabModel(objectAPIName, objectDisplayName+' '+'('+ resultCount +')', pageRef, objectDisplayName);
+                }
+            }
+        
+        
+            /* create the model required for the tab */
+            function fireCreateTabModel(objectAPIName, objectDisplayName, pageRef, DisplayName, type){
+        
+                var ds = new Ext.data.Store({
+                    // load using HTTP
+                    proxy: ksrProxy,
+                    objectAPIName: objectAPIName,
+                    objectDisplayName: objectDisplayName,
+                    pageRef: pageRef,
+                   
+                    DisplayName: DisplayName,                      
+                    reader: new Ext.data.XmlReader({
+                        // records will have an "TabColumns" tag
+                        //record: '/KnowledgeSearchResponse/DisplayMetadata/TabColusmns[@objectAPIName='+objectAPIName+']/TabColumn',
+                        record: 'TabColumns[@objectAPIName=' + objectAPIName +']/TabColumn',
+                        id: 'ColumnAPIName',
+                        totalRecords: '@total'
+                        }, [
+                            {name:'header', mapping:'ColumnDisplayName'},
+                            {name:'mapping', mapping:'ColumnAPIName'},
+                            {name:'width', mapping:'ColumnDisplayWidth'},
+                            {name:'sortable', mapping:'ColumnSortable'},
+                            {name:'visible', mapping:'ColumnVisible'},
+                            {name:'type', mapping:'ColumnType'}
+                           ],
+                        {useSimpleXPath: false, debug: true})
+                });
+        
+                ds.on('load',processColHeaderRecs, this, true);
+                ds.load();
+            }
+			function columnRenderer(data, metadata, record, rowIndex, columnIndex, store){
+                if(data == null || data=='' || data == '-' )
+                     data=record.get('account_name__c');
+               return data;
+            }
+            function processColHeaderRecs(ds){
+                var colHeaders = new Array();
+                var colMappings = new Array();
+                for (var i = 0; i < ds.getCount(); i++) {
+                    var rec = ds.getAt(i);
+                    var header = new Array();
+                    header['header']= rec.get('header');
+					var dataIndex=rec.get('mapping');
+                    header['dataIndex']= dataIndex;
+                    if(dataIndex=='AccountId'){
+                        header['renderer']= columnRenderer;
+                    }
+                    if(rec.get('visible') == 'false'){
+                        header['hidden']=true;
+                    }
+                    
+                    if(null != rec.get('width')){
+                        header['width']= rec.get('width');
+                    }else{
+                        header['width']= DEFAULT_HEADER_WIDTH;
+                    }
+        			header['tooltip']= rec.get('header');
+                    header['sortable']= true;
+                    if(rec.get('type') && rec.get('type') != 'HTMLDATA')
+                        header['renderer'] = 'htmlEncode';
+        
+                    header['dataIndex']= rec.get('mapping');
+                    colHeaders[i]  = header;
+                    colMappings[i] = rec.get('mapping');
+                }
+        
+        
+                //create new store with data from search results
+                var results = new Ext.data.Store({
+                    // load using HTTP
+                    proxy: ksrProxy,
+                    headers:colHeaders,
+                    objectAPIName: ds.objectAPIName,
+                    objectDisplayName: ds.objectDisplayName,
+                    pageRef: ds.pageRef, 
+                   
+                    DisplayName: ds.DisplayName,                     
+                    reader: new Ext.data.XmlReader({
+                        // records will have an "TabColumns" tag
+                        record: 'SearchResults/SearchResult[@objectAPIName=' + ds.objectAPIName +']/ResultAtom',
+                        totalRecords: '@total'
+                        }, colMappings ,
+                        {useSimpleXPath: false, debug: true})
+                });
+        		//alert('About to create grid');
+                createGrid(results);
+            }
+        
+            /* finally create results grid and add it to the tab panel */
+            function createGrid(results){
+                var headers = results.headers;
+                var objectAPIName = results.objectAPIName;
+                var objectDisplayName = results.objectDisplayName;
+                var pageRef = results.pageRef;  
+                
+                var DisplayName = results.DisplayName;
+                        
+                //create grid with the data
+                var grid = new Ext.grid.GridPanel({
+                        store: results,
+                        columns:headers,
+                        title: objectDisplayName,
+                        tabTip:'{!JSENCODE($Label.TooltipGlobalSearchTabs)}',
+                        stripeRows: true,                       
+                        enableHdMenu:false,
+                        height: RESULTS_GRID_PANEL_HEIGHT,
+                        //sm: new Ext.grid.RowSelectionModel({selectRow:Ext.emptyFn}),
+                        viewConfig: {
+                            forceFit:false,
+                            scrollOffset:0
+                        }
+                        
+                });
+                grid.on('render', function() {
+                    grid.tip = new Ext.ToolTip({
+                    view: grid.getView(),
+                    target: grid.getView().mainBody,
+                    delegate: '.x-grid3-row',
+                    trackMouse: true,
+                    renderTo: document.body,
+                    listeners: {
+                        beforeshow: function updateTipBody(tip) {
+                            tip.body.dom.innerHTML = "{!JSENCODE($Label.TooltipClientSearchMatchingRecord)}";
+                        }
+                    }
+                   });
+                });
+                Isearching = false;
+               /* grid.on('headerclick', function(grid, columnIndex,e ) {
+                alert('Sort Data'); 
+                 }); */
+                grid.on('celldblclick', function(sm){
+                    var gridrecord = grid.getSelectionModel().getSelected();
+                    var index = grid.getStore().indexOf(gridrecord);
+	                var selectedId = grid.getStore().getAt(index).data.Id;
+                    var objAPIName = gridrecord.store.objectAPIName;
+                    var add_info=gridrecord .get('add_info');
+                  
+                    window.parent.setPopUpVar(selectedId,add_info);
+                   	window.parent.closePopupRF();
+                   /*if(objAPIName != 'Document' && pageRef != ''){
+                   		var title;
+                   		if (objAPIName.toLowerCase().indexOf('incident__c') >= 0)
+                   			title = '%23' + grid.getStore().getAt(index).data.name;
+                   			//title = '{!$Label.incident}'+ ' %23' + grid.getStore().getAt(index).data.name;
+                   		else if (objAPIName.toLowerCase().indexOf('task__c') >= 0)
+                   			title = '%23' + grid.getStore().getAt(index).data.name;
+                   			//title = '{!$Label.task}'+ ' %23' + grid.getStore().getAt(index).data.name;
+                   		else if (objAPIName.toLowerCase().indexOf('faq__c') >= 0)
+                   			title = '%23' + grid.getStore().getAt(index).data.name;
+                   		else
+                   			title = DisplayName;
+	       				var url = "NavigatorPage?title="+ title +"&target="+pageRef+"?id=" + grid.getStore().getAt(index).data.Id;
+                        window.parent.parent.addNewTab(DisplayName, DisplayName, url);
+                    }
+                    if(objAPIName == 'Document'){ 
+                         
+                        if(grid.getStore().getAt(index).data.Type != 'URL'){
+                            window.open('/servlet/servlet.FileDownload?file='+grid.getStore().getAt(index).data.Id);
+                        }else{
+                            window.open(grid.getStore().getAt(index).data.Id);                        
+                        }  
+                    }  */           
+                });   
+                //load results after grid definition rather than fire grid creation as a callback
+                //this is to prevent multiple onload calls whenever pagination occurs.
+                results.load({params:{start:0, limit: MAX_ROWS_ON_PAGE}});
+        
+                if(searchTabs == null){
+                    document.getElementById('searchResults').innerHTML = '';
+                    searchTabs =  new Ext.ux.TabPanel({
+                        renderTo: 'searchResults',
+                        xtype:'grid',
+                        activeTab: 0,
+                        items: grid,
+                        deferredRenderer:false,
+                        layoutOnTabChange: true,
+                        tabPosition:'left',  //choose 'left' or 'right' for vertical tabs; 'top' or 'bottom' for horizontal tabs
+                        textAlign:'right',
+                        tabWidth:140, 
+                        defaults:{autoScroll: true},
+                        enableTabScroll: true
+                    });
+                 }else{
+                    searchTabs.add(grid);
+                 }            
+                window.parent.clientPopupInprogress = false;                      
+            }
+        
+            /*External Google Search*/
+        
+            //<![CDATA[
+            google.load('search', '1');
+                
+            function google_search(){
+                var search_txt = text_to_search;
+                     var test = new Ext.form.Label({
+    				    id:'test',
+        				text:'{!JSENCODE($Label.NoSearchResult)}'
+    				});
+                if(searchTabs == null){
+                    document.getElementById('searchResults').innerHTML = '';
+                    searchTabs =  new Ext.ux.TabPanel({
+                        renderTo: 'searchResults',
+                        activeTab: 0,
+                        deferredRenderer:false,
+                        layoutOnTabChange: true,
+                        tabPosition:'left',  //choose 'left' or 'right' for vertical tabs; 'top' or 'bottom' for horizontal tabs
+                        textAlign:'right',
+                        tabWidth:140, 
+                        defaults:{autoScroll: true},
+                        enableTabScroll: true
+                    });
+                }
+                if(search_txt){
+                    searchTabs.add({
+                        id: 'searchcontrol',
+                        title: '{!JSENCODE($Label.Error)}',
+                        autoHeight: false,
+                        height: 500,
+                        autoScroll: true,                     
+                        //tabTip: '{!JSENCODE($Label.TooltipGlobalSearchWebTab)}',
+                        items:[test]
+                    }).show();
+                    
+                    //searchTabs.add({title:'Web', iconCls:'icon-list', html:'<div id="searchcontrol"></div>'});
+    
+                    
+                    // Create a search control
+                    //var searchControl = new google.search.SearchControl();
+					//var NO_RESULT = "{!JSENCODE($Label.NoSearchResult)}";
+					
+                    //var options = new google.search.SearcherOptions();
+                    //options.setExpandMode(google.search.SearchControl.EXPAND_MODE_OPEN);
+                    //searchControl.addSearcher(new google.search.WebSearch(), options);
+                    //searchControl.setResultSetSize(google.search.Search.LARGE_RESULTSET);
+                    
+                   //create a drawOptions object
+                    //var drawOptions = new google.search.DrawOptions();
+            
+                   //tell the searcher to draw itself in linear mode
+                    //drawOptions.setDrawMode(google.search.SearchControl.DRAW_MODE_LINEAR);
+                   // searchControl.draw(document.getElementById("searchcontrol"), drawOptions);
+                  // searchControl.setNoResultsString(NO_RESULT); 
+                   //execute an inital search
+                    //searchControl.execute(search_txt);
+            
+                   //google.setOnLoadCallback(OnLoad);
+            
+                   //]]>
+                }else{
+                }   
+            }
+            
+            </script>
+            
+            <div id="grid"></div>
+            <div id="grid1"></div>
+            <script>Ext.onReady(extInit);</script>
+            <!--pre>{!log}</pre-->
+           
+        </apex:outputPanel>
+    </body>
+</apex:page>

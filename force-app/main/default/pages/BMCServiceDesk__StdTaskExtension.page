@@ -1,0 +1,17 @@
+<apex:page standardController="BMCServiceDesk__Task__c" extensions="BMCServiceDesk.StdTaskExtensionController" id="thePage" action="{!doAction}" showHeader="false" standardStylesheets="false">
+  <head>
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/NavigatorStyleSheet.css"/>
+</head>
+    <apex:form target="_parent">
+        <c:StdLayoutStageProgression ObjectNameVal="Task__c" status="{!current_status}" ShowServiceTargetsIcon="true" 
+        ServiceTargetStatus="{!ServiceTargetStatus}"   rendered="{!IF($CurrentPage.parameters.messageString=='',true,false)}"/>
+        <apex:actionFunction name="refreshTask" action="{!refreshTask}" />
+    </apex:form>
+    <script>
+    	var errorMsg = '{!JSENCODE(messageString)}';
+    	if (errorMsg.length > 0) {
+	    	alert(errorMsg);
+	    	refreshTask();
+    	}
+    </script>
+</apex:page>

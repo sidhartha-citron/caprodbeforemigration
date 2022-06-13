@@ -1,0 +1,93 @@
+<apex:page standardStylesheets="false" showHeader="false" controller="BMCServiceDesk.AdminServiceRequestSettingsController">
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminServiceRequestSettings.css" />
+    	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+	<c:CommonIncludes />
+<body id="bodyContents">
+	
+<script>
+    var wikiUrl='{!wikiUrl}';
+var lblServiceRequestTitle = '{!JSENCODE($Label.serviceRequestPortletHeader)}';
+    var lblEnableCustomFieldMapping = '{!JSENCODE($Label.EnableCustomFieldMapping)}';
+    var propEnableCustomFieldMapping = {!enableCustomFieldMapping};
+    var SDEFStyles = '{!$Resource.SDEFStyles}';
+    var ProcessQueueAssignment = new Ext.form.Label({id: 'ProcessQueueAssignmentId',text: '{!JSENCODE($Label.ChildProcessQueueAssignment)}', cls: 'clsInputBoldLabelTDI'});
+    var TaskQueueLabel = new Ext.form.Label({id: 'TaskQueueLabel',text: '{!JSENCODE($Label.TaskAssignment)}'});
+    var CRQueueLabel = new Ext.form.Label({id: 'CRQueueLabel',text: '{!JSENCODE($Label.CRAssignment)}'});
+   	var labelUp =  '{!JSENCODE($Label.Up)}';
+   	var saveLabel = '{!JSENCODE($Label.Save)}'; 
+   	var saveButtonImage =SDEFStyles + '/SDEFbuttons/b_save.gif';
+   	var successMessage = '{!JSENCODE($Label.SavedSuccessfully)}';
+   	var errorMessage = '{!JSENCODE($Label.MsgSaveError)}';
+   var queueAssgnProcess = '{!$Component.myForm.queueAssignment}';
+   var enableustomFieldMap = '{!$Component.myForm.enableCustomFieldMap}';
+    
+ function isSaveSuccessful() {
+       	saveStatus = '{!success}';
+       	if((saveStatus == 'success' || saveStatus == '')){
+	                	showMessage(successMessage);
+	                }else{
+	                	showMessage(errorMessage + saveStatus);
+	                }
+       }
+   	
+</script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminServiceRequestSettings.js"></script>
+<apex:outputPanel id="setChaildProcessQueues">
+    <script>
+        var TaskQueLookupId = Ext.getCmp('TaskQueLookupId');
+        if(TaskQueLookupId!=null && TaskQueLookupId!='undefined'){
+            TaskQueLookupId.setValue('{!JSENCODE(taskQueue)}');
+            
+            if(document.getElementById('{!$Component.myForm.blankTaskQueue}')!=null)
+                document.getElementById('{!$Component.myForm.blankTaskQueue}').value = '{!JSENCODE(taskQueue)}';
+        }
+        
+        var CRQueLookupId = Ext.getCmp('CRQueLookupId');
+        if(CRQueLookupId!=null && CRQueLookupId!='undefined'){
+            CRQueLookupId.setValue('{!JSENCODE(CRQueue)}');
+            
+            if(document.getElementById('{!$Component.myForm.blankCRQueue}')!=null)
+                document.getElementById('{!$Component.myForm.blankCRQueue}').value = '{!JSENCODE(CRQueue)}';
+        }
+        
+        function setBlankValues(process) {
+            if(process.toLowerCase()=='task') {
+                document.getElementById('{!$Component.myForm.blankTaskQueue}').value = '';
+                    
+            }else if(process.toLowerCase()=='change request') {
+                document.getElementById('{!$Component.myForm.blankCRQueue}').value = '';
+            }
+        }
+        
+        
+        
+    </script>
+        </apex:outputPanel>
+         
+
+
+<apex:form id="myForm">
+<div id="savetoolbar"></div>
+<div id="applicationsettingsDiv"></div>
+<apex:actionFunction name="savemodifiedData" action="{!saveQueueAssignment}" onComplete="isSaveSuccessful();" >
+<apex:param assignTo="{!enableCustomFieldMapping}" name="propEnableCustomFieldMapping" value=""/>
+
+</apex:actionFunction>
+<apex:actionFunction name="childProcessQueueAssignment" action="{!childProcessQueueAssignment}"  rerender="setChaildProcessQueues"  > 
+    
+    <apex:param assignTo="{!savedID}" name="savedName" value=""/>
+    
+</apex:actionFunction>
+<apex:inputhidden id="queueAssignment" value="{!queueAssignment}" />
+
+<apex:inputhidden id="blankTaskQueue" value="{!taskQueue}" />
+
+<apex:inputhidden id="blankCRQueue" value="{!CRQueue}" />
+<apex:inputHidden id="enableCustomFieldMap" value="{!enableCustomFieldMapping}"/>
+
+</apex:form>
+
+</body>
+
+
+</apex:page>

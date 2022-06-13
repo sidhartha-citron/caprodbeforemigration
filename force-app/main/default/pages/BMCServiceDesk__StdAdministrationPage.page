@@ -1,0 +1,98 @@
+<apex:page showHeader="true"  controller="BMCServiceDesk.NavigatorController" action="{!OOTBData}" cache="true" standardStylesheets="false" sidebar="false" contentType="{!contetnTypeForIE}" >
+<c:CommonIncludes />
+
+<apex:form id="stdAdministrationTab">
+<c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent">
+</c:ValidationComponent>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Portal.css" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/Portal.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/PortalColumn.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/Portlet.js" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SkywalkerStyleSheet.css"/>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/Portlets.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/StdAdministrationPage.css" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSCommon.js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/StdAdministration.js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CommonHelp.js" id="CommonHelp-js"/>
+ 
+    <apex:outputPanel >
+        <script>        
+            
+            var labelTabScrollerLeft = '{!JSENCODE($Label.TabScrollerLeft)}',
+            labelTabScrollerRight = '{!JSENCODE($Label.TabScrollerRight)}', 
+            labelCloseTab = '{!JSENCODE($Label.CloseTab)}', 
+            labelCloseTabLabel = '{!JSENCODE($Label.CloseTabLabel)}',
+            labelWarning = '{!JSENCODE($Label.Warning)}',
+            labelQueryNameExisting = '{!JSENCODE($Label.QueryNameExisting)}',
+            labelConfirmHomePage = '{!JSENCODE($Label.ConfirmHomePage)}',
+            labelHomeLink = '{!JSENCODE($Label.HomeLink)}',
+            labelAdministration = '{!JSENCODE($Label.Administration)}',
+            labelTooltipCollapseNavigator = '{!JSENCODE($Label.TooltipCollapseNavigator)}',
+            labelTooltipExpandNavigator = '{!JSENCODE($Label.TooltipExpandNavigator)}',
+            labelApplicationSettingsTitle = '{!JSENCODE($Label.ApplicationSettingsTitle)}',
+            labelAddSidebarContentHeader = '{!JSENCODE($Label.AddSidebarContentHeader)}';
+            var resSDEFStylesPath = '{!$Resource.SDEFStyles}',
+            newsFeedVal = {!newsFeed},
+            AlignabilityProcessModel = '{!JSENCODE($Label.AlignabilityProcessModel)}',
+            jsonStringVal = {!jsonString},
+            spChar = '¬';
+            
+            chatterFeedLabel = '{!JSENCODE($Label.Navigator_ChatterFeed)}',
+            incidentLabel = '{!JSENCODE($Label.Navigator_Incidents)}';
+            
+            var formAssignment = '{!JSENCODE(formAssignment)}';
+            function repeatNodePageReference(){
+                <apex:repeat value="{!nodePageReferences}" var="nodeReference">
+                    nodePageReferences["{!nodeReference.name}"] = "{!nodeReference.BMCServiceDesk__PageReference__c}"
+                </apex:repeat>
+            }
+            function configurationJsonFeedRoot(){
+                return <apex:outputText escape="false" value="{!stdAdministrationTabTreeJsonFeed}"/>;
+            }
+        </script>
+    </apex:outputPanel>
+    <apex:actionFunction name="refreshTree" action="{!refreshTree}" />
+    <apex:actionFunction action="{!UpdatePropSysStage}" name="UpdatePropSysStage" rerender="resetJsonString" onComplete="PortletBtnComplete();">
+    <apex:param assignTo="{!screenHeight}" name="scrHeight" value=""/>
+    </apex:actionfunction>
+    <apex:actionFunction name="refreshPage" action="{!refreshPage}"/>
+	 <apex:actionFunction name="updateRF" action="{!updateRFIds}" oncomplete="null" />
+    <input type="hidden" id="ownerId" name="ownerId" value="{!ownerId}" />
+    <apex:actionFunction action="{!resetJsonString}" name="resetJsonString" rerender="resetJsonString" onComplete="addPortletComponent()" /> 
+    </apex:form>
+    <apex:outputPanel id="resetJsonString" >
+        <script>
+            jsonStringVal = {!jsonString} ;
+            function addPortletComponent(){
+                var hasPreviousPort = '{!portletHasPrev}';
+                var hasNextPort = '{!portletHasNext}';
+                Ext.getCmp('portletNextBtn').setDisabled((hasNextPort=='false'));
+                Ext.getCmp('portletPrevBtn').setDisabled((hasPreviousPort=='false'));                       
+                var MyComp =Ext.getCmp('navview');
+                MyComp.findById('portalContent').add({xtype:'panel',id:'eastPanel',height:5,bodyStyle:{"background-color":"#334f67","border":"none"}});
+                MyComp.findById('portalContent').add(<apex:outputText escape="false" value="{!jsonString}"/>);
+                MyComp.doLayout();
+            }
+            
+            
+            function refreshActionItemsPortlet(wid, pagelbl){
+                if(typeof(window.frames.ActionItemsiFrame) != 'undefined' && window.frames.ActionItemsiFrame != 'undefined'){
+                    if(typeof(window.frames.ActionItemsiFrame.FetchActionItemsDataJS) != 'undefined' && window.frames.ActionItemsiFrame.FetchActionItemsDataJS != 'undefined')
+                        window.frames.ActionItemsiFrame.FetchActionItemsDataJS(pagelbl);
+                }   
+            }
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="renderErrorMsg">
+        <script>
+            errorMessge="{!messageString}";
+        </script>       
+    </apex:outputPanel>
+    <div id="StdConfigurationModule"></div>
+	<script>
+    window.onload =function(){
+    updateRF();
+    }
+    </script>
+</apex:page>

@@ -1,0 +1,145 @@
+<apex:page standardStylesheets="false" extensions="BMCServiceDesk.EntitleMentComponentController" showHeader="false" sidebar="false" controller="BMCServiceDesk.AdminSSTileOrderingController" >
+
+<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/>   
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSSTileOrdering.css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+<style>
+<!-- specific to the page-->
+.x-btn-inner{
+	padding-left : 0px !important;
+	padding-right : 0px !important;
+}
+.x-grid-checkheader {
+    height: 14px;
+    background-image: url('{!$Resource.ExtJS4_1_3}/resources/themes/images/default/grid/unchecked.gif');
+    background-position: 50% -2px;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+
+.x-grid-checkheader-checked {
+    background-image: url('{!$Resource.ExtJS4_1_3}/resources/themes/images/default/grid/checked.gif');
+}
+
+</style>
+<apex:form id="tileForm">
+<script>
+var wikiUrl='{!wikiUrl}';
+var removeLinkStr ='';
+var LabelYes = '{!JSENCODE($Label.ExtjsMessageYes)}';
+var LabelNo = '{!JSENCODE($Label.ExtjsMessageNo)}';
+var ssTileOrderDisplayOptions='{!JSENCODE($Label.ssTileOrderDisplayOptions)}';
+var ssTileOrderLeftDisplayOption='{!JSENCODE($Label.ssTileOrderLeftDisplayOption)}';
+var ssTileOrderRightDisplayOption='{!JSENCODE($Label.ssTileOrderRightDisplayOption)}';
+var ssTileOrderVisibleCol = '{!JSENCODE($Label.ssTileOrderVisibleCol)}';
+var ssTileOrderTitleCol = '{!JSENCODE($Label.ssTileOrderTitleCol)}';
+var ssTileOrderDescriptionCol = '{!JSENCODE($Label.ssTileOrderDescriptionCol)}';
+var ssTileOrderOrderCol = '{!JSENCODE($Label.ssTileOrderOrderCol)}';
+var ssTileOrderCustLinkNameCol = '{!JSENCODE($Label.SSTileOrderCustLinkNameCol)}';
+var ssTileOrderCustLinkUrlCol = '{!JSENCODE($Label.SSTileOrderCustLinkUrlCol)}';
+var SSTileAddNewTile = '{!JSENCODE($Label.SSTileAddNewTile)}';
+var SSTileRemoveTile= '{!JSENCODE($Label.SSTileRemoveTile)}';
+var SSTileAddNewLink= '{!JSENCODE($Label.SSTileAddNewLink)}';
+var SSTileRemoveLink= '{!JSENCODE($Label.SSTileRemoveLink)}';
+var ssTileOrderErrorMessageForTileRequiredFields = '{!JSENCODE($Label.SSTileOrderErrorMessageForTileRequiredFields)}';
+var ssTileOrderConfimMessageForDeletingTile = '{!JSENCODE($Label.SSTileOrderConfimMessageForDeletingTile)}';
+var ssTileOrderorderingNotSequential= '{!JSENCODE($Label.ssTileOrderorderingNotSequential)}';
+var ssTileOrdervisibleTileWithoutOrder= '{!JSENCODE($Label.ssTileOrdervisibleTileWithoutOrder)}';
+var ssTileOrdernoIntranetURL= '{!JSENCODE($Label.ssTileOrdernoIntranetURL)}';
+var ssTileOrderNoteLabel='{!JSENCODE($Label.ssTileOrderNoteLabel)}';
+var linkNumberValidation='{!JSENCODE($Label.linkNumberValidation)}';
+var maxLimitExceeded='{!JSENCODE($Label.maxLimitExceeded)}';
+var invalidURL = '{!JSENCODE($Label.invalidURL)}';
+var maxLinkLimitExceeded='{!JSENCODE($Label.MaxLinkLimitExceeded)}';
+var gridStore = '{!JSENCODE(tileDataString)}';
+var linkgridstore ='{!JSENCODE(linkDataString)}';
+var helpResouces = parent.getStdFormHelpPath(); 
+var AdminContextHelpText = '{!JSENCODE($Label.AdminContextHelpText)}';
+var AdminContextHelpTooltip = '{!JSENCODE($Label.AdminContextHelpTooltip)}';
+var chatterEnabled = {!isChatterEnabled};
+var saveLbl =  '{!JSENCODE($Label.Save)}';
+var PE = 'П';// for comma separator;
+var EF = 'ф'; // for # separator;
+var MaxTileCount='{!maxTilesCount}';
+var MaxLinkCount='{!maxLinksCount}';
+var icondown = '{!JSENCODE($Label.IconDown)}';
+var iconup = '{!JSENCODE($Label.IconUp)}';
+var selectedTileRow=0;
+var resourcesfilesvar='{!$Resource.SDEFStyles}';
+var tileGridLabel = '{!JSENCODE($Label.TileGridTitle)}';
+var alertTitle = '{!JSENCODE($Label.SStileOrdering)}';
+var errAlertTitle = '{!JSENCODE($Label.Error)}';
+var SSTileOrderWarnMessageForRepeatingOrder = '{!JSENCODE($Label.SSTileOrderWarnMessageForRepeatingOrder)}';
+var tilePosition='{!JSENCODE(tilePosition)}';
+var tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+var directLinkImg = '{!$Resource.SDEFStyles}/SDEFicons/link-icon-active.png';
+var entitlementImg = '{!$Resource.SDEFStyles}/SDEFicons/settings_permission_v2.svg';
+var directLinkImgDisabled = '{!$Resource.SDEFStyles}/SDEFicons/link-icon-disabled.png';    
+var tileDirectLinkInfoMessage = '{!JSENCODE($Label.DirectLinkTileInfo)}';    
+var closeBtnLabel = '{!JSENCODE($Label.Close)}';
+var ssTileDirectLinkCol = '{!JSENCODE($Label.DirectLink)}';
+var ssSiteURL = '{!JSENCODE(ssSiteURL)}';
+var directLinkTooltip = '{!JSENCODE($Label.DirectLinkTileTooltip)}'; 
+var entitlementHeader = '{!JSENCODE($Label.entitlement)}';
+var configureEntitlement = '{!JSENCODE($Label.configureEntitlementForTile)}';
+var tileId;
+var hideEntitlementColumn = {!hideEntitlementColumn};
+eval(gridStore);
+eval(linkgridstore);
+var entitlementLabel = '{!JSENCODE($Label.Entitlement)}';
+var _RemotingActions={};
+_RemotingActions.getUserProfileInfo="{!$RemoteAction.EntitleMentComponentController.getAccounts}";
+setupUI();
+</script>
+<apex:outputPanel id="gridData">
+<apex:outputPanel rendered="{!noError}">
+<script>
+gridStore = '{!JSENCODE(tileDataString)}';
+eval(gridStore);
+objFieldStore.loadData(tileStoreData);
+</script>
+</apex:outputPanel>
+</apex:outputPanel>
+
+<apex:outputPanel id="messageID">
+<script>
+	var error_controller = '{!JSENCODE(errorMessage)}';
+	if(error_controller!='')
+        showSuccessMessage(error_controller);
+		
+</script>
+</apex:outputPanel>
+<apex:actionFunction action="{!SaveTilesAndLinks}" name="save" rerender="messageID,gridData" onComplete="saveoncompletefun('{!JSENCODE(linkDataString)}');" >
+    <!--apex:param name="finalgriddata" assignTo="{!finalgriddata}" value=""/-->
+	<apex:param name="tilePosition" assignTo="{!tilePosition}" value=""/>
+    <apex:param name="finalSettingString" assignTo="{!finalSettingString}" value=""/>
+    <apex:param name="removeLinkStr" assignTo="{!deleteRecordStr}" value=""/>
+</apex:actionFunction>
+
+<table width="100%" id="AdminSSTileOrder"> 
+      <tr>   
+        <td>
+<div id="mainDiv"></div> 
+        </td>
+</tr>
+<tr>
+        <td>
+         <h2  style="margin-left:15px;color:#004376;font-weight: bold;font-family: tahoma,arial,verdana,sans-serif;"> {!JSENCODE($Label.linkGridTitle)}</h2>
+        </td>
+</tr>                            
+<tr>
+        <td>
+         <div  id="quickLinksGrid" ></div>
+        </td>
+</tr>                  
+</table>                              
+<c:EntitleMentComponent objName="SSCustomTileAndLink__c" fromCustomSettings="True"></c:EntitleMentComponent>
+</apex:form>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/src/ux/CheckColumn.js" id="CheckColumn-js"/>
+ <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/HTML_ENCODE_DECODE.js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminSSTileOrdering.js" id="AdminTileOrdering-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSCommon.js" id="JSCommon-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/WikiHelp.js"/>
+
+</apex:page>

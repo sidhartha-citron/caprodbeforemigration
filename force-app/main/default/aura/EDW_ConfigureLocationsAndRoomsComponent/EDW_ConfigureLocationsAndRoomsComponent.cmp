@@ -1,0 +1,60 @@
+<aura:component controller="EDW_ConfigureAppointmentController">
+    <aura:attribute type="String[]" name="numberOfRooms" />
+    <aura:attribute type="String[]" name="infestationLevels" />
+    <aura:attribute type="String[]" name="treatmentTypes" />
+    <aura:attribute type="Boolean" name="isValidForAddingRows" default="false" />
+    <aura:attribute type="Boolean" name="isValidForUpdatingRows" default="false" access="private" />
+    <aura:attribute type="Boolean" name="areRowsSelectedForEditing" default="false" />
+    <aura:attribute type="Boolean" name="isMultiRes" />
+    
+    <aura:registerEvent name="EDW_SendNewTableRowsRequestEvent" type="c:EDW_SendNewTableRowsRequestEvent" />
+    <aura:registerEvent name="EDW_MassEditEvent" type="c:EDW_MassEditEvent" />
+    
+    <aura:handler name="change" value="{!v.areRowsSelectedForEditing}" action="{!c.rowsSelectedListener}"/>
+    
+	<div class="ch-section-wrapper slds-container--fluid">
+        <div class="ch-section-header slds-page-header__title">
+            <div class="section-icon section-icon-collapsed" data-collapsetarget="configure-locations" onclick="{!c.expandContractSection}">
+                <lightning:buttonIcon class="button-icon" iconName="utility:down" variant="bare" alternativeText="Down" />
+            </div>
+            <c:EDW_ConfigureAppointmentSectionTitlesComponent iconName="custom:custom78" iconAlternativeText="Survey Locations" iconSize="medium" sectionTitle="{!$Label.c.Configure_Locations_and_Rooms}" />
+        </div>
+        <div aura:id="configure-locations" class="ch-section-body rolledup">
+            <div class="ch-input-wrapper">
+                <lightning:select name="selTreatmentType" aura:id="selTreatmentType" label="{!$Label.c.Treatment_Type}" onchange="{!c.validateFormTreatment}">
+                    <option value="">{!$Label.c.None}</option>
+                    <aura:iteration items="{!v.treatmentTypes}" var="type">
+                        <option value="{!type}">{!type}</option>
+                    </aura:iteration>
+                </lightning:select>
+            </div>
+            <div class="ch-input-wrapper">
+                <lightning:select name="selInfestationLevel" aura:id="selInfestationLevel" label="{!$Label.c.Infestation_Level}" onchange="{!c.validateFormInfestation}" disabled="true">
+                    <option value="">{!$Label.c.None}</option>
+                    <aura:iteration items="{!v.infestationLevels}" var="level">
+                        <option value="{!level}">{!level}</option>
+                    </aura:iteration>
+                </lightning:select>
+            </div>
+            <div class="ch-input-wrapper">
+                <lightning:input type="number" maxlength="3" min="0" max="2000" aura:id="txtNumberOfUnits" name="txtNumberOfUnits" label="{!$Label.c.Number_of_Units}" placeholder="{!$Label.c.Number_of_Units_Placeholder}" onchange="{!c.validateForm}" />
+            </div>
+            
+            <aura:if isTrue="{!v.isMultiRes}">
+                <div class="ch-input-wrapper">
+                    <lightning:select name="selNumberOfRooms" aura:id="selNumberOfRooms" label="{!$Label.c.Number_of_Rooms}" onchange="{!c.validateForm}" disabled="true">
+                        <option value="">{!$Label.c.Rooms_Not_Applicable}</option>
+                        <aura:iteration items="{!v.numberOfRooms}" var="num">
+                            <option value="{!num}">{!num}</option>
+                        </aura:iteration>
+                    </lightning:select>         
+                </div>
+            </aura:if>
+            <div class="ch-button-wrapper">
+                <lightning:button variant="brand" label="{!$Label.c.Add_with_Survey_Location}" iconName="utility:add" iconPosition="left" onclick="{!c.addRowsWithLocation}" disabled="{!!v.isValidForAddingRows}" />
+                <lightning:button variant="brand" label="{!$Label.c.Add}" iconName="utility:add" iconPosition="left" onclick="{!c.addRows}" disabled="{!!v.isValidForAddingRows}" />
+                <lightning:button class="ch-btn-warning" label="{!$Label.c.Update_Selected_Items}" disabled="{!!v.isValidForUpdatingRows}" onclick="{!c.updateSelectedOrderItems}" />
+            </div>
+        </div>
+    </div>
+</aura:component>

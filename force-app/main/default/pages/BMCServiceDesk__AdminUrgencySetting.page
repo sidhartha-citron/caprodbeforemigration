@@ -1,0 +1,40 @@
+<apex:page controller="BMCServiceDesk.AdminUrgencyController" standardStylesheets="false" showHeader="false">
+	<apex:form >
+		 <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>
+		 <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminUrgency.css" />
+		 <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+
+	<body>
+	<div id="tbDiv" ></div>
+	<div id="helpDiv" class="clshelpDiv"></div>
+	<div id="mainDiv" ></div>
+	<apex:actionFunction name="save" action="{!save}" onComplete="saveComplete('{!success}')" reRender="">
+		<apex:param assignTo="{!UrgencyHeirarchy}" name="urgencystring" value=""/>
+		<apex:param assignTo="{!propCalculateUrgencyOnUpdate}" name="propCalculateUrgency" value=""/>
+	</apex:actionFunction>
+	<script>
+			var urgencyHierarchy 			= '{!JSENCODE(UrgencyHeirarchy)}'; 
+			var urgencyHierarchyArray 		= urgencyHierarchy.split(';');
+			var apivalues 					= {!apivalues};
+			var urgencyApivaluesArray 		= apivalues.split(';');
+			var urgencyArray 				= new Array();
+			var propCalculateUrgency 		= '{!JSENCODE(propCalculateUrgencyOnUpdate)}';
+			var savelabel 					= '{!JSINHTMLENCODE($Label.Save)}';
+			var SDEFStylesPath				= '{!$Resource.SDEFStyles}';
+			var labelUp						= '{!JSINHTMLENCODE($Label.Up)}';
+			var labelDown					= '{!JSINHTMLENCODE($Label.Down)}';
+			var labelUrgencyOrder 			= '{!JSINHTMLENCODE($Label.UrgencyOrder)}'
+			var labelRecalculateUrgency 	= '{!JSINHTMLENCODE($Label.RecalculateUrgency)}';
+			var sucessMsg 					= '{!JSINHTMLENCODE($Label.SavedSuccessfully)}';
+		    var errorMsg 					= '{!JSINHTMLENCODE($Label.MsgSaveError)}';
+		    var msgTitle 					= '{!JSINHTMLENCODE($Label.UrgencyOrder)}';
+	var wikiUrl = '{!wikiUrl}';        
+    parent.addHelpOnPage(document.getElementById('helpDiv'),'urgency_assignment.htm',wikiUrl);
+	</script>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ext-all.js" id="ext-all-js"/> 
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminUrgency.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/> 
+</body>
+</apex:form>
+</apex:page>

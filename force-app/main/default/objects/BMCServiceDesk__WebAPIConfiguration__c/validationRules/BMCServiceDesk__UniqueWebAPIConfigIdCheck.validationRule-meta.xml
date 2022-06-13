@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BMCServiceDesk__UniqueWebAPIConfigIdCheck</fullName>
+    <active>true</active>
+    <errorConditionFormula>IF(ISNEW(),
+NOT(ISBLANK(VLOOKUP(  $ObjectType.BMCServiceDesk__WebAPIConfiguration__c.Fields.Name , $ObjectType.BMCServiceDesk__WebAPIConfiguration__c.Fields.Name,NULLVALUE(Name, Name)))),
+IF(ISCHANGED(Name),
+IF((LOWER(Name) = LOWER(VLOOKUP($ObjectType.BMCServiceDesk__WebAPIConfiguration__c.Fields.Name, $ObjectType.BMCServiceDesk__WebAPIConfiguration__c.Fields.Name,Name))&amp;&amp;LOWER(PRIORVALUE(Name)) != Lower(Name)), TRUE, FALSE),
+FALSE))</errorConditionFormula>
+    <errorMessage>Web API Configuration name already exists. Enter a unique name.</errorMessage>
+</ValidationRule>

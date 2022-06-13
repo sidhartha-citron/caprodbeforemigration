@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Lock_Opportunity_on_Stage</fullName>
+    <active>true</active>
+    <description>If stage is &apos;Signed Awaiting Site Survey Approval&apos; we need to lock the record.</description>
+    <errorConditionFormula>AND(
+    AND($Profile.Name  &lt;&gt; &apos;Sales Operations&apos;, 
+        $Profile.Name  &lt;&gt; &apos;Sales VP&apos;,
+        $Profile.Name  &lt;&gt; &apos;System Administrator&apos;),
+AND(
+  OR(Text(StageName)=&apos;Signed Awaiting Survey Approval&apos;, Text(StageName)=&apos;Signed&apos;),
+  NOT(ISCHANGED(StageName)),
+  NOT(ISCHANGED(isConverted__c)),
+  NOT(ISCHANGED(Case_Created__c))
+  )
+)</errorConditionFormula>
+    <errorDisplayField>CPQ_Costing_Model_Stamp__c</errorDisplayField>
+    <errorMessage>The Opportunity is at &apos;Signed Awaiting Survey Approval&apos; or &apos;Signed.&apos; No change is allowed.</errorMessage>
+</ValidationRule>

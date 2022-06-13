@@ -1,0 +1,98 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0" controller="BMCServiceDesk.ReadinessChart">
+    <title>{!$Label.RR_RemedyforceReadiness}</title>    
+    
+  	<link rel="stylesheet" href="{!URLFOR($Resource.RemedyforceReadiness, '/css/RemedyforceReadiness.css')}"/> 
+  	<link rel="stylesheet" href="{!URLFOR($Resource.RemedyforceReadiness, '/css/bootstrap-4.0.0.css')}"/> 
+  	<link rel="stylesheet" href="{!$Resource.SDEFStyles}/ConsoleDetail.css" type="text/css" />
+  	<link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />
+    <script>
+        var featuresReadiness ='{!JSENCODE(featuresReadinessString)}';
+        var subfeaturesReadinessString = '{!JSENCODE(subfeaturesReadiness)}';
+        var rfCompleteness =  {!rfCompleteness};
+        var rfCompletenessLabel = '{!JSENCODE($Label.RR_RemedyforceReadiness)}';
+        var readinessPointsLabel = '{!JSENCODE($Label.RR_Points)}';
+        var readinessKnowMoreLabel = '{!JSENCODE($Label.RR_KnowMore)}';
+        var rfBadgeDisabledTooltip = '{!JSENCODE($Label.RFBadgeDisabledTooltip)}';
+        var rfBadgeAchievementShare = '{!JSENCODE($Label.RFBadgeAchievementShare)}';
+        
+        var rFBadgeTwitterShareContent = '{!JSENCODE($Label.RFBadgeTwitterShareContent)}';
+        var rFBadgeCommunityShareContent= '{!JSENCODE($Label.RFBadgeCommunityShareContent)}';
+        var rfBadgeDonutTooltip = '{!JSENCODE($Label.RFBadgeDonutToolTip)}';
+        var communityPostSharingError = '{!JSENCODE($Label.CommunityPostSharingError)}';
+        var labelCancel = '{!JSENCODE($Label.Cancel)}';
+        var labelCommunities = '{!JSENCODE($Label.Communities)}';
+        var labelPost = '{!JSENCODE($Label.Post)}';
+        var labelClose = '{!JSENCODE($Label.Close)}';
+        var expert = '{!JSENCODE(EXPERT)}';
+        var proficient = '{!JSENCODE(PROFICIENT)}';
+        var statusLabels = {
+        	"notStarted" : "{!JSENCODE($Label.RR_notStarted)}",
+        	"completed" : "{!JSENCODE($Label.CompletedScan)}",
+        	"inProgress" : "{!JSENCODE($Label.InProgress)}"
+        }
+        var wikiUrl = '{!wikiUrl}'; 
+        var readinessResourcePath = '{!$Resource.RemedyforceReadiness}';
+        var sdefStyleResourcePath = '{!$Resource.SDEFStyles}';
+        var BmcSiteUrl = '{!JSENCODE(BmcSiteUrl)}';
+        var mapBadgeInfo = JSON.parse('{!JSENCODE(badgeInfoString)}');
+        var twitterCardUrl = BmcSiteUrl + '/' + '{BADGESHORTHAND}.html';
+        var RFCommunityURL = '{!RFCommunityURL}';
+        var _RemotingActions = {
+        	"updateRFReadiness" : "{!$RemoteAction.ReadinessChart.updateRemedyforceReadiness}",
+            "getAdditionalInfo" : "{!$RemoteAction.ReadinessChart.getAdditionalInfo}",
+            "sendPostToBMCCommunities" : "{!$RemoteAction.ReadinessChart.sendPostToBMCCommunities}"
+        }   
+        var sfhost = '{!sfHost}';
+        var communityBaseURL = '{!COMMUNITY_BASE_URL}';
+        var apiSessionId =  '{!$Api.Session_ID}';
+    </script> 
+    <apex:form id="theform">
+    <apex:actionFunction name="createRemedyforceCommunityRemoteSettingCopy"  action="{!createRemedyforceCommunityRemoteSettingCopy}"   rerender="None">
+        </apex:actionFunction>
+    </apex:form>
+             
+    <body id="appPanel" >
+    	<div class="loginform container-fluid" ng-app="readinessApp" ng-controller="pieCtrl">
+    		<div class="chartHeaderContainer row">
+    			<span class="chartHeader col-1">
+    				<span class="backbtn" ng-click="loadPieChart();" ng-show="showBackBtn">&lt;&nbsp;{!$Label.ssBack}</span>
+    			</span>
+    			<span class="chartHeader charttext col-10">{!$Label.RemedyforceReadiness}</span>
+    			<span class="helpBtnWrapper col-1">
+    				<span title="{!$Label.TooltipHelp}" class="helptbn d-icon-question_circle" ng-click="openHelp()"></span>
+    			</span>
+			</div>
+			<div ng-show="showPieChart">
+				<div id="canvas"  ng-click="drillDown();" class="row">
+					<div class="col-4"></div>
+					<div class="col-4">					
+						<canvas id="pie" class="chart chart-doughnut"
+							chart-data="data" chart-labels="labels" chart-options="options"
+							chart-dataset-override="datasetOverride" title="{!$Label.RFBadgeDonutToolTip}">
+						</canvas>
+					</div>
+				</div>	
+				<div id="readinessDetails" style="padding-top:25px;">		
+					<div id="readinessLegend">{!readinessChartLegend}</div>
+				</div>
+			</div>
+			<div ng-show="showChildGraphs" >
+				<div ng-include="'{!$Resource.RemedyforceReadiness}/templates/readiness-template.html'"/>
+	        </div> 
+        </div>      	
+          
+		<apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}"/>
+        <script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/angular/angular.min.js"/>
+	    <script type="text/javascript" src="{!$Resource.RemedyforceReadiness}/js/Chart.js"/>
+	    <script type="text/javascript" src="{!$Resource.RemedyforceReadiness}/js/angular-chart.js"/>
+	    <script type="text/javascript" src="{!$Resource.RemedyforceReadiness}/js/readiness-chart.js"/>  
+	  	<link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, '/SelfService/DPLLibraries/css/bootstrap-3.3.5.css')}"/> 
+        <script type="text/javascript" src="{!$Resource.Salesforce1}/SelfService/DPLLibraries/js/popper.js"/>
+        <script type="text/javascript" src="{!$Resource.Salesforce1}/SelfService/DPLLibraries/js/bootstrap.min.js"/>
+    </body>
+     <apex:outputPanel rendered="{!NOT(validateRFCommunityUrlRemoteSetting)}">
+        <script type="text/javascript">
+                createCommunityRemoteSite();
+        </script>
+    </apex:outputPanel>
+</apex:page>

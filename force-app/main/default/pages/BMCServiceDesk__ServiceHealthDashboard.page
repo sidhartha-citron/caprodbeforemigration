@@ -1,0 +1,290 @@
+<apex:page sidebar="false" showHeader="{!isCalledFromSS}" standardStylesheets="false" docType="html-5.0" controller="BMCServiceDesk.ServiceHealthDashboardController" title="{!JSENCODE($Label.bmcservicedesk__remedyforceservicehealth)}">
+    <head>
+        <!-- App CSS -->
+        <link rel="stylesheet" href="{!$Resource.SDEFStyles}/ServiceHealthDashboard.css" type="text/css" />
+    </head>
+     <script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/jquery/jquery.min.js"></script>
+    
+    <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular.js')}"/>
+    <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-route.js')}"/>
+    <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-touch.js')}"/>
+    <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-sanitize.js')}"/>
+   
+ 
+        
+    <!-- Initialization -->
+    <script type="text/javascript">
+        var ServiceHealthApp = angular.module('ServiceHealthDashboard', []);
+        
+        var _RemotingActions = {};
+        _RemotingActions.getTileDataForServices = '{!$RemoteAction.ServiceHealthDashboardController.getTileDataForServices}';
+        _RemotingActions.getServiceOutageDetails = '{!$RemoteAction.ServiceHealthDashboardController.getServiceOutageDetails}';
+        _RemotingActions.getServiceOutageHistory = '{!$RemoteAction.ServiceHealthDashboardController.getServiceOutageHistory}';
+        _RemotingActions.changeSubscription = '{!$RemoteAction.ServiceHealthDashboardController.changeSubscription}';
+        
+        var isCalledFromSS = ('{!JSENCODE($CurrentPage.parameters.isCalledFromSS)}' == 'true');
+        var showHistoryLbl = '{!JSENCODE($Label.SRShowInputHistory)}';
+        var hideHistoryLbl = '{!JSENCODE($Label.SRHideInputHistory)}';
+		
+		var wikiUrl = '{!JSENCODE(wikiUrl)}';
+        var statusValues = {!statusValues};
+        
+        var lookupWindow;
+        var selectedAccId, selectedAccName;
+        
+        function setPopUpVar(selectedId, selectedNameVal) {
+        
+            selectedAccId = selectedId;
+            selectedAccName = selectedNameVal;
+            
+            lookupWindow.close();
+        }
+
+		function openHelpPage() {
+			if(isNewContextpage() && wikiUrl != null && wikiUrl != 'undefined' && wikiUrl != ''){
+				window.open(wikiUrl, false, 'width='+screen.width+',height='+screen.height+',resizable = 1,scrollbars=yes,status=1,top=0,left=0', false);
+			}
+		}
+
+    </script>
+    
+    <!-- Page Body -->
+    <div ng-app="ServiceHealthDashboard" style="margin: 0px;width: 100%;" >
+        <div id="mainDiv" ng-controller="ServiceHealthTiles" style="height: 100%;" ng-click="isFilterClicked = false;" class="ng-cloak">
+            
+			<div class="loadingDiv" id="el_loading" style="background-color:#fbfbfb; height:100%; opacity:0.65; width:100%;" ng-show="isShowLoader"> 
+				<div class="loadingHolder">
+					<img class="loadingImage" src="/img/loading.gif" />
+					<span class="loadingDescription">{!JSENCODE($Label.SSLoading)}...</span>
+				</div>
+			</div>
+            
+            <div >
+                <!-- Toolbar -->
+                <div id="toolbarDiv" class="toolbarCls">
+                    <div id="tabDiv" class="tabClass">
+                        <a id="currentTab" ng-click="getServiceOutagesPerTab('current');" style="margin: 0px 5px;">{!JSENCODE($Label.Current_Color)}</a>
+                        |
+                        <a id="futureTab" ng-click="getServiceOutagesPerTab('future');" style="margin: 0px 5px;">{!JSENCODE($Label.Future)}</a>
+                    </div>
+                    
+                    <div class="filterMenuCls">
+                        <div id="accFilterDiv" ng-if="!isTileClicked && !isFromSS" style="float: left; margin: 0px 15px;">
+                            <label>{!JSENCODE($Label.FilterByAccount)}</label>
+                            <input type="text" id="accountTxt" readOnly="true" ng-value="accountName" class="txtBoxCls" placeholder="{!JSENCODE($Label.Select)}"/>
+                            <input type="button" id="accountLookupBtn" class="lookupBtn" ng-click="openPopup('SearchPage?popupId=Organization&isLookup=true&isCalledFromSHD=true')"/>
+							<input type="button" id="clearAccBtn" class="bmcRefresh" ng-click="clearAccount()"/>
+                        </div>
+                        
+                        <div id="filterDiv" ng-if="!isTileClicked && selectedTab != 'future'" style="float: left; margin-right: 15px;margin-top: 2px;" ng-click="showStatusFilter($event);">
+                            <label style="cursor:pointer">{!JSENCODE($Label.FilterByStatus)}</label>
+							<span class="arrowDownSpan" />
+							
+                            <div class="statusFilterDiv" ng-show="isFilterClicked">
+                                <table>
+                                    <tr ng-repeat="status in outageStatuses">
+                                        <td>
+                                            <img ng-if="status.value != 'All'" src="{!$Resource.SDEFStyles}/SDEFicons/service_{{status.value}}.png" style="width:15px; height:15px;"/>
+                                        </td>
+                                        <td>
+											<input ng-if="status.value == 'All'" type="checkbox" style="margin: 5px 5px;" ng-value="status.value" ng-checked="selectedStatusArr.indexOf(status.value) > -1" ng-click="setSelectedStatus(status.value, $event)"/>
+                                            <input ng-if="status.value != 'All'" type="checkbox" style="margin: 5px 5px;" ng-value="status.value" ng-checked="selectedStatusArr.indexOf(status.value) > -1" ng-click="setSelectedStatus(status.value, $event)"/>
+                                        </td>
+                                        <td>
+                                            {{status.label}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+						
+						<div id="helpDiv" ng-if="!isFromSS" style="float: right; padding-right: 15px;">
+							<a href="#" onclick="openHelpPage()">
+								<img title="{!JSENCODE($Label.TooltipHelp)}" height="17" width="17" id="helpIcon" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_console_help.png"/>
+							</a>
+						</div>
+                    </div>
+                </div>
+                
+                
+                <!-- Navigation Bar -->
+                <div id="navBarDiv" class="navBarCls fontWithBold">
+                    <label ng-if="!isTileClicked" style="padding-left: 18px;">{!JSENCODE($Label.ACService)}</label>
+                    <u><a ng-if="isTileClicked" ng-click="goBackToServices()" id="taggedA" class="servicesNav" style="cursor:pointer;">{!JSENCODE($Label.ACService)}</a></u>
+                    <label id="tileNavDiv"/>
+                    <div ng-if="!isTileClicked" class="searchCls">
+                        <input placeholder="{!JSENCODE($Label.Search)}" ng-change="searchService()" id="searchTxt" ng-model="seachStr" class="txtBoxCls"/>
+                        <input type="button" id="clearSearchBtn" class="bmcRefresh" ng-click="clearSearch()"/>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <!-- Service Tiles -->
+            <div id="serviceTilesDiv" ng-if="!isTileClicked && isNoServicesFound" class="commonFontStyleCls" ng-style="{ 'padding-left' : screensWidth}" style="display: block !important;">
+                <label >{!JSENCODE($Label.NoServicesFound)}</label>
+            </div>
+		
+				<div id="serviceTilesDiv" ng-if="!isTileClicked">
+                <table ng-repeat="tile in tiles | filter: {title: seachStr} | filterServicesByStatus: selectedStatusArr : this" class="service-tile-widget" ng-style="{ 'width' : tileWidth}" ng-click="showServiceTileDetails(tile)">
+                    <tr>
+                        <td ng-if="tile.iconClass == null" colspan="1" rowspan="2" style="width:50px; height:50px;">
+                            <img src="{!$Resource.SDEFStyles}/SDEFimages/Service.png" class="serviceIconCls" />
+                            <img src="{!$Resource.SDEFStyles}/SDEFicons/service_{{tile.status}}.png" class="statusIconCls" title="{{tile.statusLabel}}"/>
+                        </td>
+                        <td colspan="1" rowspan="2" ng-if="tile.iconClass != null" style="width:50px; height:50px;">
+                            <img src="/servlet/servlet.FileDownload?file={{tile.iconClass}}" class="serviceIconCls"/>
+                            <img src="{!$Resource.SDEFStyles}/SDEFicons/service_{{tile.status}}.png" class="statusIconCls" title="{{tile.statusLabel}}"/>
+                        </td>
+                        <td colspan="1" rowspan="1" class="service-tile-title" title="{{tile.title}}">{{tile.title | truncateString: 56}}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="1" rowspan="1" class="service-tile-descr" title="{{tile.serviceDescription}}">{{tile.serviceDescription | truncateString: 30}}</td>
+                    </tr>
+                </table>
+            </div>
+            
+			<div id="serviceDetailsDiv" ng-if="isTileClicked">
+                <!-- Show service details -->
+                <table style="boder: 2px solid">
+                    <tr>
+                        <td ng-if="selectedServiceTile.iconClass == null" colspan="1" rowspan="2" style="width:50px; height:50px;">
+                            <img src="{!$Resource.SDEFStyles}/SDEFimages/Service.png" class="serviceIconCls"/>
+                            <img src="{!$Resource.SDEFStyles}/SDEFicons/service_{{selectedServiceTile.status}}.png" class="statusIconCls"/>
+                        </td>
+                        <td colspan="1" rowspan="2" ng-if="selectedServiceTile.iconClass != null" style="width:50px; height:50px;">
+                            <img src="/servlet/servlet.FileDownload?file={{selectedServiceTile.iconClass}}" class="serviceIconCls"/>
+                            <img src="{!$Resource.SDEFStyles}/SDEFicons/service_{{selectedServiceTile.status}}.png" class="statusIconCls"/>
+                        </td>
+                        <td colspan="1" rowspan="1" class="service-tile-title">{{selectedServiceTile.title}}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="1" rowspan="1" style="font: 13px arial;">{{selectedServiceTile.serviceDescription}}</td>
+                    </tr>
+                    <tr>
+                        <td/>
+                        <td colspan="1" rowspan="1" class="status{{selectedServiceTile.status}}Cls">{{selectedServiceTile.statusLabel}}</td>
+                    </tr>
+                </table>
+                
+				
+                <div id="outageDetailsDiv" class="outageDetailsCls" style="margin-top: 10px;">
+                    
+                    <!-- Show service outage details -->
+                    <table id="outageTable" ng-if="outages.outageId != null" style="margin-left: -3px;">
+                        <tr ng-if="outages.startDate != null">
+                            <td class="tdStyleCls fontWithBold" style="padding-top: 0px;">
+                                {!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Start_Date__c.label)}
+                            </td>
+                            <td class="tdStyleCls" style="padding-top: 0px;">: {{outages.startDate}}</td>
+                        </tr>
+                        <tr ng-if="outages.endDate != null">
+                            <td class="tdStyleCls fontWithBold" style="padding-top: 5px;">
+                                {!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.End_Date__c.label)}
+                            </td>
+                            <td class="tdStyleCls" style="padding-top: 5px;">: {{outages.endDate}}</td>
+                        </tr>
+                        <tr ng-if="outages.outageDescription != null">
+                            <td class="tdStyleCls fontWithBold" style="vertical-align: text-top;">
+                                {!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Description__c.label)}
+                            </td>                            
+                            <td class="tdStyleCls"><div class="descriptionContainer"><div>:</div><div class="descriptionCls"> {{outages.outageDescription}}</div></div></td>
+                        </tr>
+                        <tr ng-if="outages.rootCause != null">
+                            <td class="tdStyleCls fontWithBold" style="vertical-align: text-top;">
+                                {!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Root_Cause__c.label)}
+                            </td>
+                            <td class="tdStyleCls"><div class="descriptionContainer"><div>:</div><div class="descriptionCls"> {{outages.rootCause}}</div></div></td>
+                        </tr>
+                        <tr ng-if="outages.outageActionList != null &&  outages.outageActionList.length > 0">
+                            <td class="tdStyleCls fontWithBold">
+                                    {!JSENCODE($Label.Updates)} 
+                            </td>
+                            <td class="tdStyleCls">: </td>
+                        </tr>
+                    </table>
+                            
+                    <!-- Show outage action details -->        
+					<table id="outageActionTable" class="actionTableCls" ng-if="outages.outageActionList != null &&  outages.outageActionList.length > 0">
+						<thead>
+							<tr class="actionTableHeaderCls">
+								<th style="width:15%; padding-left: 5px">{!JSENCODE($ObjectType.Unavailability_Action_History__c.fields.date__c.label)}</th>
+								<th style="width:15%; padding-left: 5px">{!JSENCODE($ObjectType.Unavailability_Action_History__c.fields.FKAction__c.label)}</th>
+								<th style="width:70%; padding-left: 5px">{!JSENCODE($ObjectType.Unavailability_Action_History__c.fields.note__c.label)}</th>
+							</tr>
+						</thead>
+						<tbody>                     
+							<tr ng-repeat="action in outages.outageActionList" class="actionTableCls">
+								<td style="padding: 5px 10px 5px 5px;">{{action.noteDateTime}}</td>
+								<td style="padding: 5px 10px 5px 5px;">{{action.action}}</td>
+								<td style="padding: 5px 10px 5px 5px;">{{action.note}}</td>
+							</tr>
+						</tbody>                        
+					</table>
+					
+					<!-- Show subscription setting -->
+					<div ng-if="outages.isNotificationChecked == true" class="commonFontStyleCls">
+						<input type="checkbox" name="subscribeforupdateschkbox" ng-value="outages.isSubscriptionChecked" id="subscriptionSchkBox" ng-checked="outages.isSubscriptionChecked" ng-click="outages.isSubscriptionChecked = !outages.isSubscriptionChecked; checkChangeDetails(outages.outageId);"/>{!JSENCODE($Label.Subscribeforupdate)}<br/>
+                	</div>
+					
+					<!-- Show history button -->
+                    <div ng-if="outages.outageHistoryCount > 0">
+                        <hr/>
+                        <input type="button" id="historyBtn" ng-click="showOutageHistory()" value="Show History"/>
+                        <hr />
+                    </div>
+					
+                    <!-- Show outage history details -->
+                    <div id="historyDiv" ng-if="!isShowHistory">
+                        <div ng-repeat="history in outageHistory">
+                            <table ng-model="collapsed" ng-click="collapsed=!collapsed" style="margin-left: 15px;" class="commonFontStyleCls" ng-show="!collapsed">
+                                <tr>
+									<td>
+										<span class="expandCls" ng-if="!collapsed"/>
+									</td>
+									<td>
+										<label ng-show="!collapsed" class="fontWithBold" style="cursor:pointer">{{history.startDate}}</label>
+									</td>
+								</tr>
+                            </table>
+                            <table ng-show="collapsed" ng-click="collapsed=!collapsed" class="historyDetail">
+								<tr class="commonFontStyleCls" ng-if="history.startDate != null">
+									<td style="width:1%"><span class="collapseCls" ng-if="collapsed"/></td>
+									<td class="fontWithBold" style="width:6%;">{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Start_Date__c.label)}</td>
+									<td style="width:1%">:</td>
+									<td> {{history.startDate}}</td>
+								</tr>
+								<tr class="commonFontStyleCls" ng-if="history.endDate != null">
+									<td></td>
+									<td class="fontWithBold">{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.End_Date__c.label)}</td>
+									<td>:</td>
+									<td> {{history.endDate}}</td>
+								</tr>
+								<tr class="commonFontStyleCls" ng-if="history.outageDescription != null">
+									<td></td>
+									<td class="fontWithBold">{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Description__c.label)}</td>
+									<td>:</td>
+									<td> {{history.outageDescription}}</td>
+								</tr>
+								<tr class="commonFontStyleCls" ng-if="history.rootCause != null">
+									<td></td>
+									<td class="fontWithBold">   {!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Root_Cause__c.label)}</td>
+									<td>:</td>
+									<td> {{history.rootCause}}</td>
+								</tr>
+                            </table>
+                            <hr/>
+                        </div>                  
+                    </div>
+				</div>
+            </div>
+        </div>
+    </div>
+    
+	
+    <!-- App JS -->
+    <script src="{!$Resource.SDEFCommonJS}/ServiceHealthDashboard.js" />
+    <script src="{!$Resource.SDEFCommonJS}/ServiceHealthFactory.js" /> 
+	<script src="{!$Resource.SDEFCommonJS}/WikiHelp.js" /> 
+    
+</apex:page>

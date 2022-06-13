@@ -1,0 +1,19 @@
+<div class="activity-item__attachments">
+	<span class="i i-activity-item-attachments activity-item-attachments__staple-icon"></span>
+
+	<div ng-repeat="attachment in attachments | limitTo: (activityItemType === 'commented' ? attachments.length : activityStreamModel.MAX_ATTACHMENTS_TO_DISPLAY)"
+		 class="activity-item-attachments__attachment"
+		 ng-class="{'activity-item-attachments__attachment_expanded': activityItemType === 'commented'}">
+		<a target="_blank" href="{{attachment.downloadUrl}}" download="{{attachment.filename}}">
+			<div class="activity-item-attachment__thumbnail" title="{{attachment.filename}}"
+				 ng-style="attachment.thumbnail ? {'background-image': 'url(' + attachment.thumbnail + ')'} : {}"
+				 ng-class="{ 'i-attachment-{{attachment.type}}' : !attachment.thumbnail}" />
+		</a>
+		<a target="_blank" href="{{attachment.downloadUrl}}" download="{{attachment.filename}}">
+			<div class="activity-item-attachment__details" ng-if="attachments.length === 1 || activityItemType === 'commented'">
+				<div class="activity-item-attachment__title" ng-cloak="">{{attachment.filename}}</div>
+				<div class="activity-item-attachment__size" ng-cloak="">{{attachment.contentSize | fileSize}}</div>
+			</div>
+		</a>
+	</div>	
+</div>

@@ -1,0 +1,98 @@
+<aura:component access="global" controller="SurveyAssetAllocationController">
+    <aura:handler name="init" value="{!this}" action="{!c.initialize}"/>
+    
+    <!-- aura attributes -->
+    <aura:attribute name="siteSurveyId" type="String"/>
+    <aura:attribute name="locationId" type="String"/>
+    <aura:attribute name="languageCode" type="String"/>
+    <aura:attribute name="mapRoomSubTypes" type="Map"/>
+    <aura:attribute name="locationTypes" type="Map"/>
+    <aura:attribute name="locationSubTypes" type="Map"/>
+    <aura:attribute name="locationSubTypesFiltered" type="Map"/>
+    <aura:attribute name="numberOfRooms" type="String[]"/>
+    
+    <aura:attribute name="locationDependencyPicklists" type="Object"/>
+
+    <aura:registerEvent name="ModalCloseEvent" type="c:ModalCloseEvt"/>
+    <aura:registerEvent name="NewSurveyLocationEvent" type="c:SurveyRoomCreated"/>
+    <!-- <aura:handler name="init" value="{!this}" action="{!c.doInit}" /> -->
+    
+    <!-- aura methods -->
+    <aura:method name="setSurveyId" action="{!c.setSiteSurveyId}" description="Set parent survey id">
+        <aura:attribute name="surveyid" type="string" default=""/>
+    </aura:method>
+    <aura:method name="setLocationId" action="{!c.setLocationId}" description="Set location id">
+        <aura:attribute name="surveyRecord" type="Survey_Location__c"/>
+    </aura:method>
+    
+    <aura:attribute name="surveyLocation" type="Survey_Location__c" default="{'sobjectType':'Survey_Location__c'}"/>
+    <aura:attribute name="recordError" type="String"/>
+    
+    <c:CustomToast aura:id="customToast" />
+    
+    <div class="slds-form slds-form_stacked"> 
+        <div class="slds-grid slds-gutters">
+        	<div class="slds-col slds-size_1-of-2">
+                <div class="slds-form-element">
+                    <lightning:input label="{!$Label.c.Site_Survey_Building}" name="building" aura:id="building" value="{!v.surveyLocation.Building__c}" />        	
+                </div>
+                
+                <div class="slds-form-element" title="{!$Label.c.Site_Survey_Floor_Help}">
+                    <lightning:input label="{!$Label.c.Site_Survey_Floor}" name="floor" aura:id="floor" value="{!v.surveyLocation.Floor__c}" required="true"/>        	
+                </div>
+                <!-- 21530 -->
+                <div class="slds-form-element" title="{!$Label.c.Site_Survey_Unit_Number}">
+                    <lightning:input label="{!$Label.c.Site_Survey_Unit_Number}" name="unit_number" aura:id="unit_number" value="{!v.surveyLocation.Unit_Number__c}" />        	
+                </div>
+                <!-- 21618 -->
+                <div class="slds-form-element">
+                    <ui:inputSelect class="slds-select" aura:id="numberOfRooms" label="{!$Label.c.Number_of_Rooms}" value="{!v.surveyLocation.Number_of_Rooms__c}">
+                        <ui:inputSelectOption text="" label=""/>
+                        
+                        <aura:iteration items="{!v.numberOfRooms}" var="room">
+                            <ui:inputSelectOption text="{!room}" label="{!room}"/>
+                        </aura:iteration>
+                    </ui:inputSelect>
+                </div>
+                <!-- 21530 -->
+                <div class="slds-form-element" title="{!$Label.c.Site_Survey_Service_Order}"> 
+                    <lightning:input label="{!$Label.c.Site_Survey_Service_Order}" name="service_order" aura:id="service_order" value="{!v.surveyLocation.Service_Order__c}" />        	
+                </div>
+                
+                <div class="slds-form-element">                               
+                    <ui:inputSelect class="slds-select slds-required" aura:id="locationType" required="true" change="{!c.handleRoomTypeChange}" label="{!$Label.c.Site_Survey_Location_Type}"  value="{!v.surveyLocation.Location_Type__c}" requiredIndicatorClass="slds-required">
+                        <aura:iteration items="{!v.locationTypes}" var="roomType">
+                            <ui:inputSelectOption text="{!roomType.pickListValue}" label="{!roomType.pickListLabel}"/>
+                        </aura:iteration>
+                    </ui:inputSelect>
+                </div>
+                <div class="slds-form-element">                             
+                    <ui:inputSelect aura:id="roomSubType" label="{!$Label.c.Site_Survey_Location_Subtype}" value="{!v.surveyLocation.Location_SubType__c}">
+                        <aura:iteration items="{!v.locationSubTypesFiltered}" var="subType">
+                            <ui:inputSelectOption text="{!subType.pickListValue}" label="{!subType.pickListLabel}"/>
+                        </aura:iteration>
+                    </ui:inputSelect>         
+                </div>      
+                <div class="slds-form-element">
+                    <ui:inputText label="{!$Label.c.Site_Survey_Location}" aura:id="roomName" value="{!v.surveyLocation.Name}" />        	
+                </div>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <div class="slds-form-element">
+                    <lightning:textarea label="{!$Label.c.Installation_Notes}" value="{!v.surveyLocation.Installation_Notes__c}" maxlength="255" />
+                </div>
+                <div class="slds-form-element">
+                    <lightning:textarea label="{!$Label.c.Service_Notes}" value="{!v.surveyLocation.Service_Notes__c}" maxlength="255" />
+                </div>
+                <div class="slds-form-element">
+                    <label class="slds-form-element__label">{!$Label.c.Site_Survey_Notes}</label>
+                    <lightning:inputRichText value="{!v.surveyLocation.Notes__c}" />             
+                </div>                
+            </div>
+        </div>
+    </div>
+    <div class="slds-modal__footer">
+        <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeModal }" />
+        <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Submit}" onclick="{!c.handleSubmit }" />
+    </div>
+</aura:component>

@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <buckets>
+        <bucketType>picklist</bucketType>
+        <developerName>BucketField_21463845</developerName>
+        <masterLabel>BRANCH</masterLabel>
+        <nullTreatment>n</nullTreatment>
+        <otherBucketLabel>Other</otherBucketLabel>
+        <sourceColumnName>User.Accpac_Customer_Group__c</sourceColumnName>
+        <useOther>true</useOther>
+        <values>
+            <sourceValues>
+                <sourceValue>1110 TORONTO - CND$</sourceValue>
+            </sourceValues>
+            <value>TORONTO</value>
+        </values>
+        <values>
+            <sourceValues>
+                <sourceValue>1130 OTTAWA - CND$</sourceValue>
+            </sourceValues>
+            <value>OTTAWA</value>
+        </values>
+        <values>
+            <sourceValues>
+                <sourceValue>1120 LONDON - CND$</sourceValue>
+            </sourceValues>
+            <value>LONDON</value>
+        </values>
+        <values>
+            <sourceValues>
+                <sourceValue>1210 MONTREAL - CND$</sourceValue>
+            </sourceValues>
+            <sourceValues>
+                <sourceValue>1220 QUEBEC CITY - CND$</sourceValue>
+            </sourceValues>
+            <sourceValues>
+                <sourceValue>1230 TROIS-RIVIERES - CND$</sourceValue>
+            </sourceValues>
+            <value>QUEBEC</value>
+        </values>
+        <values>
+            <sourceValues>
+                <sourceValue>1310 VANCOUVER - CND$</sourceValue>
+            </sourceValues>
+            <value>VANCOUVER</value>
+        </values>
+        <values>
+            <sourceValues>
+                <sourceValue>1410 CALGARY - CND$</sourceValue>
+            </sourceValues>
+            <sourceValues>
+                <sourceValue>1420 EDMONTON- CND$</sourceValue>
+            </sourceValues>
+            <value>ALBERTA</value>
+        </values>
+        <values>
+            <sourceValues>
+                <sourceValue>0000 NATIONAL - CND$</sourceValue>
+            </sourceValues>
+            <value>NATIONAL</value>
+        </values>
+    </buckets>
+    <chart>
+        <backgroundColor1>#FFFFFF</backgroundColor1>
+        <backgroundColor2>#FFFFFF</backgroundColor2>
+        <backgroundFadeDir>Diagonal</backgroundFadeDir>
+        <chartSummaries>
+            <aggregate>Sum</aggregate>
+            <axisBinding>y</axisBinding>
+            <column>AMOUNT</column>
+        </chartSummaries>
+        <chartType>HorizontalBarStacked</chartType>
+        <enableHoverLabels>false</enableHoverLabels>
+        <expandOthers>true</expandOthers>
+        <groupingColumn>BucketField_21463845</groupingColumn>
+        <legendPosition>Right</legendPosition>
+        <location>CHART_BOTTOM</location>
+        <secondaryGroupingColumn>CDF1</secondaryGroupingColumn>
+        <showAxisLabels>false</showAxisLabels>
+        <showPercentage>false</showPercentage>
+        <showTotal>false</showTotal>
+        <showValues>false</showValues>
+        <size>Medium</size>
+        <summaryAxisRange>Auto</summaryAxisRange>
+        <textColor>#000000</textColor>
+        <textSize>12</textSize>
+        <titleColor>#000000</titleColor>
+        <titleSize>18</titleSize>
+    </chart>
+    <columns>
+        <field>OPPORTUNITY_NAME</field>
+    </columns>
+    <columns>
+        <field>FULL_NAME</field>
+    </columns>
+    <columns>
+        <field>RECORDTYPE</field>
+    </columns>
+    <columns>
+        <field>TYPE</field>
+    </columns>
+    <columns>
+        <field>ADDRESS2_CITY</field>
+    </columns>
+    <columns>
+        <aggregateTypes>Sum</aggregateTypes>
+        <field>AMOUNT</field>
+    </columns>
+    <columns>
+        <field>CLOSE_DATE</field>
+    </columns>
+    <columns>
+        <field>CREATED_DATE</field>
+    </columns>
+    <columns>
+        <aggregateTypes>Average</aggregateTypes>
+        <field>Opportunity.CPQ_Deal_Score__c</field>
+    </columns>
+    <columns>
+        <field>QUANTITY</field>
+    </columns>
+    <columns>
+        <field>UNIT_PRICE</field>
+    </columns>
+    <columns>
+        <aggregateTypes>Sum</aggregateTypes>
+        <field>TOTAL_PRICE</field>
+    </columns>
+    <columns>
+        <field>PRODUCT_DESCRIPTION</field>
+    </columns>
+    <columns>
+        <field>PRODUCT_PRICE</field>
+    </columns>
+    <columns>
+        <aggregateTypes>Sum</aggregateTypes>
+        <field>OpportunityLineItem.Total_Monthly_Revenue__c</field>
+    </columns>
+    <columns>
+        <aggregateTypes>Sum</aggregateTypes>
+        <field>OpportunityLineItem.Service_Price_Per_Unit__c</field>
+    </columns>
+    <columns>
+        <field>OpportunityLineItem.Item_Type__c</field>
+    </columns>
+    <columns>
+        <field>OpportunityLineItem.Service_Frequency__c</field>
+    </columns>
+    <customDetailFormulas>
+        <calculatedFormula>IF(
+    AND(OpportunityLineItem.Item_Type__c = &quot;Consumables&quot;, ISPICKVAL(OpportunityLineItem.Service_Frequency__c, &quot;One-Time&quot;)),&apos;Consumables (One-Time)&apos;,
+    IF( 
+        AND(OpportunityLineItem.Item_Type__c = &quot;Consumables&quot;, NOT(ISPICKVAL(OpportunityLineItem.Service_Frequency__c, &quot;One-Time&quot;))),&apos;Consumables (Recurring)&apos;,
+		IF( 
+			AND(OpportunityLineItem.Item_Type__c = &quot;Service&quot;, NOT(ISPICKVAL(OpportunityLineItem.Service_Frequency__c, &quot;One-Time&quot;))),&apos;Service (Recurring)&apos;,
+			IF( 
+				AND(OpportunityLineItem.Item_Type__c = &quot;Service&quot;, ISPICKVAL(OpportunityLineItem.Service_Frequency__c, &quot;One-Time&quot;)),&apos;Service (One-Time)&apos;,
+				IF( 
+					AND(OpportunityLineItem.Item_Type__c = &quot;Equipment&quot;, NOT(ISPICKVAL(OpportunityLineItem.Service_Frequency__c, &quot;One-Time&quot;))),&apos;Equipment (Recurring)&apos;,
+					IF( 
+						AND(OpportunityLineItem.Item_Type__c = &quot;Equipment&quot;, ISPICKVAL(OpportunityLineItem.Service_Frequency__c, &quot;One-Time&quot;)),&apos;Equipment (One-Time)&apos;, &quot;Other&quot;
+					)
+				)
+			)
+		)
+	)
+)</calculatedFormula>
+        <dataType>Text</dataType>
+        <developerName>CDF1</developerName>
+        <label>Sale Category</label>
+        <scale>2</scale>
+    </customDetailFormulas>
+    <format>Summary</format>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>BucketField_21463845</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>CDF1</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <groupingsDown>
+        <aggregateType>Sum</aggregateType>
+        <dateGranularity>Day</dateGranularity>
+        <field>ACCOUNT_NAME</field>
+        <sortByName>AMOUNT</sortByName>
+        <sortOrder>Desc</sortOrder>
+        <sortType>Aggregate</sortType>
+    </groupingsDown>
+    <name>Won Opps Yesterday - Categorized Version</name>
+    <params>
+        <name>open</name>
+        <value>closedwon</value>
+    </params>
+    <params>
+        <name>probability</name>
+        <value>&gt;0</value>
+    </params>
+    <params>
+        <name>co</name>
+        <value>1</value>
+    </params>
+    <reportType>OpportunityProduct</reportType>
+    <scope>organization</scope>
+    <showDetails>true</showDetails>
+    <showGrandTotal>true</showGrandTotal>
+    <showSubTotals>true</showSubTotals>
+    <sortColumn>AMOUNT</sortColumn>
+    <sortOrder>Desc</sortOrder>
+    <timeFrameFilter>
+        <dateColumn>Opportunity.Close_Date_Previous_Business_Date__c</dateColumn>
+        <interval>INTERVAL_YESTERDAY</interval>
+    </timeFrameFilter>
+</Report>

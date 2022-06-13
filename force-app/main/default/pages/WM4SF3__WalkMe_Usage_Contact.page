@@ -1,0 +1,103 @@
+<apex:page standardController="Contact" extensions="WM4SF3.ctrl_usage" docType="html-5.0" standardStylesheets="false" >
+    <apex:iframe id="CONTACT_USAGE_INSIGHTS_IFRAME" src="https://insights.walkme.com?uid={!uid}&euid={!Contact[euidField]}&guid={!token}" rendered="{!uid !='' && Contact[euidField]!=''}" scrolling="true"/>
+
+    <script language="JavaScript">
+        var MESSAGE_SUBSCRIBE = 'wm-plugin-pmo-subscribe';
+        var MESSAGE_UNSUBSCRIBE = 'wm-plugin-pmo-unsubscribe';
+        var MESSAGE_SUBSCRIBED = 'wm-plugin-pmo-subscribed';
+        var MESSAGE_NOTIFY = 'wm-plugin-pmo-notify';
+
+        var frm = document.getElementById('CONTACT_USAGE_INSIGHTS_IFRAME');
+        var frameHeightAdjusted = false;
+        var messageListenerAdded = false;
+        var mutationSubscriptionId = null;
+
+        function tryAdjustFrameHeight() {
+            var parentHeight = (window.innerHeight ? window.innerHeight : document.documentElement.clientHeight);
+
+            if (parentHeight > 0) {
+                frm.height = parentHeight;
+                document.body.style.overflow = 'hidden';
+                return true;
+            }
+
+            return false;
+        }
+
+        function onMessage(event) {
+
+            function isMessage(message) {
+                return (
+                    typeof event.data === 'string' &&
+                    event.data.indexOf(message) == 0 &&
+                    event.data.length >= message.length + 2 && 
+                    event.data.charAt(message.length) == '/');
+            }
+
+            if (isMessage(MESSAGE_SUBSCRIBED)) {
+                mutationSubscriptionId = event.data.substr(MESSAGE_SUBSCRIBED.length + 1);
+            } else if (isMessage(MESSAGE_NOTIFY)) {
+                if (!mutationSubscriptionId) {
+                    mutationSubscriptionId = '?';
+                }
+                if (!frameHeightAdjusted) {
+                    setTimeout(function() {
+                        if (tryAdjustFrameHeight()) {
+                            window.top.postMessage(MESSAGE_UNSUBSCRIBE + '/' + mutationSubscriptionId, '*');
+                        }
+                    }, 500);
+                }
+            }
+        }
+        
+        function requestSubscribeToMutations() {
+            if (!messageListenerAdded) {
+                window.addEventListener('message', onMessage, false);
+                messageListenerAdded = true;
+            }
+
+            var selector = '.efpViewSelect ul.optionContainer li';
+            window.top.postMessage(MESSAGE_SUBSCRIBE + '/' + selector, '*');
+        }
+        
+        function adjustFrameHeightOrObserveMutations() {
+            frameHeightAdjusted = frameHeightAdjusted || tryAdjustFrameHeight();
+            
+            if (frameHeightAdjusted || typeof MutationObserver !== 'function') {
+                return;
+            }
+            
+            if (!mutationSubscriptionId) {
+                requestSubscribeToMutations();
+                window.setTimeout(adjustFrameHeightOrObserveMutations, 500);
+            }
+        }
+        
+        adjustFrameHeightOrObserveMutations();
+    </script>
+
+    <div id="NoDataSection" align="center">
+        <apex:outputPanel rendered="{! Contact[euidField] == ''}">
+            <div id="panel1" align="center">
+                <div class="not-identify-wrapper">
+                    <div class="not-identify-image">
+                        <apex:image value="{!$Resource.WM4SF3__NoDataImage}" alt="No Data Was Found Image"/>
+                    </div>
+                    <p class="not-identify-text bold">WalkMe does not identify this Contact yet.</p>
+                    <p class="not-identify-text">To see their WalkMe interactions, add value to "{!$ObjectType.Contact.Fields[euidField].Label}" field</p>
+                </div>
+            </div>
+        </apex:outputPanel>
+
+        <apex:outputPanel rendered="{! uid == '' }">
+            <div id="panel2" align="center">
+                <div class="not-identify-wrapper">
+                    <div class="not-identify-image">
+                        <apex:image value="{!$Resource.WM4SF3__NoDataImage}" alt="No Data Was Found Image"/>
+                    </div>
+                    <p class="not-identify-text">WalkMe Was Not Set Up To View WalkMe Usage, Please Contact Your WalkMe Admin.</p>
+                </div>
+            </div>
+        </apex:outputPanel>
+    </div>
+</apex:page>

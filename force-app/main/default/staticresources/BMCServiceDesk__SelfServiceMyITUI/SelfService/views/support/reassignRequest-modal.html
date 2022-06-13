@@ -1,0 +1,76 @@
+<div class="modal-header Branding-Title_bar-background_color Branding-Title_bar-broadcast_text_color support-modal-header">	
+	<div style="float:left;width:97%;">
+		<h1 class="modal-header__title support-modal-header__title" id="support-modal-header__title">
+			{{ $root.selfServiceLabels.Reassign }}{{ approvalRequest.TargetObjectName ? ': ' : '' }}{{ approvalRequest.TargetObjectName }}
+		</h1>
+	</div>
+	<div role="button" aria-label="{{ $root.selfServiceLabels.cancel }}" tabindex="0" class="search-remove-btn search-remove-btn-dpl" ng-click="cancel()">
+    	<span class="d-icon-cross"/>
+	</div>
+	
+</div>
+
+<div class="modal-body support-modal-body">
+  <loading-spinner if="manageApprovalState.isLoading" overlay="true" style="min-height:200px;"></loading-spinner>
+    <div ng-show="!manageApprovalState.isLoading" style="padding-left: 10px; padding-top: 10px; padding-bottom: 10px; padding-right: 10px;" >
+      <div>
+          <div class="srd-question-label-container__left" style="padding-left: 3px;">
+            <h5 class="srd-question-label ng-binding" style="font-weight: bold;">{{$root.selfServiceLabels.AssignTo}}</h5>
+          </div>
+          <input class="fullwidth srd-question-input " type="text"  ng-model="searchVar.usersSearchText" placeholder="{{$root.selfServiceLabels.search}}" ng-focus="getUsersOnFocus()" ng-change="getUsersBySearch(searchVar.usersSearchText)" arrow-selector></input>
+          <div class="reassign-approval-search__dropdown" ng-if="showUsersTypeAheadDiv && ((searchResults|filter:searchVar.usersSearchText).length || searchResultsAreLoading)">
+            <div style="max-height: 250px;overflow-y: auto;" arrow-selector class="srd-question-reference-container">    
+				<div ng-repeat="optionVal in searchResults" class="srd-question-on-behalf-search__result-item" ng-click="selectOptionVal(optionVal);" ng-attr-id="outerDiv-{{$index}}" 
+				ng-mouseover = "selectRow(searchResults.indexOf(optionVal));"
+						ng-class="{'selected': (searchResults.indexOf(optionVal) == selectedRow)}">
+							<div class="rfDPL-user-blade" style="overflow: hidden;">
+							<div class="rfDPL-user-img-container" ng-show="optionVal.photoURL != ''">
+								<img src="{{optionVal.photoURL}}" class="rfDPL-user-image" height="30" width="30"/>
+							</div>
+							<div class="rfDPL-name-col lookup-user-data">
+								<p class="rfDPL-user-fullname block-with-text-2-lines" ng-class="optionVal.defaultSize != 0?'rfDPL-user-fullname-bold':''">{{htmlUnescape(optionVal.itemName)}}
+								</p>
+								<p class="rfDPL-user-fullname lookupData block-with-text-2-lines" ng-show="optionVal.extraInfo != ''">{{htmlUnescape(optionVal.extraInfo)}}
+								</p>
+								<div ng-attr-id="defaultInfo-{{optionVal.itemId}}">
+									<p ng-repeat="(key, value) in optionVal.defaultInfoList" class="lookupData">
+										<span class="lookupDataLabel block-with-text-2-lines" ng-show="showLabelsInDefaultLookupView">{{htmlUnescape(key)}}</span>
+										<span class="lookupDataValue block-with-text-2-lines">{{htmlUnescape(value)}}</span>
+									</p>
+									<p ng-repeat="i in getNumber(optionVal.emptyDefaultDataSize) track by $index" class="lookupData">
+										<span class="lookupDataLabel block-with-text-2-lines"></span>
+										<span class="lookupDataValue block-with-text-2-lines"></span>
+									</p>
+								</div>
+								<div ng-attr-id="extraInfo-{{optionVal.itemId}}" ng-show="!optionVal.showMore">
+									<p ng-repeat="field in optionVal.extraInfoList" class="lookupData" >
+										<span class="lookupDataLabel block-with-text-2-lines" ng-show="field.showLabel">{{htmlUnescape(field.label)}}</span>
+										<span class="lookupDataValue block-with-text-2-lines">{{htmlUnescape(field.value)}}</span>
+									</p>
+								</div>
+							</div>
+							<div class="lookup-data-icon d-icon-plus" ng-show="optionVal.showMore" ng-click="$event.stopPropagation(); expandLookupData(optionVal,searchResults.indexOf(optionVal));"/>
+							<div class="lookup-data-spinner" ng-if="optionVal.resultsAreLoading">
+								<loading-spinner if="true" inline="true"></loading-spinner>
+							</div>
+							<div class="lookup-data-icon d-icon-minus" ng-attr-id="expand-{{optionVal.itemId}}" ng-show="optionVal.isShowMoreAvailable && !optionVal.showMore" data-index="{{searchResults.indexOf(optionVal)}}" ng-click="$event.stopPropagation();  collapseLookupData(optionVal.itemId,searchResults.indexOf(optionVal));"/>
+						</div>
+				</div>	
+              </div>
+            </div>
+            <div class="srd-question-on-behalf-search__message" ng-if="searchResultsAreLoading">
+              <loading-spinner if="true" inline="true"></loading-spinner>
+              {{$root.selfServiceLabels.searching}}
+            </div>
+            <div class="srd-question-on-behalf-search__message" ng-if="!searchResultsAreLoading && (searchResults.length === 0)">
+              {{$root.selfServiceLabels.noResults}}
+            </div>        
+          </div>
+      </div>
+    </div>
+      <div class="modal-footer__btn-container" style="padding-left: 150px;padding-bottom: 10px;">
+      <button type="button" class="btn Branding-Right_Panel-button_outline ng-binding"  ng-click="cancel()">{{$root.selfServiceLabels.cancel}}</button>
+      <button type="button" class="btn btn-primary Branding-Right_Panel-default_button Branding-Right_Panel-button_outline ng-binding" ng-disabled="(!selectedUserId || !searchVar.usersSearchText)" ng-click="reassign(selectedUserId)">{{$root.selfServiceLabels.Reassign}}</button>
+      </div>
+    </div>
+</div>

@@ -1,0 +1,773 @@
+<!-- Content of CIExplorerLauncher.Page has been moved to this page -->
+<apex:page Controller="BMCServiceDesk.CIExplorerLauncherController" showHeader="false" sidebar="false" standardStylesheets="false">
+    <apex:outputPanel id="CIExplorer" rendered="{!(!silverlightCIExplorer)}">
+
+        <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+        <link rel="stylesheet" href="{!$Resource.SDEFStyles}/FilterComponent.css" type="text/css" />
+        
+        <link rel="stylesheet" href="{!$Resource.SDEFStyles}/CIExplorerLauncher.css" type="text/css" />
+        <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+        <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+        <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+        
+        <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" />
+        <style>
+           .x-splitter-collapsed .x-layout-split-bottom {
+                
+                background: url('{!URLFOR($Resource.CIForce, 'images/toolbar/cmdb_split-devider-ci-explorer.svg')}') no-repeat 0 -1px; 
+                margin: auto auto auto -55px;
+                width: 134px;
+                height: 83px;
+                background-position: 29px 14px;
+                transform: rotate(90deg);
+            }
+
+            .x-layout-split-bottom {
+                background: no-repeat top left;
+                
+                background-image: url('{!URLFOR($Resource.CIForce, 'images/toolbar/cmdb_split-devider-ci-explorer.svg')}');
+                background-position: 0px 160px;
+                margin:auto auto auto -55px;
+                width: 220px;
+                transform: rotate(90deg);
+                height: 227px;
+                
+            }
+            
+            .reposition{
+                background-image: url('{!URLFOR($Resource.CIForce, 'images/toolbar/respositioning-icon.png')}');
+            }
+            .reposition-off{
+                background-image: url('{!URLFOR($Resource.CIForce, 'images/toolbar/respositioning-icon-disabled.png')}');
+                cursor: default !important;
+            }
+            
+        </style>
+        
+    <script>
+    var selectAllLabel = '{!JSENCODE($Label.selectall)}';
+    var allClassesSelectedLabel = '{!JSENCODE($Label.allclassesselected)}';
+    var allRelSelectedLabel = '{!JSENCODE($Label.allrelationshipselected)}';
+    var classTypes = [selectAllLabel];
+    var licenseLocation = "{!URLFOR($Resource.DeepView, 'js/diagram_lic.txt')}";
+
+    window.onfocus = function(){
+    var refreshId = Ext.getCmp('refreshBtnId');
+      if(refreshId != 'undefined' && refreshId != null && refreshId != '')
+          refreshId.focus();
+    }
+        var className = '{!JSENCODE($CurrentPage.parameters.className)}';
+        var wikiUrl = '{!wikiUrl}';
+        var isaccess = {!isAccessible};
+        var titlechildpanel;    
+        var moduleSeq = '{!JSENCODE(moduleSeq)}';
+        var recordSeq = '{!JSENCODE(recordSeq)}';
+        var CiSettings = '{!JSENCODE($Label.ciexpciexplorersettings)}';
+        var isAssetManagementEnabled = {!isAssetManagementEnabled};
+        var isCIManagementEnabled = {!isCIManagementEnabled};  
+        
+        var userId = '{!$User.Id}';      
+        var labels = {};
+            labels.AnalyzeImpact="{!JSENCODE($Label.analyzeimpact)}";
+            labels.BorderedTree="{!JSENCODE($Label.borderedtree)}";
+            labels.Fractal="{!JSENCODE($Label.fractal)}";
+            labels.Layered="{!JSENCODE($Label.layered)}";
+            labels.Spring="{!JSENCODE($Label.spring)}";
+            labels.Tree="{!JSENCODE($Label.tree)}";
+            labels.Layout="{!JSENCODE($Label.ciexplayout)}";
+            labels.RelDisplayed="{!JSENCODE($Label.ciexprelationshipsdisplayed)}";
+            labels.Refresh="{!JSENCODE($Label.refresh)}";
+            labels.Settings="{!JSENCODE($Label.settings)}";
+            labels.Help="{!JSENCODE($Label.tooltiphelp)}";
+            labels.Reposition="{!JSENCODE($Label.ciexprepositionnodes)}";
+            labels.Instance="{!JSENCODE($Label.instance)}";
+            labels.title = "{!JSENCODE($Label.ciexpciexplorer)}";
+            labels.AllCIRelDisplayed="{!JSENCODE($Label.ciexpallavailablerelationshipsofthisconfigurationitemhavebeendisplayed)}";
+            labels.Incident= "{!JSENCODE($Label.ciexpincidentlabel)}";
+            labels.Problem= "{!JSENCODE($Label.ciexpproblemlabel)}";
+            labels.Task= "{!JSENCODE($Label.ciexptask1)}";
+            labels.Change= "{!JSENCODE($Label.changehash)}";
+            labels.Release= "{!JSENCODE($Label.ciexprelease)}";
+            labels.ShowLinkRecords= "{!JSENCODE($Label.ciexpshowlinkedrecords)}";
+            labels.HideLinkRecords= "{!JSENCODE($Label.ciexphidelinkedrecords)}";
+            labels.Impacted="{!JSENCODE($Label.impactedci)}";
+            labels.HTML5CanvasCheck="{!JSENCODE($Label.html5canvas)}";
+            labels.ServiceRequestPrefix="{!JSENCODE($Label.servicerequestprefix)}";
+            labels.IncidentRecordPrefix="{!JSENCODE($Label.incidentrecordprefix)}";
+            labels.ShowClasses="{!JSENCODE($Label.showclasses)}";
+            labels.CMDBInstances="{!JSENCODE($Label.cmdbinstances)}";
+            labels.CMDB_TAB_Assets="{!JSENCODE($Label.cmdb_tab_assets)}";
+            labels.CMDB_TAB_CIs="{!JSENCODE($Label.cmdb_tab_cis)}";
+            labels.All="{!JSENCODE($Label.all)}";
+            labels.NoRelExist="{!JSENCODE($Label.cmdbexplorernorelexist)}";
+            labels.FilterByClasses = "{!JSENCODE($Label.filterbyclasses)}";
+            
+            var selectedInstanceID;
+            
+            var i=0;
+            var j=0;
+            var reljson = new Array();
+            var relationshipFIlterJSON = '{!JSENCODE(relationshipFiltersJSON)}';
+            i = 0;
+            j = 0;
+            <apex:repeat value="{!getRelationsPicklistJSON}" var="pickvalue"  id="relidList">    
+               reljson[i] = new Array(2);
+               reljson[i++]=['{!JSENCODE(pickvalue)}',''];
+            </apex:repeat>    
+            
+            <apex:repeat value="{!relLabels}" var="picklabel"  id="relidListLabel">    
+               reljson[j++][1]=['{!JSENCODE(picklabel)}'];
+            </apex:repeat>
+             
+            reljson[0][0]='Select All'; 
+            resourceURL = '{!URLFOR($Resource.CIForce)}';
+
+            function invokeServerRequest(cmd, recSeq, modSeq)
+            {
+                selectedInstanceID = recSeq;
+                Visualforce.remoting.Manager.invokeAction( '{!$RemoteAction.CIExplorerLauncherController.getGraphJSON}', cmd, recSeq, modSeq,
+                    function(result, event) 
+                    {
+                        if(event.type === 'exception') 
+                        {
+                            console.log("exception");
+                        } 
+                        else if (event.status) 
+                        {                           
+                            onResponse(result);
+                        } 
+                        else 
+                        {
+                            console.log(event.message);
+                        }
+                },{escape: false});
+            }
+            
+        function getIsAllowedtoSave()
+        {
+            var isAllowedToSave = {!isUserSA};
+            return isAllowedToSave;
+        }
+        </script>
+
+
+        <body>
+            <apex:form >
+                <!-- CMDB Class filter Start-->
+                <div id="classFilterDiv" class="rf-filter-popup filterMainDiv">
+                    <div id="filterDiv" class="filterClassDiv">
+                    </div>
+                </div>
+                <!-- CMDB Class filter End-->
+                <!-- Relationship filter -->
+                <div id="relFilterDiv" class="rf-filter-popup filterMainDiv" >
+                    <div class="filterClassDiv">
+                        <apex:repeat value="{!relationshipFilters}" var="picklst1">
+                            <label class="rf-filter-checkbox">{!picklst1.label}
+                              <input type="checkbox" value="{!picklst1.value}" onchange="addIntoRelationshipFlter(event,'{!picklst1.value}')"/>
+                              <span class="rf-checkmark"></span>
+                            </label>
+                        </apex:repeat>
+                    </div>
+                </div>
+                <!-- Relationship filter End -->
+                <div id='content-div'></div>
+                        
+                
+                            
+                <div id="diagDiv" style="overflow:auto;">
+                    <table class="noselect">
+                        <tr>
+                            <td style="width:100%;vertical-align:top;">
+                               <!-- The Diagram component is bound to the canvas element below -->
+                                
+                                <div id="diagramdiv" style="width:1080px;height:560px;overflow:auto;">
+                                    <canvas id="diagram" width="500" height="350" style="left:0;right:0;margin-left:auto;margin-right:auto;">
+                                        <script type="text/javascript">
+                                            labels.HTML5CanvasCheck
+                                        </script>                                       
+                                    </canvas>               
+                                </div>
+                                <!-- The ZoomControl component is bound to the canvas element below -->
+                                    <div id="zoomerdiv" style="position: absolute; top:10px; left:95%; width: 40px; height: 230px;margin-left:auto;margin-right:auto;float:right;">
+                                        <canvas id="zoomer" width="40" height="230"></canvas>
+                            </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="siDiv">
+                   <table id="rf-table-main" >
+                        <tr>  
+                            <td>
+                                <a href="#" onclick="addtab();">
+                                <div  id="divToggleView" title="{!JSENCODE($Label.TooltipMaximize)}">
+                                </div> 
+                                 </a>
+                             </td>
+                        </tr>
+                    </table>            
+                </div>
+                <apex:actionFunction name="checkPermission" action="{!checkPermission}" reRender="accessPanel" oncomplete="showScreen()">
+                    <apex:param name="objectName" value="" assignTo="{!objectName}"/>
+                    <apex:param name="objId " value="" assignTo="{!objId }" />
+                </apex:actionFunction>
+                <apex:outputPanel id="accessPanel" rendered="true">
+                <script>         
+                     isaccess = {!isAccessible};                          
+                </script>
+                </apex:outputPanel>
+            </apex:form>        
+            <script type="text/javascript">
+                launchAttributesCI = Ext.util.Format.htmlDecode('{!JSINHTMLENCODE(attributesCI)}');
+                var closeCMDBExp = {!noRelExist};   
+                MindFusionImpl = "JQuery";
+                var clsName, recName, sequenceId;
+                
+                function showPopup(className, RecordName, seqId)
+                {
+                    clsName = className;
+                    recName = RecordName;
+                    sequenceId = seqId;
+                    checkPermission(className,RecordName);
+                }
+    
+                function showScreen() 
+                {
+                    var title;
+                    if(isaccess)
+                    {
+                        if(clsName == 'bmc_baseelement__c')
+                        {
+                            window.parent.parent.CMDB_RecordID = recName+'@@'+sequenceId;
+                            var cmdwin = window.parent.parent.CMDBManagerWin;
+                            if(cmdwin != null && cmdwin && cmdwin.CheckAndOpenInstance) {
+                                cmdwin.CheckAndOpenInstance();
+                            }
+                            //if std form,open in new window
+                            if(get_url_parameter('wid')==null || get_url_parameter('wid')=='') {
+                                var CIExplorerInstTitleVal='',CIExplorerInstTitleLink = document.getElementById("CIExplorerInstTitleLink");
+                                if(typeof CIExplorerInstTitleLink != 'undefined' && CIExplorerInstTitleLink.text != 'undefined') 
+                                    CIExplorerInstTitleVal = CIExplorerInstTitleLink.textContent;
+                                var cmdbRecordId = recName+'@@'+sequenceId;
+                                window.open("/apex/CMDBManager?id=1010&cmdbRecordId="+cmdbRecordId+'&instNameFromCIExplorer='+CIExplorerInstTitleVal);
+                            }
+                            else 
+                            {
+                                window.parent.parent.addNewTab("CMDBManager", "{!JSENCODE($Label.configurationitems)}","NavigatorPage?title=&tabName="+title+"&target=CMDBManager?id=1010");
+                            }
+                        }            
+                    }
+                    else
+                    {                    
+                        Ext.Msg.alert('', '{!JSENCODE($Label.userpermissionmsg)}'); 
+                    }
+                }
+            </script>
+            
+            <apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}"/>
+            <script type="text/javascript" src="{!$Resource.DeepView}/js/MindFusion.Common.js"/>
+            <script type="text/javascript" src="{!$Resource.DeepView}/js/MindFusion.Diagramming.js"/>
+            <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/CIExplorer.js" />
+            <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/JSCommon.js" />
+            <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/CIExplorerLauncher.js" />
+            <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js" />
+            <script>
+                $(window).resize(function() {
+                    var windowSize = {};
+                    windowSize.width = Ext.getBody().getViewSize().width;
+                    windowSize.height = Ext.getBody().getViewSize().height; 
+                    var southPanel = document.getElementById('SIIframeID').contentWindow.Ext.getCmp('south-panel');
+                    if(southPanel != null && southPanel != '' && southPanel != undefined){
+                        southPanel.setWidth(windowSize.width+'px');
+                        southPanel.setHeight(windowSize.height+'px');
+                    }
+                });
+            </script>
+        </body> 
+    </apex:outputPanel>
+
+    <apex:outputPanel id="CIExplorerSilverlight" rendered="{!silverlightCIExplorer}">
+
+  <script>
+  var taskConsole = '{!$Page.TaskConsole}';
+  var incidentConsole = '{!$Page.IncidentConsole}';
+  var CILaunchData = '';
+  var servertime = 0;
+  var startCILaunch = '{!cistarttime}';
+  var pageloadtime = 0;
+  var servertimecounter = 0;
+  var pageloadtimecounter = 0;
+  var latencytimecounter = 0;
+  var finallatency = 0; 
+  var infopaneflag = 0;
+  var isaccess = {!isAccessible};
+  var clsName =''; 
+  var recName = '';
+  var sequenceId = '';
+  </script>
+  <c:CommonIncludes />
+  <head>
+  <script type="text/javascript" src="{!URLFOR($Resource.CIForce,'Silverlight.js')}"></script>
+  <script type="text/javascript">
+  // code by sumit ... to set window title on std form
+  function get_url_parameter( param ){
+    param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");;
+    var r1 = "[\\?&]"+param+"=([^&#]*)";
+    var r2 = new RegExp( r1 );
+    var r3 = r2.exec( window.location.href );
+    if( r3 == null ){return ""}
+    else {return r3[1]};
+    } 
+ // code by sumit end   
+   Ext.onReady(function(){
+// code by sumit ... to set window title on std form
+   if(get_url_parameter('stdForm')) {
+       document.title='{!JSENCODE($Label.CIExpCIExplorer)}';
+    }
+ // code by sumit end
+   if(Ext.isIE8)
+   {
+    
+       if(document.getElementById('silverlightlink') != null)
+       {
+           document.getElementById('silverlightlink').href = "https://go.microsoft.com/fwlink/?LinkID=149156&v=3.0.40624.0";
+       }
+       if(document.getElementById('silverlightimg') != null)
+       {
+          document.getElementById('silverlightimg').src= "https://go.microsoft.com/fwlink/?LinkId=108181";
+       }
+   }
+ });
+ function showMessage(title, message)
+  {
+     Ext.Msg.alert(title, message);      
+  }
+  
+  function showMessageInJS(title)
+  {
+     Ext.Msg.alert(title, '{!JSENCODE($Label.CIExplorerOpenerRecordDeleteMessage)}');      
+  }
+
+  function showPopup(className, RecordName, seqId)
+  {
+    var url;
+    var title;
+    clsName = className;
+    recName = RecordName;
+    sequenceId = seqId;
+    checkPermission(className,RecordName);
+  }
+    
+    function showScreen() {
+        var url;
+        var title;
+        var isConsoleEnabled = '{!isConsoleEnabled}';
+        var isRFConsoleEnabled = '{!isRFConsoleEnabled}';
+        if(isaccess)
+         {
+            if(clsName == 'Incident__c')
+            {
+               title = '%23' + sequenceId ;
+               url = "NavigatorPage?title="+ title +"&target=IncidentPage?id=" + recName ;
+               // Code by sumit ... if std form,open in new window
+               if( (get_url_parameter('wid')==null || get_url_parameter('wid')=='') && (isConsoleEnabled == 'false') && (isRFConsoleEnabled == 'false') ) {
+                    window.open("/"+recName);
+               }else if(isRFConsoleEnabled == 'true'){
+                    if ((window.opener != null) && (window.opener.parent!= null) && (window.opener.location!= null) &&  (window.opener.location.pathname.toLowerCase().indexOf('console') > -1) && (window.opener.parent.addTab != null) ){
+                        window.opener.parent.addTab(recName,sequenceId,'Incident__c',null,null,null);
+                    }
+                    else{
+                        window.open('/apex/RemedyforceConsole?record_id='+recName+'&objectName=Incident__c',"_blank");
+                    }
+                    loadIncidentDetail(recName);
+               }else if(isConsoleEnabled == 'true'){
+                    window.open(incidentConsole+'&record_id='+recName,"_blank");
+                    loadIncidentDetail(recName);
+               }
+               //Code by sumit ... End
+               else {
+               window.parent.parent.addNewTab('IncidentPage', '{!JSENCODE($Label.Navigator_Incidents)}', url);
+              }
+            }
+            else if(clsName == 'Task__c')
+            {
+                title = '%23' + sequenceId ; 
+                url = "NavigatorPage?title="+ title +"&target=TaskPage?id=" + recName ;
+                 // Code by sumit ... if std form,open in new window
+                if( (get_url_parameter('wid')==null || get_url_parameter('wid')=='') && (isConsoleEnabled == 'false') && (isRFConsoleEnabled == 'false') ) {
+                    window.open("/"+recName);
+                }else if(isRFConsoleEnabled == 'true'){
+                   if ((window.opener != null) && (window.opener.parent!= null) && (window.opener.location!= null) &&  (window.opener.location.pathname.toLowerCase().indexOf('console') > -1) && (window.opener.parent.addTab != null) ){
+                        window.opener.parent.addTab(recName,sequenceId,'Task__c',null,null,null);
+                    }else{
+                   window.open('/apex/RemedyforceConsole?record_id='+recName+'&objectName=Task__c',"_blank");
+                   }
+                }else if(isConsoleEnabled == 'true'){
+                    window.open(taskConsole+'&record_id='+recName,"_blank");
+                }                       
+                //Code by sumit ... End
+                else {
+                window.parent.parent.addNewTab('TaskPage', '{!JSENCODE($Label.Navigator_Tasks)}', url);
+                }
+            }
+            
+            else if(clsName == 'Change_Request__c')
+            {
+                
+                title = '%23' + sequenceId ; 
+                url = "NavigatorPage?title="+ title +"&target=ChangeRequestPage?id=" + recName ;
+                // Code by sumit ... if std form,open in new window
+                if( (get_url_parameter('wid')==null || get_url_parameter('wid')=='')  && (isRFConsoleEnabled == 'false') ) {
+                    window.open("/"+recName);
+                }else if(isRFConsoleEnabled == 'true'){
+                    if ((window.opener != null) && (window.opener.parent!= null) && (window.opener.location!= null) &&  (window.opener.location.pathname.toLowerCase().indexOf('console') > -1) && (window.opener.parent.addTab != null) ){
+                        window.opener.parent.addTab(recName,sequenceId,'Change_Request__c',null,null,null);
+                    }else{
+                    window.open('/apex/RemedyforceConsole?record_id='+recName+'&objectName=Change_Request__c',"_blank");
+                    }
+                }
+                //Code by sumit ... End
+                else {
+                window.parent.parent.addNewTab('ChangeRequestPage', '{!JSENCODE($Label.ChangeRequests)}', url);
+                }
+            }
+            
+            else if(clsName == 'Problem__c')
+            {
+                title = '%23' + sequenceId ; 
+                url = "NavigatorPage?title="+ title +"&target=ProblemPage?id=" + recName ;
+                // Code by sumit ... if std form,open in new window
+                if( (get_url_parameter('wid')==null || get_url_parameter('wid')=='') && (isRFConsoleEnabled == 'false') ) {
+                    window.open("/"+recName);
+                }else if(isRFConsoleEnabled == 'true'){
+                     if ((window.opener != null) && (window.opener.parent!= null) && (window.opener.location!= null) &&  (window.opener.location.pathname.toLowerCase().indexOf('console') > -1) && (window.opener.parent.addTab != null) ){
+                        window.opener.parent.addTab(recName,sequenceId,'Problem__c',null,null,null);
+                    }else{
+                    window.open('/apex/RemedyforceConsole?record_id='+recName+'&objectName=Problem__c',"_blank");
+                    }
+                }
+                //Code by sumit ... End
+                else {
+                window.parent.parent.addNewTab('ProblemPage', '{!JSENCODE($Label.Navigator_Problems)}', url);
+              }
+            }
+            else if(clsName == 'bmc_baseelement__c')
+            {
+                window.parent.parent.CMDB_RecordID = recName+'@@'+sequenceId;
+                var cmdwin = window.parent.parent.CMDBManagerWin;
+                if(cmdwin != null && cmdwin && cmdwin.CheckAndOpenInstance) {
+                    cmdwin.CheckAndOpenInstance();
+                }
+                // Code by sumit ... if std form,open in new window
+                if(get_url_parameter('wid')==null || get_url_parameter('wid')=='') {
+                   var cmdbRecordId = recName+'@@'+sequenceId;
+                    window.open("/apex/CMDBManager?id=1010&cmdbRecordId="+cmdbRecordId);
+                }
+                //Code by sumit ... End
+                else {
+                window.parent.parent.addNewTab("CMDBManager", "{!JSENCODE($Label.ConfigurationItems)}","NavigatorPage?title=&tabName="+title+"&target=CMDBManager?id=1010");
+               }
+            }
+            else if(clsName == 'Release__c')
+            {
+                title = '%23' + sequenceId ; 
+                //url = "NavigatorPage?title="+ title +"&target=ProblemPage?id=" + recName ;               
+                if( (get_url_parameter('wid')==null || get_url_parameter('wid')=='') && (isRFConsoleEnabled == 'false') ) {
+                    window.open("/"+recName);
+                }else if(isRFConsoleEnabled == 'true'){
+                     if ((window.opener != null) && (window.opener.parent!= null) && (window.opener.location!= null) &&  (window.opener.location.pathname.toLowerCase().indexOf('console') > -1) && (window.opener.parent.addTab != null) ){
+                        window.opener.parent.addTab(recName,sequenceId,'Release__c',null,null,null);
+                    }else{
+                    window.open('/apex/RemedyforceConsole?record_id='+recName+'&objectName=Release__c',"_blank");
+                    }
+                }              
+            }
+        }
+        else
+        {                    
+            Ext.Msg.alert('', '{!JSENCODE($Label.UserPermissionMsg)}'); 
+        }
+    }
+    function senddata(){
+        return CILaunchData;
+    }
+    function GetHTMLMsg(labelID)
+    {
+
+    var res;
+
+    res = clmArr[labelID];
+
+    if (res == null)
+    //force null rather than undefined
+    return "";
+
+    return res;
+    }
+    var CLM_MAX_ID= 7000; //insert new maximum value here
+    var clmArr = new Array(CLM_MAX_ID+1);
+    var isSA = false;
+    
+    //Custom Labels to be used in CI-Explorer
+    clmArr[6612]= "{!JSENCODE($Label.CIExpCIExplorer)}";
+
+    clmArr[6601]= "{!JSENCODE($Label.CIExpReload)}";
+    clmArr[6602]= "{!JSENCODE($Label.Settings)}";
+    clmArr[6603]= "{!JSENCODE($Label.CIExpShowInformationPane)}";
+    clmArr[6604]= "{!JSENCODE($Label.CIExpHideInformationPane)}";
+    clmArr[6605]= "{!JSENCODE($Label.TooltipHelp)}";
+    clmArr[6606]= "{!JSENCODE($Label.CIExpLayout)}";
+    clmArr[6607]= "{!JSENCODE($Label.CIExpChooseLayoutStyle)}";
+    clmArr[6608]= "{!JSENCODE($Label.CIExpRepositionNodes)}";
+    clmArr[6609]= "{!JSENCODE($Label.CIExpZoom)}";
+    clmArr[6610]= "{!JSENCODE($Label.CIExpDragTheSliderToZoomInOrZoomOut)}";
+    clmArr[1057]= "{!JSENCODE($Label.Print)}";
+    clmArr[6677]= "{!JSENCODE($Label.Export)}";
+
+    clmArr[6613]= "{!JSENCODE($Label.CIExpOpenRecord)}";
+    clmArr[6614]= "{!JSENCODE($Label.CIExpShowCIRelationships)}";
+    clmArr[6615]= "{!JSENCODE($Label.CIExpShowLinkedServices)}";
+    clmArr[6616]= "{!JSENCODE($Label.CIExpShowlinkedConfigurationItems)}";
+
+    clmArr[6618]= "{!JSENCODE($Label.CIExpTreeRadial)}";
+    clmArr[6619]= "{!JSENCODE($Label.CIExpTreeCentered)}";
+    clmArr[6620]= "{!JSENCODE($Label.CIExpTreeCascaded)}";
+    clmArr[6675]= "{!JSENCODE($Label.CIExpOrthogonal)}";
+    clmArr[6621]= "{!JSENCODE($Label.Layered)}";
+    clmArr[6622]= "{!JSENCODE($Label.CIExpGrid)}";
+    clmArr[6623]= "{!JSENCODE($Label.CIExpAnneal)}";
+    clmArr[6624]= "{!JSENCODE($Label.Spring)}";
+
+    clmArr[6626]= "{!JSENCODE($Label.CIExpAllAvailableLinkedServicesOfThisConfigurationItemIfAnyHaveBeen)}";
+    clmArr[6627]= "{!JSENCODE($Label.CIExpAllavailablelinkedconfigurationitemsOfThisServiceIfAnyHaveBeen)}";
+    clmArr[6625]= "{!JSENCODE($Label.CIExpAllAvailableRelationshipsOfThisConfigurationItemHaveBeenDisplayed)}";
+    clmArr[6666]= "{!JSENCODE($Label.CIExpCIExplorerSettings)}";
+    clmArr[6665]= "{!JSENCODE($Label.CIExpCIExplorerSettingsFailedToSave)}";
+    clmArr[6667]= "{!JSENCODE($Label.CIExpCIExplorerSettingsWereSavedSuccessfully)}";
+    clmArr[6641]= "{!JSENCODE($Label.CIExpSelectDefaultLevelForCIRelationshipExpansion)}";
+    clmArr[6670]= "{!JSENCODE($Label.CIExpSelectTheLineThickness)}";
+
+    clmArr[6676]= "{!JSENCODE($Label.CIExpShowSubcomponents)}";
+
+    clmArr[6679]= "{!JSENCODE($Label.CIExpAllAvailableLinkedServicesOfThisConfigurationItemIfAnyHaveBeen)}";
+    clmArr[6680]= "{!JSENCODE($Label.CIExpThisserviceDoesNotNaveAnyLinkedServices)}";
+    clmArr[6683]= "{!JSENCODE($Label.CIExpParentService)}";
+    clmArr[6684]= "{!JSENCODE($Label.CIExpChildService)}";
+    clmArr[6682]= "{!JSENCODE($Label.CIExpSupportedService)}";
+    clmArr[6681]= "{!JSENCODE($Label.CIExpSupportingService)}";
+
+    clmArr[6633]= "{!JSENCODE($Label.CIExpConfigurationItem)}";
+    clmArr[6635]= "{!JSENCODE($Label.CIExpService)}";
+    clmArr[2335]= "{!JSENCODE($ObjectType.Incident__c.LabelPlural)}";
+    clmArr[1168]= "{!JSENCODE($ObjectType.Task__c.LabelPlural)}";
+    clmArr[6636]= "{!JSENCODE($ObjectType.Problem__c.LabelPlural)}";
+    clmArr[6637]= "{!JSENCODE($ObjectType.Change_Request__c.LabelPlural)}";
+    clmArr[6685]= "{!JSENCODE($ObjectType.Release__c.LabelPlural)}";
+
+    clmArr[765]= "{!JSENCODE($ObjectType.Incident__c.fields.incidentDescription__c.label)}";
+    clmArr[766]= "{!JSENCODE($ObjectType.Change_Request__c.fields.Change_Description__c.label)}";
+    clmArr[767]= "{!JSENCODE($ObjectType.Task__c.fields.taskDescription__c.label)}";
+    clmArr[768]= "{!JSENCODE($ObjectType.Problem__c.fields.Problem_Description__c.label)}";
+    clmArr[769]= "{!JSENCODE($ObjectType.Release__c.fields.Description__c.label)}";
+    
+ 
+    clmArr[6673]= "{!JSENCODE($Label.CIExpIncidentLabel)}";
+    clmArr[6672]= "{!JSENCODE($Label.CIExpProblemLabel)}";
+    clmArr[6674]= "{!JSENCODE($Label.CIExpTask1)}";
+    clmArr[6638]= "{!JSENCODE($Label.ChangeHash)}";
+    clmArr[6686]= "{!JSENCODE($Label.CIExpRelease)}";
+
+    clmArr[6631]= "{!JSENCODE($Label.CIExpField)}";
+    clmArr[6632]= "{!JSENCODE($Label.Value)}";
+
+    clmArr[6634]= "{!JSENCODE($Label.CIExpMaximum0)}";
+    clmArr[6639]= "{!JSENCODE($Label.CIExpLineSettings)}";
+    clmArr[6640]= "{!JSENCODE($Label.CIExpFieldSettings)}";
+    clmArr[6668]= "{!JSENCODE($Label.CIExpExpandCIRelationshipsTo)}";
+    clmArr[6669]= "{!JSENCODE($Label.CIExplevels)}";
+    clmArr[6642]= "{!JSENCODE($Label.CIExpRelationshipType)}";
+    clmArr[6643]= "{!JSENCODE($Label.CIExpRelationship)}";
+    clmArr[6644]= "{!JSENCODE($Label.CIExpServiceType)}";
+    clmArr[6645]= "{!JSENCODE($Label.CIExpLineStyle)}";
+    clmArr[6646]= "{!JSENCODE($Label.CIExpDotted)}";
+    clmArr[351]= "{!JSENCODE($Label.CIExpSolid)}";
+    clmArr[6647]= "{!JSENCODE($Label.CIExpLineDirection)}";
+    clmArr[6648]= "{!JSENCODE($Label.CIExpLineThickness)}";
+    clmArr[6649]= "{!JSENCODE($Label.CIExpLineColor)}";
+    clmArr[6650]= "{!JSENCODE($Label.CIExpLeftToRight)}";
+    clmArr[6651]= "{!JSENCODE($Label.CIExpRightToLeft)}";
+    clmArr[6652]= "{!JSENCODE($Label.CIExpNonDirectional)}";
+    clmArr[6653]= "{!JSENCODE($Label.CIExpDisplayFieldsFor)}";
+    clmArr[6654]= "{!JSENCODE($Label.CIExpToolTip)}";
+    clmArr[6655]= "{!JSENCODE($Label.CIExpLabel)}";
+    clmArr[6656]= "{!JSENCODE($Label.CIExpInformationPane)}";
+    clmArr[6657]= "{!JSENCODE($Label.CIExpAddsinglefield)}";
+    clmArr[6658]= "{!JSENCODE($Label.CIExpRemoveSingleField)}";
+    clmArr[6659]= "{!JSENCODE($Label.CIExpRemoveAllFields)}";
+    clmArr[6660]= "{!JSENCODE($Label.CIExpAvailableFields)}";
+    clmArr[6661]= "{!JSENCODE($Label.SelectedFields)}";
+    clmArr[5393]= "{!JSENCODE($Label.CIExpModule)}";
+    clmArr[1749]= "{!JSENCODE($Label.Ok)}";
+    clmArr[6663]= "{!JSENCODE($Label.Close)}";
+    clmArr[6664]= "{!JSENCODE($Label.Save)}";
+    clmArr[36]= "{!JSENCODE($Label.CIExpMoveUpByOneRow)}";
+    clmArr[37]= "{!JSENCODE($Label.CIExpMovedownByOneRow)}";
+    clmArr[6611]= "{!JSENCODE($Label.CIExpAcceptablevalues110)}";
+    clmArr[6671]= "{!JSENCODE($Label.CIExpClicktoopentheColorSelector)}";
+    clmArr[2872]= "{!JSENCODE($Label.Cancel)}";
+
+    clmArr[6678]= "{!JSENCODE($Label.CIExpCIExplorerfailedToFetchRelationshipRecords)}";
+    //Added By Manoj for ToolTIp
+    clmArr[7001]= "{!JSENCODE($Label.TooltipCIExplorerLineRelationshipLevels)}";
+    clmArr[7006]= "{!JSENCODE($Label.TooltipCIExplorerRelationshipDSLineDirection)}";
+    clmArr[7007]= "{!JSENCODE($Label.TooltipCIExplorerRelationshipDSLineThickness)}";
+    clmArr[7008]= "{!JSENCODE($Label.TooltipCIExplorerRelationshipDSLineStyle   )}";
+    clmArr[7009]= "{!JSENCODE($Label.TooltipCIExplorerRelationshipDSLineColor)}";
+    clmArr[7010]= "{!JSENCODE($Label.TooltipCIExplorerFieldDisplayFields)}";
+    clmArr[7011]= "{!JSENCODE($Label.TooltipCIExplorerFieldAvailableFields)}";
+    clmArr[7012]= "{!JSENCODE($Label.TooltipCIExplorerFieldSelectedFields)}";
+    // End here
+
+    function onSilverlightError(sender, args) {
+    var appSource = "";
+    if (sender != null && sender != 0) {
+    appSource = sender.getHost().Source;
+    }
+
+    var errorType = args.ErrorType;
+    var iErrorCode = args.ErrorCode;
+
+    if (errorType == "ImageError" || errorType == "MediaError") {
+    return;
+    }
+
+    var errMsg = "Unhandled Error in Silverlight Application " +  appSource + "\n" ;
+
+    errMsg += "Code: "+ iErrorCode + "    \n";
+    errMsg += "Category: " + errorType + "       \n";
+    errMsg += "Message: " + args.ErrorMessage + "     \n";
+
+    if (errorType == "ParserError") {
+    errMsg += "File: " + args.xamlFile + "     \n";
+    errMsg += "Line: " + args.lineNumber + "     \n";
+    errMsg += "Position: " + args.charPosition + "     \n";
+    }
+    else if (errorType == "RuntimeError") {
+    if (args.lineNumber != 0) {
+    errMsg += "Line: " + args.lineNumber + "     \n";
+    errMsg += "Position: " +  args.charPosition + "     \n";
+    }
+    errMsg += "MethodName: " + args.methodName + "     \n";
+    }
+
+    throw new Error(errMsg);
+    }
+
+    function getIsAllowedtoSave()
+    {
+      var isAllowedToSave = {!isUserSA};
+      return isAllowedToSave;
+    }
+
+    
+  </script>
+
+  <style type="text/css">
+    
+    body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    }
+    
+    </style>
+  
+    </head>
+    <body onload="">
+    <object height="100%" width="100%" id ="silverlightControl" data="data:application/x-silverlight-2," type="application/x-silverlight-2" >
+      <param name="source" value="{!URLFOR($Resource.CIForce,'CIExplorerOnForce.xap')}"/>
+      <param name="onError" value="onSilverlightError" />
+      <param name="background" value="white" />
+      <param name="minRuntimeVersion" value="3.0.40624.0" />
+      <param name="autoUpgrade" value="true" />
+      <param name="pluginbackground" value="Transparent" />
+      <param name="windowless" value="true" />    
+      <a id="silverlightlink" href="https://go.microsoft.com/fwlink/?LinkID=149156&v=3.0.40624.0" style="text-decoration:none">
+        <img id="silverlightimg" src="https://go.microsoft.com/fwlink/?LinkId=108181" alt="Get Microsoft Silverlight" style="border-style:none"/>
+      </a>
+    </object>
+    <iframe id="_sl_historyFrame" style="visibility:hidden;margin:0px;padding:0px;height:0px;width:0px;border:0px"></iframe>
+    </body>
+     <script>
+    function getservertime(ciservertime){
+        //alert("getservertime"+ciservertime);
+        CILaunchData = "";
+        servertime = 0;
+        servertime = servertime + parseInt(ciservertime);
+        servertimecounter++ ;
+        //if(servertimecounter == 1){
+            if(infopaneflag == 0){
+                servertime = parseInt(servertime) + parseInt(temptime) + parseInt(CIEndLaunch);
+                CILaunchData += '{!JSENCODE($Label.PM_servertime)}';
+                CILaunchData += servertime;
+                CILaunchData += '<br>'; 
+            }   
+            if(infopaneflag == 1){
+                //alert("***");
+                servertime = 0;
+                servertime = parseInt(ciservertime);
+                infopaneflag = 0;
+                CILaunchData = '';
+                CILaunchData += '{!JSENCODE($Label.PM_servertime)}';
+                CILaunchData += servertime;
+                CILaunchData += '<br>'; 
+            } 
+        //}
+        
+    }
+    
+    function latencytime(latencytime){
+        finallatency = 0;
+        finallatency = finallatency + parseInt(latencytime);
+        latencytimecounter++;
+        //if(latencytimecounter == 1){
+            CILaunchData += '{!JSENCODE($Label.PM_netwokLatency)}';
+            CILaunchData += finallatency;
+            CILaunchData += '<br>';         
+        //}
+    }
+    function getpageload(pageload){
+        pageloadtime = 0;
+        pageloadtime = pageloadtime + pageload;
+        pageloadtimecounter++;
+        //if(pageloadtimecounter == 1){
+            CILaunchData += '{!JSENCODE($Label.PM_PageLoad)}';
+            CILaunchData += pageloadtime;
+            CILaunchData += '<br>';         
+        //}
+    }
+    function infopane(infopane){
+        infopaneflag = 1;
+    }
+    var CIEndLaunch = '{!ciendtime}';
+    CIEndLaunch = CIEndLaunch - startCILaunch; 
+    var temptime = '{!lcetime}';
+    
+    </script>
+
+    <apex:form >
+        <apex:actionFunction name="checkPermission" action="{!checkPermission}" reRender="accessPanel" oncomplete="showScreen()">
+        <apex:param name="objectName" value="" assignTo="{!objectName}"/>
+        <apex:param name="objId " value="" assignTo="{!objId }" />
+    </apex:actionFunction>
+    <apex:outputPanel id="accessPanel" rendered="true">
+        <script>         
+         isaccess = {!isAccessible};
+          
+        </script>  
+    </apex:outputPanel>
+    </apex:form>
+    </apex:outputPanel>
+</apex:page>

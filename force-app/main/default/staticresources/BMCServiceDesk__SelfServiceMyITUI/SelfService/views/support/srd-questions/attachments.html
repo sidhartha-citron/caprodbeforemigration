@@ -1,0 +1,63 @@
+<div class="srd-attachments" ng-cloak style="margin-bottom: 10px;">
+	<loading-spinner overlay="true" if="data.addingAttachment"></loading-spinner>
+	<div class="srd-new-attachment-container" style="margin-bottom: 60px">
+		<h4>{{ $root.selfServiceLabels.AttachmentSectionHeader}}
+					<span class="srd-question-label__required srd-question-label__required-error" ng-show="data.isAttachmentRequired">
+				&nbsp;({{ $root.selfServiceLabels.required }})
+				</span>			
+		</h4>
+		<button class="btn srd-new-attachment__button-container srd-new-attachment-button" title="Attach File" ng-disabled="data.length >= maxAttachments" ng-show="$root.hasAPIEnabledPermission" style="float:left">		
+			<div class="srd-attachment__icon d-icon-paperclip" ></div>&nbsp;
+			{{$root.selfServiceLabels.AddAttachments}}
+			<div class="d-icon-paperclip attach-file-disabled ng-hide" ng-show="!$root.hasAPIEnabledPermission" title="{{$root.selfServiceLabels.StdInsufficentOperationPrivilege}}"></div>		
+		</button>
+		<input type="file" name="file" class="srd-new-attachment__hidden-file-input" files="data" tabindex="-1">
+	</div>	
+	<div ng-show="data.attachments.length > 0" style="margin-bottom: -15px;" tabindex="0">
+		{{data.attachments.length}} {{ $root.selfServiceLabels.FilesUploaded }}
+	</div>	
+	<hr class="Branding-Right_Panel-separator" style="margin-bottom: 5px" />
+	<div ng-show="!data.hideList && !data.isDraft" ng-repeat="attachment in data.attachments">
+		<div class="srd-attachment" style="margin-bottom: -19px;">
+			<span  class="{{attachment.iconClass}} attachment-type-icon"></span>		
+			<span class="__icon-trash icon-delete d-icon-trash" ng-click="removeAttachment(attachment)" style="    margin-top: 5px;" title= {{$root.selfServiceLabels.deleteAttachment}} tabindex="0"></span>				
+			<div class="srd-attachment__name" tabindex="0">{{ (attachment.name) ? attachment.name:attachment.Name }}</div>
+			</div>
+		<hr class="Branding-Right_Panel-separator" style="margin-bottom: 5px"/>
+	</div>
+
+	<loading-spinner overlay="true" if="data.isAttachmentLoading"></loading-spinner>
+	<div id="AttachmentsSectionId" style="width:100%;" ng-show="data.isDraft && data.attachments.length > 0">
+		<div class="activity-log Branding-Right_Panel-activity" Style="border: none; max-height: none;" ng-if="data.attachments.length > 0">
+			<div class="activity-log__item Branding-Right_Panel-activity" ng-class="{'firstAttachment':$index == 0,'notFirstAttachment':$index > 0}" Style="border: none; margin-top: 10px;" ng-if="data.attachments.length > 0" ng-repeat="attachment in data.attachments">
+				<div class="activity-log__item-user-thumbnail-container" style="padding-left: 0px;">
+					<img src="{{attachment.createdByImgURL}}"/>
+				</div>
+				<div class="activity-log__item-content" ng-class="{'widthFor2ColumnLayout': srColumnLayoutForSS3}">
+					<div class="activity-log__item-submitter" ng-bind-html="attachment.CreatedByName"></div>
+					<div class="activity-log__item-date">{{ attachment.LastModifiedDate}}</div>
+
+					<div class="activity-log__item-text">
+					<div class="{{attachment.iconClass}} attachment-type-icon" style="margin-top: -5px;font-size:28px;"></div>
+					<span class="__icon-trash icon-delete d-icon-trash" style="margin-top: -5px !important;" ng-click="removeAttachment(attachment)"  title= {{$root.selfServiceLabels.deleteAttachment}} tabindex="0">
+						</span>
+						<a target="_blank" ng-if="!attachment.isFile" href="/servlet/servlet.FileDownload?file={{attachment.Id}}" style="margin-left: 10px;" class="activity-log__attachment" title="{{htmlUnescape(attachment.Name)}}" tabindex="0">
+							<span class="activity-log__attachment-name">{{(attachment.name) ? htmlUnescape(attachment.name) : htmlUnescape(attachment.Name)}}</span>
+							{{attachment.attachmentSize | fileSize}}
+						</a>
+						<a target="_blank" ng-if="attachment.isFile" href="/sfc/servlet.shepherd/version/download/{{attachment.Id}}" style="margin-left: 10px;" class="activity-log__attachment" title="{{htmlUnescape(attachment.Name)}}" tabindex="0">
+							
+							<span class="activity-log__attachment-name">{{(attachment.name) ? htmlUnescape(attachment.name) : htmlUnescape(attachment.Name)}}</span>
+							{{attachment.attachmentSize | fileSize}}
+						</a>							
+					</div>	
+				</div>
+				<hr class="Branding-Right_Panel-separator" style="margin-top: -1px;"/>
+			</div>
+		</div>
+	</div>
+
+	<div class="srd-attachments__size-message">
+		{{}}
+	</div>
+</div>

@@ -1,0 +1,231 @@
+<apex:page controller="BMCServiceDesk.AdminCMDBGeneralSettingController" standardStylesheets="false" showHeader="false">
+ 
+ <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css"/>
+ <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminCMDBGeneralSetting.css" />
+ <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+ 
+ <script> 
+	var activateRBACls = false;
+ 	var excWhileActivatingRBACls = '';
+	var msgString = '';
+	var msgStringlbl = '';
+ </script> 
+ 
+ <div id = "toolbar" />
+ <div id="SaveMessageDiv" class="msgCls message" style="display:none">
+	<table class="messageTable" cellspacing="0" cellpadding="0" border="0" style="padding: 0px; margin: 4px 2px 4px 2px;">
+		<tr valign="top">
+			<td>
+				<apex:image styleClass="SaveSuccessIcon" title="{!$Label.bmcservicedesk__savedsuccessfully}" value="/s.gif" alt="{!$Label.bmcservicedesk__savedsuccessfully}" />
+			</td>
+			<td>
+				<div id="SaveMessage"  style="margin-left: 6px;" ><apex:outputText value="{!$Label.bmcservicedesk__savedsuccessfully}" /></div>
+			</td>
+		</tr>
+	</table>
+ </div>
+ <div id="helpDiv" class="clshelpDiv"></div>
+ 
+<apex:form id="GeneralSettingsForm">
+	<apex:outputPanel id="mainPanel"  styleClass="ClsContainer">
+			<div id="mainPaneldiv" Class="clsMainContainer">    		
+	    		<table class="MainDiv">
+					<apex:outputpanel rendered="{!IF(LOWER(switchedToFlattenedCmdb) =='true' ,true,false)}">
+					<tr>                       
+                        <td class="clsInputCheckBox" ><apex:inputCheckbox id="enableItAssetManagement" value="{!enableAssetMgmt}" style="*margin-left: -4px !important;" onclick="enableAssetStatusConfiguration();toggleCIMgmntITAM('Asset');"/></td>
+                        <td><apex:outputLabel value="{!$Label.bmcservicedesk__enableitmanagement}"  styleClass="clsInputCheckBoxLabel" /></td>
+                    </tr>
+                    <tr>                       
+                        <td colspan="2" height="10"></td>
+                    </tr>
+                    <tr>                       
+                        <td class="clsInputCheckBox" ><apex:inputCheckbox id="enableItCIManagement" value="{!enableCIMgmt}" style="*margin-left: -4px !important;" onchange="toggleCIMgmntITAM('CI');"/></td>
+                        <td><apex:outputLabel value="{!$Label.bmcservicedesk__enableitcimanagement}"  styleClass="clsInputCheckBoxLabel" /></td>
+                    </tr>
+                    <tr>                       
+                        <td colspan="2" height="20"></td>
+                    </tr>
+                    <apex:outputPanel rendered="{!NOT(isFreshInstall)}">
+						<tr>                       
+	                        <td class="clsInputCheckBox" ><apex:inputCheckbox id="enableModelManagement" value="{!enableModel}" style="*margin-left: -4px !important;"/></td>
+	                        <td><apex:outputLabel value="{!$Label.bmcservicedesk__enablemodels}"  styleClass="clsInputCheckBoxLabel"/>
+	                        	<span><img src = "/s.gif" id="infoBtnenableModel" class="bmcInfoButton" title="{!JSENCODE($Label.EnableModelsInfo)}"/></span>
+	                        </td>
+	                    </tr>
+	                    <tr>                       
+	                        <td colspan="2" height="10"></td>
+	                    </tr>
+					</apex:outputPanel>
+                    </apex:outputpanel>
+                    
+                </table>
+                <apex:outputpanel rendered="{!IF(LOWER(switchedToFlattenedCmdb) =='true' ,true,false)}">
+				<apex:outputpanel id="NormalizationPanel">
+                <table style="{!IF(enableModel || isFreshInstall,'display:block','display:none')}">
+                    <tr>                       
+                        <td colspan="2" height="25"></td>
+                    </tr>
+                    <tr>
+                        <td class="clsHeading">{!JSENCODE($Label.ModelGeneration)}</td>
+                    </tr>
+                    <tr>                       
+                        <td colspan="2" height="10"></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__modelgenerationinfo}" style="font:9pt Arial" />
+                        </td>   
+                    </tr>
+                     <tr>                       
+                        <td colspan="2" height="10"></td>
+                    </tr>
+                    <tr>
+                        <td>
+                           <div id="ImportButtonTD" class="clsNormalizationbtnLabelTD" style="padding-left: 0px !important"></div>    
+                       </td>
+                    </tr>
+                </table>
+				</apex:outputPanel>
+                <table>
+                    <tr>                       
+                        <td colspan="2" height="25"></td>
+                    </tr>
+                     <tr>
+                        <td class="clsHeading">{!JSENCODE($Label.Schedule_Normalization_Rules)}</td>
+                    </tr>
+                    <tr>                       
+                        <td colspan="2" height="10"></td>
+                    </tr>
+                    <tr>
+                       <td>
+                        <apex:outputLabel value="{!$Label.bmcservicedesk__normalizationinterval}"  style="font:9pt Arial" />       
+                       </td>
+                       <td>
+                           <div id="hourFieldTD" style="float:left;margin-left: 10px"></div>
+                           <div id="hourLabelTD" style="font:9pt Arial;margin-left:5px;margin-top:4px;float:left;" >{!JSENCODE($Label.HoursLabel)}</div>
+                       </td>
+                       <td>
+                           <div class="" id="minuteFieldTD" style="float:left;padding-left:15px;"></div>
+                           <div id="minLabelTD" style="font:9pt Arial;margin-left:5px;margin-top:4px;float:left;">{!JSENCODE($Label.MinutesLabel)}</div>
+                      </td>
+                      <td>
+                           <div id="NormalizationButtonTD" class="clsNormalizationbtnLabelTD" ></div>    
+                       </td>
+                    </tr>
+					<tr>                       
+                        <td colspan="2" height="10"></td>
+                    </tr>
+                    <tr>
+                      <td>
+                         <a id="ExceptionLink" name="ExceptionLink" href="#" onclick="openExceptions();">{!JSENCODE($Label.ShowSchedulerExceptions)}</a>
+                      </td> 
+                    </tr>
+				</table>
+				</apex:outputpanel>
+				<apex:outputpanel rendered="{!IF(LOWER(switchedToFlattenedCmdb) =='true' ,true,false)}">
+					<apex:outputPanel id="assetStatusPanel">
+						<table>
+							<tr>                       
+								<td height="25"></td>
+							</tr>
+							<tr>
+								<td>
+									<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__configureassetstatusvaluesheader)}" styleClass="clsHeading"/>                            
+								</td>
+							</tr>
+							<tr>                       
+								<td height="10"></td>
+							</tr>
+							<tr>
+								<td>
+									<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__configureassetstatusvaluessubheader)}"/>
+								</td>
+							</tr>
+							<tr>                       
+								<td height="10"></td>
+							</tr>
+							<tr>
+								<td >
+									<apex:selectCheckboxes value="{!selectedStatus}" styleClass="statusColumnStructure"> 
+										<apex:selectOptions value="{!AssetStatus}" />
+									</apex:selectCheckboxes>
+								</td>
+							</tr>
+					   </table>
+				   </apex:outputPanel>
+			   </apex:outputPanel>
+	 	 		</div>
+	</apex:outputPanel>
+    <apex:outputPanel id="statusPanel">
+   <script>   
+    jobstatusflag='{!jobstatus}';
+  </script>      
+  </apex:outputPanel>
+    <apex:actionfunction name="save" action="{!save}" rerender="activationPanel,NormalizationPanel" onComplete="hideLoadingMask();showMsg();AskToActivateClasses();showButton();" >
+        <apex:param assignTo="{!schedulingInterval}" name="ScheduleIntervalData" value=""/>
+    </apex:actionfunction>
+    <apex:actionfunction name="ScheduleJob" action="{!scheduleJobMethod}" reRender="statusPanel" oncomplete="onCompleteStart()">
+		<apex:param assignTo="{!schedulingInterval}" name="ScheduleIntervalData" value=""/>
+	</apex:actionfunction>
+    <apex:actionfunction name="StopJob" action="{!stopJob}" reRender="statusPanel" oncomplete="onCompleteStop()"/> 
+    <apex:actionfunction name="ScheduleImportJob" action="{!ScheduleImportJob}" rerender="importPanel" oncomplete="checkModelGenerationProgress();"/>
+     <apex:actionFunction name="pollingFunction" action="{!pollingFunction}" rerender="importPanel" oncomplete="showImportButton();"/>
+    <apex:actionfunction name="activateRBAClasses" action="{!activateRBAClasses}" reRender="activationExcPanel" oncomplete="ActivationComplete();"/>
+    
+    <apex:outputPanel id="importPanel">
+        <script>
+            enableImportModel = {!enableImportModel};
+        </script>
+    </apex:outputPanel>
+        
+    <apex:outputPanel id="activationPanel">
+        <script>
+            excWhileActivatingRBACls = '{!excWhileActivatingRBACls}';
+			activateRBACls = {!ActivateRBACls};
+			msgString = '{!messageString}';
+			enableModels = {!enableModel};
+			isFreshInstall = {!isFreshInstall}; 
+			msgStringlbl = '{!messageStringlbl}';
+        </script>
+    </apex:outputPanel>
+</apex:form>
+ <script>
+ 	var savelabel = '{!JSENCODE($Label.Save)}';
+    var NormButton,hourField,minField;
+    var buttontext = '{!jobrunnningflag}';
+    var defaultHours = '{!Schedulehours}';  
+    var defaultMins = '{!Scheduleminutes}';
+    var startbuttontext = '{!JSENCODE($Label.StartNormalization)}';;
+    var stopbuttontext = '{!JSENCODE($Label.StopNormalization)}';
+	var schedulingException = '{!JSENCODE($Label.Scheduled_Job_Exception)}';
+	var NormalizationTimeMandatory = '{!JSENCODE($Label.milestoneTimeMandatory)}';
+	var SchedulerExceptionsPage = '{!$Page.SchedulerExceptions}';
+	var ImportModelRecords = '{!JSENCODE($Label.EnableImportingModels)}';
+	var enableModels = {!enableModel};
+    var enableImportModel = {!enableImportModel};
+    var Batchjobrunnningflag = {!Batchjobrunnningflag};
+ 	var CMDBGeneralSettings = '{!JSENCODE($Label.CMDBGeneralSettings)}';
+ 	var SaveLabel1 = '{!JSENCODE($Label.SavedSuccessfully)}';
+ 	var waitImg = '{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif';
+ 	var wikiUrl='{!wikiUrl}';
+ 	var switchedToFlattenedCmdb='{!switchedToFlattenedCmdb}';
+ 	if((switchedToFlattenedCmdb!='') && (switchedToFlattenedCmdb=='false')){
+ 		parent.addHelpOnPage(document.getElementById('helpDiv'),'general_cmdb1_settings.htm',wikiUrl);
+ 	}else
+ 		parent.addHelpOnPage(document.getElementById('helpDiv'),'general_cmdb_settings.htm',wikiUrl);
+ 		
+ 	var Saving = '{!JSENCODE($Label.MobSaving)}';
+	var assetEnabledChecked = document.getElementById('{!$Component.GeneralSettingsForm.enableItAssetManagement}');
+	var enableCIMgmtSetting = document.getElementById('{!$Component.GeneralSettingsForm.enableItCIManagement}');
+	
+	var activateRBAClassesTitleLbl = '{!JSENCODE($Label.ActivateAllRBAClassesPopupTitle)}';
+	var activateRBAClassesMsg = '{!JSENCODE($Label.ActivateAllRBAClassesPopup)}';
+	var activationSuccessfullMsg = '{!JSENCODE($Label.SuccessfulActivationOfAllRBAClasses)}';
+	var ExceptionMessage = '{!JSENCODE($Label.ExceptionMessage)}';
+    
+ </script>
+ <script src="{!$Resource.ExtJS4_1_3}/ext-all.js"  type="text/javascript"/>
+ <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js" />
+ <script src="{!$Resource.SDEFCommonJS}/AdminCMDBGeneralSetting.js"  type="text/javascript"/>
+ <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminJSCommon.js"></script>
+</apex:page>

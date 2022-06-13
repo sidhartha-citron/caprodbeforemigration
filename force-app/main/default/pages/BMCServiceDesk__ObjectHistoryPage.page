@@ -1,0 +1,373 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.ObjectHistoryController" standardStylesheets="false">
+<c:CommonIncludes />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomViews.css" />
+<!-- std layout changes -->
+<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js" />
+<style>
+.clsInputTextBox{
+    *height:13px !important;
+}
+</style>
+
+<script>
+    // std layout changes
+    
+     var standardLayout = getUrlParameter('standardLayout');
+     var editStandardLayout = getUrlParameter('editStandardLayout');     
+     var recId = '{!stdParentId}';
+	
+     // end std layout--- 
+     var HistoryAction;               
+     var HistoryId;
+     var errormsg;
+     var chkBoxValue;
+     var sysDisable; 
+     var isCustomPage=true;
+      var isLookup = "{!JSENCODE($CurrentPage.parameters.islookup)}";  
+	var isDeleteEnabled = true;
+	var isSaveEnabled = true;
+	var formname = getUrlParameter('formname');
+	if(formname == 'Change_Request__c'){
+		isDeleteEnabled = {!AND($ObjectType.Change_History__c.deletable, isEnableEdit, isOpened)};
+		isSaveEnabled = {!AND($ObjectType.Change_History__c.updateable, isEnableEdit,isOpened)};
+	}
+	else if(formname == 'Problem__c'){
+		isDeleteEnabled = {!AND($ObjectType.Problem_History__c.deletable, isEnableEdit, isOpened)};
+		isSaveEnabled = {!AND($ObjectType.Problem_History__c.updateable, isEnableEdit,isOpened)};
+	}
+	else if(formname == 'Release__c'){
+		isDeleteEnabled = {!AND($ObjectType.Release_History__c.deletable, isEnableEdit, isOpened)};
+		isSaveEnabled = {!AND($ObjectType.Release_History__c.updateable, isEnableEdit,isOpened)};
+	}  
+	  
+      if(isLookup && (!editStandardLayout || editStandardLayout == null || editStandardLayout =='' )){
+          window.parent.changePopUpTitle('{!JSENCODE(objLabel)}');
+      }
+      
+      function populateDescriptionOnTabout() {
+        if(document.getElementById('{!$Component.formId.Action__c_id_name}').value != null && document.getElementById('{!$Component.formId.Action__c_id_name}').value != '') {
+            document.getElementById('{!$Component.formId.Action__c_id_description}').value = document.getElementById('{!$Component.formId.Action__c_id_name}').value;
+        } 
+      }
+       var isLightningExperience = {!IF(isLightningExperience,true,false)};	
+    //Sujeet made changes here
+     function closeWindow(){         
+        if(isLookup=="true" &&(errormsg==null||errormsg==''||errormsg=='{!JSENCODE($Label.SavedSuccessfully)}')){
+          
+          // changes for std layout
+          var parentId;
+          var formname = getUrlParameter('formname');
+                  if(standardLayout == 'true'){
+                    if(formname == 'Change_Request__c'){
+                       parentId = getUrlParameter('changeRequestId');
+                    }else if(formname == 'Problem__c'){   
+                        parentId = getUrlParameter('problemId');
+                    }else if(formname == 'Release__c'){                     
+                        parentId = getUrlParameter('releaseId');
+                    }      
+                    window.opener.closeWindowParent(); 
+                    window.close();                                 
+                  }  
+                  // end std layout
+                  
+                  if(editStandardLayout == 'true'){ 
+					var PageURL = window.location.href; 
+                 if( isLightningExperience && PageURL.indexOf('/lightning/') != -1) {
+                     retpagefunctioninLightning( formname );
+                 } else {
+                  		window.parent.retpagefunction();                    
+                      }
+             }
+          if(window.parent.frames.SIIframeID !=null){                          
+              window.parent.frames.SIIframeID.refreshDocs();  
+		  }
+          window.parent.closePopupRF();
+       }
+     }
+    function retpagefunctioninLightning( formname ) { 
+        var url;
+        if( formname == 'Change_Request__c' ) {
+            url = '/one/one.app#/sObject/'+ recId + '/rlName/BMCServiceDesk__Change_Histories__r/view';
+        } else if( formname == 'Problem__c' ) {
+            url = '/one/one.app#/sObject/'+ recId + '/rlName/BMCServiceDesk__Problem_Histories__r/view';
+        } else if( formname == 'Release__c' ) {
+            url = '/one/one.app#/sObject/'+ recId + '/rlName/BMCServiceDesk__Release_Histories__r/view';
+        }
+        
+        window.parent.parent.location.href = url;
+    }
+    
+     //Sujeet adde this var
+     var disableTrue = true;
+        Ext.onReady(function(){
+        disableSystemEntry(sysDisable); 
+    
+         Ext.QuickTips.init(); 
+         if(isLookup=="true"){
+          disableTrue = true;
+          }   else disableTrue = false;
+        var NewBtnhandler = function(button,event) { newIncident(); };
+        var SaveBtnHandler = function(button,event) {
+        save();};
+        var CopyBtnHandler = function(button,event) {  /*alert('Copy!');*/ };
+        var DeleteBtnHandler = function(button,event) {  Ext.MessageBox.confirm('{!JSENCODE($Label.Delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}', function(btn){
+                                                           if(btn === 'yes'){
+                                                                  deleteHistory();
+                                                             }     
+                                                           if(btn==='no'){
+                                                            if(editStandardLayout == 'true'){                      
+                                                              window.parent.location.href = '/'+recId;
+                                                            }
+                                                           }
+                                                           });
+                                                       };
+        var ClearBtnHandler= function(button,event) { /*deleteIncident();*/ };
+        var OpenBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+        var NextBtnHandler = function (button,event) { };
+        var PreviuosBtnHandler = function (button,event) { };
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+                scale: 'medium',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.New)}',
+                iconCls: 'bmcNew',
+                hidden:disableTrue,
+                handler:NewBtnhandler
+            } ,' ', {
+                scale: 'medium',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.Save)}',
+                iconCls: 'bmcSave',
+                disabled: !isSaveEnabled,
+                handler:SaveBtnHandler
+            },' ', {
+                scale: 'medium',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.Copy)}',
+                id:'copyId',
+                iconCls: 'bmcCopy',
+                hidden:disableTrue,
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.Delete)}',
+                disabled: !isDeleteEnabled,
+                id:'deleteId1',
+                
+                            
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.clear)}',
+                id:'deleteId',
+                hidden:disableTrue,
+                handler:ClearBtnHandler
+            }]
+        });
+        
+        HistoryId = '{!myid}';    
+        if(HistoryId == null ||HistoryId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+        }
+         if(sysDisable == null ||sysDisable == ''|| sysDisable == 'true'){ 
+        
+        Ext.getCmp('deleteId1').setDisabled(true);             
+                
+        }      
+
+    });
+    
+    function buttonValidator() {
+       
+       if((HistoryAction != null && HistoryAction != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.SavedSuccessfully)}')){   
+  
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+       }  
+     }
+     
+    </script>   
+     <apex:outputPanel title="Style classes">
+                             
+
+    <apex:outputPanel id="dummy"></apex:outputPanel>
+          
+    </apex:outputPanel>   
+    <apex:outputPanel id="panelId">
+		<script>  
+			HistoryAction = '{!JSENCODE(historyobj.action)}';               
+			HistoryId = '{!JSENCODE(myid)}';      
+			sysDisable = '{!sysDisable}';
+			blnUpdateable = {!allAccessible};
+			  
+			function disableSystemEntry(sysDisable){
+				if(HistoryId != null && HistoryId != '' && blnUpdateable == true) {                                     
+					document.getElementById('{!$Component.formId.User_id_username}').readOnly= true;			
+					document.getElementById('{!$Component.formId.lookupIconOn}').setAttribute("class", "lookupIconOn x-item-disabled");
+					if(sysDisable == 'true') {
+						document.getElementById('{!$Component.formId.Action__c_id_name}').readOnly = true;
+						document.getElementById('{!$Component.formId.dateAndTime}').disabled = true;
+						document.getElementById('{!$Component.formId.duration}').readOnly= true;
+					}
+				} 
+			}
+			if(blnUpdateable == false){
+                alert('{!JSENCODE($Label.BMCServiceDesk__insufficentprivilegetoaccess)}');
+				window.parent.close();
+            }
+		</script>
+	</apex:outputPanel>
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+         
+    <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+		<div id="btnToolbar"></div>
+            <apex:form id="formId">
+                <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+                
+<!--                  <apex:actionFunction action="{!incidentQuery}" name="setIncidentId" reRender="incident__c_id_name">
+                    <apex:param assignTo="{!incidentId}" value="" name="saveIncidentId "/>
+                </apex:actionFunction> -->
+
+                <apex:actionFunction action="{!actionQuery}" name="setActionId" reRender="formId">
+                    <apex:param assignTo="{!ActionId}" value="" name="saveActionId "/>
+                </apex:actionFunction>  
+         
+                <apex:actionFunction action="{!userQuery}" name="setUserId" reRender="User_id_username">
+                    <apex:param assignTo="{!userId}" value="" name="saveUserId "/>
+                </apex:actionFunction>
+          
+                <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,panelId,errorId" oncomplete="showError();closeWindow();buttonValidator();">
+                </apex:actionFunction>
+ <!--                 <apex:actionFunction action="{!newIncident}" name="newIncident"/> -->
+                <apex:actionFunction action="{!deleteHistory}" name="deleteHistory" onComplete="closeWindow();"/>
+				<apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object and is part of our process so fields of history object must be available to all users" rendered="false"/>
+				<apex:outputPanel rendered="{!allAccessible}">
+                <div id="capsule" class="CapsuleDiv1">
+                    <table cellpadding="0" cellspacing="0" class="clsMainTable" style="border-width:0px">
+                         <tr>
+                            <td>
+                            <table cellpadding="0" cellspacing="0" class="clsTable">
+                            <tr>
+                                <td class="clsTopAlignment75">
+                                   <table cellpadding="0" cellspacing="0" class="clsTable">
+                                        <tr>
+                                            <td colspan="3"><div class="div15pxVspacing"/></td>
+                                        </tr>                                   
+                                         <tr>
+                                            <td class="clsInputLabelTD" style='width:58px;'><apex:outputLabel value="{!$Label.bmcservicedesk__actionid}"/><span class="clsRequiredBlack">*</span></td>
+                                            <td class="clsInputTextBoxTD">
+												<apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object and is part of our process so fields of history object must be available to all userss. CRUD check added in parent panel" rendered="false"/>
+                                                <apex:inputText title="{!$ObjectType.BMCServiceDesk__Problem_History__c.fields.BMCServiceDesk__FKAction__c.inlineHelpText}" value="{!historyobj.action}" id="Action__c_id_name" onblur="showalldata(event, populateDescriptionOnTabout);" styleClass="clsInputTextBox" />
+                                            </td>
+                                            <td class="lookupIconTD">
+                                              <div class="lookUpIconDiv">
+                                                <apex:commandButton onclick="if(!inProgress) {openPopupWithTitle('SearchPage?popupId=Action&isLookup=true&filterClause='+escape('appliesTo{!actiontype} =true and system__c=false'),setActionId,'',307,560);}" rerender="dummy" styleClass="lookupIconOn" disabled="{!sysDisable}"/>                                                  
+                                              </div>
+                                            </td>
+                                        </tr>                             
+                                        
+
+                                        
+                                       </table>
+                                        <table class="clsTable" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td class="clsInputBoldLabelTDI" ><apex:outputLabel value="{!$Label.bmcservicedesk__description}"/></td>
+                                        </tr>
+                                        <tr>
+                                        	<td class="clsInputTextBoxTD clsLeftPadding10 clsRightPadTD" colspan="3">
+                                        		<div class="clsRelativePosition">
+													<apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object and is part of our process so fields of history object must be available to all userss. CRUD check added in parent panel" rendered="false"/>
+                                            		<apex:inputTextarea title="{!$Label.bmcservicedesk__tooltiphistorydescription}" value="{!historyobj.description}" id="Action__c_id_description" styleClass="clsInputTextAreaPgWoSidePanel" />
+                                            	</div>
+                                            </td>
+                                            <apex:outputpanel rendered="{!renderTextAreaResizeButton}">
+	                                            <td class="lookupIconTD" style="vertical-align:top;">
+													<input type="button" id="inputTxtAreaButton" class="TextboxPopupIcon" style="display:inline" onclick="showTextEditor('{!$Component.formId.Action__c_id_description}', '{!$Label.bmcservicedesk__description}', '32000', '{!JSENCODE($Label.OK)}', '{!JSENCODE($Label.Cancel)}', 300);"/>
+												</td>
+											</apex:outputpanel>
+                                        </tr>
+                                         </table>
+                                      
+                                      <table class="clsTable" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td class="clsInputBoldLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__note}"/></td>
+                                            
+                                        </tr>
+                                        <tr>
+                                           <td class="clsInputTextBoxTD clsLeftPadding10 clsRightPadTD" colspan="3">
+                                        		<div class="clsRelativePosition">
+													<apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object and is part of our process so fields of history object must be available to all userss. CRUD check added in parent panel" rendered="false"/>
+                                                	<apex:inputTextarea value="{!historyobj.note}" 
+                                                    	   title="{!$ObjectType.BMCServiceDesk__Problem_History__c.fields.BMCServiceDesk__Note__c.inlineHelpText}" id="Action__c_id_note" styleClass="clsInputTextAreaPgWoSidePanel"  />
+                                                </div>                                                
+                                            </td>
+                                             <td class="lookupIconTD" style="vertical-align:top;">
+												<input type="button" id="inputTxtAreaButton" class="TextboxPopupIcon" style="display:inline" onclick="showTextEditor('{!$Component.formId.Action__c_id_note}', '{!$Label.bmcservicedesk__note}', '32000', '{!JSENCODE($Label.OK)}', '{!JSENCODE($Label.Cancel)}', 300);"/>
+											</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"><div class="div13pxVspacing"/></td>
+                                        </tr>
+                                      
+                                    </table>
+                                          <table class="clsTable" cellspacing="0" cellpadding="0">
+                                           <tr style="{!IF(actionHideDuration, 'display:none',  'display:table-row')}">
+                                            <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__duration}"/></td>
+                                            <td class="clsInputTextBoxTD">
+											<apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object and is part of our process so fields of history object must be available to all userss. CRUD check added in parent panel" rendered="false"/><apex:inputText title="{!$Label.bmcservicedesk__tooltiphistoryduration}" id="duration" value="{!historyobj.duration}" styleClass="clsInputTextBox"/></td>
+                                            <td style="vertical-align: top;"><apex:outputLabel value="{!$Label.bmcservicedesk__hhmm}"  styleClass="dateFormatLabel"/></td>
+                                        </tr>
+<!--                                         <tr>
+                                            <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.DateAndTime}"/></td>
+                                             <td class="clsInputTextBoxTD">
+											 <apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object and is part of our process so fields of history object must be available to all userss. CRUD check added in parent panel" rendered="false"/><apex:inputText id="dateAndTime" value="{!historyobj.date1}"  styleClass="clsInputTextBox" /></td>
+                                        </tr> -->    
+                                        <tr>
+                                              <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__staffid}"/></td>
+                                            <td class="clsInputTextBoxTD">
+											<apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object and is part of our process so fields of history object must be available to all userss. CRUD check added in parent panel" rendered="false"/>
+                                            <apex:inputText title="{!$Label.bmcservicedesk__tooltiphistorystaffid}" value="{!historyobj.userid}" id="User_id_username"  styleClass="clsInputTextBox" />
+                                            </td>
+                                            <td class="lookupIconTD">  
+                                             <div class="lookUpIconDiv">  
+                                                <apex:commandButton onclick="if(!inProgress) {openPopup('SearchPage?popupId=Client&isLookup=true',setUserId);}" rerender="dummy" styleClass="lookupIconOn" disabled="true" id="lookupIconOn" />
+                                           </div>
+                                            </td>
+                                        </tr>
+                                           </table>
+                                           <div class="div13pxVspacing"/>
+                                </td>
+                              </tr>
+                            </table>
+                            
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+				</apex:outputPanel>
+                <c:TabOutComponent ></c:TabOutComponent>
+             </apex:form>
+    </apex:outputPanel>  
+</apex:page>

@@ -1,0 +1,239 @@
+<apex:page controller="BMCServiceDesk.AdminSelfServiceController" showHeader="false" standardStylesheets="false" action="{!AdminSearchLoader}" id="pg">
+    <style>
+        .toolSpCls .x-toolbar-left {
+            padding-left: 1px;
+            width:30px !important;
+        }
+   </style>
+ <c:CommonIncludes />
+   <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSelfService.css"/>
+   <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+   <apex:form id="form">
+   <apex:slds ></apex:slds>	   
+		<div id = "btnToolbar" />
+		<div id="helpDiv" class="clshelpDiv"></div>
+		<apex:outputPanel id="mainPanel" styleClass="main-panel" layout="block">
+		<table class = "slds-p-around_small" border="0">                                     
+			<tr style="display:{!(if(And(isSSSwitchNewUI,isFreshInstallWithoutSS2),'none',''))}">
+				<td width="25">
+					<div class="slds-checkbox slds-form-element__row slds-form-element">
+						<apex:outputLabel styleClass="slds-checkbox__label">
+						<apex:inputCheckbox id="enableIntranet" styleclass="slds-input" disabled="{!disableSS2Settings}" value="{!selfServiceBean.Enable_Intranet_Search_Portlet}"
+						onClick="enableUrl();" />
+						<span class="slds-checkbox--faux"></span>
+					</apex:outputLabel>
+					</div>
+				</td> 
+				<td align="left" colspan="2"> 
+					<apex:outputLabel value="{!$Label.bmcservicedesk__enableintranet}" styleClass="{!if(disableSS2Settings,'DisabledLabel','')}"/>
+				</td>            
+			</tr>
+			<tr style="display:{!(if(isFreshInstallWithoutSS2,'none',''))}"><td class = "div2pxVspacing" colspan="3"></td></tr>
+			<tr style="display:{!(if(isFreshInstallWithoutSS2,'none',''))}">
+				<td>&nbsp;</td>
+				<td align="left">
+					<apex:outputLabel value="{!$Label.bmcservicedesk__intraneturl}"  styleClass="{!if(disableSS2Settings,'DisabledLabel','')}"/>
+				</td>
+				<td>
+					<apex:inputText id="txturl" title="{!$Label.bmcservicedesk__intranetsearch}" disabled="{!disableSS2Settings}" style="width:350px"    value="{!selfServiceBean.URL_of_Intranet_Search}" styleClass="slds-input"/>
+				</td>
+			</tr>
+			<tr style="display:{!(if(isFreshInstallWithoutSS2,'none',''))}"><td class = "div2pxVspacing" colspan="3"></td></tr>
+			<tr style="display:{!(if(isFreshInstallWithoutSS2,'none',''))}">
+				<td>
+					<div class="slds-checkbox slds-form-element__row slds-form-element">
+						<apex:outputLabel styleClass="slds-checkbox__label">
+							<apex:inputcheckbox id="enableInternet" styleclass="slds-input" disabled="{!disableSS2Settings}" value="{!selfServiceBean.Allow_Internet_Search}"
+						onClick="enableSearchEngine();" />
+							<span class="slds-checkbox--faux"></span>
+						</apex:outputLabel>
+					</div>                                            
+				</td> 
+				<td align="left" colspan="2"> 
+				<apex:outputLabel value="{!$Label.bmcservicedesk__enableinternet}" styleClass="{!if(disableSS2Settings,'DisabledLabel','')}" />
+				</td> 
+			</tr>
+			<tr style="display:{!(if(isFreshInstallWithoutSS2,'none',''))}"><td class = "div10pxVspacing" colspan="3"></td></tr>
+			<tr style="display:{!(if(isFreshInstallWithoutSS2,'none',''))}">
+				<td >&nbsp;</td>                                        
+				<td width="15%">
+					<apex:outputLabel value="{!$Label.bmcservicedesk__searchengine}" styleClass="{!if(disableSS2Settings,'DisabledLabel','')}"/>
+				</td>
+				<td>
+					<apex:inputText disabled="true"  id="txtSearchEngine"  value="{!selfServiceBean.Available_Search_Engines}" style="width:350px;" styleClass="slds-input"/>
+				</td>
+			</tr>
+			<tr style="display:{!(if(isFreshInstallWithoutSS2,'none',''))}"><td class = "div10pxVspacing" colspan="3"></td></tr>
+			<tr>
+				<td >
+					<div class="slds-checkbox slds-form-element__row slds-form-element">
+					<apex:outputLabel styleClass="slds-checkbox__label">
+						<apex:inputCheckbox styleclass="slds-input" id="enableRFKnowledgeSearch" value="{!selfServiceBean.Allow_RF_Knowledge}" />
+						<span class="slds-checkbox--faux"></span>
+					</apex:outputLabel>
+					</div>
+				</td> 
+				<td align="left" colspan="2"> 
+					<apex:outputLabel value="{!$Label.bmcservicedesk__searchrfknowledgeinss}"  />     
+				</td>                                       
+			</tr>
+			<tr>
+				<td class = "div10pxVspacing" colspan="3"></td>
+			</tr>
+			<tr>
+				<td >
+					<div class="slds-checkbox slds-form-element__row slds-form-element">
+						<apex:outputLabel styleClass="slds-checkbox__label">
+							<apex:inputCheckbox styleclass="slds-input" id="enableSFKnowledge" value="{!selfServiceBean.Allow_SF_Knowledge}" />
+							<span class="slds-checkbox--faux"></span>
+						</apex:outputLabel>
+					</div>     
+				</td> 
+				<td align="left" colspan="2"> 
+					<apex:outputLabel value="{!$Label.bmcservicedesk__searchsfknowledgeinss}" />     
+				</td>
+			</tr>
+			<apex:outputPanel rendered="{!Not(isFreshInstallWithoutSS2)}" layout="none">
+			<tr>
+				<td colspan="3" class="div10pxVspacing"></td>
+			</tr>
+			<tr style="display:{!(if(isSSSwitchNewUI,'','none'))}">
+				<td width="25">&nbsp;</td>
+				<td colspan="1">
+					<apex:outputLabel id="directLinkLabel" value="{!$Label.bmcservicedesk__directlink}: {!$Label.bmcservicedesk__selfservicesearch}" style="{!if(disableSS2Settings,'color:#d9d9d9;padding-right:10px;','padding-right:10px;')}"/>          
+				</td> 
+				<td align="left"> 
+					<apex:inputText value="{!ssDirectLinkURL}" disabled="{!disableSS2Settings}" style="width:350px;" onclick="this.select();" styleClass="slds-input"/>     
+				</td>
+			</tr>
+			</apex:outputPanel>
+			<tr>
+				<td class="div10pxVspacing" colspan="3"></td>
+			</tr>
+			<tr style="display:{!(if(isSS3Configured,'','none'))}">
+				<td>
+					<div class="slds-checkbox slds-form-element__row slds-form-element">
+						<apex:outputLabel styleClass="slds-checkbox__label">
+							<apex:inputCheckbox styleclass="slds-input" id="enableSelfServiceSearchHistory" value="{!isEnableSSSearchHistoryTracking}"/>
+							<span class="slds-checkbox--faux"></span>
+						</apex:outputLabel>
+					</div>
+				</td>
+				<td align="left" colspan="2">
+					<apex:outputLabel value="{!$Label.bmcservicedesk__enablesssearchhistorytracking}" />
+				</td>
+			</tr>
+			<apex:outputPanel rendered="{!AND(NOT(isSRSearchOptimized),isSS3Configured)}">
+			<tr>
+				<td class="div10pxVspacing" colspan="3"></td>
+			</tr>
+			<tr>
+			<td width="25">&nbsp;</td>
+			<td width="15%">
+				<apex:outputLabel id="OptmzSRSearchLabel" 
+				value="{!$Label.bmcservicedesk__optimizeservicereqsearch}" 
+				styleClass="floatLeft" />
+			</td>
+			<td>
+				<div  id="OptimizeButtonTD" class="floatLeft" ></div>  
+				<div id="Panel" >
+					<div id="Progress_Section" >
+						<img src="/img/loading.gif" id="stUploadingImg"/>
+					</div>  
+					<div id= 'SuccessDiv'>
+						<img src="{!$Resource.SDEFStyles}/SDEFimages/accept.png"  style="padding-right :5px;" class="tickImg"/><b>{!$Label.ACActionsSuccess}</b>
+					</div>                  
+					<div id ='FailDiv'> 
+						<img src="/img/msg_icons/warning16.png" class= "paddingRt3px"/>
+						<span id='countDiv'></span>
+						(<a id ='logURLId' target='_blank' styleClass="linkCls">{!$Label.FailureLogs}</a>)                
+					</div>
+				</div>
+			</td>
+			</tr>
+			<tr>
+				<td colspan="3" class="div10pxVspacing"></td>
+			</tr>
+			</apex:outputPanel>
+		</table>
+		</apex:outputPanel>
+       <apex:outputPanel id="msg">
+         <script>               
+             var message = '{!JSENCODE(messageString)}';                  
+         </script>
+   </apex:outputPanel>
+    <apex:outputPanel id="BatchPanel">
+         <script>               
+             var batchStatusVal= '{!JSENCODE(batchStatus)}';  
+             var isSuccessVal ={!isSuccess};  
+             var descText='{!JSENCODE(scanReportUrl)}';   
+			 if(descText) {
+                 var descTxtArr = descText.split('URL:');
+                 if(descTxtArr  && descTxtArr.length>1 ){
+                     var failStat= descTxtArr[0];
+                     var logURL =descTxtArr[1];  
+                 }  
+              }         
+         </script>
+   </apex:outputPanel>
+         <apex:actionFunction name="save" action="{!searchSave}" reRender="msg" oncomplete="waitMsg.hide();showErrorMsg();" />                  
+         <apex:actionFunction name="reset" action="{!searchReset}" rerender="mainPanel" /> 
+            <apex:actionFunction name="optimize" action="{!OptimizeSRSearch}" reRender="CompletedStatus"  /> 
+             <apex:actionFunction name="pollingFunction" action="{!checkBatchStatus}" reRender="BatchPanel,FailDiv" oncomplete="resetPolling();"/>
+   </apex:form>    
+   <script>
+    var txturlvar='{!JSENCODE($Component.pg.form.txturl)}';
+    var txtSearchEnginevar='{!JSENCODE($Component.pg.form.txtSearchEngine)}';
+    var txtEnableinternet = '{!JSENCODE($Component.pg.form.enableIntranet)}';
+    var saveLabel = '{!JSENCODE($Label.save)}';
+    var undoDefaultSettingPageLabel='{!JSENCODE($Label.Reset)}';
+	var OptimizeLabel ='{!JSENCODE($Label.ACStartservice)}';
+   	function enableUrl(){
+   		var isNewSSUI = '{!isSSSwitchNewUI}';
+   		if(isNewSSUI.toUpperCase() =='FALSE')
+   		{
+   			isNewSSUI = false;
+   		}
+        if(document.getElementById(txtEnableinternet).checked){
+            document.getElementById(txturlvar).disabled=false;
+        }
+        else if(!Boolean(isNewSSUI)){
+        	document.getElementById(txturlvar).disabled=true;
+        }
+       
+    }
+    function enableSearchEngine(){
+    	
+        if(document.getElementById(txtEnableinternet).checked){
+            //document.getElementById(txtSearchEnginevar).disabled=false;
+        }
+        else{
+            document.getElementById(txtSearchEnginevar).disabled=true;
+        }
+    }
+    function ResetBtnHandler(){
+		   reset();
+    }
+    function showErrorMsg(){
+              
+         if(message!=null && message !=''){                                
+             Ext.MessageBox.show({                                
+                 title: '{!JSENCODE($Label.SSSearch)}',
+                 msg:message ,
+                 width:300,
+                 buttons: Ext.MessageBox.OK
+             });
+        }
+    }
+     var wikiUrl = '{!wikiUrl}';
+     var progSecElm = document.getElementById('Progress_Section');
+            var failDivElm = document.getElementById('FailDiv');
+            var logURLElm = document.getElementById('logURLId');
+            var countDivElm = document.getElementById('countDiv');
+            var successDivElm  = document.getElementById('SuccessDiv');
+     
+    parent.addHelpOnPage(document.getElementById('helpDiv'),'SS_search_settings.htm',wikiUrl);
+    var interVal;
+   </script>  
+   <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminSearch.js"/>                   
+</apex:page>

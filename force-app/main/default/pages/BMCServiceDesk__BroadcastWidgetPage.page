@@ -1,0 +1,206 @@
+<apex:page Controller="BMCServiceDesk.BroadcastWidgetController" showheader="false" cache="true" sidebar="false" standardStylesheets="false">
+    <head>
+      <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>  
+      <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Portal.css"/>
+      <apex:outputpanel rendered="{!IF(isfromConsole == 'true', true, false)}">
+        <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BroadcastWidgetConsole.css"/>
+        <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+      </apex:outputpanel>    
+      <apex:outputpanel rendered="{!ISNULL(isfromConsole)}">
+        <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BroadcastWidget.css"/>
+        <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/stdcalalog.css"/>
+      </apex:outputpanel>
+    </head>
+    <c:CommonIncludes2 />
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/BroadcastWidgetPage.js"/> 
+    <script>
+         var isFromSS = '{!JSENCODE($CurrentPage.parameters.fromSS)}';
+         var isfromconsole = '{!JSENCODE($CurrentPage.parameters.fromconsole)}';
+         var isfromRFconsole = '{!JSENCODE($CurrentPage.parameters.fromRFconsole)}';
+         var calledFromConsoleListViewPage = '{!JSENCODE($CurrentPage.parameters.calledFromConsoleListViewPage)}';
+         var isServiceRequest = '{!JSENCODE($CurrentPage.parameters.isServiceRequest)}';
+         var islinktobroadcast=false;
+         
+         if('{!JSENCODE($CurrentPage.parameters.linktobroadcast)}'== 'true')
+         {
+             islinktobroadcast=true;
+         }
+    </script>
+    <apex:outputPanel id="dataPanel">
+        <script>
+            var isPortalUser = '{!isPortalUser}';
+            var showSubmitIncIcon = {!showSubmitIncIcon};
+            var listData;
+            
+            function setData() {
+                listData = [{!listData}];
+                setDataJS(listData);
+            }
+            Ext.ns("BroadcastWidget");
+            BroadcastWidget.Labels = {
+                NavigatorBroadcast: '{!JSENCODE($Label.Navigator_Broadcasts)}'
+            }
+            setData();
+            window.onload = getIncidentIdsTOBroadcast
+        </script>
+    </apex:outputPanel>
+    <script>
+        var labelBroadcastWindowHeaderSearchPage = '{!JSENCODE($Label.broadcastWindowHeaderSearchPage)}';
+        function renderIcon(image,metadata, record, rowIndex, columnIndex, store) {
+            if(isfromconsole == 'true'){
+                return '<span class="clsImageA" rowIndex="'+ rowIndex +'" columnIndex="'+ columnIndex +'" ><label class="broadcast-priority-col ' + image.split(':')[1] + '"/>' + image.split(':')[0] + '</span>';    
+            }
+            else{
+                return '<span class="clsImageA" rowIndex="'+ rowIndex +'" columnIndex="'+ columnIndex +'" ><img src="' + "{!$Resource.SDEFStyles}/SDEFimages/" +image + '"/> </span>';
+            }
+        }
+        
+        var follow = '{!JSENCODE($Label.followBroadcast)}';
+        var unFollow = '{!JSENCODE($Label.unFollowBroadcast)}';
+        var submitTktLbl = '{!JSENCODE($Label.SS_IncidentHome)}';
+        var SSIfIncidentAlreadyCreatedForBrd = '{!JSENCODE($Label.SSIfIncidentAlreadyCreatedForBrd)}';
+        var NoRecordsFound ='{!JSENCODE($Label.NoRecordsFound)}';
+    </script>
+    
+    <apex:outputPanel id="stylePanel" rendered="{!IF($CurrentPage.parameters.fromconsole != 'true',true,false)}" >
+        <style>
+            div,textarea { font:12px arial !important; }
+           
+        </style>
+    </apex:outputPanel>
+ 
+    <apex:outputPanel id="errorId">
+        <script>
+           errormsg = '{!JSENCODE(messageString)}';
+        </script>
+        </apex:outputPanel>
+        
+    <apex:form id="theForm">
+        <apex:actionfunction name="getBroadcastDetails" action="{!setBroadcastList}" rerender="detailcontainer,dataPanel" />
+        <apex:actionFunction name="handleRowClick" action="{!getBroadcastDetails}" reRender="detailcontainer">
+            <apex:param name="BroadcastId" value="" />
+        </apex:actionFunction>
+        <apex:actionFunction name="handleRowClickWithFollow" action="{!getBroadcastDetailsWithFollow}" reRender="detailcontainer,errorId" oncomplete="showError();changeImages();">
+            <apex:param name="BroadcastId" value="" />
+            <apex:param name="follow" value="" />
+        </apex:actionFunction>
+        <apex:actionFunction name="handleColumnClick" action="{!handleColumnClick}" oncomplete="" reRender="detailcontainer,dataPanel,bottomPanel">
+            <apex:param name="sortColumn" value="" assignTo="{!sortColumn}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="passincidentidstocontroller" reRender="errorId"  >
+            <apex:param name="IncidentIds" value="" assignTo="{!raw_incidentIDs}"/>
+            </apex:actionFunction>
+        <div id="tableDiv" tabindex="-1">
+            <table class="clsTable1" cellspacing="0" cellpadding="0" tabindex="-1">
+            </table>
+        </div>
+        <div class="clsBroadcastGridPanel" id="GridPanel" >
+            <div id="extGridPanel" ></div>
+        </div>
+        <apex:outputpanel id="bottomPanel">
+            <div class="prevNextDiv" tabindex="-1">
+               <table align="center" tabindex="-1">
+                   <tr>
+                    <td tabindex="-1">
+                            <apex:commandbutton tabindex="{!IF(hasPrevious,'0','-1')}" action="{!handleFirstClick}" id="firstPageBTN" styleClass="{!IF(hasPrevious, 'clsImage1', 'clsDisImage1')}" title="{!$Label.bmcservicedesk__firstpage}" disabled="{!IF(hasPrevious,false,true)}"/>
+                    </td>
+                    <td tabindex="-1">  
+                            <apex:commandbutton tabindex="{!IF(hasPrevious,'0','-1')}" action="{!handlePreviousClick}"  id="previousPageBTN" styleClass="{!IF(hasPrevious, 'clsImage2', 'clsDisImage2')}" title="{!$Label.bmcservicedesk__previouspage}" disabled="{!IF(hasPrevious,false,true)}"/>
+                    </td>
+                    <td align="center" class="clsPaginationLabel" tabindex="-1">    
+                      <apex:outputText value="{!$Label.Page} {!currentPage} {!$Label.Of} {!totalpage }"
+                        id="pageInfoText"/>
+                    </td>
+                    <td tabindex="-1" >
+                           <apex:commandbutton tabindex="{!IF(hasNext,'0','-1')}" action="{!handleNextClick}" id="nextPageBTN" styleClass="{!IF(hasNext, 'clsImage3 flRight', 'clsDisImage3 flRight')}" title="{!$Label.bmcservicedesk__nextpage}" disabled="{!IF(hasNext,false,true)}"/>
+                    </td>
+                    <td tabindex="-1">
+                            <apex:commandbutton tabindex="{!IF(hasNext,'0','-1')}" action="{!handleLastClick}" id="lastPageBTN" styleClass="{!IF(hasNext, 'clsImage4 flRight', 'clsDisImage4 flRight')}" title="{!$Label.bmcservicedesk__lastpage}" disabled="{!IF(hasNext,false,true)}"/>
+                   </td> 
+                   </tr>
+                 </table>   
+            </div>
+            <tr>
+                <td tabindex="-1">
+                    <div class="div10pxVspacing" style="{!IF($CurrentPage.parameters.fromSS == 'true','background-color:#F7F7F7','background-color: white')}"/>
+                </td>
+            </tr>
+            <div style="{!IF($CurrentPage.parameters.fromSS == 'true','background-color:#F7F7F7;','background-color: white; height:113px;')}" id="BRDetails">
+                <apex:outputpanel id="detailcontainer">
+                    <apex:outputPanel rendered="{!IF($CurrentPage.parameters.fromSS == 'true',false,true)}">
+                <table>
+                    <tr>
+                        <td>
+                            <apex:outputText styleClass="clsTbw3" value="{!postDate}" rendered="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__postDate__c.Accessible}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="clsPanelInputCheckboxTDS">
+                            <apex:inputTextArea value="{!broadcastMessage}" readonly="true" styleClass="clsTbw5" rendered="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__broadcastMessage__c.Accessible}"/>
+                        </td>
+                    </tr>
+                   </table>
+                </apex:outputpanel>
+                    
+                    <apex:outputPanel rendered="{!IF($CurrentPage.parameters.fromSS == 'true',true,false)}">
+                       <table class="broadcastMsgDiv">
+                            <tr>
+                                <td>
+                                    <apex:outputText style="font-weight:bold;" styleClass="clsTbw3" value="{!$Label.bmcservicedesk__ssbroadcasted}"/>:
+                                    <apex:outputText style="padding-left:5px;" styleClass="clsTbw3" value="{!postDate}" rendered="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__postDate__c.Accessible}"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="clsPanelInputCheckboxTDS">
+                                    <apex:inputTextArea value="{!broadcastMessage}" readonly="true" onkeydown="focusFirstRow();" styleClass="{!IF(isfromConsole == 'true', 'textAreaCls', 'clsTbw5 clsBroadcastTextArea')}" tabindex="0" rendered="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__broadcastMessage__c.Accessible}" style="{!IF($CurrentPage.parameters.linktobroadcast == 'true','height:115px;','height:116px')}"/> 
+                                </td>
+                            </tr>
+                       </table>
+                    </apex:outputpanel>
+                </apex:outputpanel>
+            </div>
+            <!--  for link Incidents to Broadcast button --> 
+             <apex:outputpanel rendered="{!IF($CurrentPage.parameters.linktobroadcast == 'true',true,false)}">
+            <div class="prevNextDiv" style="height:25px;border-bottom:none;">
+                          <table align="left">
+               <tr>
+                <td>
+                    <apex:commandbutton id="linktobroadcast"  style="height:25px;width:50px;" styleClass="btn" disabled="{!if(listIsNull == false, false, true)}" reRender="errorId" value="{!$Label.bmcservicedesk__link}" action="{!LinkIncidentsTOBroadcast}" oncomplete="showError();showSucessmsg();" status="PleaseWait"/>
+                    <apex:actionStatus onStart="showMask();" onstop="hideMask();" id="PleaseWait"/>
+                    <div id="overlay" class="overlay">
+                    </div>
+                    <div align="center" id="divmsg" class="divmsg" style="display:none;">
+                        <div style="position:relative; " id="mask"> 
+                            <ul class="d-loading">
+                                <li class="d-loading__stick d-loading__stick_1"></li>
+                                <li class="d-loading__stick d-loading__stick_2"></li>
+                                <li class="d-loading__stick d-loading__stick_3"></li>
+                                <li class="d-loading__stick d-loading__stick_4"></li>
+                                <li class="d-loading__stick d-loading__stick_5"></li>
+                                <li class="d-loading__stick d-loading__stick_6"></li>
+                                <li class="d-loading__stick d-loading__stick_7"></li>
+                                <li class="d-loading__stick d-loading__stick_8"></li>
+                                <li class="d-loading__stick d-loading__stick_9"></li>
+                                <li class="d-loading__stick d-loading__stick_10"></li>
+                                <li class="d-loading__stick d-loading__stick_11"></li>
+                                <li class="d-loading__stick d-loading__stick_12"></li>
+                            </ul>
+                            <div class="plswait">{!JSENCODE($Label.PleaseWait)}...</div>
+                        </div>
+                    </div>
+                </td>
+               
+                </tr>
+             </table>   
+            </div>
+            </apex:outputpanel> 
+        </apex:outputpanel>
+    </apex:form>
+ 
+<script>      
+    if(Sarissa._SARISSA_IS_IE && (navigator.userAgent.indexOf("Trident/6")>-1)){  
+        window.XMLSerializer = function(){};      
+        window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+ </script>
+</apex:page>

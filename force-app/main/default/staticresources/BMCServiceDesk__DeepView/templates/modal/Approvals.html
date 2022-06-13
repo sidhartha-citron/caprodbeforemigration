@@ -1,0 +1,94 @@
+<div class="panel approvals-panel" ng-if="showApprovals" id="approvalPanel">
+	<panel-header action="hidePanels()" headertext="{{_Labels.modal.approvaldetails}}"></panel-header>
+	
+	<div class="panel-body" id="approvalPanelInner">
+		<div class="approval-list-panel" style="max-height:351px;">
+		<table class="detail-table">
+			<thead>
+				<tr>
+					<th class="table-th">{{_Labels.modal.approver}}</th>
+					<th class="table-th">{{_Labels.modal.status}}</th>
+					<th class="table-th">{{_Labels.modal.dateTime}}</th>
+				</tr>
+			</thead>
+			<tr ng-if="nodeApprovals[0].Status=='Pending'" ng-repeat="workItem in nodeApprovals[0].Workitems">
+					<td title="{{workItem['Actor']['Name']}}"><div class="approvalDetailsList">{{workItem['Actor']['Name']}}</div></td>
+					
+					<td>{{_Labels.modal.Pending}}</td>
+					<td>{{workItem['CreatedDate'] | date:"MM/dd/yyyy ' ' h:mm ' ' a"}}</td>
+			</tr>
+			<tbody ng-repeat="nodeApp in nodeApprovals">
+				<tr ng-repeat="approval in nodeApp.Steps" ng-if="approval['StepStatus']!='NoResponse'">
+					
+					<td title="{{approval['Actor']['Name']}}"><div class="approvalDetailsList">{{approval['Actor']['Name']}}</div></td>
+					<td class="{{approval['StepStatus']}}">{{approval['StepStatus']=='Started' ? _Labels.modal.Submitted : approval['StepStatus'] == 'Removed' ? _Labels.modal.Recalled : approval['StepStatus'] == 'Rejected' ? _Labels.modal.Rejected : approval['StepStatus'] == 'Approved' ? _Labels.modal.Approved : approval['StepStatus']}}</td>
+					<td>{{approval['CreatedDate'] | date:"MM/dd/yyyy ' ' h:mm ' ' a"}}</td>
+				</tr>
+			</tbody>
+			
+		</table>
+		</div>
+		<div class="approval-buttons"  id="approval-buttons">
+			<table>
+				<tr>
+					<td class="approval-buttons-reassign">
+						<button ng-click="showReassignBottomButton()" ng-if="enableApproveRejectButton" title="{{_Labels.modal.reassign}}" class="btn btn-default"><div class="approval-pop-up-button-text" title="{{_Labels.modal.reassign}}">{{_Labels.modal.reassign}}</div></button>	
+					</td>	
+					<td class="approval-buttons-approvereject">
+						<button ng-click="showApproveRejectBottomButtons()" ng-if="enableApproveRejectButton" title="{{_Labels.modal.approve}} / {{_Labels.modal.reject}}" class="btn btn-default"><div title="{{_Labels.modal.approve}} / {{_Labels.modal.reject}}" class="approval-pop-up-button-text">{{_Labels.modal.approve}} / {{_Labels.modal.reject}}</div></button>	
+					</td>
+					<td>
+						<button ng-click="showRecallBottomButton()" title="{{_Labels.modal.recall}}" ng-if="enableRecallButton" title="{{_Labels.modal.recall}}" class="btn btn-default"><div class="approval-pop-up-button-text">{{_Labels.modal.recall}}</div></button>	
+					</td>
+				</tr>			  
+			</table>
+		</div>
+		<div class="reassign-approver" ng-if="showReassignButtonBottom">
+			
+			{{_Labels.modal.approver}}<span class="sidebar-required" >  ({{_Labels.modal.Required}})</span>      :
+			
+			<input type="REFERENCE" 
+                                           class="reassign-lookup quick-edit"  
+                                           ng-click="getApproverLookup('OwnerId', 'Owner')" 
+                                           mg-model="OwnerRefFieldVal['OwnerId']" 
+                                           value="{{OwnerRefFieldVal['OwnerId'].fRefFieldVal}}"
+                                           ng-if="showReassignButtonBottom"     
+                                           reqd="true"
+                                           readonly/>
+		</div>		
+		<div id="approval-comments" style="max-height:103px;">
+			<table class="approval-comments-table">
+				<tr>
+					<td ng-show="showApproveRejectButtonsBottom||showRecallButtonBottom" class="question-label ng-binding" style="font-weight: bold;color: #666">{{_Labels.modal.comment}}:</td>       
+				</tr>
+				<tr>
+					<td class="approval-comments-textarea">
+						<textarea  ng-model="comments.data" maxlength="4000" class="panel add-notes,quick-edit" style="padding:0px;resize:none" 
+									  ng-show="showApproveRejectButtonsBottom||showRecallButtonBottom" reqd="false"/>
+					</td>					  
+				</tr>
+			</table>
+		</div>
+		<div class="approval-buttons-bottom" id="approval-buttons-bottom">
+			<table>
+				<tr>	
+					<td ng-if="showApproveRejectButtonsBottom" class="approval-buttons-bottom-approve">
+						<button ng-click="callApproveRecord()"  title="{{_Labels.modal.approve}}" class="btn btn-default">{{_Labels.modal.approve}}</button>	
+					</td>
+					<td ng-if="showApproveRejectButtonsBottom" class="approval-buttons-bottom-reject">
+						<button ng-click="callRejectRecord()"  title="{{_Labels.modal.reject}}" class="btn btn-default">{{_Labels.modal.reject}}</button>	
+					</td>
+					<td ng-if="showReassignButtonBottom" class="approval-buttons-bottom-reassign">
+						<button ng-click="callReassignRecord()" title="{{_Labels.modal.reassign}}" class="btn btn-default">{{_Labels.modal.reassign}}</button>	
+					</td>
+					<td ng-if="showRecallButtonBottom" class="approval-buttons-bottom-recall">
+						<button ng-click="callRecallRecord()"  title="{{_Labels.modal.recall}}" class="btn btn-default">{{_Labels.modal.recall}}</button>	
+					</td>
+					<td ng-if="showApproveRejectButtonsBottom||showReassignButtonBottom||showRecallButtonBottom" class="approval-buttons-bottom-cancel">
+						<button ng-click="callCancelRecord()" title="{{_Labels.quickDetails.cancel}}" class="btn btn-default">{{_Labels.quickDetails.cancel}}</button>	
+					</td>
+				</tr>			  
+			</table>
+		</div>					  
+	</div>
+</div>

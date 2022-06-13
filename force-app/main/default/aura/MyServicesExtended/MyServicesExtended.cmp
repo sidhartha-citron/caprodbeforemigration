@@ -1,0 +1,333 @@
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" controller="MyServicesExtended">
+    
+    <aura:attribute name="queryParams" type="String[]" default="['OrderItemNumber, Order.OrderNumber, Product2.Name, Product2.Display_Frequency_In_Portal__c, Quantity, Product2.Product_Image_URL__c, Product2.Item_Type__c, Product_Name__c, Frequency__c, Order_Number__c, Order.Status, Order.AccountId, PricebookEntryId, PricebookEntry.UnitPrice, Related_Product__r.Name']"/>
+    <aura:attribute name="orderProductsMap" type="ExtendedLineItem[]"/>
+    <aura:attribute name="totalPriceMap" type="Object[]"/>
+    <aura:attribute name="mainSiteContact" type="Contact"/>
+    
+    <aura:attribute name="productsSize" type="Integer"/>
+    <aura:attribute name="ServicesSize" type="Integer"/>
+    
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="isPortal" type="Boolean" default="false"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/> 
+    
+    <div class="demo-only slds-m-top_xx-large slds-align_absolute-center customMargin" style="height:6rem;" aura:id="theSpinner">
+        <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+            <span class="slds-assistive-text">Loading</span>
+            <div class="slds-spinner__dot-a"></div>
+            <div class="slds-spinner__dot-b"></div>
+        </div>
+    </div>
+        
+    <div class="desktop">
+        <div class="slds-page-header">
+            <div class="slds-media">
+                <div class="slds-media__figure">
+                    <span class="slds-icon_container slds-icon-standard-shipment" title="My Scheduled Orders and Services">
+                        <lightning:icon iconName="standard:shipment" size="large" alternativeText="Scheduled Orders and Services"/>
+                    </span>
+                </div>
+                <div class="slds-media__body">
+                    <h1 class="slds-page-header__title slds-truncate slds-align-middle" title="Scheduled Orders and Services">Scheduled Orders and Services</h1> 
+                    <p class="slds-text-body_regular slds-line-height_reset">
+                        <aura:if isTrue="{!v.mainSiteContact == null}">
+                            <span class="bold">Main Site Contact:</span>&nbsp;None found
+                            <aura:set attribute="else">
+                                <span class="bold">Main Site Contact:</span>&nbsp;{!v.mainSiteContact.Name}&nbsp;&nbsp;<ui:outputEmail value="{!v.mainSiteContact.Email}"/>&nbsp;&nbsp;<lightning:formattedPhone value="{!v.mainSiteContact.Phone}"/>
+                            </aura:set>
+                        </aura:if>
+                    </p>
+                    <p class="slds-text-body_regular slds-text-color_error slds-line-height_reset">
+                        <b>Estimated next scheduled date is accurate for hygiene only.</b>
+                    </p>
+                </div>
+            </div>
+    	</div>
+        <aura:iteration items="{!v.orderProductsMap}" var="itemMap" indexVar="index">
+            <div class="slds-section slds-is-open" id="{!itemMap.key+index}">
+                <h3 class="slds-section__title">
+                    <lightning:button variant="neutral" label="{!itemMap.key+index}" iconName="utility:chevrondown" iconPosition="left" class="slds-button slds-section__title-action" onclick="{!c.openSection}" value="true">
+                        <span class="slds-cell-wrap" title="Section Title">{!itemMap.key} ({!itemMap.value.length})</span>
+                    </lightning:button>
+                </h3>
+                <div aria-hidden="false" class="slds-section__content" >
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                        <thead>
+                            <tr class="slds-text-title_caps">
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_30" title="Order Number">Order Number</div>
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_75" title="Product Name">Product Name</div>
+                                </th>
+                                <!--<th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_75" title="Related Product">Related Product</div>
+                                </th>-->
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_75 center" title="Service Frequency">Frequency</div>
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_30 center" title="Quantity">Quantity</div>
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_30 center" title="Service Price">{!itemMap.key == 'Consumables' ? 'Purchase Price Per unit' : 'Service Price Per Unit'}</div>
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_30 center" title="Price">
+                                        Price&nbsp;<lightning:helptext iconName="utility:info" content="For services: Monthly price per unit is calculated by multiplying number of occurrences per year and service price per unit. The result is then divided by 12. Formula: Service Price Per Unit * Number Of Occurrences Per Year / 12." /><br/>(Monthly)
+                                    </div>
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_30 center" title="Last Service">{!itemMap.key == 'Consumables' ? 'Last Delivery' : 'Last Service'}</div>
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_30 center" title="# of Cannot Complete">
+                                        # of Cannot Complete
+                                        <lightning:helptext iconName="utility:info" content="This allows you to quickly see if any Work Order Line Items were set to a status of Cannot Complete - click the link to see the full list and Cannot Complete Reasons, if entered." />
+                                    </div>
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_30 center" title="Next Service">
+                                        {!itemMap.key == 'Consumables' ? 'Est. Next Scheduled Delivery' : 'Est. Next Scheduled Service'}
+                                        <lightning:helptext iconName="utility:info" content="This allows you to get a general sense of when the customer is planned to get serviced. If you see a single date vs a range, the date is closer to confirmed - a range indicates when we are planning to have them serviced. Please communicate these dates with caution to your customer, never give customers an exact date. Special Notes: 1) Emergency Services are not considered here. 2) Dates for Chem are not as accurate" />
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <aura:iteration items="{!itemMap.value}" var="item">
+                                <tr class="" id="{!itemMap.key}">
+                                    <th scope="row" data-label="Order" class="slds-cell-wrap">
+                                        <div class="slds-truncate_container_30" title="{!item.OrderNumber}">
+                                            <a href="{!'/one/one.app?#/sObject/' + item.OrderId + '/view'}">{!item.OrderNumber}</a>
+                                        </div>
+                                    </th>
+                                    <td data-label="Close Date" class="slds-cell-wrap">
+                                        <div class="slds-truncate_container_75" title="{!item.ProductName}">{!item.ProductName}</div>
+                                        <aura:if isTrue="{! !empty(item.RelatedProduct) }">
+                                        	Related Product: <div class="slds-truncate_container_75" title="{!item.RelatedProduct}">{!item.RelatedProduct}</div>
+                                        </aura:if>
+                                    </td>
+                                    <!--<td data-label="Prospecting" class="slds-cell-wrap">
+                                        <div class="slds-truncate_container_75" title="{!item.RelatedProduct}">{!item.RelatedProduct}</div>
+                                    </td>-->
+                                    <td data-label="Confidence" class="slds-cell-wrap">
+                                        <aura:if isTrue="{!item.displayFreq}">
+                                        	<div class="slds-truncate_container_75 slds-align_absolute-center" title="{!item.Frequency}">
+                                                <!--{!item.Frequency}-->
+                                                {!item.ServiceFrequency}
+                                                <aura:if isTrue="{!item.isFixedWeekly}">
+                                                    <lightning:helptext iconName="utility:info" content="TBD" />
+                                                </aura:if>
+                                            </div>
+                                        </aura:if>
+                                    </td>
+                                    <td data-label="Amount" class="slds-cell-wrap">
+                                        <div class="slds-truncate_container_30 slds-align_absolute-center" title="{!item.Quantity}">
+                                            {!item.Quantity}
+                                        </div>
+                                    </td>
+                                    <td data-label="ServicePrice" class="slds-cell-wrap">
+                                        <div class="slds-truncate_container_30 slds-align_absolute-center" title="{!item.Service_Price_Per_Unit__c}">
+                                            {!item.ServicePricePerUnit}
+                                        </div>
+                                    </td>
+                                    <td data-label="Price" class="slds-cell-wrap">
+                                        <div class="slds-align_absolute-center">
+                                            <div class="slds-truncate_container_30" >
+                                            <aura:iteration items="{!item.priceAggregates}" var="pa">
+                                                <ui:outputCurrency value="{!pa.price}"/>&nbsp;({!pa.num})<br/>    
+                                            </aura:iteration>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td data-label="Last Service" class="slds-cell-wrap">
+                                        <div class="slds-align_absolute-center">
+                                            <div class="slds-truncate_container_30" >
+                                            <aura:iteration items="{!item.lastServiceAggregates}" var="lsa">
+                                                <a href="{!'/one/one.app?#/sObject/' + lsa.workOrderId + '/view'}">
+                                                    <ui:outputDate value="{!lsa.theDate}" format="M/dd/yyyy"/>&nbsp;({!lsa.num})
+                                                </a>
+                                                <br/>
+                                            </aura:iteration>
+                                            </div>
+                                        </div>
+                                    </td>
+									<td data-label="# of Cannot Complete" class="slds-cell-wrap">
+                                        <div class="slds-align_absolute-center">
+                                            <div class="slds-truncate_container_30" >
+                                            <aura:iteration items="{!item.cannotCompleteAggregates}" var="cc">
+                                                <a href="{!'/one/one.app?#/sObject/' + cc.workOrderId + '/rlName/WorkOrderLineItems/view'}">{!cc.cannotComplete}/{!cc.total}</a> 
+                                                <br/>
+                                            </aura:iteration>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td data-label="Next Service" class="slds-cell-wrap">
+                                        <div class="slds-align_absolute-center">
+                                            <aura:if isTrue="{!item.nextServiceAggregates == null || item.nextServiceAggregates.length == 0}">
+                                                <lightning:helptext iconName="utility:question" content="Work Orders are generated 1 week before the scheduled date, if you don’t see dates here please check back 4-5 days before the Frequency + the Last Service date" />
+                                            </aura:if>
+                                            <div class="slds-truncate_container_30" >
+                                            <aura:iteration items="{!item.nextServiceAggregates}" var="ns">
+                                                <aura:if isTrue="{!ns.endDate}">
+                                                    <a href="{!'/one/one.app?#/sObject/' + ns.workOrderId + '/view'}"><ui:outputDate value="{!ns.startDate}" format="M/dd/yyyy"/>-<ui:outputDate value="{!ns.endDate}" format="M/dd/yyyy"/>&nbsp;({!ns.num})</a>
+                                                    <aura:set attribute="else">
+                                                        <a href="{!'/one/one.app?#/sObject/' + ns.workOrderId + '/view'}"><ui:outputDate value="{!ns.startDate}" format="M/dd/yyyy"/>&nbsp;({!ns.num})</a>
+                                                    </aura:set>
+                                                </aura:if>
+                                                <br/>
+                                            </aura:iteration>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </aura:iteration>
+                            <tr>
+                                <td class="slds-cell-wrap"></td>
+                                <td class="slds-cell-wrap"></td>
+                                <td class="slds-cell-wrap"></td>
+                                <td class="slds-cell-wrap"></td>
+                            	<td data-label="Total Price" class="slds-cell-wrap">
+                                    <div class="slds-align_absolute-center">
+                                        	<aura:iteration items="{!v.totalPriceMap}" var="total">
+												<aura:if isTrue="{!total.key == itemMap.key}">
+                                                    <span class="bold">Recurring Total: <ui:outputCurrency value="{!total.value}"/></span>&nbsp;
+                                                    <div class="iconWrapper"><lightning:helptext iconName="utility:info" content="Excludes One-Time frequency items." /></div>
+                                                    <br/>
+                                            	</aura:if>
+                                            </aura:iteration>
+                                    </div>
+                                </td>
+                                <td class="slds-cell-wrap"></td>
+                                <td class="slds-cell-wrap"></td>
+                                <td class="slds-cell-wrap"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </aura:iteration>
+    </div>
+
+    <ul class="slds-has-dividers--around-space mobileDisplay" aura:id="orderProductTiles">
+        <div class="slds-page-header">
+            <div class="slds-media">
+                <div class="slds-media__figure">
+                    <span class="slds-icon_container slds-icon-standard-shipment" title="My Scheduled Orders and Services">
+                        <lightning:icon iconName="standard:shipment" size="large" alternativeText="Scheduled Orders and Services"/>
+                    </span>
+                </div>
+                <div class="slds-media__body">
+                    <h1 class="slds-page-header__title slds-truncate slds-align-middle" title="Scheduled Orders and Services">Scheduled Orders and Services</h1> 
+                    <div class="slds-m-top_small">
+                        <aura:if isTrue="{!v.mainSiteContact == null}">
+                            <p class="slds-text-body_regular slds-line-height_reset"><span class="bold">Main Site Contact:</span> None found</p>
+                            <aura:set attribute="else">
+                                <p class="slds-text-body_regular slds-line-height_reset bold slds-m-top_x-small">Main Site Contact:</p>
+                                <p class="slds-text-body_regular slds-line-height_reset slds-m-top_x-small">{!v.mainSiteContact.Name}</p>
+                                <p class="slds-text-body_regular slds-line-height_reset slds-m-top_x-small"><ui:outputEmail value="{!v.mainSiteContact.Email}"/></p>
+                                <p class="slds-text-body_regular slds-line-height_reset slds-m-top_x-small"><lightning:formattedPhone value="{!v.mainSiteContact.Phone}"/></p>
+                                <p class="slds-text-body_regular slds-m-top_small slds-text-color_error">
+                                    <b>Data displayed below is not accurate for the 'Chemical' and 'Pest Control' lines of business. Do not communicate any 'Chemical' or 'Pest' details to customers. Please bear with us as we improve the data and the processes that feed accurate data.</b>
+                    			</p>
+                            </aura:set>
+                        </aura:if>
+                    </div>
+                    <div class="slds-m-top_x-small">
+                        <aura:iteration items="{!v.totalPriceMap}" var="total">
+                            <p class="bold">{!total.key} (monthly) <lightning:helptext iconName="utility:info" content="Excludes One-Time frequency items." />:</p>
+                        	<p><ui:outputCurrency value="{!total.value}"/></p>
+                        </aura:iteration>
+                    </div>
+                </div>
+            </div>
+    	</div>
+        <aura:iteration items="{!v.orderProductsMap}" var="typeProduct">
+            <div class="slds-section slds-is-open" id="{!typeProduct.key + 'Mobile'}">
+                <h3 class="slds-section__title">
+                    <lightning:button variant="neutral" name="{!typeProduct.key + 'Mobile'}" label="{! typeProduct.key +'Mobile'}" iconName="utility:chevrondown" iconPosition="left" class="slds-button slds-section__title-action" onclick="{!c.openSection}" value="false">
+                        <span class="slds-truncate" title="Section Title">{!typeProduct.key}</span>
+                    </lightning:button>
+                </h3>
+                <div aria-hidden="false" class="slds-section__content">	
+                    <aura:iteration items="{!typeProduct.value}" var="item" indexVar="i">            
+                        <li class="slds-box slds-theme_default">
+                            <div class="slds-tile slds-tile--board">              
+                                <p class="slds-section__title" title="{!item.OrderNumber}">                            
+                                    Order Number:&nbsp; <a href="{!'/one/one.app?#/sObject/' + item.OrderId + '/view'}">{!item.OrderNumber}</a>
+                                </p>
+                                <p class="slds-section__title" title="{!item.ProductName}">                            
+                                    Product Name:&nbsp;{!item.ProductName}
+                                </p>
+                                <p class="slds-section__title" title="{!item.RelatedProduct}">                            
+                                    <aura:if isTrue="{! !empty(item.RelatedProduct) }">
+                                        Related Product:&nbsp;{!item.RelatedProduct}
+                                    </aura:if>
+                                </p>
+                                <p class="slds-section__title" title="{!item.Frequency}">                            
+                                    <aura:if isTrue="{!item.displayFreq}">
+                                        {!typeProduct.key == 'Consumables' ? 'Delivery Frequency' : 'Service Frequency'}:&nbsp;{!item.Frequency}
+                                        <aura:if isTrue="{!item.isFixedWeekly}">
+                                        	<div class="iconWrapper"><lightning:helptext iconName="utility:info" content="TBD" /></div>
+                                        </aura:if>
+                                    </aura:if>
+                                </p>
+                                <p class="slds-section__title" title="{!item.Quantity}">                            
+                                    Quantity:&nbsp;<a href="{!'/one/one.app?#/sObject/' + item.OrderId + '/rlName/OrderItems/view'}">{!item.Quantity}</a>
+                                </p>
+                                <p class="slds-section__title" title="Prices">
+                                    Price <div class="iconWrapper"><lightning:helptext iconName="utility:info" content="Price (monthly) is calculated by taking the frequency-based price, multiplying by the item quantity, then multiplying by the ratio of 30 (avg days in month) over the frequency in days (e.g, 30 / 60, for Bi-Monthly)." /></div>:&nbsp;
+                                    <aura:iteration items="{!item.priceAggregates}" var="pa">
+                                        <ui:outputCurrency value="{!pa.price}"/>&nbsp;({!pa.num})<br/>
+                                    </aura:iteration>
+                                </p>
+                                <p class="slds-section__title" title="Last Service">
+                                    {!typeProduct.key == 'Consumables' ? 'Last Delivery' : 'Last Service'}:&nbsp;
+                                    <aura:iteration items="{!item.lastServiceAggregates}" var="lsa">
+                                            <a href="{!'/one/one.app?#/sObject/' + lsa.workOrderId + '/view'}">
+                                                <ui:outputDate value="{!lsa.theDate}" format="M/dd/yyyy"/>&nbsp;({!lsa.num})
+                                        	</a>
+                                        	<br/>
+                                	</aura:iteration>
+                                </p>
+                                <p class="slds-section__title" title="# Cannot Complete">
+                                    # Cannot Complete <div class="iconWrapper"><lightning:helptext iconName="utility:info" content="This allows you to quickly see if any Work Order Line Items were set to a status of Cannot Complete - click the link to see the full list and Cannot Complete Reasons, if entered." /></div>:&nbsp;
+                                    <aura:iteration items="{!item.cannotCompleteAggregates}" var="cc">
+                                    	<a href="{!'/one/one.app?#/sObject/' + cc.workOrderId + '/rlName/WorkOrderLineItems/view'}">{!cc.cannotComplete}/{!cc.total}</a> 
+                                        <br/>
+                                    </aura:iteration>
+                                 
+                                </p>
+                                <p class="slds-section__title" title="Next Service">
+                                    {!typeProduct.key == 'Consumables' ? 'Est. Next Scheduled Delivery' : 'Est. Next Scheduled Service'} <div class="iconWrapper"><lightning:helptext iconName="utility:info" content="TBD" /></div>:&nbsp;
+                                    <aura:if isTrue="{!item.nextServiceAggregates == null || item.nextServiceAggregates.length == 0}">
+                                        <div class="iconValueWrapper">
+                                            <lightning:helptext iconName="utility:question" content="This allows you to get a general sense of when the customer is planned to get serviced. If you see a single date vs a range, the date is closer to confirmed - a range indicates when we are planning to have them serviced. Please communicate these dates with caution to your customer, never give customers an exact date. Special Notes: 1) Emergency Services are not considered here. 2) Dates for Chem are not as accurate" />
+                                        </div>
+                                   	</aura:if>
+                                    <aura:iteration items="{!item.nextServiceAggregates}" var="ns">
+                                        <aura:if isTrue="{!ns.endDate}">
+                                            <a href="{!'/one/one.app?#/sObject/' + ns.workOrderId + '/view'}"><ui:outputDate value="{!ns.startDate}" format="M/dd/yyyy"/>-<ui:outputDate value="{!ns.endDate}" format="M/dd/yyyy"/>&nbsp;({!ns.num})</a>
+                                            <aura:set attribute="else">
+                                            	<a href="{!'/one/one.app?#/sObject/' + ns.workOrderId + '/view'}"><ui:outputDate value="{!ns.startDate}" format="M/dd/yyyy"/>&nbsp;({!ns.num})</a>
+                                            </aura:set>
+                                        </aura:if>
+                                        <br/>
+                                    </aura:iteration>
+                                </p>
+                                <p class="slds-section__title slds-hide" title="{!item.Quantity}">                            
+                                    <lightning:button variant="brand" value="{!item.PricebookEntryId}" label="{!$Label.c.Add_to_Cart}" class="slds-button slds-section__title-action" onclick=""/>
+                                </p>
+                            </div>
+                        </li>
+                        <br/>                 
+                    </aura:iteration>
+                </div>
+            </div>
+        </aura:iteration>
+    </ul>    
+    
+</aura:component>

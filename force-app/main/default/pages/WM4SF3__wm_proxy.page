@@ -1,0 +1,56 @@
+<apex:page showChat="false" controller="WM4SF3.ctrl_WalkMeSfVars" showHeader="false" standardStylesheets="false" sidebar="false">
+    <script type="text/javascript">
+var allowedOrigins = /(\.salesforce\.com$|\.force\.com$)/i;
+
+var origin = document.location.search.match(/(\?|&)origin=([^&]+)/)[2];
+
+if (origin.match(allowedOrigins) || origin === window.location.origin) {
+  setup();
+}
+
+function setup() {
+  window.parent.postMessage({"ready": true}, origin);
+
+  if (window.addEventListener) {
+    window.addEventListener("message", receiveMessage, false);
+  } else if (window.attachEvent) {
+    window.attachEvent("onmessage", receiveMessage, false);
+  }
+}
+
+function receiveMessage(event) {
+  var data = event.data;
+  data.requestId && getQueryData(data.requestId, data.query);
+}
+
+function getQueryData(requestId, queryString) {
+  Visualforce.remoting.Manager.invokeAction(
+    "WM4SF3.ctrl_WalkMeSfVars.getQueryData",
+    queryString,
+    function(result, event) {
+      if (event.status) {
+        window.parent.postMessage(
+          { data: unescapeText(result), requestId: requestId },
+          origin
+        );
+        return;
+      } else if (event.type === "exception") {
+        document.getElementById("responseErrors").innerHTML =
+          event.message + "<br/>\n<pre>" + event.where + "</pre>";
+      } else {
+        document.getElementById("responseErrors").innerHTML = event.message;
+      }
+    },
+    { escape: true }
+  );
+}
+
+function unescapeText(text) {
+  return text
+    .replace(/&#39;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&#34;/g, '"')
+    .replace(/&#38;/g, "&");
+}
+    </script>
+</apex:page>

@@ -1,0 +1,352 @@
+<apex:page controller="BMCServiceDesk.ACDeviceSummary" sidebar="false" showHeader="false" standardStylesheets="false">
+<title>
+	{!JSENCODE($Label.bmcservicedesk__devicesummary)} - {!JSENCODE(DeviceName)}
+</title>
+<body>
+  <c:CommonIncludes isExtJS4="true" />
+  <!--<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SkywalkerStyleSheet.css"/> --> 
+  <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/{!ResourcePath}"/>
+  <c:ACCommon hideViewSummary="true" renderedin="{!JSENCODE($Label.bmcservicedesk__devicesummary)}" isExtJS4Enabled="true"/> 
+  <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+   <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ACDeviceSummary.js"/>
+   <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/CommonRFDiscovery.js"/>
+	<script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}" />
+       <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+
+   
+   <style>
+	.ext-strict .x-grid3-cell-inner, .x-grid3-row {
+    	cursor: auto;
+	}
+	.x-grid3-row td {
+	-moz-user-select:inherit;
+	-ms-user-select: inherit;
+	user-select: inherit;
+}
+	.disabledTabMsg {
+		font: 9pt arial !important; 
+		margin: 20px; 
+		font-weight: bold!important; 
+		color: #004376; 
+		text-align: center; 
+		vertical-align: middle;
+	}
+
+ 
+</style>
+   <script>
+    var isACEnabled = {!isACEnabled};
+    var isACCertified = {!isACCertified};
+    var baseURL = '{!JSENCODE(BCMbaseURL)}';
+    var isManualOSSelectionEnabled = {!manualOSSelectionEnabled};
+    var osCookieVal = '';
+    if(isManualOSSelectionEnabled && Ext.util.Cookies.get('apex__OSForBCMBinary')){
+        osCookieVal = Ext.util.Cookies.get('apex__OSForBCMBinary');
+    }
+    
+    var makeAPICallsFromServer = {!makeAPICallsFromServer};
+    if(!makeAPICallsFromServer && (!!navigator.userAgent.match(/Trident.*rv\:11\./))){
+        makeAPICallsFromServer = true;
+    }
+    
+   	var RestrictedTabs = {!RestrictedTabs};
+   	var showAdvanceTab = {!showAdvanceTab};
+   	var DisabledText = '{!DisabledText}';
+   	var isAdminUser = {!isAdminUser};
+   	var DiscoveryScannerCapability = '{!JSENCODE($Label.DiscoveryScannerCapability)}';
+   	var response;
+    var gridData= [];
+    var grid, gridObj;
+    var selectedTabName; 
+    var softwareGrid;
+    var tabs; 
+    var tableStoreHW, tableStoreSW, tableStoreLI, tableStoreSEC, tableStoreFIN, tableStoreAH;
+    var gridName;
+    var record_count = parseInt({!RECORD_COUNT});
+    var json =  {!hardwareJson}; 
+    var storeFields = {!hardwareColFlds};
+    var ColumnModel = {!colunmfields};
+    var totalPages = {!totalPages};
+    var pageTitle = '{!JSENCODE($Label.bmcservicedesk__devicesummary)} - '+'{!JSENCODE(DeviceName)}';
+    var emptyText = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+    var securityStoreFlds ;
+    var securityColunmfields;
+    var securityJson = {!securityJson};
+    var HWStoreFlds = '';
+    var HWColunmfields = '';
+    var HWJson = '';
+    var softwareData='', softwareColModel='', softwareStorefields ='';
+    var financeStoreFlds;
+    var financeColunmfields = '';
+    var financeJson = '';
+    var licenseStoreFlds;
+    var licenseColunmfields = '';
+    var licenseJson = '';
+    fromStdLayout = '{!JSENCODE($CurrentPage.parameters.standardLayout)}';
+    LinkedCiId = '{!JSENCODE($CurrentPage.parameters.LinkedCiId)}';
+    var actionStoreFlds;
+    var actionColunmfields = '';
+    var actionJson = '';
+    var actions = "{!JSENCODE($Label.Actions)}";
+    var imageHelp='{!$Resource.SDEFStyles}';
+    var Help = "{!JSENCODE($Label.TooltipHelp)}",
+	  Refresh = "{!JSENCODE($Label.Refresh)}";
+	var incidentId=window.parent.incidentId;
+    strMessage = "{!JSENCODE($Label.SSContactUsMessageText)}";
+    if(typeof(incidentId) !='undefined' && incidentId != '')
+    {	
+    	AcInvalidDeviceMsg="{!JSENCODE($Label.ACInvalidDevice)}";
+    	AdvActionLabel="{!JSENCODE($Label.ACAdvanceAction)}";
+    	AcORReqMsg="{!JSENCODE($Label.ACOpRuleReqSuccess)}";
+    	
+    }
+	  pleasewait = "{!JSENCODE($Label.pleasewait)}...";
+     Ext.ns("ACDeviceSummaryPage");
+     ACDeviceSummaryPage.Labels = {
+                HardwareTab: '{!JSENCODE($Label.HardwareTab)}',
+                SoftwareTab: '{!JSENCODE($Label.SoftwareTab)}',
+                LicenseUnitsTab :'{!JSENCODE($Label.LicenseUnitsTab)}',
+                SecurityTab: '{!JSENCODE($Label.SecurityTab)}',
+                FinancialTab: '{!JSENCODE($Label.FinancialTab)}',
+                ActionHistory: '{!JSENCODE($Label.ActionHistory)}',
+                PageLabel: '{!JSENCODE($Label.Page)}',
+                OfLabel:'{!JSENCODE($Label.Of)}'
+            }
+    function stopWatingMask()
+    {
+        var parentWindow = window.parent;
+		var index =-1;
+        if(parentWindow != null && parentWindow != '' && parentWindow != 'undefined')
+        {
+              var parentWindowLocation = new String(parentWindow.location);
+              index = parentWindowLocation.indexOf('apex/AcActions?');
+              if(index != -1)
+                window.parent.stopWaitMsgBar();
+        }
+    }
+   </script>
+       
+    <apex:outputPanel id="refreshHWVarPanel">
+        <script>
+            HWStoreFlds = {!hardwareColFlds};
+            HWColunmfields = {!colunmfields};
+            HWJson = {!hardwareJson}; 
+			stopWatingMask();
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="refreshSecurityVarPanel">
+        <script>
+
+            securityStoreFlds = {!securityStoreFlds};
+            securityColunmfields = {!securityColunmfields};
+            securityJson = {!securityJson};
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="refreshFinanceVarPanel">
+        <script>
+            financeStoreFlds = {!financeStoreFlds};
+            financeColunmfields = {!financeColunmfields};
+            financeJson = {!financeJson};
+        </script>
+    </apex:outputPanel>
+<apex:outputPanel id="refreshLicenseVarPanel">
+        <script>
+            licenseStoreFlds = {!licenseStoreFlds};
+            licenseColunmfields = {!licenseColunmfields};
+            licenseJson = {!licenseJson};
+        </script>
+    </apex:outputPanel> 
+    <apex:outputPanel id="softwarePanel">
+        <script>
+            totalPages = {!totalPages};
+            softwareData = {!softwareDataJson};
+            softwareColModel = {!softwareColModelJson};
+            softwareStorefields = {!softwareStoreFldsJson};
+        
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="refreshActionHistoryPanel">
+        <script>
+            actionStoreFlds = {!actionStoreFlds};
+            actionColunmfields = {!actionColunmfields};
+            actionJson = {!actionJson};
+            
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="dirConnErrPanel">
+        <script>
+        var acError =  '{!JSENCODE(messageString)}';
+        function checkACError(){
+            if(acError !=''){
+                 Ext.MessageBox.show({                       
+                     msg:acError,width:300,height:'auto',buttons: Ext.MessageBox.OK
+                  });
+            }else{
+                launchConsole();
+ }
+ }
+ 		function colRender(data, metadata, record, rowIndex, columnIndex, store){
+			var tip=''+data;
+		    metadata.attr = 'title="'+data+'"';  
+		if(columnIndex == 1){
+				var statusValue = record.get("hcol5");
+				var status_img = null;
+	        	if(statusValue=='_STATUS_EXECUTEDOK_' || statusValue=='_STATUS_ENABLED_')
+	        		status_img = 'Circle_Green.png';
+	        	else if(statusValue=='_STATUS_EXECUTEFAILED_' || statusValue=='_STATUS_VERIFICATIONFAILED_' || statusValue=='_STATUS_DEPENDENCIESCHECKFAILED_' || statusValue=='_STATUS_NOTRECEIVED_'|| statusValue=='_STATUS_ADVERTISENOTRECEIVED_')
+	        		status_img = 'Circle_Red.png';
+	        	else if(statusValue=='_STATUS_ASSIGNPAUSED_' || statusValue=='_STATUS_UPDATEPAUSED_' || statusValue=='_STATUS_UNASSIGNEDPAUSED_')
+	        		status_img = 'Circle_Grey.png';
+	        	else if(statusValue=='_STATUS_IMPOSSIBLESENDING_' )
+	        		status_img = 'Circle_Orange.png';
+	        	else 
+	        		status_img = 'Circle_Yellow.png';
+	        		
+	        	if(status_img!=null){
+		       		data='<img height="16px" width="16px"   src="{!$Resource.SDEFStyles}/SDEFicons/'+status_img+'"></img>'+'<span style="vertical-align: top;padding-left:5px;">'+data+'</span>';
+		        }
+		       		
+				}
+			return data;  
+		}
+
+ 
+        </script>
+    
+    </apex:outputPanel>
+    <apex:form id="DeviceSummaryForm" styleClass="formStyle">
+    <div id="ToolBarTD"></div>  
+    <div id="capsule" class="CapsuleDiv1">
+        
+        <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            <apex:actionregion >
+                <apex:actionFunction name="directConnectDevice" action="{!directConnectDevice}" rerender="dirConnErrPanel" onComplete="stopWaitMask();checkACError();">
+                    <apex:param name="actionContext" value=""/>
+                    <apex:param name="assemblyId" value=""/>
+                    <apex:param name="selectedBEId" value=""/>
+                </apex:actionFunction>
+            </apex:actionregion>
+            <apex:actionRegion >
+                <apex:actionFunction name="launchConsole" action="{!launchConsole}" />
+            </apex:actionRegion>
+             <apex:actionFunction name="fetchHardwareDetails" action="{!fetchHardwareDetails}" rerender="validationComponent,refreshHWVarPanel" onComplete="stopWaitMask();showError();refreshTabValues();">  
+              </apex:actionFunction>
+              <apex:actionFunction name="fetchSoftwareDetails" action="{!fetchSoftwareDetails}" rerender="validationComponent,softwarePanel" onComplete="stopWaitMask();showError();refreshTabValues();"> 
+                <apex:param name="pageOffset" value="pageOffset"/>
+              </apex:actionFunction>
+              <apex:actionFunction name="fetchLicenseDetails" action="{!fetchLicenseDetails}" rerender="validationComponent,refreshLicenseVarPanel" onComplete="stopWaitMask();showError();refreshTabValues();"> 
+              </apex:actionFunction>
+              <apex:actionFunction name="fetchSecurityDetails" action="{!fetchSecurityDetails}" rerender="validationComponent,refreshSecurityVarPanel" onComplete="stopWaitMask();showError();refreshTabValues();" > 
+              </apex:actionFunction>
+              <apex:actionFunction name="fetchFinalcialDetails" action="{!fetchFinalcialDetails}" rerender="validationComponent,refreshFinanceVarPanel" onComplete="stopWaitMask();showError();refreshTabValues();"> 
+              </apex:actionFunction>
+              <apex:actionFunction name="fetchActionHistoryDetails" action="{!fetchActionHistoryDetails}" rerender="validationComponent,refreshActionHistoryPanel" onComplete="stopWaitMask();showError();refreshTabValues();"> 
+              </apex:actionFunction>
+              
+              <apex:actionFunction name="getBinaryFileForBCMAction" action="{!getBinaryFileForBCMAction}" rerender="BCMBinaryPanelId" oncomplete="BCMBinaryOnComplete();">
+                  <apex:param name="deviceId" assignTo="{!BCMdeviceId}" value=""/>
+                  <apex:param name="action" assignTo="{!action}" value=""/>
+                  <apex:param name="contextId" assignTo="{!contextId}" value=""/>
+                  <apex:param name="os" assignTo="{!os}" value=""/>
+                  <apex:param name="requestContext" assignTo="{!requestContext}" value=""/>
+              </apex:actionFunction>
+              
+              <apex:outputpanel id="BCMBinaryPanelId">
+                  <script>
+                      var BCMBinaryResponse = '{!JSENCODE(BCMBinaryResponse)}';
+                  </script>
+              </apex:outputpanel>
+              
+<table cellpadding="0" cellspacing="0" class="clsMainTable2" >
+        </table>      
+        <apex:outputPanel id="bannerdetails">      
+        
+        <table cellpadding="0" cellspacing="0" class="clsMainTableSI" style="min-Width: 500px;">
+                    <tr >
+                        
+                                    <td style='width:100%;vertical-align:top;padding:10px;color: #f86e00;font: bold 14px Salesforce Sans;'>
+                                        {!JSENCODE($Label.SummaryFor)} {!DeviceName}
+                                    </td>
+                                
+                    </tr>
+                    <tr>
+                        <td style='width:100%;vertical-align:top;padding-left:10px;'>
+                            <table  style='width:100%;' cellspacing="5">
+                                <tr>
+                                    <td class="bannerlabelCLs">
+                                        {!JSENCODE($Label.DeviceType)}: 
+                                    </td>
+                                    <td class="bannervalCLs">
+										<apex:outputText value="CRUDFLSCheck# False Positive: No association to any sObject field." rendered="false" />
+                                         <apex:outputText value="{!deviceType}" id="deviceType"/>
+                                    </td>
+                                    
+                                </tr>
+                                <tr>
+                                    <td class="bannerlabelCLs">
+                                        {!JSENCODE($Label.SerialNumber)}:
+                                    </td>
+                                    <td class="bannervalCLs">
+										<apex:outputText value="CRUDFLSCheck# False Positive: No association to any sObject field." rendered="false" />
+                                        <apex:outputText value="{!serialnumber}" id="serialnumber"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="bannerlabelCLs">
+                                        {!JSENCODE($Label.OperatingSystem)}:
+                                    </td>
+                                    <td class="bannervalCLs">
+										<apex:outputText value="CRUDFLSCheck# False Positive: No association to any sObject field." rendered="false" />
+                                        <apex:outputText value="{!operatingSystem}" id="operatingSystem"/>
+                                    </td>
+                                    
+                                </tr>
+                                <tr>
+                                    <td class="bannerlabelCLs">
+                                        {!JSENCODE($Label.IPAddress)}:
+                                    </td>
+                                    <td class="bannervalCLs">
+										<apex:outputText value="CRUDFLSCheck# False Positive: No association to any sObject field." rendered="false" />
+                                        <apex:outputText value="{!IPAddress}" id="IPAddress"/>
+                                    </td>
+                                    
+                                </tr>
+                                <tr>
+                                    <td class="bannerlabelCLs">
+                                        {!JSENCODE($Label.MACAddress)}:
+                                    </td>
+                                    <td class="bannervalCLs">
+										<apex:outputText value="CRUDFLSCheck# False Positive: No association to any sObject field." rendered="false" />
+                                        <apex:outputText value="{!MACAddress}" id="MACAddress"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="bannerlabelCLs">
+                                        {!JSENCODE($Label.Domain)}:
+                                    </td>
+                                    <td class="bannervalCLs">
+										<apex:outputText value="CRUDFLSCheck# False Positive: No association to any sObject field." rendered="false" />
+                                        <apex:outputText value="{!domain}" id="domain"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="bannerlabelCLs">
+                                        {!JSENCODE($Label.User)}:
+                                    </td>
+                                    <td class="bannervalCLs">
+										<apex:outputText value="CRUDFLSCheck# False Positive: No association to any sObject field." rendered="false" />
+                                        <apex:outputText value="{!UserName}" id="userId"/>
+                                    </td> 
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>     
+                                      
+                </table>
+                </apex:outputPanel> 
+                </div>
+    </apex:form>
+    </body>  
+</apex:page>

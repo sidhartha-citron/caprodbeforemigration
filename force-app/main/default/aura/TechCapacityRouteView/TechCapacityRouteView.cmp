@@ -1,0 +1,46 @@
+<!--
+- @FileName: TechCapacityRouteView
+- @Description: Component displaying calendar of technician capacity over the next 8 weeks
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       10/18/2019      Created
+*************************************************************
+-->
+
+<aura:component description="TechCapacityRouteView"
+                controller="TechCapacityCtrl"
+                implements="flexipage:availableForAllPageTypes">
+    <ltng:require scripts="{!$Resource.LightningUtils}" />
+
+    <aura:attribute name="spinner" type="Boolean" default="false" />
+    <aura:attribute name="daysOfTheWeek" type="List" default="['sun','mon','tue','wed','thu','fri','sat']" />
+    <aura:attribute name="technician" type="Map" />
+    <aura:attribute name="days" type="List" default="[]" />
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <aura:handler event="c:TechCapacityCalendarRefreshEvt" action="{!c.getRouteDetails}" />
+    <aura:handler name="showDayDetails" event="c:TechCapacityDayDetailModalEvt" action="{!c.showDayDetails}" />
+
+    <aura:if isTrue="{!v.spinner}">
+        <div class="slds-is-relative" style="height:100px;">
+            <c:Util_LoadingSpinner />
+        </div>
+    </aura:if>
+
+    <div class="{!v.spinner ? 'slds-hide' : 'slds-card calendar'}">
+        <div class="slds-grid slds-text-align_center calendar-header">
+            <aura:iteration items="{!v.daysOfTheWeek}" var="day">
+                <div class="slds-col slds-size_1-of-7 slds-align_absolute-center">{!day}</div>
+            </aura:iteration>
+        </div>
+        <div class="slds-grid slds-wrap">
+            <aura:iteration items="{!v.days}" var="day" >
+                <c:TechCapacityRouteDay day="{!day}" />
+            </aura:iteration>
+        </div>
+    </div>
+
+    {!v.body}
+</aura:component>

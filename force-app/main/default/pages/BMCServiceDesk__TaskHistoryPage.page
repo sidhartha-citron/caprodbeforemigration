@@ -1,0 +1,349 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.TaskHistoryController" standardStylesheets="false">
+<c:CommonIncludes />    
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/DatePicker.css" />
+<!-- std layout changes --> 
+<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js" />
+<style>
+.clsInputTextBox{
+    *height:13px !important;
+}
+</style>
+
+ <script>
+// std layout changes --
+ var standardLayout = getUrlParameter('standardLayout');
+    var editStandardLayout = getUrlParameter('editStandardLayout');
+   
+    var taskId='{!taskIdforstd}';
+	
+    var taskHistoryAction; 
+    var taskHistoryStaff;               
+    var taskHistoryId;
+    var errormsg;
+    var chkBoxValue;
+    var sysDisable; 
+     var isLookup = "{!JSENCODE($CurrentPage.parameters.islookup)}";
+     var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+	 
+    var isDeleteEnabled = {!AND($ObjectType.TaskHistory__c.deletable, isEnableEdit, isOpen)} ;
+    var isSaveEnabled = {!AND($ObjectType.TaskHistory__c.updateable, isEnableEdit, isOpen)};
+	
+     if(isLookup && (!editStandardLayout || editStandardLayout == null || editStandardLayout =='' )){
+          window.parent.changePopUpTitle('{!JSENCODE(objLabel)}');
+      }
+     
+     var isLightningExperience = {!IF(isLightningExperience,true,false)};	
+     //sujeet added this method
+        function closeWindow(){
+             if(isLookup=="true" &&(errormsg==null||errormsg==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){
+                  // changes for std layout
+                  if(standardLayout == 'true'){
+                                      
+                       window.opener.closeWindowParent(); 
+                       window.close();                
+                  }  
+                  // end std layout
+                  
+                  if(editStandardLayout == 'true'){ 
+					  var PageURL = window.location.href; 
+                      if( isLightningExperience && PageURL.indexOf('/lightning/') != -1) {
+                          retpagefunctioninLightning();
+                      } else {
+                      window.parent.retTaskfunction();
+                  }
+                  }
+                  if(window.parent.frames.SIIframeID !=null){
+                      window.parent.frames.SIIframeID.refreshDocs();              
+				  }
+                  window.parent.closePopup();
+				  
+              }else
+                showError();
+        }  
+        //sujeet added this method 
+     function saveRecords(){
+       saveAction();
+        
+     }
+    function retpagefunctioninLightning() { 
+        var url = '/one/one.app#/sObject/'+ taskId + '/rlName/BMCServiceDesk__Task_History__r/view';
+        window.parent.parent.location.href = url;
+    }
+    
+     //sujeet added this var
+     var disableTrue = true;
+        Ext.onReady(function(){
+    
+         Ext.QuickTips.init(); 
+         disableSystemEntry(sysDisable);
+         if(isLookup){
+            disableTrue = true;
+          }else{ 
+          disableTrue = false; }
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event) { newAction(); };
+        var SaveBtnHandler = function(button,event) {  saveRecords(); };
+        var CopyBtnHandler = function(button,event) {/* copy();*/};        
+        var DeleteBtnHandler = function(button,event) {  Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}', function(btn){
+                                                           if(btn === 'yes'){
+                                                                  deleteTaskHistory();
+                                                               
+                                                            }
+                                                             if(btn==='no'){
+                                                                  if(editStandardLayout == 'true'){                      
+																	if( 'true' == isLightningExperienceEnabled ) {
+																		retpagefunctioninLightning();
+																	} else { 
+                                                                      window.parent.retTaskfunction();
+                                                                  }
+                                                           }
+                                                           }
+                                                          });
+                                                           };
+        var ResetBtnHandler = function(button,event) {  reset(); };
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+             cls:'toolSpCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                iconCls: 'bmcNew',
+                tooltipType: 'title',
+                 tooltip: '{!JSENCODE($Label.new)}',
+                disabled: 'true',
+                hidden:disableTrue,
+                handler:NewBtnHandler
+            },' ',{
+                scale: 'medium',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.save)}',
+                iconCls: 'bmcSave',
+                disabled: !isSaveEnabled,
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.copy)}',
+                id:'copyId',
+                hidden:disableTrue,
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.delete)}',
+                disabled: !isDeleteEnabled,
+                id:'deleteId1', 
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.Clear)}',
+                id:'clearId',
+                hidden:disableTrue,
+                handler:ResetBtnHandler 
+            }
+            ]
+        });
+         taskHistoryId = '{!taskHistory.Id}';    
+        if(taskHistoryId == null || taskHistoryId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+         Ext.getCmp('clearId').setDisabled(true); 
+        }
+        if(sysDisable == null ||sysDisable == ''|| sysDisable == 'true'){ 
+         
+        Ext.getCmp('deleteId1').setDisabled(true);             
+                
+        }  
+             
+    });
+    
+    function buttonValidator() {
+       
+       if((taskHistoryAction != null && taskHistoryAction != '')&&(taskHistoryStaff != null && taskHistoryStaff != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){   
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+       }  
+     }
+ 
+    </script>
+    
+   
+
+    <apex:outputPanel id="dummy"></apex:outputPanel>
+    
+    <apex:outputPanel id="panelId">
+		<script>
+			taskHistoryAction = '{!JSENCODE(taskHistory.action_Id__c)}';
+			taskHistoryStaff = '{!JSENCODE(taskHistory.user_Id__c)}';                
+			taskHistoryId = '{!JSENCODE(taskHistory.Id)}';
+			sysDisable = '{!sysDisable}';
+			blnUpdateable = {!$ObjectType.BMCServiceDesk__Task__c.Accessible};
+			  
+			function disableSystemEntry(sysDisable){
+				if(taskHistoryId != null && taskHistoryId != '' && blnUpdateable == true) {
+					document.getElementById('{!$Component.formId.User_id_username}').readOnly= true;  
+					document.getElementById('{!$Component.formId.lookupIconOn}').setAttribute("class", "lookupIconOn x-item-disabled");				
+					if(sysDisable == 'true') {
+						document.getElementById('{!$Component.formId.Action__c_id_name}').readOnly= true;                                                              
+						document.getElementById('{!$Component.formId.dateAndTime}').disabled = true;
+						document.getElementById('{!$Component.formId.duration}').readOnly = true;
+					}
+				}
+			}
+			if(blnUpdateable == false){
+                alert('{!JSENCODE($Label.BMCServiceDesk__insufficentprivilegetoaccess)}');
+				window.parent.close();
+            }
+		</script>
+	</apex:outputPanel>
+    <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+    <apex:outputPanel ><!-- Page body in this panel -->
+        <apex:messages />
+		<div id="btnToolbar"></div>
+        <apex:form id="formId" >
+        <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+                
+        <apex:actionFunction name="setStaffNext" action="{!staffQuery}" reRender="User_id_username"> 
+            <apex:param assignTo="{!staffId}" name="savedName" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="setActionNext" action="{!actionQuery}" reRender="formId"> 
+            <apex:param assignTo="{!actionId}" name="saved" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="saveAction" action="{!save}" reRender="validationComponent,panelId,errorId" oncomplete="closeWindow(); buttonValidator();">
+        </apex:actionFunction>
+        <apex:actionFunction name="newAction" action="{!newAction}" reRender="tablePanel"/>
+        <apex:actionFunction action="{!deleteTaskHistory}" name="deleteTaskHistory" onComplete="closeWindow();"/>
+            <apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object (Task__c) and is part of our process so fields of history object must be available to all users" rendered="false"/>
+			<apex:outputpanel rendered="{!$ObjectType.BMCServiceDesk__Task__c.Accessible}">
+			<div id="capsule" class="CapsuleDiv1">
+            <table cellpadding="0" cellspacing="0" class="clsMainTable" style="border-width:0px">             
+                <tr>
+                    <td>                    
+                    <table cellpadding="0" cellspacing="0" class="clsTable">
+                        <tr>
+                            <td class="clsTopAlignment75">
+                            <apex:outputPanel id="tablePanel">
+                            <table cellpadding="0" cellspacing="0" class="clsTable">                                                                
+                                <tr>
+                                     <td colspan="3"><div class="div15pxVspacing"/></td>
+
+                                </tr>
+                                
+                                <tr>
+                                    <td class="clsInputLabelTD" style='width:90px;'><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__FKAction__c.label}"></apex:outputLabel><span
+                                        class="clsRequiredBlack">*</span></td>
+                                    <td class="clsInputTextBoxTD">
+                                        <apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object (Task__c) and is part of our process so fields of history object must be available to all users. CRUD check added in parent panel" rendered="false"/>
+                                        <apex:inputText value="{!actionName}" title="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__FKAction__c.InlineHelpText}" id="Action__c_id_name" onblur="showalldata(event)" styleClass="clsInputTextBox"/>
+                                    </td>
+                                    <td class="lookupIconTD"> 
+                                    <div class="lookUpIconDiv">   
+                                    <apex:commandButton onclick="if(!inProgress) {openPopupWithTitle('SearchPage?popupId=Action&isLookup=true&filterClause='+escape('appliesToTask__c = true and system__c=false'),setActionNext,'',307,560);}" rerender="dummy" styleClass="lookupIconOn" disabled="{!sysDisable}"/> 
+                                    </div>
+                                    </td>
+                                </tr>
+                                
+                                
+                                </table>
+                                <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td class="clsInputBoldLabelTDI"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__description__c.label}"></apex:outputLabel><span
+                                        class="clsRequired"></span></td>
+                                </tr>
+                                <tr>
+                                	<td class="clsInputTextBoxTD clsLeftPadding10 clsRightPadTD" colspan="3">
+										<div class="clsRelativePosition">
+											<apex:outputText value="CRUDFLSCheck# sObject.field is binded as a value so no FLS check is required" rendered="false"/>
+                                    	    <apex:inputTextarea value="{!taskHistory.BMCServiceDesk__description__c}" title="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__description__c.InlineHelpText}" id="Action__c_id_description__c" styleClass="clsInputTextAreaPgWoSidePanel"/>
+                                      	</div>
+                                    </td>
+                                    <td class="lookupIconTD" style="vertical-align:top;">
+										<input type="button" id="inputTxtAreaButton" class="TextboxPopupIcon" style="display:inline" onclick="showTextEditor('{!$Component.formId.Action__c_id_description__c}', '{!$ObjectType.IncidentHistory__c.fields.description__c.label}', '32000', '{!JSENCODE($Label.OK)}', '{!JSENCODE($Label.Cancel)}', 300);"/>
+									</td>
+                                </tr>
+                                </table>
+                                <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td class="clsInputBoldLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__note__c.label}"></apex:outputLabel></td>
+                                </tr>
+                                <tr>                                    
+                                   	<td class="clsInputTextBoxTD clsLeftPadding10 clsRightPadTD" colspan="3">
+									<div class="clsRelativePosition">
+										<apex:outputText value="CRUDFLSCheck# sObject.field is binded as a value so no FLS check is required" rendered="false"/>
+                                   		<apex:inputTextarea value="{!taskHistory.BMCServiceDesk__note__c}" title="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__note__c.InlineHelpText}" id="note" styleClass="clsInputTextAreaPgWoSidePanel"/>
+                                 	</div>
+                                    </td>
+                                    <td class="lookupIconTD" style="vertical-align:top;">
+											<input type="button" id="inputTxtAreaButton" class="TextboxPopupIcon" style="display:inline" onclick="showTextEditor('{!$Component.formId.note}', '{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__note__c.label}', '32000', '{!JSENCODE($Label.OK)}', '{!JSENCODE($Label.Cancel)}', 300);"/>
+									</td>
+                                </tr>
+                                <tr>
+                                    <td >  <div class="div13pxVspacing"></div></td>  
+                                     </tr>                                                  
+                            </table>
+                                    <div class="div13pxVspacing"/>
+                                <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr style="{!IF(actionHideDuration, 'display:none',  'display:table-row')}">
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__duration__c.label}"></apex:outputLabel></td>
+                                    <td class="clsInputTextBoxTD">
+									<apex:outputText value="CRUDFLSCheck# sObject.field is binded as a value so no FLS check is required" rendered="false"/>
+									<apex:inputtext id="duration" title="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__duration__c.InlineHelpText}" 
+                                        value="{!taskHistory.BMCServiceDesk__duration__c}" styleClass="clsInputTextBox"/></td>
+                                    <td style="vertical-align: top;"><apex:outputLabel value="{!$Label.bmcservicedesk__hhmm}" styleClass="dateFormatLabel" /></td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__date__c.label}"></apex:outputLabel></td>
+                                    <td class="clsInputTextBoxTD" title="{!$ObjectType.TaskHistory__c.fields.date__c.inlineHelpText}"><apex:inputField id="dateAndTime"
+                                        value="{!taskHistory.BMCServiceDesk__date__c}" styleClass="clsInputTextBox"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__FKUser__c.label}"></apex:outputLabel><span
+                                        class="clsRequiredBlack">*</span></td>
+                                    <td class="clsInputTextBoxTD">                                    
+                                        <apex:outputText value="CRUDFLSCheck# sObject.field is binded as a value so no FLS check is required" rendered="false"/>
+										<apex:inputText title="{!$ObjectType.BMCServiceDesk__TaskHistory__c.fields.BMCServiceDesk__FKUser__c.InlineHelpText}" value="{!taskHistory.BMCServiceDesk__user_Id__c}" id="User_id_username"  styleClass="clsInputTextBox"/>
+                                    </td>
+                                    <td class="lookupIconTD">
+                                    <div class="lookUpIconDiv"> 
+                                        <apex:commandButton onclick="if(!inProgress) {openPopup('SearchPage?popupId=Staff&isLookup=true',setStaffNext);}" rerender="dummy" styleClass="lookupIconOn" disabled="true" id="lookupIconOn"/>                                   
+                                   </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >  <div class="div13pxVspacing"></div></td>  
+                                     </tr>
+                                </table>
+                                
+                            </apex:outputPanel>
+                           </td>
+
+                        </tr>
+                    </table>                    
+                  </td>
+                </tr>
+                               
+            </table>
+          </div>
+		  </apex:outputPanel>
+        <c:TabOutComponent ></c:TabOutComponent>
+      </apex:form>
+    </apex:outputPanel>
+</apex:page>

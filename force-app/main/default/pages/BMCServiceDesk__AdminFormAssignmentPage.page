@@ -1,0 +1,169 @@
+<apex:page standardStylesheets="false" showHeader="false" controller="BMCServiceDesk.AdminFormAssignmentController">
+    <c:CommonIncludes />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/Knowledge.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AppAdmin.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminFormAssignment.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <style>
+    .saveCls {
+        background: url("{!$Resource.SDEFStyles}/SDEFbuttons/b_save.gif") no-repeat scroll 0 0 transparent !important;
+    }
+    #saveBtn{ margin-left: 9px; }
+   	.tooltipCls{
+		background-color :#e9f2ff !important;
+		border-color :#8eacce !important;
+		font:normal 11px tahoma,arial,helvetica,sans-serif;margin:0!important;line-height:14px;color:#444;padding:0;
+		border-radius :  5px 5px !important;
+		-moz-border-radius: 5px;
+	}
+
+.tooltipCls .tooltipCls-mc{background :#e9f2ff;font:normal 11px tahoma,arial,helvetica,sans-serif;padding:5px;}
+.tooltipCls .tooltipCls-ml{background: #8eacce ;padding-left:1px;}
+.tooltipCls .tooltipCls-mr{background: #8eacce ;padding-right:1px;zoom:1;}
+
+.tooltipCls .tooltipCls-tc{background: #8eacce ;padding-top:1px;overflow:hidden;zoom:1;}
+.tooltipCls .tooltipCls-tl{padding-left:1px;overflow:hidden;zoom:1;height:1px;}
+.tooltipCls .tooltipCls-tr{padding-right:1px;overflow:hidden;zoom:1;}
+
+.tooltipCls .tooltipCls-bc{background:#8eacce;height:1px;overflow:hidden;}
+.tooltipCls .tooltipCls-bl{padding-left:1px;zoom:1;}
+.tooltipCls .tooltipCls-br{padding-right:1px;zoom:1;}
+    
+   .x-fieldset-body{
+   	*overflow-x : hidden !important;
+   }
+    </style>
+<apex:outputPanel id="loadformAssignments">
+<script>
+    var assignedStdForms = new Array();
+    var assignedCustomForms = new Array();
+    var selectedFormAssignment = '{!JSENCODE(SelectedFormAssignment)}';
+    var i=0;
+    <apex:repeat value="{!standardFormAssigned}" var="stdAssigned">
+        assignedStdForms[i++] = ['{!stdAssigned.id}', '{!JSINHTMLENCODE(stdAssigned.name)}'];
+    </apex:repeat>
+    i=0;
+    <apex:repeat value="{!customFormAssigned}" var="customAssigned">
+        assignedCustomForms[i++] = ['{!customAssigned.id}', '{!JSINHTMLENCODE(customAssigned.name)}'];
+    </apex:repeat>
+
+</script>   
+</apex:outputPanel>
+      
+<script type="text/javascript"> 
+var wikiUrl = '{!wikiUrl}';
+var isSaveDone=false;
+var labelFormToAssign = '{!JSENCODE($Label.ApplicationSetting_FormToAssign)}';
+var labelAssignStndrdFrom = '{!JSENCODE($Label.FormAssignmentWithoutFS)}';
+var labelAssignCustFrom = '{!JSENCODE($Label.FormAssignmentWithFS)}';
+var labelAssignStndrdFromTootlip = '{!JSENCODE($Label.FormAssignmentWithoutFSTooltip)}';
+var labelAssignCustFromTootlip = '{!JSENCODE($Label.FormAssignmentWithFSTooltip)}';
+var imagePath ='{!$Resource.SDEFStyles}/SDEFbuttons/';
+var imgRightArrow = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_R_new.gif';
+var imgLeftArrow = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_L_disable_custom.gif';
+var imgDisableRight = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_R_disable_custom.gif';
+var imgDownArrowLeftNew = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_L_new.gif';
+var imgDownArrowDNew = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_D_new.gif';
+var imgDownArrowDisabled = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_U_disable_custom.gif';
+var imgDownArrowDisableCustom = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_D_disable_custom.gif';
+var imgDownArrowUNew = '{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_U_new.gif';
+   eval('{!FormAssignList}');
+   
+  
+    var saveLbl = '{!JSENCODE($Label.Save)}';
+    function setData(){
+        ds.loadData(AvailableCustomFields); 
+        ds1.loadData(SelectedCustomFields);
+    }
+    
+    function setformAssignmentData(){
+        dsAssignedStdForms.loadData(assignedStdForms);
+        dsAssignedCustomForms.loadData(assignedCustomForms);        
+    }
+        /*------------------------------------------------------
+        savehandler(): To save the values.
+        -----------------------------------------------------------*/
+        function savehandler(button,event){
+	       waitbox(0);
+	        var customformAssigned = '';
+	        if (Ext.getCmp('customProfileList')){
+	            var record = Ext.getCmp('customProfileList').store;
+	            record.data.each(function(item, index, totalItems) { 
+	                customformAssigned += item.get('ProfileId') + ',';
+	            });
+	        }
+	        else{
+	            for (var i=0; i<assignedCustomForms.length; i++){
+	                customformAssigned += assignedCustomForms[i][0] + ',';
+	            }
+	        }
+	        isSaveDone=true;
+            savemodifiedData(customformAssigned);
+        }
+            
+            function waitbox(timeout){ 
+            if(parseInt(timeout)>0) setTimeout("waitMsg.hide()", timeout);
+            waitMsg = new Ext.Window({ 
+                height      : 100, 
+                width       : 200, 
+                resizable   : false, 
+                closable    : false, 
+                header      : false,
+                frame       : false, 
+                modal       : true,
+                shadow      : false, 
+                baseCls     : 'waitboxCls', 
+                items       : [{ 
+                    xtype:'panel', 
+                    height:100, 
+                    width:200, 
+                    border: false,
+                    bodyStyle:'background-color:transparent;border:none;', 
+                    html: '<div align="center"><img src="' +  tabOutImg +  '"/></div>' 
+                }] 
+            }); 
+            waitMsg.show();
+        }
+        
+        function showMessage(msg){
+               Ext.MessageBox.show({
+                   id:'commonmsgbox',
+                   width: 250,
+                   title: '{!JSENCODE($Label.ApplicationSetting_FormAssignment)}',
+                   msg: msg,
+                   buttons: Ext.MessageBox.OK
+               }); 
+         }
+        
+        
+    
+ </script>
+ 
+ <apex:outputPanel id="successId">
+    <script>
+    var success_message = '{!success}';
+       if(isSaveDone){
+      		if((success_message == 'success' || success_message == '')){
+           	showMessage('{!JSENCODE($Label.SavedSuccessfully)}');
+           }else{
+           	showMessage('{!JSENCODE($Label.MsgSaveError)}'+success_message);
+           }
+       }
+	</script>
+	</apex:outputPanel>
+<apex:form id="mainForm">
+<div id="main" ></div>
+<apex:actionFunction name="selectFormToAssignCombo" action="{!getProfilesForFormAssign}" onComplete="setformAssignmentData();" reRender="loadformAssignments">
+<apex:param assignTo="{!SelectedFormAssignment}" name="selectedFormToAssign" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="savemodifiedData" action="{!saveSettings}" onComplete="waitMsg.hide()" reRender="successId">
+<apex:param assignTo="{!strCustomFormAssigned}" name="customformAssigned" value=""/>
+</apex:actionFunction>
+
+</apex:form>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AppAdminItemselector.js" id="itemselector"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSCommon.js" id="JSCommon-js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminFormAssignment.js" id="AdminFormAssignment-js"/>
+
+</apex:page>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>check_service_territory_not_empty</fullName>
+    <active>true</active>
+    <errorConditionFormula>AND(
+OR( ISNEW() ,  ISCHANGED(ForecastCategoryName) ),
+(RecordTypeId !=
+$Setup.Field_Service_Settings__c.Opportunity_RecordType_Frequency_Change__c) ,
+OR(
+ISPICKVAL(ForecastCategoryName , &apos;Closed&apos;) ,
+ISPICKVAL(ForecastCategoryName , &apos;Commit&apos;)
+),ISBLANK( Account.Service_Territory__c )
+)</errorConditionFormula>
+    <errorMessage>Please fill in the Service Territory field of the associated Shipping Account.</errorMessage>
+</ValidationRule>

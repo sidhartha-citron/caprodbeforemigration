@@ -1,0 +1,40 @@
+<apex:page id="thePage" standardController="BMCServiceDesk__SRM_RequestDefinition__c" extensions="BMCServiceDesk.ReqDefDescriptionController" showHeader="false" sidebar="false">
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ReqDefDescription.css" />
+<apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__RemedyforceAdministration, 'styles/remedyforce-administration.css')}" />
+    <apex:form id="theForm">               
+        <!--[if IE]>
+				<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/IEStyleforReqDefDesc.css" />
+		<![endif]-->
+        <apex:actionFunction name="onOKClickFunc" action="{!onOKClick}" rerender="rtfPanel" oncomplete="closeFunc();"/> 
+        <apex:inputField id="desc" rendered="{!!isUserInstruction}" value="{!BMCServiceDesk__SRM_RequestDefinition__c.BMCServiceDesk__Description_Rich_Text__c}"/>        
+        <apex:inputField id="usrInstdesc" rendered="{!isUserInstruction}" value="{!BMCServiceDesk__SRM_RequestDefinition__c.BMCServiceDesk__User_Instructions_Rich_Text__c}"/>  
+        <div align="center" >                        
+            <span style="right:15px;position:absolute;padding-top:5px;">
+                <input type="button" id="Okbtn"  value="{!$Label.Ok}" onClick="onOKClickFunc();"  class="cancel-btn" style="cursor:pointer;margin-right: 5px;"/ >
+                <input type="button" id= "Savebtn"  value="{!$Label.Cancel}" onclick="closeFunc();" style="cursor:pointer;" class="cancel-btn"/>            
+            </span>
+        </div>          
+        <apex:outputPanel id="rtfPanel">                                    
+            <script>                          
+                    function closeFunc(){
+                        var rtfUI = "{!JSENCODE(richTextInstruction)}";
+                        var rtf = "{!JSENCODE(richTextDescription)}";
+
+                        var isUsrInstruction = {!isUserInstruction};
+                        if(isUsrInstruction){
+                            window.parent.userInstructions_RichText = rtfUI;
+                        }else{
+                            window.parent.description_RichText = rtf;
+                        }                        
+                        window.parent.setDescriptionFields(isUsrInstruction);
+						window.parent.hideDescPopup(isUsrInstruction); 
+                    }
+            </script> 
+        </apex:outputPanel> 
+    </apex:form>      
+    
+    <script>
+        var rtfDescId = '{!JSENCODE($Component.theForm.desc)}';
+        var rtfUIId = '{!JSENCODE($Component.theForm.usrInstdesc)}';
+    </script>
+</apex:page>

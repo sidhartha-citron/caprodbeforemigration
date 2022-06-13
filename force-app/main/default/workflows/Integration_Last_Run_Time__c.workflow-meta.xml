@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>Integration_has_not_executed_last_24_hours</fullName>
+        <description>Integration has not executed last 24 hours</description>
+        <protected>false</protected>
+        <recipients>
+            <recipient>apiuser@citronhygiene.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderType>DefaultWorkflowUser</senderType>
+        <template>Talend_Integration_Template/Integration_Not_Running_Template</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>Update_Time_Stamp_On_Integration_Last</fullName>
+        <description>Temp (Can be deleted Later)</description>
+        <field>Notification_Time_Stamp__c</field>
+        <formula>NOW()</formula>
+        <name>Update Time Stamp On Integration Last</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <rules>
+        <fullName>Integration Stopped Working Notification</fullName>
+        <active>true</active>
+        <description>Notify specific users when the integration has not worked for over 24 hours.</description>
+        <formula>true</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+        <workflowTimeTriggers>
+            <actions>
+                <name>Integration_has_not_executed_last_24_hours</name>
+                <type>Alert</type>
+            </actions>
+            <actions>
+                <name>Update_Time_Stamp_On_Integration_Last</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <offsetFromField>Integration_Last_Run_Time__c.Accounts_SalesforceToAccPac__c</offsetFromField>
+            <timeLength>24</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+    </rules>
+</Workflow>

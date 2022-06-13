@@ -1,0 +1,39 @@
+<aura:component >
+    <aura:attribute name="message" type="String"/>
+    <aura:attribute name="toastTitle" type="String"/>
+    <aura:attribute name="toastType" type="String"/>
+    <aura:attribute name="toastTimeOut" type="Boolean" default="true"/>
+    
+    <aura:method name="showMessage" action="{!c.showMessage}">
+        <aura:attribute name="title" type="String" />
+        <aura:attribute name="msg" type="String"/>
+        <aura:attribute name="toastType" type="String"/>
+    </aura:method>
+    
+    <aura:method name="setCloseType" action="{!c.setType}">
+        <aura:attribute name="toastTimeOut" type="Boolean" default="true"/>
+    </aura:method>
+    
+    <div class="slds-notify_container slds-is-relative slds-hide" aura:id="divToHide">
+        <div class="{! 'slds-notify slds-notify_toast ' +  (v.toastType=='SUCCESS'? 'slds-theme_success' : 'slds-theme_error')}" role="alert">
+            <span class="slds-assistive-text">{!v.toastType=='SUCCESS'? success : error}</span>
+            <span class="{! 'slds-icon_container ' + (v.toastType=='SUCCESS'? 'slds-icon-utility_success':'slds-icon-utility_error') + ' slds-m-right_small slds-no-flex slds-align-top'}" title="Description of icon when needed">             
+                <aura:if isTrue="{!v.toastType=='SUCCESS'}">
+                    <lightning:icon iconName="utility:success" variant="inverse" size="small"/>
+                    <aura:set attribute="else">
+                     <lightning:icon iconName="utility:error" variant="inverse" size="small"/>   
+                    </aura:set>
+                </aura:if>
+                
+            </span>
+            <div class="slds-notify__content">                
+                <h2 class="slds-text-heading_small ">{!v.message}</h2>
+            </div>
+            <button class="slds-button slds-button_icon slds-notify__close slds-button_icon-inverse" title="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeToast}">                
+                <lightning:icon iconName="utility:close" variant="inverse" size="small"/>   
+                <span class="slds-assistive-text">{!$Label.c.Site_Survey_Close}</span>
+            </button>
+        </div>
+    </div>
+	
+</aura:component>

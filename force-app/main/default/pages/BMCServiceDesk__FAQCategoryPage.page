@@ -1,0 +1,460 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.FAQCategoryController" standardStylesheets="false">
+   <c:CommonIncludes />
+   <apex:outputPanel id="wholePage">
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSTemplate.js"/>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SelfServiceStyleSheet.css" /> 
+   
+   <apex:outputPanel id="dummyRender">
+     <script>
+         var faqCatId='{!JSENCODE(faqCategory.Id)}';
+      </script>
+    </apex:outputPanel>
+       
+    <script>
+    var chkBoxValue;
+    var faqCategoryId;
+    var faqCategoryName;
+    var faqCategoryLabel = '{!JSENCODE($ObjectType.FAQ_Category__c.Label)}';        
+    var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+    var inactiveLabel = '{!JSENCODE($ObjectType.FAQ_Category__c.fields.Inactive__c.label)}';
+	document.onclick = activateWindow; 
+    function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+    }
+    
+      /*	Code for handling Data change on Page
+     		- START
+     	*/
+	    function afterSaveAction(){ 
+        var modName = "{!JSENCODE($CurrentPage.parameters.moduleName)}";  
+        var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";  
+        if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined' && errormsg=='{!JSENCODE($Label.savedSuccessfully)}'){
+            window.parent.parent.refreshSupportingInformation(parentWid,modName);
+        }else{
+            showError();
+        }
+      } 
+        var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+	    var clickedOnce = false;  
+	    function handleChange(){
+	        if(!clickedOnce){
+	            clickedOnce = true;
+	            window.parent.registerChange(wid2);
+	        }
+        }
+	        
+	    function handleResetChange(){
+	    	if(clickedOnce){
+               clickedOnce = false;
+               window.parent.registerSave(wid2);
+           }
+	       }
+    
+      /*
+     		END
+     	*/
+	function completeDelete(){
+        if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}'){
+            showError();
+        }else{
+            closeWindow();
+        }
+     }
+    
+    function closeWindow(){
+        window.parent.refreshList();
+        window.parent.closeTab(wid);
+    }
+    
+    var removeCategoryHandler = function(button ,event) {
+        if(button=='ok'){
+            deleteFAQCategory(); 
+        }else{
+            return;
+        }    
+    }
+    
+    function callCopyPage(){
+        window.parent.addTab("FAQCategoryPage?copyId="+faqCatId, faqCategoryLabel, faqCategoryLabel);
+    }
+    
+    var idset=window.parent.returnListOfId();
+
+    
+    function previousFAQCategoryBtnHandler1(){
+        var idSetString='';
+        var i=0;
+        while(idset.length > i){
+            if(idSetString==''){
+                idSetString=idset[i];
+            }else{
+                idSetString=idSetString+','+idset[i];
+            }
+            i++;
+        }
+        previousFAQCategoryBtnHandler(idSetString);
+   }
+       
+   function nextFAQCategoryBtnHandler1(){
+       var idSetString='';
+       var i=0;
+       while(idset.length > i){
+           if(idSetString==''){
+               idSetString=idset[i];
+           }else{
+               idSetString=idSetString+','+idset[i];
+           }
+           i++;
+      }
+      nextFAQCategoryBtnHandler(idSetString);
+   }   
+    
+    
+    var PreviuosBtnHandler = function (button,event) { 
+     if(document.getElementById('prevId').disabled!=true)
+        previousFAQCategoryBtnHandler1();
+    };
+    
+    var NextBtnHandler = function (button,event) { 
+    if(document.getElementById('nextId').disabled!=true)
+        nextFAQCategoryBtnHandler1();
+    }; 
+    
+    var DeleteBtnHandler = function(button,event) { 
+      validateDeletion();   
+    }; 
+     
+    function DeleteBtnHandlerAfterValidation(deleteFAQCategoryCheck){ 
+    if (deleteFAQCategoryCheck== 'true') {     
+        Ext.Msg.show({       
+            title:'{!JSENCODE($Label.delete)}',
+			msg: '{!JSENCODE($Label.FAQCategoryDeletionErrorMessage)}',
+            buttons: Ext.Msg.OK,
+            width:  450,       
+            icon: Ext.MessageBox.WARNING 
+      });
+       }else{
+        Ext.Msg.show({
+            
+            title:'{!JSENCODE($Label.delete)}',
+            msg: '{!JSENCODE($Label.DeleteConfirmMessage)}',
+            buttons: Ext.Msg.OKCANCEL,
+            fn: removeCategoryHandler,  
+            width:  450,       
+            icon: Ext.MessageBox.WARNING 
+            
+       });
+    }}
+    var ResetBtnHandler = function(button,event) {
+        resetFAQCategory();
+    };    
+    
+    var CopyBtnHandler = function(button,event) 
+    { 
+	    activeAllWindowFlag=false;
+        callCopyPage(); 
+    };
+    
+    var SaveBtnHandler = function(button,event) {
+        Ext.getCmp('saveId').setDisabled(true);
+        chkBoxValue=Ext.getCmp('idInactive').getValue();
+        waitbox(0);
+        saveFAQCategory(chkBoxValue);
+         
+    };
+    
+    var NewBtnhandler = function(button,event) { activeAllWindowFlag=false; openPage("FAQCategoryPage", faqCategoryLabel, faqCategoryLabel); };    
+    Ext.onReady(function(){
+            Ext.QuickTips.init();  
+            
+            var SamplePanel = Ext.extend(Ext.Panel, {
+                    renderTo: 'btnToolbar',
+                    defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+                });
+            new SamplePanel({
+                    title: '',
+                cls:'toolSpCls',
+                    bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+                    tbar: [ {
+                        scale: 'medium',
+                        iconCls: 'bmcNew',
+                        tooltipType : 'title',
+                        tooltip: '{!JSENCODE($Label.new)}',
+                        id:'newId',
+                        //hidden:disableTrue,
+                        listeners: {
+                            mouseover: function(){
+                                this.setIconClass('bmcNewOn');    
+                            },
+                            mouseout: function(){
+                                this.setIconClass('bmcNew');          
+                            }
+                        },     
+                        handler:NewBtnhandler
+                    },' ', {
+                        scale: 'medium',
+                        iconCls: 'bmcSave',
+                        tooltipType : 'title',
+                        tooltip: '{!JSENCODE($Label.save)}',
+                        id:'saveId',
+                        listeners: {
+                            mouseover: function(){
+                                this.setIconClass('bmcSaveOn');    
+                             },
+                            mouseout: function(){
+                                this.setIconClass('bmcSave');          
+                            }
+                        }, 
+                        handler:SaveBtnHandler
+                    },' ',{
+                        scale: 'medium',
+                        iconCls: 'bmcCopy',
+                        tooltipType : 'title',
+                        tooltip: '{!JSENCODE($Label.copy)}',
+                        id:'copyId',
+                        //hidden:disableTrue,
+                        listeners: {
+                            mouseover: function(){
+                                this.setIconClass('bmcCopyOn');    
+                             },
+                            mouseout: function(){
+                                this.setIconClass('bmcCopy');          
+                            }
+                        },     
+                        handler:CopyBtnHandler
+                    },' ','-',' ',{
+                        scale: 'medium',
+                        iconCls: 'bmcRefresh',
+                        tooltipType : 'title',
+                        tooltip: '{!JSENCODE($Label.Reset)}',
+                        id:'undoId',
+                        //hidden:disableTrue,
+                        listeners: {
+                            mouseover: function(){
+                                this.setIconClass('bmcRefresh');    
+                             },
+                            mouseout: function(){
+                                this.setIconClass('bmcRefresh');          
+                            }
+                        },     
+                        handler:ResetBtnHandler
+                    },' ',{
+                        scale: 'medium',
+                        iconCls: 'bmcDelete',
+                        tooltipType : 'title',
+                        tooltip: '{!JSENCODE($Label.delete)}',
+                        id:'deleteId',
+                        listeners: {
+                            mouseover: function(){
+                                this.setIconClass('bmcDeleteOn');    
+                             },
+                             mouseout: function(){
+                                this.setIconClass('bmcDelete');          
+                             }
+                        },               
+                        handler:DeleteBtnHandler
+                    },
+                new Ext.Toolbar.Fill(), 
+                {
+                      id :'idInactive',
+                   xtype  : 'checkbox',
+                   width  : 93,
+                   color :'#004376',
+                   align:'top',
+                   checked: false,
+                   boxLabel:'<span class="checkboxLabelCls" style="font-family: Tahoma, MS Sans Serif;font-size: 11px;">{!JSENCODE($ObjectType.FAQ_Category__c.fields.Inactive__c.label)}</span>',
+                   autoCreate: {tag: "input", type: "checkbox", title:"{!JSENCODE($ObjectType.FAQ_Category__c.fields.Inactive__c.label)}"}
+                
+                  
+                },  {
+                   
+                   id:'prevId',
+                    xtype : 'box',
+                    autoEl:  {tag: 'img', 
+                              src:('{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif'),   
+                             title:'{!JSENCODE($Label.previousRecord)}'
+                             },
+                              
+                    cls:'cursorCls',
+                    listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                                 
+                },{
+                     id:'nextId',
+                    xtype : 'box',
+                    autoEl:  {tag: 'img', 
+                              src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif',
+                              title:'{!JSENCODE($Label.nextRecord)}' },
+                    cls:'cursorSpaceCls',
+                    listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+                   
+                    
+                }
+                ] 
+            });
+            Ext.getCmp('idInactive').setValue('{!faqCategory.Inactive__c}');  
+              
+            //var faqCatId='{!JSENCODE(faqCategory.Id)}';
+            if (faqCategoryId != null && faqCategoryId!= ''){
+                 Ext.getCmp('prevId').setDisabled(false);
+                Ext.getCmp('nextId').setDisabled(false);
+                Ext.getCmp('deleteId').setDisabled(false);
+                Ext.getCmp('deleteId').setIconClass('bmcDelete');
+                Ext.getCmp('copyId').setDisabled(false);
+                Ext.getCmp('copyId').setIconClass('bmcCopy');
+            	Ext.getCmp('undoId').setDisabled(false);
+            } else {
+                Ext.getCmp('undoId').setDisabled(true);
+                 Ext.getCmp('prevId').setDisabled(true);
+                Ext.getCmp('nextId').setDisabled(true);
+                Ext.getCmp('deleteId').setDisabled(true);
+                Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+                Ext.getCmp('copyId').setDisabled(true);
+                Ext.getCmp('copyId').setIconClass('bmcCopyDisable');
+            }
+           /*------------function call To Handle Changes in Page Data---------*/
+            handleElemEvent();
+            
+    });                                 
+    </script> 
+    
+    <apex:outputPanel id="faqCatPanel">
+        <script>
+            faqCategoryId = '{!JSENCODE(faqCategory.Id)}';
+            faqCategoryName = '{!JSENCODE(faqCategory.FAQ_Category_Name__c)}';            
+            if (faqCategoryId != null && faqCategoryId!= ''){
+            
+            if(Ext.getCmp('deleteId')!=null){
+                Ext.getCmp('deleteId').setDisabled(false);
+                Ext.getCmp('deleteId').setIconClass('bmcDelete');
+                }if(Ext.getCmp('copyId')!=null){
+                Ext.getCmp('copyId').setDisabled(false);
+                Ext.getCmp('copyId').setIconClass('bmcCopy');
+            }
+            if(Ext.getCmp('undoId') != null){
+            	Ext.getCmp('undoId').setDisabled(false);
+            }
+            } else {
+               
+               if(Ext.getCmp('deleteId')!=null){
+                Ext.getCmp('deleteId').setDisabled(true);
+                Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+                }  if(Ext.getCmp('copyId')!=null){
+                Ext.getCmp('copyId').setDisabled(true);
+                Ext.getCmp('copyId').setIconClass('bmcCopyDisable');
+            	}  if(Ext.getCmp('undoId') != null){
+            	Ext.getCmp('undoId').setDisabled(true);
+            }}
+        </script>
+    </apex:outputPanel>
+     <apex:outputPanel id="afterSavePanel">
+        <script>
+           function handleSave(){
+               var id = "{!JSENCODE(faqCategory.Id)}";
+            window.parent.handleSave(wid, id);
+        }
+          
+    
+        </script>
+     </apex:outputPanel>
+    
+    <apex:outputPanel id="titlePanel">
+        <script>
+            var newFaqId;
+            var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+                function updateTitle(){
+                    var faqCategoryName ='{!JSENCODE(faqCategory.FAQ_Category_Name__c)}';
+                    var newTitle = faqCategoryLabel;  
+                	if(faqCategoryName != ""){	
+	                    window.parent.changeTitle(wid,faqCategoryName,newTitle);
+	                    window.parent.refreshList();
+                    }
+                }
+      </script>
+    </apex:outputPanel>
+  <apex:outputPanel id="inactivePanel">
+        <script>
+           function updateInactive(){
+            Ext.getCmp('idInactive').setValue('{!faqCategory.inactive__c}');
+        }
+          
+   		 function enableSaveButton() {
+        		Ext.getCmp('saveId').setDisabled(false);
+      		} 
+        </script>
+    </apex:outputPanel>
+    
+    <apex:form id="FAQCategoryForm">
+    <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+           <apex:outputPanel id="errorId">
+           <script>
+               var errormsg = '{!JSENCODE(messageString)}';     
+           </script>
+    </apex:outputPanel>
+    
+    <apex:actionFunction name="deleteFAQCategory" action="{!deleteFAQCategory}" oncomplete="completeDelete();" rerender="errorId,validationComponent"/>    
+    <apex:actionFunction name="resetFAQCategory" action="{!resetFAQCategory}" rerender="inactivePanel,tablePanel" oncomplete="handleResetChange();updateInactive();"/>
+    <apex:actionFunction name="saveFAQCategory" action="{!saveFAQCategory}" rerender="dummyRender,faqCatPanel,errorId,validationComponent,titlePanel,afterSavePanel,tablePanel" oncomplete="waitMsg.hide();afterSaveAction();updateTitle();showError();handleSave();window.parent.refreshList();enableSaveButton();">
+    <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+    </apex:actionFunction>
+    
+    
+    <apex:actionFunction action="{!nextBtnHandler}" name="nextFAQCategoryBtnHandler" rerender="titlePanel,tablePanel,afterSavePanel,inactivePanel,dummyRender"  oncomplete="handleResetChange();updateTitle(); updateInactive();"> 
+        <apex:param assignTo="{!tempString}" name="idSetString" value=""/>          
+    </apex:actionFunction>
+    <apex:actionFunction action="{!previousBtnHandler}" name="previousFAQCategoryBtnHandler" rerender="titlePanel,tablePanel,afterSavePanel,inactivePanel,dummyRender" oncomplete="handleResetChange();updateTitle(); updateInactive();" > 
+       <apex:param assignTo="{!tempString}" name="idSetString" value=""/>  
+    </apex:actionFunction> 
+     <apex:actionFunction action="{!validateFAQCategoryDeletion}" name="validateDeletion" oncomplete="DeleteBtnHandlerAfterValidation('{!checkFAQCategoryDeletion}');"> 
+     </apex:actionFunction> 
+
+    <table  cellspacing="0" cellpadding="0"  class="clsMainTable">
+    
+        <tr class="clsRowGreyBg">
+           <td colspan="3">
+               <div id="btnToolbar"></div>
+           </td>
+        </tr>
+        <tr>
+            <td>
+                <apex:outputPanel id="tablePanel">
+                <table class="clsTable" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td>
+                            <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td>
+                                        <table class="clsTable" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td colspan="3">
+                                                    <div class="div15pxVspacing" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__FAQ_Category__c.fields.BMCServiceDesk__FAQ_Category_Name__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                                <td class="clsInputTextBoxTD"><apex:inputText title="{!$ObjectType.BMCServiceDesk__FAQ_Category__c.fields.BMCServiceDesk__FAQ_Category_Name__c.InlineHelpText}" value="{!faqCategory.BMCServiceDesk__FAQ_Category_Name__c}" styleClass="clsFAQInputTextBox" /></td>
+                                                
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__FAQ_Category__c.fields.BMCServiceDesk__Description__c.label}"/></td>
+                                                <td class="clsInputTextBoxTD"><apex:inputTextarea title="{!$ObjectType.BMCServiceDesk__FAQ_Category__c.fields.BMCServiceDesk__Description__c.InlineHelpText}" value="{!faqCategory.BMCServiceDesk__Description__c}" styleClass="clsFAQInputTextArea" /></td>
+                            
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3">
+                                                    <div class="div10pxVspacing" />
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                </apex:outputPanel>
+             </td>
+        </tr>
+    </table>        
+    </apex:form>        
+    </apex:outputPanel>
+</apex:page>

@@ -1,0 +1,68 @@
+<apex:page controller="CTCT2.SyncHistoryController" action="{!initPage}" sidebar="false" tabstyle="Sync_History__tab">
+
+	<style>
+		.pbTable {border: 1px solid lightgray;}
+		.message {margin-bottom: 10px;} /* Add some space after the pageMessages component. */
+	</style>
+
+	<apex:sectionHeader title="Constant Contact for Salesforce"  subtitle="Sync History" />
+
+	<apex:pageMessages id="errors" />
+	
+	<apex:outputPanel layout="none" rendered="{!canAccessHistory}">
+		<apex:form id="theForm">
+			<apex:pageBlock id="thePageBlock" helpTitle="Help for this page" helpUrl="{!helpURL.helpurlSyncHistory}"> 
+			
+				<apex:outputPanel layout="block" style="text-align: center; padding-bottom: 10px;">
+					<apex:commandButton value="Refresh" action="{!refresh}" />
+					&nbsp;&nbsp;
+					<apex:actionRegion >
+					<apex:commandButton id="theButton" value="Sync Now" rerender="errors,blnManualSyncError" 
+					  immediate="false" rerender="errors,blnManualSyncError"
+					  action="{!DoManualSync}" status="waitStatus" 
+					  oncomplete="if('false'==document.getElementById('{!$Component.blnManualSyncError}').value) alert('The sync process has started.'); top.location.reload(true);" />
+			            <apex:actionstatus id="waitStatus" startText="  Please Wait..." />
+					<apex:inputHidden value="{!blnManualSyncError}" id="blnManualSyncError" />
+					</apex:actionRegion>
+	
+				</apex:outputPanel>
+	
+				<apex:pageBlockTable value="{!histories}" var="history" width="100%" 
+				styleClass="pbTable" columnClasses="pbTable" headerClass="pbTable">
+					<apex:column value="{!history.CTCT2__Start__c}">
+						<apex:facet name="header">Start Time</apex:facet>
+					</apex:column>
+					<apex:column value="{!history.CTCT2__Finish__c}">
+						<apex:facet name="header">Finish Time</apex:facet>
+					</apex:column>
+					<apex:column value="{!history.CTCT2__Status__c}">
+						<apex:facet name="header">Status</apex:facet>
+					</apex:column>
+					<apex:column value="{!history.CTCT2__Frequency__c}">
+						<apex:facet name="header">Schedule Type</apex:facet>
+					</apex:column>
+	
+					<apex:column value="{!history.CTCT2__Opt_Outs_From_CTCT__c}" style="text-align:center;">
+						<apex:facet name="header"><center>Opt Outs from<br/>Constant Contact</center></apex:facet>
+					</apex:column>
+					<apex:column value="{!history.CTCT2__Opt_Ins_from_CTCT__c}" style="text-align:center;">
+						<apex:facet name="header"><center>Opt Ins from<br/>Constant Contact</center></apex:facet>
+					</apex:column>
+					<apex:column value="{!history.CTCT2__Opt_Outs_To_CTCT__c}" style="text-align:center;">
+						<apex:facet name="header"><center>Opt Outs to<br/>Constant Contact</center></apex:facet>
+					</apex:column>
+					<apex:column value="{!history.CTCT2__Comment__c}">
+						<apex:facet name="header">Comment</apex:facet>
+					</apex:column>
+				</apex:pageBlockTable>
+				
+				<apex:outputPanel layout="block" style="text-align: center;">
+					<apex:commandLink action="{!previous}" rendered="{!hasPrevious}">Previous</apex:commandlink>
+					<apex:outputPanel rendered="{!hasPrevious && hasNext}">&nbsp;&nbsp;</apex:outputPanel>
+					<apex:commandLink action="{!next}" rendered="{!hasNext}">Next</apex:commandlink>
+				</apex:outputPanel> 
+			 
+			</apex:pageBlock>
+		</apex:form>
+	</apex:outputPanel>
+</apex:page>

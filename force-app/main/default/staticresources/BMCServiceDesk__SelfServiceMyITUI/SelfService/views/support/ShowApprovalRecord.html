@@ -1,0 +1,174 @@
+	<div class="modal-header Branding-Title_bar-background_color Branding-Title_bar-broadcast_text_color" >
+		<div class="search-remove-btn search-remove-btn-dpl" ng-click="cancel()">
+			<span class="d-icon-cross"/>
+		</div>
+		<h1 class="modal-header__title_centered" >{{approvalRequest.TargetObjectType}}
+			<a class="modal-header__link" 
+				ng-if="dataDetail.type == 'comment'" 
+				ng-click="goToRequestActivity(); resetSections();"
+				tabindex="0">
+				<!--<i class="glyphicon glyphicon-chevron-left"></i> -->
+				&#10094; {{$root.selfServiceLabels.back}}
+			</a>	
+		</h1>	
+			
+	</div>
+	<div ng-show="!manageApprovalState.isLoading">
+		<div  class="support-modal__srd-header-container" style="border: 1px solid #d9d9d9;">
+				<div ng-show="!manageApprovalState.isLoading" style="color: black">
+					<h3 class="support-modal__srd-header-title" style="float: left; width: 420px;" ng-bind="approvalRequest.TargetObjectName"></h3>
+					
+					<div class="support-modal__srd-header-instruction" >
+						<strong Style="margin-left: 15px;">{{$root.selfServiceLabels.submittedDate}}:</strong> {{approvalRequest.CreatedDate}}
+					</div>
+				</div>
+		</div>
+	</div>	
+	<div class="modal-content" style="display: block;overflow-y: auto" set-Height="setEditContentDivHeight" >
+		<loading-spinner overlay="true" if="manageApprovalState.isLoading"></loading-spinner>
+		<div style="padding:10px; overflow-y: auto; width: 100%;">
+			<div style="width: 100%; background-color: #f2f2f2; margin-top: 10px; border: solid 1px; border-color: #d9d9d9;" ng-click="showHideDetailSection('detail')" ng-show="!manageApprovalState.isLoading" ng-if="dataDetail.type != 'comment'" >
+				<table style="width: 100%;">
+					<tr>
+						<td style="width: 91%;">
+							<strong style="margin-left: 20px; margin-right: 20px;">{{$root.selfServiceLabels.DetailsSectionHeader}}</strong>
+						</td>
+						<td>
+							<div class="expandIcon" ng-if="!isDetailSectionCollapsed">
+								<span class="d-icon-right-angle_up" style="color:#999"></span>
+							</div>
+							<div class="expandIcon" ng-if="isDetailSectionCollapsed">
+								<span class="d-icon-right-angle_down" style="color:#999"></span>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div id="DetailsSectionId" style="width:100%; border: solid 1px; border-color: #d9d9d9; margin-top: -1px; padding: 15px;" ng-hide="isDetailSectionCollapsed" >
+				<div ng-show="!manageApprovalState.isLoading">
+					<div class="srd-question" ng-repeat="recordDetails in selectedItem.selectedApproval" ng-if="dataDetail.type != 'comment'" >
+						<span class="srd-question-error_message" ></span>
+						<table style="width:100%">
+					      <tr style="line-height: 2;">
+					        <td style="width:40%;vertical-align:top;" class="wrapContentsForAllIE" ng-show="recordDetails.name!='Name'" >
+					        	<strong class="wrapContents">{{ htmlUnescape(recordDetails.label) }}:</strong>
+					        </td>
+					          <td id="rtfViewDiv" class="wrapContentsForAllIE text-alignment" style="width:60%;vertical-align:top;" ng-if="recordDetails.additionalinfo != undefined && recordDetails.additionalinfo.fieldtype !='URL' && recordDetails.additionalinfo.fieldtype !='formulatextfields' && recordDetails.additionalinfo.fieldtype =='richtextareafield'" ng-bind-html="to_trusted(recordDetails.value)"  ng-show="recordDetails.name!='Name'"></td>
+					        <td class="wrapContentsForAllIE text-alignment" style="width:60%;vertical-align:top;" ng-if="recordDetails.additionalinfo != undefined && recordDetails.additionalinfo.fieldtype !='URL' && recordDetails.additionalinfo.fieldtype !='richtextareafield' && recordDetails.additionalinfo.fieldtype =='formulatextfield'" ng-bind-html="to_trustURL(recordDetails.value)"  ng-show="recordDetails.name!='Name'"></td>
+					        <td class="wrapContentsForAllIE text-alignment" style="width:60%;vertical-align:top;" ng-if="recordDetails.additionalinfo != undefined && recordDetails.additionalinfo.fieldtype !='URL' && recordDetails.additionalinfo.fieldtype !='richtextareafield' && recordDetails.additionalinfo.fieldtype !='formulatextfield'" ng-bind-html="recordDetails.value"  ng-show="recordDetails.name!='Name'"></td>
+					        <td class="wrapContentsForAllIE text-alignment" style="width:60%;vertical-align:top;" ng-if="recordDetails.additionalinfo != undefined && recordDetails.additionalinfo.fieldtype =='URL'" ng-bind-html="recordDetails.value | createAnchors"  ng-show="recordDetails.name!='Name'"></td>
+					      </tr>
+					    </table>     
+					</div>
+				</div>
+			</div>
+			<div ng-if="dataDetail.type == 'comment'">
+					<div class="activity-log__item-content">
+						<div class="activity-log__item-submitter" ng-bind-html="dataDetail.data.Submitter" tabindex="0"></div>
+						<div class="activity-log__item-date" style="margin-top: 10px;" tabindex="0">{{ dataDetail.data.CreatedDate}}</div>
+						<div class="activity-log__item-text wrapContents" style="margin-top: 10px;" tabindex="0">
+							<activity-log-text data="dataDetail.data.Notes" ng-if="dataDetail.data.Notes"></activity-log-text>
+							<activity-log-text data="dataDetail.data.Summary" ng-if="!dataDetail.data.Notes"></activity-log-text>
+						</div>
+					</div>
+			</div>
+			<div style="width: 100%; background-color: #f2f2f2; margin-top: 10px; border: solid 1px; border-color: #d9d9d9;" ng-click="showHideDetailSection('attachment')" ng-show="!manageApprovalState.isLoading" ng-if="dataDetail.type != 'comment'">
+				<table style="width: 100%;">
+					<tr>
+						<td style="width: 80%;">
+							<strong style="margin-left: 20px; margin-right: 20px;">{{$root.selfServiceLabels.AttachmentSectionHeader}}</strong>
+						</td>
+						<td style="width: 11%;">
+							<div style="background-color: #999999; float: right; width: 45px; height: 30px; border-radius: 4px; text-align: center; font-size: 15px;" ng-if="attachmentData.attachments.length > 0">
+								<label style="vertical-align: sub; margin-bottom: 0px; font-weight: normal; color: #ffffff;">{{attachmentData.attachments.length}}</label>
+							</div>
+						</td>
+						<td>
+							<div class="expandIcon" ng-if="!isAttachmentSectionCollapsed">
+								<span class="d-icon-right-angle_up" style="color:#999"></span>
+							</div>
+							<div class="expandIcon" ng-if="isAttachmentSectionCollapsed">
+								<span class="d-icon-right-angle_down" style="color:#999"></span>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			
+			<div id="AttachmentsSectionId" style="width:100%; border: solid 1px; border-color: #d9d9d9; margin-top: -1px; padding: 15px;" ng-hide="isAttachmentSectionCollapsed" ng-if="dataDetail.type != 'comment'" >
+				<div id="NewAttachmentsSectionId" style="width:100%;margin-top: 5px;">
+					<srd-attachments data="attachmentData"></srd-attachments>
+				</div>
+				<div class="activity-log Branding-Right_Panel-activity" Style="border: block; max-height: none;" ng-if="attachmentData.attachments.length > 0">
+					<div class="activity-log__item Branding-Right_Panel-activity" Style="border: block; margin-top: 10px;" ng-if="attachmentData.attachments.length > 0" ng-repeat="attachment in attachmentData.attachments">
+						<div class="activity-log__item-user-thumbnail-container">
+							<img src="{{attachment.createdByImgURL}}"/>
+						</div>
+					<div class="activity-log__item-content">
+						<div class="activity-log__item-submitter" ng-bind-html="attachment.CreatedByName"></div>
+						<div class="activity-log__item-date">{{ attachment.LastModifiedDate}}</div>
+
+						<div class="activity-log__item-text">
+							<div class="srd-attachment__icon i {{ htmlUnescape(attachment.Name) | fileTypeIconClass }}" style="margin-left: 10px;"></div>
+								<a target="_blank" ng-if="!attachment.isFile" href="/servlet/servlet.FileDownload?file={{attachment.Id}}" style="margin-left: 10px;" class="activity-log__attachment" title="{{htmlUnescape(attachment.Name)}}" >
+									<span class="activity-log__attachment-name nowrap-line">{{htmlUnescape(attachment.Name)}}</span>
+									{{attachment.attachmentSize | fileSize}}
+								</a>
+								<a target="_blank" ng-if="attachment.isFile" href="/sfc/servlet.shepherd/version/download/{{attachment.Id}}" style="margin-left: 10px;" class="activity-log__attachment" title="{{htmlUnescape(attachment.Name)}}" >
+								<!-- <ins class="activity-log__attachment-icon i {{ attachment.name | fileTypeIconClass }}"></ins>  -->
+									<span class="activity-log__attachment-name nowrap-line">{{htmlUnescape(attachment.Name)}}</span>
+									{{attachment.attachmentSize | fileSize}}
+								</a>
+							</div>							
+						</div>	
+					</div>
+				</div>
+			</div>
+			<div ng-if="comments.length > 0">
+				<div style="width: 100%; background-color: #f2f2f2; margin-top: 10px; border: solid 1px; border-color: #d9d9d9;" ng-click="showHideDetailSection('note')" ng-show="!manageApprovalState.isLoading" ng-if="dataDetail.type != 'comment'" >
+					<table style="width: 100%;">
+						<tr>
+							<td style="width: 80%;">
+								<strong style="margin-left: 20px; margin-right: 20px;">{{$root.selfServiceLabels.NotesSectionHeader}}</strong>
+							</td>
+							<td style="width: 11%;">
+								<div style="background-color: #999999; float: right; width: 45px; height: 30px; border-radius: 4px; text-align: center; font-size: 15px;" ng-if="comments.length > 0">
+									<label style="vertical-align: sub; margin-bottom: 0px; font-weight: normal; color: #ffffff;">{{comments.length}}</label>
+								</div>
+							</td>
+							<td>
+								<div class="expandIcon" ng-if="!isNotesSectionCollapsed">
+										<span class="d-icon-right-angle_up" style="color:#999"></span>
+								</div>
+								<div class="expandIcon" ng-if="isNotesSectionCollapsed">
+									<span class="d-icon-right-angle_down" style="color:#999"></span>
+								</div>
+							</td>
+						</tr> 
+					</table>
+				</div>
+				<div class="activity-log Branding-Right_Panel-activity" Style="border: block; max-height: block;" ng-if="comments.length > 0" ng-hide="isNotesSectionCollapsed">
+					<div class="activity-log__item Branding-Right_Panel-activity" Style="border: none; margin-top: 10px;" ng-repeat="comment in comments | orderBy: '-createDate'">
+						<div ng-click="showDetails('comment', comment)">
+							<div class="activity-log__item-user-thumbnail-container">
+								<img src="{{comment.SubmitterUserImgURL}}"/>
+							</div>
+							<div class="activity-log__item-content">
+								<div class="activity-log__item-submitter" ng-bind-html="comment.Submitter"></div>
+								<div class="activity-log__item-submitter" ng-bind-html="comment.CreatedDate"></div>
+								<div class="activity-log__item-text">
+									<activity-log-text data="reduceTheString(comment.Notes)" ng-if="comment.Notes"></activity-log-text>
+									<activity-log-text data="reduceTheString(comment.Summary)" ng-if="!comment.Notes"></activity-log-text>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>	
+	</div>
+	<div class="modal-footer">
+		<div class="modal-footer__btn-container">
+		</div>
+	</div>
+

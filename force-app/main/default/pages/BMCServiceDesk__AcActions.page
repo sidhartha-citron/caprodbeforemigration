@@ -1,0 +1,126 @@
+<apex:page controller="BMCServiceDesk.AcRestActionsController" extensions="BMCServiceDesk.CMDBRemoteActions" showHeader="false" standardStylesheets="false" title="{!JSENCODE($Label.bmcservicedesk__acactions)}">
+<head><title>{!JSENCODE($Label.CIAction)}</title></head>
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AcRestActions.js" />
+<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+
+<style>
+.x-panel-body-default,#tabId{ 
+    border-top: none !important;
+}
+.x-border-layout-ct {
+    background-color: #FFFFFF !important;
+}
+.rf-tab-div {
+    padding: 5px 0px 0px !important;
+}
+    .x-tab button {
+    	font-family: salesforce sans !important;
+    }
+    .x-tip {
+        box-shadow: 0 9px 12px 0 rgba(0, 0, 0, 0.2), 0 27px 30px 0 rgba(0, 0, 0, 0.12) !important;
+        border: solid 1px #d9d9d9 !important;
+        background-color: #ffffff !important;
+    }
+    .x-tip-body {
+    	font-size: 12px !important;
+        font-family: Salesforce sans !important;
+    }
+</style>
+<script>
+var wikiUrl = '{!wikiUrl}';
+var toolbarItem,tabTitle='',mapDeviceIdVsInstanceName = JSON.parse('{!JSENCODE(mapDeviceIdVsInstanceName)}'),tabToolTip='',
+    actionContext = '{!JSENCODE(actionContext)}',
+    link = '', 
+    assemblyIdParam='{!JSENCODE(assemblyId)}',
+    CIPagelink,
+    PageBEId = '{!JSENCODE($CurrentPage.parameters.selectedBEId)}',
+    incidentOrBEId = '{!JSENCODE($CurrentPage.parameters.incidentId)}',
+    incidentId = '{!JSENCODE($CurrentPage.parameters.incidentId)}',
+    proxyData = JSON.parse('{!JSENCODE(CIGridData)}'),
+    strFields = {!strFields},
+    strColumns = {!strColumns};
+	
+	var warningtitle = '{!JSENCODE($Label.Warning)}';
+	
+	if(!incidentOrBEId){
+        incidentOrBEId = '{!JSENCODE($CurrentPage.parameters.selectedBEId)}';
+	}
+	
+if(incidentOrBEId != '' && incidentOrBEId != null && incidentOrBEId != 'undefined') 
+    CIPagelink = 'AcDevices?incidentId='+incidentOrBEId+'&IsMenurequired=false&isPaginationRequired=false&assemblyId='+assemblyIdParam+'&isActionMenuMapAlreadyFilled=true';
+else
+    CIPagelink = 'AcDevices?selectedBEId='+PageBEId+'&IsMenurequired=false&isPaginationRequired=false&assemblyId='+assemblyIdParam+'&isActionMenuMapAlreadyFilled=true';
+	
+	
+var maxTabLimit = '{!maxTabLimit}',
+    ConfigurationItems="{!JSENCODE($Label.CIsAndAssets)}",
+    pleasewait = "{!JSENCODE($Label.pleasewait)}...",
+    Event="{!JSENCODE($Label.ACEvents)}", 
+    Services="{!JSENCODE($Label.ACService)}", 
+    TabLimitCrossed="{!JSENCODE($Label.ACTabLimitCrossed)}",
+    registry="{!JSENCODE($Label.ACRegistry)}",
+    processes="{!JSENCODE($Label.ACProcesses)}",
+    assetSummary="{!JSENCODE($Label.DeviceSummary)}",
+    noLinkedCiLbl="{!JSENCODE($Label.ACNoLinkedCI)}",
+    showJapaneseHelp='{!JSENCODE($CurrentPage.parameters.showJapaneseHelp)}',
+    stdHelpResource = '{!$Resource.StdFormHelp}',
+    stdHelpJapResource = '{!$Resource.StdFormHelp_JA}',
+	useStdHelp='{!useStdHelp}',
+    LabelYes = "{!JSENCODE($Label.ExtjsMessageYes)}",
+    LabelNo = "{!JSENCODE($Label.ExtjsMessageNo)}",
+    ACConfimMessageForWakeupDevice = "{!JSENCODE($Label.ACConfimMessageForWakeupDevice)}",
+    ACConfimMessageForRebootDevice = "{!JSENCODE($Label.ACConfimMessageForRebootDevice)}",
+    ACConfimMessageForShutdownDevice = "{!JSENCODE($Label.ACConfimMessageForShutdownDevice)}";
+    Message = "{!JSENCODE($Label.SSContactUsMessageText)}";
+</script>
+    <body>
+        <apex:form id="TabPanelForm">
+        
+    <apex:outputPanel > 
+    <apex:actionRegion >
+     <apex:actionFunction Name="directConnectDevice" action="{!callXMLRPC}" rerender="acErrorPanel" onComplete="stopWaitMsgBar();showACError();">
+        <apex:param name="actionContext" value="" assignTo="{!actionContext}"/>
+        <apex:param name="deviceId" value="" assignTo="{!deviceId}"/>
+        <apex:param name="contextId" value="" assignTo="{!reqContexId}"/>
+    </apex:actionFunction>
+    </apex:actionRegion>
+    <apex:actionRegion >
+    <apex:actionFunction Name="launchConsole" action="{!launchConsole}" />
+    </apex:actionRegion>
+    </apex:outputPanel>
+    </apex:form>
+    <apex:outputPanel id="acErrorPanel"> 
+            <script>
+              errorStr= '{!errorString}';
+            </script>
+    </apex:outputPanel> 
+    </body>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js" />
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/CMDBUtils.js"/>
+	
+	<apex:includeScript value="{!URLFOR($Resource.BMCServiceDesk__SelfServiceMyITUI, 'SelfService/scripts/vendor/jquery/jquery.min.js')}"/>
+	<script>
+		var isDiscoveryEnabled = {!isDiscoveryEnabled};
+		var isACEnabled = {!isACEnabled};
+		var isACCertified = {!isACCertified};
+        var baseURL = '{!JSENCODE(BCMbaseURL)}';
+		var isManualOSSelectionEnabled = {!manualOSSelectionEnabled};
+        var osCookieVal = '';
+        if(isManualOSSelectionEnabled && Ext.util.Cookies.get('apex__OSForBCMBinary')){
+            osCookieVal = Ext.util.Cookies.get('apex__OSForBCMBinary');
+        }
+        var makeAPICallsFromServer = {!makeAPICallsFromServer};
+		if(!makeAPICallsFromServer && (!!navigator.userAgent.match(/Trident.*rv\:11\./))){
+            makeAPICallsFromServer = true;
+        }
+		
+		_RemotingActions={};
+		_RemotingActions.getBinaryFileFromBCM = "{!$RemoteAction.AcRestActionsController.getBinaryFileFromBCM}";
+        _RemotingActions.getWebConsoleUrl = "{!$RemoteAction.CMDBRemoteActions.getWebConsoleUrl}";
+	</script>
+	
+</apex:page>

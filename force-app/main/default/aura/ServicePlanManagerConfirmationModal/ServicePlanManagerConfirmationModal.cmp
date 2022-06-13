@@ -1,0 +1,50 @@
+<!--
+- @FileName: ServicePlanManagerConfirmationModal
+- @Description: Confirmation modal to confirm key field changes
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       11/21/2019         Created
+*************************************************************  
+-->
+
+<aura:component description="ServicePlanManagerConfirmationModal">
+    <aura:attribute name="confirmationType" type="String" default="duplicateServicePlans" />
+    <aura:attribute name="servicePlans" type="List" required="true" />
+
+    <aura:registerEvent name="ServicePlanManagerConfirmation" type="c:ServicePlanManagerConfirmationEvt" />
+
+    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading" aria-modal="true" aria-describedby="modal-content" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+            <header class="slds-modal__header">
+                <div>
+                    <h1 id="modal-heading" class="slds-modal__title slds-text-align_center">{!$Label.c.SPM_Potential_Duplicates}</h1>
+                </div>
+            </header>
+            <div class="slds-modal__content slds-p-around_medium" id="modal-content">
+                <p>{!$Label.c.SPM_Potential_Duplicates_Message}</p>
+
+                <br/>
+                <aura:iteration items="{!v.servicePlans}" var="plan">
+                    <p>{!plan.Name}</p>
+                </aura:iteration>
+                <br/>
+
+                <p>{!$Label.c.SPM_Potential_Duplicates_Continue}</p>
+            </div>
+            <footer class="slds-modal__footer">
+                <lightning:button variant="neutral"
+                                  label="{!$Label.c.Cancel_Label}"
+                                  value="{!$Label.c.Cancelled}"
+                                  onclick="{!c.confirmation}" />
+
+                <lightning:button variant="brand"
+                                  label="{!$Label.c.Continue}"
+                                  value="{!$Label.c.Confirmed}"
+                                  onclick="{!c.confirmation}" />
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</aura:component>

@@ -1,0 +1,406 @@
+<apex:page standardController="BMCServiceDesk__Broadcasts__c" extensions="BMCServiceDesk.StdBroadcastExtensionController" id="thePage" action="{!doAction}" standardStylesheets="false" sidebar="false" showHeader="false">
+<head>
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BroadcastPage.css" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/> 
+</head>
+
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ext-all.js" id="ext-all-js"/>
+
+
+
+
+
+
+
+<style>
+    body, tbody > td {
+        color: #4A4A56;
+        font-family: Arial,Helvetica,sans-serif;
+        font-size: 71%;
+        font-weight: bold;  
+  }
+.clsPanelCheckBoxLabel {
+   
+    padding-left: 5px;
+    padding-right: 5px;
+    vertical-align: top;
+}
+input{
+    color: #4A4A56;
+    height: 16px;
+    padding-top: 0;
+}
+
+.tdStyleProfile{
+
+padding-left :3px;
+padding-bottom : 5px;
+}
+
+.clsPanelInputCheckboxTDS{
+padding-left :10px;
+padding-bottom : 5px;
+}
+
+
+.lookupIconPanelTD{
+padding-left :1.2px;
+padding-bottom :1.5px;
+}
+</style>
+<script src="{!$Resource.BMCRFCommonJS}/StdLayoutCommon.js"/>
+<script>
+    var stdLayoutScreenWidth = 500;
+    var stdLayoutScreenHeight = 500;
+    var chkBoxValue={!broadcast.inactive__c};
+    var toEveryone={!broadcast.BMCServiceDesk__toEveryone__c};
+    window.onload = function(){
+         var flag='{!JSENCODE(broadcast.Limit_To_Account_Users__c)}';
+                if(flag=='AllAccounts'){
+                    document.getElementById('selectRadio:0').checked= true;
+                    document.getElementById('{!$Component.thePage.resetprofile.AccountSelectBtn}').disabled=true;
+                    listData=[];
+                    csvAccountListparam='';
+                    initAccountList();
+                }   
+                else{
+                   renderAccList();
+                   document.getElementById('selectRadio:1').checked= true;
+                }
+            var dispInSS = {!broadcast.BMCServiceDesk__Display_In_SelfService__c};
+                if(!dispInSS){
+                    document.getElementById('selectRadio:0').disabled = true;
+                    document.getElementById('selectRadio:1').disabled = true;
+                    document.getElementById('selectRadio:1').checked= false;
+                    document.getElementById('selectRadio:0').checked= false;
+                    document.getElementById('{!$Component.thePage.resetprofile.AccountSelectBtn}').disabled=true;  
+                    listData=[];
+                    isGridDisabled=true;
+                     initAccountList();
+                }
+                if(toEveryone){
+                    document.getElementById('{!$Component.thePage.resetprofile.ProfileButtonId}').disabled=true;
+                }
+              
+                if(!{!broadcast.state__c}){
+                 document.getElementById('selectRadio:0').disabled = true;
+                 document.getElementById('selectRadio:1').disabled = true;
+                 document.getElementById('{!$Component.thePage.resetprofile.ProfileButtonId}').disabled=true;
+                  document.getElementById('{!$Component.thePage.resetprofile.AccountSelectBtn}').disabled=true;
+                document.getElementById('{!JSENCODE($Component.thePage.resetprofile.displayInSS)}').disabled=true;
+                 document.getElementById('{!JSENCODE($Component.thePage.resetprofile.eveyoneCheckbox)}').disabled=true;
+                
+                
+                }
+               
+                if('{!UserHasPermission}' == 'false'){                 	
+                	 document.getElementById('selectRadio:0').disabled = true;
+	                  document.getElementById('selectRadio:1').disabled = true;
+	                  document.getElementById('{!$Component.thePage.resetprofile.ProfileButtonId}').disabled=true;
+	                  document.getElementById('{!$Component.thePage.resetprofile.AccountSelectBtn}').disabled=true;
+	                  document.getElementById('{!JSENCODE($Component.thePage.resetprofile.displayInSS)}').disabled=true;
+	                  document.getElementById('{!JSENCODE($Component.thePage.resetprofile.eveyoneCheckbox)}').disabled=true;
+                }
+        
+    }
+
+    var isGridDisabled = true;  
+    var listStore, accountList, hasAccounts = false, csvAccountListparam='';
+    var listData = [];
+    var cols = new Array(2); 
+    cols[1]='elID'; 
+    cols[0]='Name';
+        
+       
+    function openAccountSelector(returnValue) {
+    document.getElementById('selectRadio:1').checked = true;
+    if (returnValue != null) {
+        var array = returnValue.data;
+        listData = [];
+        var param = '';
+        var tempArr;
+        for(i=0;i < array.length;i++){
+            tempArr = new Array(2)
+            tempArr[0] = returnValue.getAt(i).get('Name');
+            tempArr[1] = returnValue.getAt(i).get('elID');
+            param = param + returnValue.getAt(i).get('elID');
+            if(i < array.length-1){
+                param = param + ',';
+            }
+            listData.push(tempArr);
+        } 
+        csvAccountListparam = param;
+        initAccountList();
+        if(param.length > 0) {
+            hasAccounts = true;
+        } else {
+            hasAccounts = false;
+        }
+    }
+    save(chkBoxValue, csvAccountListparam);  
+    }
+    function initAccountList() {
+    if(accountList!= null && typeof(accountList) != 'undefined')
+        accountList.destroy();
+    var colWidth;
+    var reader = new Ext.data.ArrayReader({}, cols);
+    listStore = new Ext.data.Store({
+        reader: reader, data: listData,
+        sortInfo: {
+            field: 'Name',
+            direction: 'ASC' 
+        }
+    });
+    if(listData.length > 8) 
+        colWidth = Ext.isIE7?218:Ext.isIE8?218:Ext.isSafari?218:218;
+    else
+        colWidth = Ext.isIE7?224:Ext.isIE8?234:Ext.isSafari?234:234;
+    accountList = new Ext.grid.GridPanel({
+        id: 'accountListPanel',
+        disabled: isGridDisabled,
+        store: listStore,
+        renderTo: 'multiSelectBox',
+
+        viewConfig: {
+            scrollOffset: 0
+        },
+        style:'border:1px gray solid;',
+        border:false,
+        layout: 'fit',
+        height:Ext.isIE7?195:Ext.isIE8?195:Ext.isSafari?195:195,
+        sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
+        cm: new Ext.grid.ColumnModel({
+            defaults: {
+                width: colWidth
+            },
+            columns:[{
+            header: 'Account Name',
+            id: 'Name',
+            dataIndex: 'Name',
+            renderer: function(value, metaData, record, rowIndex, colIndex, store) {
+                var shortvalue = value;
+                if(shortvalue.length > 30) {
+                    shortvalue = shortvalue.substr(0, 30) + '...';
+                }
+                    return'<div title="'+value+'">' + shortvalue + '</div>';
+            }
+        }]}),
+        header:false,
+        listeners: {
+            render: function(grid) {
+                   if(!Ext.isIE7)
+                   {
+                    grid.getView().el.select('.x-grid3-header').setStyle('display', 'none');
+                   }
+            }      
+        }
+    });
+    }
+    function getToEveryoneFlag(){
+        var everyoneFlag = '{!broadcast.BMCServiceDesk__toEveryone__c}';
+        return everyoneFlag;
+    }
+    var windowFeatures = "width=" + stdLayoutScreenWidth + ",height=" + stdLayoutScreenHeight + ",status,resizable,scrollbars,left=" + stdScreenLeft + ",top=" + stdScreenTop;
+ 
+    function enableRadio(){ // called on click of checkbox 'display in selfservice'
+        if(document.getElementById('{!JSENCODE($Component.thePage.resetprofile.displayInSS)}').checked){
+            document.getElementById('selectRadio:0').disabled = false;
+            document.getElementById('selectRadio:1').disabled = false;
+            document.getElementById('selectRadio:0').checked = true;
+            document.getElementById('{!$Component.thePage.resetprofile.AccountSelectBtn}').disabled = true;
+            hasAccounts = true;
+            radioAllAccounts(); 
+        } else {
+            document.getElementById('selectRadio:0').disabled = true;
+            document.getElementById('selectRadio:1').disabled = true;
+            document.getElementById('selectRadio:0').checked = false;
+            document.getElementById('selectRadio:1').checked = false;
+            document.getElementById('{!$Component.thePage.resetprofile.AccountSelectBtn}').disabled = true;
+            isGridDisabled = true;
+            listData = [];
+            initAccountList();
+            hasAccounts=true;
+            Submit();
+        }
+
+    }
+    function radioAllAccounts() {
+        save(chkBoxValue);
+        hasAccounts = true;
+        isGridDisabled = true;
+        listData = [];
+        initAccountList();
+        csvAccountListparam = 'AllAccounts';
+        document.getElementById('{!$Component.thePage.resetprofile.AccountSelectBtn}').disabled = true;
+    }
+     function radioSelectedAccounts() {
+        hasAccounts = false;
+        isGridDisabled = false;
+        document.getElementById('{!$Component.thePage.resetprofile.AccountSelectBtn}').disabled = false;
+        listData = [];
+        csvAccountListparam = '';
+        initAccountList();
+        
+    }
+  
+</script>
+
+<apex:outputPanel id="varPanel">
+    <script>
+      function checkEnableToProfiles(obj){   
+               document.getElementById('{!$Component.thePage.resetprofile.ProfileButtonId}').disabled=obj.checked;                 
+               if(obj.checked){
+                   pName = document.getElementById('{!$Component.thePage.resetprofile.Proflie__c_id_name}').value; 
+                   document.getElementById('{!$Component.thePage.resetprofile.Proflie__c_id_name}').value = "";
+                
+                   if(pName!=""){
+                       resetProfileName();  
+                   }
+                   else
+                   Submit();
+               }
+               else
+               Submit();
+            
+           }  
+    </script>
+</apex:outputPanel>
+<apex:form id="resetprofile" target="_parent">
+	<apex:outputText value="CRUDFLSCheck# False Positive: Since this is part of Remedyforce functional process which is expected to work outside of FLS and CRUD permission. Also this page can be accessible from salesforce standard page only." rendered="false" />
+    <apex:actionFunction name="resetProfileName" action="{!ClearProfileName}" rerender="varPanel" onComplete=""> 
+    </apex:actionFunction>
+
+    <apex:actionFunction name="refreshBroadcast" action="{!refreshBroadcast}"/> 
+    <apex:actionFunction name="save" action="{!saveAccount}" rerender="broadcastPanel" >
+        <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/>
+        <apex:param assignTo="{!csvAccountID}" name="csvAccount" value="AllAccounts"/>    
+    </apex:actionFunction> 
+    <apex:actionFunction name="populateProfileNames" rerender="Proflie__c_id_name" action="{!populateProfileNames}"> 
+        <apex:param assignTo="{!profileName}" name="profileName" value=""/>
+    </apex:actionFunction>
+
+    <table width="100%" cellpadding="0" cellspacing="0" class="clsTable" >
+    <tr>                                                                
+    <td colspan="3"> <div class="div15pxVspacing"></div></td>
+    </tr>
+    <tr>
+
+    <td class="clsPanelInputCheckboxTDS" colspan ="3">
+    <apex:inputCheckbox id="eveyoneCheckbox" title="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__toEveryone__c.InlineHelpText}" value="{!broadcast.BMCServiceDesk__toEveryone__c}" onclick="checkEnableToProfiles(this);" tabindex="515"/>
+    <apex:outputLabel styleClass="clsPanelCheckBoxLabel"  value="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__toEveryone__c.label}" rendered="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__toEveryone__c.Accessible}"/>
+    </td>
+    </tr>
+
+    <tr>
+    <td colspan="3"  class='tdstyleProfile'>
+    <table cellpadding="0" cellspacing="0" class="clsTable">
+    <tr>
+    <td>&nbsp; &nbsp;</td>
+    <td   style="padding-bottom : 5px;" class="clsPanelInputLabelTD" > <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.label}" rendered="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Accessible}"/></td><td>&nbsp;&nbsp;</td>
+    <td class="clsPanelInputTextboxTD1">
+       <apex:inputText style="width:165px;" onfocus="this.blur()" title="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.InlineHelpText}" id="Proflie__c_id_name"  disabled="true"  value="{!profileName}" styleClass="clsPanelInputTextboxReadOnly" rendered="{!AND($ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Accessible,$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Updateable)}"/>
+	   <apex:outputText style="width:165px;" title="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.InlineHelpText}" id="Profliee__c_id_name"  value="{!profileName}" styleClass="clsPanelInputTextboxReadOnly" rendered="{!AND($ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Accessible,NOT($ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Profiles__c.Updateable))}"/>
+      
+    </td>
+    <td >&nbsp;&nbsp;</td>
+     <td class="lookupIconPanelTD" >
+        <div class="lookUpIconDiv">  
+	<apex:outputText value="CRUDFLSCheck# False Positive: Since this is part of Remedyforce functional process which is expected to work outside of FLS and CRUD permission. Also this page can be accessible from salesforce standard page only." rendered="false" />
+    <apex:commandbutton value="Select Profile" id="ProfileButtonId"  rerender="Proflie__c_id_name" title="Select Profile" image="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_pick.gif"  onClick="{window.open('/apex/SearchPage?standardLayout=true&popupId=Profile&isLookup=true&useSOQLForSearch=true','_blank',windowFeatures);}" oncomplete="null" />
+
+        
+
+        </div>
+    </td>
+      
+    </tr>
+    </table>
+    </td>
+    </tr>
+    <tr colspan="3" class="clsPanelInputCheckboxTDS"  ></tr>
+    <tr>
+
+    <td class="clsPanelInputCheckboxTDS" colspan="3" >
+    <apex:inputCheckbox id="displayInSS" title="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Display_In_SelfService__c.InlineHelpText}" value="{!broadcast.BMCServiceDesk__Display_In_SelfService__c}"  tabindex="514" onClick="enableRadio();" />
+    <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Display_In_SelfService__c.label}" rendered="{!$ObjectType.BMCServiceDesk__Broadcasts__c.fields.BMCServiceDesk__Display_In_SelfService__c.Accessible}"/>
+    </td>
+
+    </tr>
+    <tr>
+    <td  colspan="3"   class="clsPanelInputCheckboxTDS">
+    <input type="radio" name="selectRadio" value="AllAccounts" id="selectRadio:0" onClick="radioAllAccounts();"/>
+    <label for="selectRadio:0" class="clsPanelCheckBoxLabel">{!$Label.BroadCastsToAllUsers}</label>
+    </td>
+    </tr>
+    <tr>
+    <td  colspan="3"  class="clsPanelInputCheckboxTDS">
+    <input type="radio" name="selectRadio" value="SelectedAccounts" id="selectRadio:1" onClick="radioSelectedAccounts();"/>
+    <label for="selectRadio:1" class="clsPanelCheckBoxLabel">{!$Label.BroadCastsToUsersofSelectedAccountsOnly}</label>
+    </td>
+    </tr>
+    <tr>
+    <td colspan="3" class="clsPanelInputLabelTD" > 
+    <table cellpadding="0" cellspacing="0" class="clsTable"> 
+    <tr>
+    <td id="multiSelectBox"></td>
+    <td id="multiSelectBoxBtn"  dir="ltr" valign="top" class="lookupIconPanelTD">
+
+        <div class="lookUpIconDiv">
+    <apex:outputText value="CRUDFLSCheck# False Positive: Since this is part of Remedyforce functional process which is expected to work outside of FLS and CRUD permission. Also this page can be accessible from salesforce standard page only." rendered="false" />
+    &nbsp;&nbsp; <apex:commandbutton styleclass="lookupIconPanelTD" value="Select Accounts"  id="AccountSelectBtn" title="Select Accounts For Self Service Broadcast Display" image="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_pick.gif"  onClick="{window.open('/apex/AccountSelector?stdForm=true','_blank',windowFeatures)}" oncomplete="null"  />
+
+            </div>
+        </td>
+    </tr>
+    </table>
+    </td> 
+    </tr>
+
+    </table>
+    <apex:actionFunction name="Submit" action="{!Submit}" oncomplete="null"/>
+    <br/>
+    <!--<apex:commandButton id="SaveChanges" value="Apply Changes To Broadcast" oncomplete="null"  style="float:left;"/>-->
+
+
+
+    <apex:outputPanel id="broadcastPanel">
+    <script>
+    function renderAccList() {
+
+    listData = {!brcController.accountJSON};
+
+    enableDisableAccountRadio();
+    initAccountList();
+    }
+
+    function enableDisableAccountRadio() {
+    var dispInSS = {!broadcast.BMCServiceDesk__Display_In_SelfService__c};
+    var isAllAccounts = {!brcController.isAllAccounts}; 
+    hasAccounts = true;
+    if(dispInSS){
+    if(isAllAccounts) {
+    document.getElementById('selectRadio:0').checked = true;
+    isGridDisabled = true;
+    } else {
+    document.getElementById('selectRadio:1').checked = true;
+    isGridDisabled = false;
+    }
+    } else {
+    document.getElementById('selectRadio:0').disabled = true;
+    document.getElementById('selectRadio:1').disabled = true;
+    }
+    }
+
+    csvAccountListparam = '{!JSENCODE(brcController.csvAccountID)}';
+
+
+
+    </script>
+    </apex:outputPanel>
+         
+</apex:form>
+	<script src="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSCommon.js"/>
+	
+	      
+</apex:page>

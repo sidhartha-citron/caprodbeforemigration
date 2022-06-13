@@ -1,0 +1,355 @@
+
+<div style="height: 100%;"
+	ng-click="isFilterClicked = false;">
+	<loading-spinner centered="true" if="isShowLoader"></loading-spinner>
+
+
+
+
+	<div>
+
+
+		<!-- Toolbar -->
+		<div id="toolbarDiv" class="toolbarCls" ng-if="!isTileClicked">
+
+
+			<div class="filterMenuCls">
+
+				<div id="navBarDiv">
+
+
+					<div class="support-search-input-container d-textfield d-textfield_label_hidden">
+						<label class="d-textfield__label d-icon-left-search"> <input
+							style="{{selectedTab != 'future' ? 'width:730px;' : 'width:919px;'}}"
+							type="search"
+							class="d-textfield__input ng-valid ng-not-empty ng-dirty ng-valid-parse ng-touched txtBoxClsSearch"
+							ng-change="searchService()" ng-model="searchStr" id="searchTxt"
+							focus-elm="!supportCtrlState.searchText"
+							placeholder="{{ selfServiceLabels.search}}" />
+							<div class="ServiceHealthSearchRemoveBtnCls"
+								 ng-show="searchStr.length"
+								 ng-click="clearSearch()">
+								 <span class="d-icon-cross"/>
+							</div>
+						</label>
+					</div>
+
+
+
+				</div>
+
+				<div id="filterDiv" ng-if="selectedTab != 'future'"
+					class="statusFilterDivClass" ng-click="showStatusFilter($event);">
+					<div class="statusFilterLabelDiv">
+						<label class="statusFilterLabel ">{{
+							selfServiceLabels.FilterByStatus}} </label>
+					</div>
+					<div class="d-icon-right-angle_down statusFilterDownArrow"></div>
+					<div class="clearFloatDiv"></div>
+
+					<div class="statusFilterDiv" ng-show="isFilterClicked">
+						<table>
+							<tr ng-repeat="status in outageStatuses">
+								<td>
+									<div ng-if="status.value != 'All'"
+										class="serviceTileIconFilter {{getIconClass(status.value)}}" aria-hidden="true" />
+
+
+								</td>
+								<td><input ng-if="status.value == 'All'" type="checkbox"
+									class="statusFilterCheckbox" ng-value="status.value"
+									ng-checked="selectedStatusArr.indexOf(status.value) > -1"
+									ng-click="setSelectedStatus(status.value, $event)" /> <input
+									ng-if="status.value != 'All'" type="checkbox"
+									class="statusFilterCheckbox" ng-value="status.value"
+									ng-checked="selectedStatusArr.indexOf(status.value) > -1"
+									ng-click="setSelectedStatus(status.value, $event)" /></td>
+								<td>{{status.label}}</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+				<!-- Navigation Bar -->
+
+
+			</div>
+		</div>
+
+
+
+	</div>
+
+
+	<div class="clearFloatDiv"></div>
+	<div class="divPaddingLeftRight" ng-click="isFilterClicked = false;">
+		<div class="navigationToolbarDiv">
+			<div class="backButtonDiv">
+				<a class="Branding-Right_Panel-hyperlink" ng-click="goHome()" ng-if="!isTileClicked">&#10094; {{
+					selfServiceLabels.back }}</a>
+
+
+
+				<a class="Branding-Right_Panel-hyperlink" ng-click="goBackToServices()" ng-if="isTileClicked">
+					&#10094; {{ selfServiceLabels.back }}</a>
+			</div>
+
+			<div class="futureCurrent-navigation-container"
+				ng-if="!isTileClicked">
+
+
+				<div class="futureCurrent-timeline-toolbar__actions">
+					<button id="currentTab"
+						ng-click="getServiceOutagesPerTab('current');"
+						ng-disabled="isFutureClicked">
+						{{selfServiceLabels.current}}</button>
+					<button id="futureTab"
+						ng-click="getServiceOutagesPerTab('future');"
+						ng-disabled="!isFutureClicked">
+						{{selfServiceLabels.future}}</button>
+				</div>
+
+			</div>
+			<div class="clearFloatDiv"></div>
+		</div>
+	</div>
+
+	<div style="margin-bottom: 10px;" class="divPaddingLeftRight"
+		ng-click="isFilterClicked = false;" ng-if="!isTileClicked">
+		<div style="margin-bottom: 5px;" class="divBorderTop">
+			<label>{{selfServiceLabels.serviceLbl}}</label>
+		</div>
+	</div>
+
+
+	<div class="divPaddingLeft" ng-click="isFilterClicked = false;">
+
+
+		<div id="serviceTilesDiv" ng-if="!isTileClicked">
+			<div tabindex="0" ng-repeat="tile in tiles |  filter: {title: searchStr} | filterServicesByStatus: selectedStatusArr : this"
+				class="service-tile-widget" ng-style="{ 'width' : tileWidth}"
+				ng-click="showServiceTileDetails(tile)">
+
+				<div class="TileImageSection">
+
+                    <div class="serviceIconCls d-icon-atom" aria-hidden="true" />
+					<div class="serviceTileIcon serviceTileIconbackground" aria-label="{{tile.status}}">
+                        <div class="{{getIconClass(tile.status)}}" aria-hidden="true" />
+					</div>
+				</div>
+				<div class="TileDetailsSection" ng-class="{'TileDetailsSection-MarginTop': (tile.serviceDescription)}">
+					<div class="service-tile-title statusTitleCls"
+						title="{{tile.title}}">{{tile.title | truncateString: 33 }}</div>
+					<div class="service-tile-descr ellipsisText" title="{{tile.serviceDescription}}">{{tile.serviceDescription
+						}}</div>
+				</div>
+				<div class="clearFloatDiv"></div>
+			</div>
+		</div>
+
+	</div>
+	<div id="serviceTilesDiv"
+		ng-if="!isTileClicked && isNoServicesFound && !isShowLoader"
+		class="commonFontStyleCls noServicesDiv"
+		ng-click="isFilterClicked = false;">
+		<label>{{selfServiceLabels.noServiceFoundLbl}}</label>
+	</div>
+
+	<div class="divPaddingLeftRight">
+		<div id="serviceDetailsDiv" ng-if="isTileClicked"
+			class="serviceDetailDiv">
+			<!-- 			style="border: 1px solid #d9d9d9; padding: 10px; background-color: #f2f2f2;"> -->
+
+			<table style="width: 100%;"">
+				<tr>
+					<td style="width: 5%; vertical-align: top;">
+						<table>
+							<tr>
+								<td colspan="1" rowspan="2" class="tileStatusIcon">
+
+
+									<div class="serviceIconCls d-icon-atom " aria-hidden="true "/>
+
+									<div class="serviceTileIcon serviceTileIconbackground " aria-label="{{selectedServiceTile.status}}" tabindex="0">
+										<div class="{{getIconClass(selectedServiceTile.status)}} " aria-hidden="true " />
+									</div>
+								</td>
+
+
+							</tr>
+
+						</table>
+
+					</td>
+					<td style="width: 90%; padding-top: 10px">
+						<table id="outageTable" style="width: 100%">
+							<col style="width: 10%" />
+							<col style="width: 2%" />
+							<col style="width: 88%" />
+							<tr>
+
+								<td colspan="3" rowspan="1" class="fontWithBoldTd">{{selectedServiceTile.title}}</td>
+							</tr>
+							<tr>
+								<td colspan="3" rowspan="1">{{selectedServiceTile.serviceDescription}}</td>
+							</tr>
+
+							<tr>
+
+								<td colspan="3" rowspan="1"
+									class="status{{selectedServiceTile.status}}Cls statusTdPadding">
+									{{selectedServiceTile.statusLabel}}</td>
+							</tr>
+
+							<tr ng-if="outages.startDate != null">
+								<td class="tdStyleCls fontWithBold">
+									{{selfServiceLabels.outageStartDate}}</td>
+								<td class="tdVerticalAlignTop">:</td>
+								<td class="tdStyleCls">{{outages.startDate}}</td>
+							</tr>
+
+							<tr ng-if="outages.endDate != null">
+								<td class="tdStyleCls fontWithBold">
+									{{selfServiceLabels.outageEndDate}}</td>
+								<td class="tdVerticalAlignTop">:</td>
+								<td class="tdStyleCls">{{outages.endDate}}</td>
+							</tr>
+
+							<tr ng-if="outages.outageDescription != null">
+								<td class="tdStyleCls fontWithBold tdVerticalAlignTop">
+									{{selfServiceLabels.outageDescription}}</td>
+								<td class="tdVerticalAlignTop">:</td>
+								<td class="tdStyleCls" colspan="1"><div
+										class="descriptionContainer">
+
+										<div class="descriptionCls">
+											{{outages.outageDescription}}</div>
+									</div></td>
+							</tr>
+							<tr ng-if="outages.rootCause != null">
+								<td class="tdStyleCls fontWithBold tdVerticalAlignTop">
+									{{selfServiceLabels.outageRootCause}}</td>
+								<td class="tdVerticalAlignTop">:</td>
+								<td class="tdStyleCls"><div class="descriptionContainer">
+										<div class="descriptionCls">{{outages.rootCause}}</div>
+									</div></td>
+							</tr>
+							<tr
+								ng-if="outages.outageActionList != null &&  outages.outageActionList.length > 0">
+								<td class="tdStyleCls fontWithBold"
+									style="padding-top: 8px; padding-bottom: 5px;">
+									{{selfServiceLabels.updatesLbl}}</td>
+								<td class="tdStyleCls" colspan="1">:</td>
+
+							</tr>
+						</table>
+
+
+						<div ui-grid="gridOptions" ui-grid-auto-resize
+							ng-style="getTableHeight()" class="grid"
+							style="width: 100%; border: 1px solid #d9d9d9;"
+							ng-if="outages.outageActionList != null &&  outages.outageActionList.length > 0"></div>
+						<!-- Show subscription setting -->
+						<div ng-if="outages.isNotificationChecked == true"
+							class="commonFontStyleCls divBorderBottom"
+							style="margin-bottom: 5px; padding-bottom: 5px;">
+							<input type="checkbox" name="subscribeforupdateschkbox"
+								ng-value="outages.isSubscriptionChecked"
+								id="subscriptionSchkBox" style="margin-bottom: 10px;"
+								ng-checked="outages.isSubscriptionChecked"
+								ng-click="outages.isSubscriptionChecked = !outages.isSubscriptionChecked; checkChangeDetails(outages.outageId);" />
+							&nbsp;{{selfServiceLabels.subscribeforupdateLbl}}
+						</div> <!-- Show history button -->
+						<div ng-if="outages.outageHistoryCount > 0"
+							class="divBorderBottom"
+							style="margin-bottom: 5px; padding-bottom: 5px;">
+
+							<input type="button" class="btn Branding-Right_Panel-default_button Branding-Right_Panel-button_outline btn-primary"
+								style="min-height: 32px !important;" id="historyBtn"
+								ng-click="showOutageHistory()"
+								value="{{selfServiceLabels.showHistoryLbl}}" />
+
+						</div> <!-- Show outage history details -->
+						<div id="historyDiv" ng-if="!isShowHistory">
+							<div ng-repeat="history in outageHistory" class="divBorderBottom"
+								style="margin-bottom: 5px; padding-bottom: 5px;">
+								<table ng-model="collapsed" ng-click="collapsed=!collapsed"
+									class="commonFontStyleCls" ng-show="!collapsed">
+									<tr>
+										<td><span class="d-icon-angle_right rightDownArrow"
+											ng-if="!collapsed" />&nbsp;</td>
+										<td><label ng-show="!collapsed"
+											style="cursor: pointer">{{history.startDate}}</label></td>
+									</tr>
+								</table>
+								<table ng-show="collapsed" ng-click="collapsed=!collapsed"
+									class="historyDetail">
+									<tr class="commonFontStyleCls"
+										ng-if="history.startDate != null">
+										<td style="width: 1%"><span
+											class="d-icon-angle_down rightDownArrow" ng-if="collapsed" />&nbsp;</td>
+										<td class="fontWithBoldTd" style="width: 6%">
+											{{selfServiceLabels.outageStartDate}}</td>
+										<td style="width: 2%" class="tdVerticalAlignTop">:</td>
+
+										<td>{{history.startDate}}</td>
+									</tr>
+									<tr class="commonFontStyleCls" ng-if="history.endDate != null">
+										<td></td>
+										<td class="fontWithBoldTd">{{selfServiceLabels.outageEndDate}}
+										</td>
+										<td class="tdVerticalAlignTop">:</td>
+
+										<td>{{history.endDate}}</td>
+									</tr>
+
+									<!-- 									<tr class="commonFontStyleCls" -->
+									<!-- 										ng-if="history.outageDescription != null"> -->
+									<!-- 										<td></td> -->
+									<!-- 										<td></td> -->
+									<!-- 										<td></td> -->
+									<!-- 									</tr> -->
+
+									<tr class="commonFontStyleCls"
+										ng-if="history.outageDescription != null">
+										<td></td>
+										<td class="fontWithBoldTd tdVerticalAlignTop">{{selfServiceLabels.outageDescription}}
+										</td>
+										<td class="tdVerticalAlignTop">:</td>
+										<td>{{history.outageDescription}}</td>
+									</tr>
+
+									<!-- 									<tr class="commonFontStyleCls" -->
+									<!-- 										ng-if="history.outageDescription != null"> -->
+									<!-- 										<td></td> -->
+
+									<!-- 										<td colspan="2">{{history.outageDescription}}</td> -->
+									<!-- 									</tr> -->
+
+									<!-- 									<tr class="commonFontStyleCls" -->
+									<!-- 										ng-if="history.rootCause != null"> -->
+									<!-- 										<td></td> -->
+									<!-- 										<td></td> -->
+									<!-- 										<td></td> -->
+									<!-- 									</tr> -->
+									<tr class="commonFontStyleCls"
+										ng-if="history.rootCause != null">
+										<td></td>
+										<td class="fontWithBoldTd tdVerticalAlignTop">
+											{{selfServiceLabels.outageRootCause}}</td>
+										<td class="tdVerticalAlignTop">:</td>
+
+										<td>{{history.rootCause}}</td>
+									</tr>
+								</table>
+
+							</div>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+
+
+	</div>
+</div>

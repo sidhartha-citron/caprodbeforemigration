@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Contact_Required</fullName>
+    <active>true</active>
+    <description>This validation rule ensures that a contact is required when the No Further Action Required checkbox is not checked.</description>
+    <errorConditionFormula>AND( 
+
+NOT(ISNEW()), 
+
+RecordType.DeveloperName &lt;&gt; &quot;Request_Invoice_Information&quot;, 
+
+RecordType.DeveloperName &lt;&gt; &quot;Internal_Application_Support&quot;, 
+
+No_Further_Action_Required__c = FALSE, 
+
+ISBLANK(ContactId), 
+
+ISPICKVAL(Status , &quot;Closed&quot;) 
+
+)</errorConditionFormula>
+    <errorDisplayField>ContactId</errorDisplayField>
+    <errorMessage>A Contact is required.</errorMessage>
+</ValidationRule>

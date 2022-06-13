@@ -1,0 +1,441 @@
+<apex:page controller="BMCServiceDesk.CMDBGenericController" extensions="BMCServiceDesk.ConsoleRemoteActions" showHeader="false" standardStylesheets="false" cache="true">
+ <apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js" />
+ <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomViews.css" />
+ <link rel="stylesheet" href="{!$Resource.SDEFStyles}/TypeAhead.css" type="text/css" />
+    
+<html >
+    <head>
+        <script type="text/javascript">           
+		   var userId="{!JSENCODE(userId)}";
+		   var userName="{!JSENCODE(userName)}";
+		   var wikiHelp='{!wikiUrl}';
+           var isReconEnable = JSON.parse("{!isReconEnable}");
+		   var instanceNameTxtBoxID;
+		   var subserviceNameId;
+           var subserviceValId;
+          /*Performance Metrics*/
+            var CMDBGenPageServerTime = 0;
+            var GenPageStartTime = '{!starttime}';
+            var filterClause ='';
+            var currentLookupId = '';
+            var userInfoTooltip;
+            var userInfoTooltipData;
+            var generalInfoTooltip;
+            var generalInfoTooltipData;            
+            var currentTooltipId = '';
+            var tooltipHtmlResult = '';
+        	var warningMessage = '{!JSENCODE($Label.Warning)}';
+            var imagePath = '{!$Resource.SDEFStyles}/SDEFimages/loading.gif';
+            var loadingImageText = '{!JSENCODE($Label.SSLoading)}...';
+			var orgNamespace = 'BMCServiceDesk__';
+            var userlocale = '{!JSENCODE(userlocale)}';
+            var isFromSRD='{!JSENCODE($CurrentPage.parameters.isFromSRD)}';
+            var ciType='{!JSENCODE($CurrentPage.parameters.CIType)}';
+          /* Start of server rendered javascript */
+          {!ServerVariablesString};
+          /* End of server rendered javascript */
+          var CIFORCE_RES_PATH = '{!$Resource.CIForce}';
+           
+          var currentClassName = "{!JSENCODE(ClassName)}",
+          instName = "{!JSENCODE(instName)}",
+          isChatterFeed = {!ciFeed},BE_RECORD_ID = '{!BE_RECORD_ID}';
+            var labelTooltipClose = '{!JSENCODE($Label.Close)}';     
+            var labelTooltipHelp = '{!JSENCODE($Label.TooltipHelp)}';   
+          var helpResource='';
+            userLanguage = '{!userLanguage}';
+            var showJapaneseHelp = '{!showJapaneseHelp}';            
+          Ext.ns("CMDBGenericPageComp");
+          CMDBGenericPageComp.ComponentVars = {
+            
+            CMDBGenericForm: '{!$Component.CMDBGenericForm}' }
+
+            /*Waitbox*/
+            var tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+            
+            var subserviceoflabel;
+            var renderstar = false;
+			//nakul-----------
+        	var showCI = {!CIShow};
+        	var showAsset = {!AssetShow};
+        	var updateCI = {!CIUpdate};
+        	var updateAsset = {!AssetUpdate};
+        	var CMDBClassType = '{!CMDBClassType}';
+        	var instanceType = '{!instanceType}';
+        	var tabName = '{!JSENCODE(tabName)}';
+			var flattenedCMDB  = {!isFlattenedCmdb};
+			var isAssetManagementEnabled = {!isAssetManagementEnabled};
+        	var isCIManagementEnabled = {!isCIManagementEnabled};
+            var CMDBBackLabel = "{!JSENCODE($Label.CMDBBack)}";
+       	 	var strWarningMessageforFieldsNotUpdated;
+        	var strFieldsNotUpdatedDueToPriorityRules = '{!JSENCODE($Label.FieldsNotUpdatedDueToPriorityRules)}';
+			var recordNotAccessible = '{!JSENCODE($Label.MsgNoAccessPerm)}';
+        	//nakul-----------
+			document.title= instName;
+			if(_ServerValues)
+            document.title= _ServerValues.InstanceEditorTitle + ': ' +instName;
+			var RequiredLabel = "{!JSENCODE($Label.required)}";
+		</script>
+    </head>
+    
+   
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" /> 
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CommonHelp.js" id="CommonHelp-js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSCommon.js" id="JSCommon-js"/>
+    <head>
+                
+        <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+        <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+        <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+         <link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" />
+        <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBGenericStyles.css" /> 
+        <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+        <apex:outputPanel rendered="{!IF( userlocale=='iw', true, false )}">
+            <link rel="stylesheet" href="{!$Resource.SDEFStyles}/CMDBGenericStylesRTL.css" />
+        </apex:outputPanel>
+        <script src="{!$Resource.SDEFCommonJS}/CMDBControls.js" type="text/javascript"></script>
+        
+        
+        <script>
+            var helpIcon = '{!$Resource.SDEFStyles}/SDEFicons/help_icon.png';
+            var helpLabel = '{!JSENCODE($Label.TooltipHelp)}';
+            var savedSuccessful = '{!JSENCODE($Label.SavedSuccessfully)}';
+            var continueLabel = '{!JSENCODE($Label.SF1Continue)}';
+            var cancelLabel = '{!JSENCODE($Label.Close)}';
+
+            /*Performance Metrics*/
+            var windowloaddate = '';
+            var networklatencystart = '';
+            var serverstarttime = '{!serverstarttime}';
+            var etime = '{!serverendtime}';
+            var data = '';
+            data += '{!JSENCODE($Label.PM_servertime)} ';
+            Ext.onReady(function(){
+                        Ext.MessageBox.buttonText.ok = '{!JSENCODE($Label.Ok)}';  
+                        Ext.MessageBox.buttonText.yes = '{!JSENCODE($Label.ExtjsMessageYes)}';
+                        Ext.MessageBox.buttonText.no = '{!JSENCODE($Label.ExtjsMessageNo)}';  
+                        Ext.MessageBox.buttonText.cancel = '{!JSENCODE($Label.Cancel)}';
+            });
+            function senddata(){return data;}   
+            function getWID(){
+                    return '{!JSENCODE($CurrentPage.parameters.wid)}';
+             }
+             Ext.Container.prototype.bufferResize = true;
+            var isCalledFromReport = false; 
+			if(window.parent.calledFromReport != null && window.parent.calledFromReport  != 'undefined' && window.parent.calledFromReport != '' && window.parent.calledFromReport == 'true'){
+                 isCalledFromReport = true;
+            }
+			var modelAttrMap = new Array();
+            var dynamicPicklistMap = new Map();
+            var dynamicPicklistMapMultiSelect = new Map();
+            _RemotingActions={}
+        	_RemotingActions.getLookupFieldData = '{!$RemoteAction.ConsoleRemoteActions.getLookupFieldData}';
+            _RemotingActions.getModelAttributeMap = '{!$RemoteAction.ConsoleRemoteActions.getModelAttributeMap}';
+            _RemotingActions.getWebConsoleUrl = "{!$RemoteAction.ConsoleRemoteActions.getWebConsoleUrl}";
+        
+        </script>
+		<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+        <script src="{!$Resource.SDEFCommonJS}/CMDBInput.js"/>
+        <script src="{!$Resource.SDEFCommonJS}/TypeAhead.js"/>
+    </head>
+    <body>
+    
+    <div id="rfDPLReferenceDiv"> 
+	<c:ACCommon isExtJS4Enabled="true" hideViewSummary="false" renderedIn="{!JSENCODE($Label.bmcservicedesk__cmdbinstanceeditor)}" isFromCmdbGenericPage="true"/>
+
+    <apex:form id="CMDBGenericForm">
+	<div id="SaveMessageDiv" class="d-notification d-notification_success d-notification_content rfDPL-show" style="display: none;">
+       <div class="d-notification__icon d-icon-left-check" style="padding-top: 12px;"></div>
+       <div class="d-notification__supporting-text">
+           <h3 id="SaveMessage" class="d-notification__item"><apex:outputText value="{!$Label.bmcservicedesk__savedsuccessfully}" /></h3>
+       </div>
+    </div>
+    <div id="WarningMessageDiv" style="display:none">
+        <div class="d-notification d-notification_warning d-notification_content">
+            <div class="d-notification__icon d-icon-left-exclamation_triangle"></div>
+            <div class="d-notification__supporting-text">
+               <h3 class="d-notification__item" id="warningMessageId"></h3>
+              
+            </div>
+       </div>
+    </div>    
+                       
+    <div id="capsule" class="CapsuleDiv1">
+	<div id="ToolBarTD" />
+    <apex:outputPanel id="mainpanel">
+         <script> 
+         var currentTime = "{!JSENCODE(currentTimeString)}";       
+        _ServerValues.InstanceID = '{!JSENCODE(InstanceID)}';
+        _ServerValues.savestatus = '{!savestatus}';
+        _ServerValues.savestatusMessage = '{!JSENCODE(savestatusMessage)}';
+        _ServerValues.isCustomAvailable = "{!JSENCODE(isCustomAvailable)}";
+        _ServerValues.isSaveEnabled = {!IsEditable};
+        _ServerValues.isCreateEnabled = {!IsCreatable};
+        _ServerValues.DiscoveryLaunchConsole = '{!JSENCODE($Label.DiscoveryLaunchConsole)}';
+        _ServerValues.Actions = '{!JSENCODE($Label.Actions)}';
+        var isACEnabled = {!isACEnabled};
+        var isDiscoveryEnabled = {!isDiscoveryEnabled};
+        var pleaseWaitMsg = '{!JSENCODE($Label.PleaseWait)}';
+        if(isACEnabled || isDiscoveryEnabled){
+            assemblyId = '{!JSENCODE(AssemblyId)}';
+            reqContextId = BE_RECORD_ID; 
+        }
+        var classNameLabel = '{!JSENCODE(classNameLabel)}';        
+        var classNameTitle = '{!JSENCODE($CurrentPage.parameters.classNameTitle)}';
+        strWarningMessageforFieldsNotUpdated = '{!JSENCODE(strWarningMessageforFieldsNotUpdated)}';
+        
+        classNameTitle = classNameTitle ? classNameTitle : classNameLabel;
+        instName = "{!JSENCODE(instName)}";
+        function setInstanceFramePanelTitle(instName){
+            if(window.parent.instanceFramePanel != null && typeof(window.parent.instanceFramePanel) != 'undefined'){        
+                var BackIcon = '<button id="back_button" type="button" role="button" title="'+CMDBBackLabel+'" onclick="CMDBManagerNamespace.instance.CloseFormPanel()"><span>&lt; '+CMDBBackLabel+' </span></button>';       
+                if(instName){           
+                    window.parent.instanceFramePanel.setTitle(BackIcon +'&nbsp;<span class="instance_editor_title">'+Ext.util.Format.htmlEncode(classNameTitle)+' / '+window.parent._ServerValues.InstanceEditorTitle +' : '+instName+' </span>');
+                }
+            }
+        }
+        if(instName){
+            setInstanceFramePanelTitle(instName);
+        }else{
+            setInstanceFramePanelTitle(_ServerValues.New)
+        }
+        var typeAheadDivId = 'autocompleteDiv';
+        initiateTypeAhead(typeAheadDivId, '{!$Component.CMDBGenericForm}', {});           
+        function enableButton(){ 
+			handleCMDBClassPermissions();
+            if(BE_RECORD_ID != '' && !(_ServerValues.isSaveEnabled)){
+                Ext.getCmp('saveId').setDisabled(true);
+            }else if(_ServerValues.isSaveEnabled){
+                Ext.getCmp('saveId').setDisabled(false);
+            }
+        }
+        taboutPageType = 'custom';
+        BE_InstanceID = '{!JSENCODE(InstanceID)}';
+        BE_RECORD_ID = '{!BE_RECORD_ID}';
+		var Classname = '{!JSENCODE(Classname)}';
+        if(Classname != 'BMC_BusinessService')
+            filterClause = escape('Fkey__c != \'FKBusinessService__c\'');
+		else
+        	filterClause = '';
+        var siHeight = screen.availHeight ? screen.availHeight - 300 : 525;
+        var iFrameSrc='/apex/SIContainerPage?oid='+BE_RECORD_ID+'&otype=BMC_BaseElement__c&wid='+getWID()+'&isInactive=false&filterClause='+filterClause + '&siheight=' + siHeight + '&isModernUI=true',
+        chtrSrc='/apex/CiChatterFeedPage?InstanceID='+BE_RECORD_ID,
+        ciRelSrc='/apex/CIRelationshipsPage?InstanceID='+BE_InstanceID+'&tabName='+tabName+'&instanceType='+instanceType+'&classNameTitle='+classNameTitle; 
+       </script>
+        <script src="{!$Resource.SDEFCommonJS}/CMDBGeneric.js"/>
+        <script src="{!$Resource.SDEFCommonJS}/CMDBFormGeneral.js"/>
+        
+        <div id="mainDivId">  
+                    <div id="AttributesDiv" class="x-hide-display" title="{!JSENCODE($Label.CMDBAttributeTitle)}">
+                         <div id="tabBaseInfo" class="" style="width:100%;padding-bottom:5px; margin-top: 19.5px !important;">
+                            <c:ColumnLayout FieldNames="{!genericAttrToDisplay}" ColumnSize="2" AttributeInfo="{!DispAttrs}" CMDB2="{!isFlattenedCmdb}" BERef="{!BEForDirectBinding}" Classname="{!Classname}"/>                          
+                    </div>
+                    <div id="tabDerivedInfo" class="x-hide-display" style="width:100%;padding-bottom:5px;margin-top: 19.5px !important;">
+                            <c:ColumnLayout FieldNames="{!IntermediateAttributeNames}" ColumnSize="2" AttributeInfo="{!DispAttrs}" CMDB2="{!isFlattenedCmdb}" BERef="{!BEForDirectBinding}" Classname="{!Classname}"/>
+                     <apex:outputpanel rendered="{!AND(isBusinessServiceClass,NOT(isFlattenedCmdb))}" layout="none">
+                           <c:ColumnLayout FieldNames="SERVICETYPE__C,VENDOR__C,FKBUSINESSSERVICE__C,START_DATE__C,SERVICE_OWNER__C,END_DATE__C,SERVICE_HOURS__C,SERVICE_REVIEW_DATE__C,SERVICE_PROVIDER__C,COSTDESCRIPTION__C" 
+                                ColumnSize="2" AttributeInfo="{!DispAttrs}" CMDB2="{!isFlattenedCmdb}" BERef="{!BEForDirectBinding}" Classname="{!Classname}"/>      
+                         <table border="0" cellspacing="0" cellpadding="0" style="width:495px;padding-top:15px;">
+                             <tr>
+                                <td class="clsInputLabelTD1" >
+                                    <apex:outputLabel StyleClass="x-form-item-label CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BusinessService__c.fields.BMCServiceDesk__Base_Customer_Price__c.label}"/>
+                                </td>
+                                <td class="clsInputTextBoxTD1" title="{!$ObjectType.BMC_BusinessService__c.fields.Base_Customer_Price__c.inlineHelpText}"> 
+                                    <apex:inputField id="Base_Delivery_Cost__c" value="{!serviceOfferingDetails.BMCServiceDesk__Base_Customer_Price__c}" styleClass="clsInputTextBox1" />
+                                </td>
+                                <td class="clsInputLabelTD2" >&nbsp; {!userCurrency} /</td>
+                                <td class="clsInputTextBoxTD1" title="{!$ObjectType.BMC_BusinessService__c.fields.PriceOption1__c.inlineHelpText}"> 
+                                    <apex:inputField id="CostOption1__c" value="{!serviceOfferingDetails.BMCServiceDesk__PriceOption1__c}" styleClass="clsComboStyle1"/>
+                                </td>
+                                <td class="clsInputLabelTD2" >&nbsp; /</td>
+                                <td class="clsInputTextBoxTD1" title="{!$ObjectType.BMC_BusinessService__c.fields.PriceOption2__c.inlineHelpText}"> 
+                                    <apex:inputField id="CostOption2__c" value="{!serviceOfferingDetails.BMCServiceDesk__PriceOption2__c}" styleClass="clsComboStyle2"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="clsInputLabelTD1" >
+                                    <apex:outputLabel StyleClass="x-form-item-label CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BusinessService__c.fields.BMCServiceDesk__Base_Delivery_Cost__c.label}"/>
+                                </td>
+                                <td class="clsInputTextBoxTD1" title="{!$ObjectType.BMC_BusinessService__c.fields.Base_Delivery_Cost__c.inlineHelpText}"> 
+                                    <apex:inputField id="Base_Customer_Price__c" value="{!serviceOfferingDetails.BMCServiceDesk__Base_Delivery_Cost__c}" styleClass="clsInputTextBox1"/>
+                                </td>
+                                <td class="clsInputLabelTD2" >&nbsp; {!userCurrency} /</td>
+                                <td class="clsInputTextBoxTD1" title="{!$ObjectType.BMC_BusinessService__c.fields.CostOption1__c.inlineHelpText}"> 
+                                    <apex:inputField id="PriceOption1__c" value="{!serviceOfferingDetails.BMCServiceDesk__CostOption1__c}" styleClass="clsComboStyle1"/>
+                                </td>
+                                <td class="clsInputLabelTD2" >&nbsp; /</td>
+                                <td class="clsInputTextBoxTD1" title="{!$ObjectType.BMC_BusinessService__c.fields.CostOption2__c.inlineHelpText}"> 
+                                    <apex:inputField id="PriceOption2__c" value="{!serviceOfferingDetails.BMCServiceDesk__CostOption2__c}" styleClass="clsComboStyle2"/>
+                                </td>
+                            </tr>
+                             <tr>
+                                <td class="clsInputLabelTD1" >
+                                    <apex:outputLabel StyleClass="x-form-item-label CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BusinessService__c.fields.BMCServiceDesk__Inactive__c.label}" rendered="{!$ObjectType.BMCServiceDesk__BMC_BusinessService__c.fields.BMCServiceDesk__Inactive__c.Accessible}"/>
+                                </td>
+                                <td > 
+                                    <apex:inputCheckbox id="Inactive__c" value="{!serviceOfferingDetails.BMCServiceDesk__Inactive__c}" style="clsInputCheckBox" title="{!$ObjectType.BMCServiceDesk__BMC_BusinessService__c.fields.BMCServiceDesk__Inactive__c.inlineHelpText}"  />
+                                </td>
+                               
+                            </tr>
+                         </table> 
+                    </apex:outputpanel>
+                    <apex:outputpanel rendered="{!AND(isBusinessServiceClass,isFlattenedCmdb)}" layout="none">
+                    <table border="0" cellspacing="0" cellpadding="0" style="width:100%;padding-top:15px;">
+                        <tr>
+                        <td style="width:50%;" class="td_price_and_cost"> 
+                            <table border="0" cellspacing="0" cellpadding="0" style="width:{!IF($CurrentPage.parameters.isFromSRD=='true','98%','75%')}" >
+                             <tr>
+                                    <td>
+                                    <apex:outputLabel StyleClass="x-form-item-label CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__Base_Customer_Price__c.label}"/>
+                                </td>
+                                </tr>
+                                <tr>
+                                    <td style="width:100%;">
+                                        <table border="0" cellspacing="0" cellpadding="0" style="width:{!IF($CurrentPage.parameters.isFromSRD=='true','100%','90%')}" >
+                             <tr>
+                                                <td class="{!IF($CurrentPage.parameters.isFromSRD=='true','rf-RD-price-td','rf-price-td')}" title="{!$ObjectType.BMC_BaseElement__c.fields.Base_Customer_Price__c.inlineHelpText}">  
+                                                    <apex:inputField id="BMC_BaseElement__c_id_Base_Delivery_Cost__c" value="{!BEForDirectBinding.BMCServiceDesk__Base_Customer_Price__c}" styleClass="{!IF($CurrentPage.parameters.isFromSRD=='true','rf-RD-price-input','rf-price-input')}" /> 
+                                </td>
+                                                <td  style="width:60px;text-align:right;">
+                                                    <apex:outputLabel StyleClass="x-form-item-label CMDB_FieldLabel" value="{!userCurrency} / "/>
+                                </td>
+                                                <td  title="{!$ObjectType.BMC_BaseElement__c.fields.PriceOption1__c.inlineHelpText}"> 
+                                                    <apex:inputField id="BMC_BaseElement__c_id_CostOption1__c" value="{!BEForDirectBinding.BMCServiceDesk__PriceOption1__c}" styleClass="rf-price-select1 {!IF($CurrentPage.parameters.isFromSRD=='true','rf-RD-price-calculated-select1','rf-price-calculated-select1')}"/>
+                                </td>
+                                                <td style="width:10px;">
+                                                    <apex:outputLabel StyleClass="x-form-item-label CMDB_FieldLabel" value=" / " styleClass="rf-price-separator" />
+                                </td>    
+                                                <td  title="{!$ObjectType.BMC_BaseElement__c.fields.PriceOption2__c.inlineHelpText}"> 
+                                                    <apex:inputField id="BMC_BaseElement__c_id_CostOption2__c" value="{!BEForDirectBinding.BMCServiceDesk__PriceOption2__c}" styleClass="rf-price-select2  {!IF($CurrentPage.parameters.isFromSRD=='true','rf-RD-price-calculated-select2','rf-price-calculated-select2')}"/>
+                                                </td>
+                                                <td class="{!IF($CurrentPage.parameters.isFromSRD=='true','rf-RD-price-spacer-td','rf-price-spacer-td')}">
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>   
+                                </tr>
+                                
+                            <tr>
+                                    <td>
+                                    <apex:outputLabel StyleClass="x-form-item-label CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__Base_Delivery_Cost__c.label}"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                    <td style="width:100%;">
+                                        <table border="0" cellspacing="0" cellpadding="0" style="width:{!IF($CurrentPage.parameters.isFromSRD=='true','100%','90%')}" >
+                                            <tr>
+                                                <td class="{!IF($CurrentPage.parameters.isFromSRD=='true','rf-RD-price-td','rf-price-td')}" title="{!$ObjectType.BMC_BaseElement__c.fields.Base_Delivery_Cost__c.inlineHelpText}"> 
+                                                    <apex:inputField id="BMC_BaseElement__c_id_Base_Customer_Price__c" value="{!BEForDirectBinding.BMCServiceDesk__Base_Delivery_Cost__c}" styleClass="{!IF($CurrentPage.parameters.isFromSRD=='true','rf-RD-price-input','rf-price-input')}" /> 
+                                </td>
+                                                <td style="width:60px; text-align:right;">
+                                                    <apex:outputLabel StyleClass="x-form-item-label CMDB_FieldLabel"  value="{!userCurrency} / "/>
+                                </td>   
+                                <td title="{!$ObjectType.BMC_BaseElement__c.fields.CostOption1__c.inlineHelpText}"> 
+                                                    <apex:inputField id="BMC_BaseElement__c_id_PriceOption1__c" value="{!BEForDirectBinding.BMCServiceDesk__CostOption1__c}" styleClass="rf-price-select1  {!IF($CurrentPage.parameters.isFromSRD=='true','rf-RD-price-calculated-select1','rf-price-calculated-select1')}"/>
+                                </td>
+                                                <td style="width:10px;">
+                                                    <apex:outputLabel StyleClass="x-form-item-label CMDB_FieldLabel"  value=" / " styleClass="rf-price-separator"/>
+                                </td>  
+                                <td  title="{!$ObjectType.BMC_BaseElement__c.fields.CostOption2__c.inlineHelpText}"> 
+                                                    <apex:inputField id="BMC_BaseElement__c_id_PriceOption2__c" value="{!BEForDirectBinding.BMCServiceDesk__CostOption2__c}" styleClass="rf-price-select2  {!IF($CurrentPage.parameters.isFromSRD=='true','rf-RD-price-calculated-select2','rf-price-calculated-select2')}"/>
+                                                </td>
+                                                <td class="{!IF($CurrentPage.parameters.isFromSRD=='true','rf-RD-price-spacer-td','rf-price-spacer-td')}">
+                                                </td>
+                                            </tr>
+                                        </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                    <td class="clsInputLabelTD" style="padding-left:0px;"   colspan="5">
+                                    <apex:inputCheckbox id="BMC_BaseElement__c_id_Inactive__c" value="{!BEForDirectBinding.BMCServiceDesk__Inactive__c}" title="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__Inactive__c.inlineHelpText}"  />
+                                
+                                    <apex:outputLabel StyleClass="x-form-item-label CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__Inactive__c.label}" rendered="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__Inactive__c.Accessible}"/>
+                                </td>
+                            </tr>
+                         </table> 
+                         </td>
+                         <td>
+                         </td>
+                         </tr>
+                    </table>
+                    </apex:outputpanel>
+                    </div>
+                    
+                    <div id="tabCustomInfo" class="x-hide-display" style="width:500px;padding-bottom:5px;">
+                        <apex:outputpanel rendered="{!NOT(isFlattenedCmdb)}">
+                            <c:ColumnLayout FieldNames="{!CustomAttributeNames}" ColumnSize="2" AttributeInfo="{!DispAttrs}" CMDB2="{!isFlattenedCmdb}" BERef="{!BEForDirectBinding}" Classname="{!Classname}"/>
+                        </apex:outputpanel>
+                        </div>
+                    </div>
+                    <div id="CMDBRelationshipsDiv" class="x-hide-display" title="{!JSENCODE($Label.CMDBRelationshipsTitle)}">
+                        <iframe name='cirel' id='ciRelListFrame'  width='100%' height='100%' frameborder='0' onload="hideWaitMsg();"/>
+                    </div>
+                    <div id="ChatterFeedDiv" class="x-hide-display">
+                        <iframe name='chf' id='chf' frameborder='0' style="visibility:hidden;padding:20px;" onload="applyChatterFeedIframeStyle();hideWaitMsg();"/>
+                    </div>
+                    <div id="configDetailsDiv" class="x-hide-display">
+                        <iframe name='SIIframeID' id='SIIframeID'  width='100%' height='100%' frameborder='0' style="visibility:hidden;" onload="hideWaitMsg();"/>
+                    </div>
+        </div>
+        <script>
+            if(subserviceoflabel != null && subserviceoflabel != 'undefined' && renderstar)
+            {
+                var labelElement = document.createElement("label");
+				var LabelClassAttribute = document.createAttribute('class'); 
+				LabelClassAttribute.value = 'requiredField'; 
+				labelElement.setAttributeNode( LabelClassAttribute );
+				labelElement.appendChild( document.createTextNode( "("+ RequiredLabel +")" ) );				
+				subserviceoflabel.appendChild(labelElement);
+            }
+        </script>
+    </apex:outputPanel>
+      </div>
+     <apex:outputPanel id="acErrorPanel" rendered="{!OR(isACEnabled,isDiscoveryEnabled)}">
+        <script>
+        var acError =  '{!JSENCODE(savestatusMessage)}';
+        </script>
+    </apex:outputPanel>
+    <apex:actionFunction name="SaveClick" reRender="mainpanel,apexMessageErrorPanel" oncomplete="hideWaitMsg();assignApexErrorMessage();onSaveComplete();enableButton();setSizeOnWindowResize();window.parent.parent.registerSave(getWID());" action="{!save}"  id="saveButton"/> 
+    <apex:actionFunction Name="deletecirelationships" action="{!deletecirelationships}" onComplete="DeleteDone()" reRender="" >
+            <apex:param name="deletecirelationshipsdata" value="" assignTo="{!deletecirelationshipsdata}" /> 
+    </apex:actionFunction>
+    <apex:actionregion >
+        <apex:actionFunction name="directConnectDevice" action="{!directConnectDevice}" rerender="acErrorPanel" onComplete="hideWaitMsg();checkACError();">
+            <apex:param name="actionContext" value=""/>
+            <apex:param name="deviceId" value=""/>
+            <apex:param name="contextId" value=""/>
+        </apex:actionFunction>
+    </apex:actionregion>
+    <apex:actionRegion >
+        <apex:actionFunction name="launchConsole" action="{!launchConsole}" />
+    </apex:actionRegion>
+   
+    <apex:outputPanel id="apexMessageErrorPanel" >
+         <div id="apexMessageErrorPanelDiv" style="display:none;">
+            <apex:messages />
+        </div>
+     </apex:outputPanel>
+     <c:TabOutComponent ></c:TabOutComponent>
+    </apex:form>
+</div>
+    </body>
+    </html>
+    <c:UserContextComponent />
+    <script>
+    if(getUrlParameter('wid')==null || getUrlParameter('wid')==''){
+        document.getElementById("configDetailsDiv").style.height=700;
+    }
+    
+    Ext.onReady(functionextonreadypagecall);
+    </script>
+    <script>
+        var GenPageEndTime = '{!endtime}';
+        CMDBGenPageServerTime = (GenPageEndTime - serverstarttime); 
+        data += CMDBGenPageServerTime;
+        data += '<br>';
+        var SearchAndLinkPage = '{!$Page.SearchAndLink}';
+		var StdWorkspacesPage = '{!$Page.StdWorkspacesPage}';
+		var inValidDateTimeMsg = '{!JSENCODE($Label.ValidDateTime)}';
+		var inValidDateMsg = '{!JSENCODE($Label.ValidDate)}';
+    </script>
+    
+</apex:page>

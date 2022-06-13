@@ -1,0 +1,78 @@
+<apex:page showHeader="false"  controller="BMCServiceDesk.DellKaceConfigurationController" standardStylesheets="false">
+	<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminDellKaceConfiguration.css" />
+	<script>
+		var errMsg='';
+		var dkEnabled = {!EnableDK};
+		var serName = "{!JSENCODE(DKServerURL)}";
+		var saveMsg = "{!JSENCODE($Label.SavedSuccessfully)}";
+		var saveLbl = '{!JSENCODE($Label.Save)}';
+		var tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+		var invalidUrl = '{!JSENCODE($Label.invalidURL)}';
+		var messageHeader = '{!JSENCODE($Label.DellKace)}';
+	</script>	
+	<body marginheight="0" marginwidth="0">
+		<div id="toolbarDiv"/>
+		<apex:outputpanel id="dkErrPanel">
+			<script>
+				dkEnabled = {!EnableDK};
+				serName = "{!JSENCODE(DKServerURL)}";
+				errMsg='{!JSENCODE(MsgString)}';
+			</script>
+		</apex:outputpanel>
+        <div id="helpDiv" class="clshelpDiv"></div>
+		<apex:form id="DKconfigForm" styleClass="form_cls">
+			<apex:actionFunction action="{!saveDKConfig}" name="saveDKConfig" rerender="dkErrPanel" oncomplete="waitMsg.hide();onSaveComplete();"/>
+			<table height="100%" width="auto" cellspacing="0" cellpadding="0" border="0" >
+		    	<tr>
+			      	<td class="clsInputLabelTD" colspan="2">
+			      		<apex:inputCheckBox value="{!enableDK}" id="enableDK" styleClass="fontCls" style="margin:0px;" onclick="toggleDK(this.checked)"  />
+			      		<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__enabledk)}" styleClass="fontCls clsPanelCheckBoxLabel"/> 
+				  	</td>
+		    	</tr>
+		    	<tr height="10"><td> </td></tr>
+		        <tr>
+		            <td class="clsInputLabelTD paddingRight15Cls">
+		            	<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__serverurl)}*" />
+					</td>
+					<td class="clsInputTextBoxTD">
+						<apex:inputText id="dkServerURL" value="{!DKServerURL}" styleClass="fontCls clsInputTextBox" style="width:300px;" maxlength="255" />
+						<br />
+						<div class="clsInputLabelTD">({!JSENCODE($Label.Example)}: http://Dell-KACE-Server-Name)</div>
+					</td>
+		        </tr>
+		    </table>
+		</apex:form>
+		<script>
+			function getdkServerURL(){
+				return document.getElementById('{!$Component.DKconfigForm.dkServerURL}');
+			}
+			
+			function getenableDK(){
+				return document.getElementById('{!$Component.DKconfigForm.enableDK}');
+			}
+			function checkIfChanged(){
+				var dkServerURL = getdkServerURL().value;
+				var dkEnableVal = getenableDK().checked; 
+				if((dkEnabled != dkEnableVal) ||(serName != dkServerURL)){
+					return true;
+				}else{
+					return false;
+				}
+			} 
+			function toggleDK(isEnabled){
+				var dkServerURL = getdkServerURL();
+				if(dkServerURL != null)
+					dkServerURL.disabled = !isEnabled;
+			}
+			
+			toggleDK(dkEnabled);
+           var wikiUrl='{!wikiUrl}';
+            parent.addHelpOnPage(document.getElementById('helpDiv'),'dell_kace_settings.htm',wikiUrl);
+		</script>
+	</body>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminDellKaceConfiguration.js"/>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/WikiHelp.js"/>
+</apex:page>

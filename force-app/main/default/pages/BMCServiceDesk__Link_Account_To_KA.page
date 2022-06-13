@@ -1,0 +1,67 @@
+<apex:page standardController="BMCServiceDesk__KM_KnowledgeArticle__c" extensions="BMCServiceDesk.StdKnowledgeManagementController" showHeader="false" sidebar="false">
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+    <apex:slds rendered="{!isLightningExperience}"/>
+    <style>
+        .lightningForm .x-panel{
+        border:1px solid #dddbda !important;
+        }    
+        .lightningForm .x-panel .x-grid-body{
+        border:none;
+        }
+        .lightningForm .x-grid-cell-inner{
+        font-family: "Salesforce Sans",Arial,sans-serif;
+        padding-top:4px;
+        padding-bottom:4px;
+        }
+        .classicForm .linkHeader{
+        vertical-align:top;
+        font-weight:bold;
+        color:rgb(74, 74, 86);
+        font-size:91%
+        }
+    </style>
+    <div class="slds-scope {!IF(isLightningExperience,'lightningForm','classicForm')}"> 
+        <apex:form id="KAform"> 
+            <apex:outputPanel >
+                <apex:actionFunction name="save" action="{!saveAccount}" rerender="KAIdPanel" oncomplete="reloadData();postMessageToLightningComponent();">
+                    <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/>
+                    <apex:param assignTo="{!csvAccountID}" name="csvAccount" value="AllAccounts"/>    
+                </apex:actionFunction>
+                <div class="slds-section slds-is-open">
+                    <h3 class="slds-section__title slds-theme_shade">
+                        <span class="slds-truncate slds-p-horizontal_small linkHeader">{!$Label.DisplayKA}</span>
+                    </h3>
+                    <br></br>  
+                    <br></br>  
+                    <table>
+                        <tr>
+                            <td id="multiSelectBox" style="width:235px"></td>
+                            <td style="vertical-align:top">
+                                <input type="button" id="AccountSelectBtn" class="btn slds-button slds-button_neutral" value="{!$Label.CMDBEdit}" onClick="window.open('/apex/AccountSelector?stdForm=true&KAId={!KAId}&isForKA=true','window','resizable=1,scrollbars=1,width=500,height=550,left=200px,top=150px');" style="vertical-align:top;margin-left:10px;cursor:pointer;cursor:hand;" title="{!$Label.SelectAccounts}"/>
+                            </td>
+                        </tr>
+                    </table>  
+                </div>  
+            </apex:outputPanel>
+    
+            <apex:outputPanel id="KAIdPanel">
+                <script>
+                if({!NOT($ObjectType.KM_KnowledgeArticle__c.updateable)}){
+                    var accountSelectBtn = document.getElementById("AccountSelectBtn");
+                    accountSelectBtn.disabled = true;
+                    accountSelectBtn.setAttribute("class","btnDisabled");
+                }     
+                var csvAccountListparam = '{!JSENCODE(accountStr)}';
+                </script> 
+            </apex:outputPanel>
+    
+            <script>
+            var allAccounts = '{!JSENCODE($Label.AllAccountsEntitlement)}'; 
+            var listData = {!accountJSON};
+            var isLightningMode = {!IF(isLightningExperience,true,false)};
+            </script>  
+        </apex:form>
+        <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+        <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/LinkAccountToKA.js"/>
+    </div>
+</apex:page>

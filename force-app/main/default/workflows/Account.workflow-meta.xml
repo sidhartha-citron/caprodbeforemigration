@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>Send_Price_Hold_Approval</fullName>
+        <description>Send Price Hold Approval</description>
+        <protected>false</protected>
+        <recipients>
+            <type>accountOwner</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>Price_Hold_Approval/Price_Hold_Approved</template>
+    </alerts>
+    <alerts>
+        <fullName>Send_Price_Hold_Reject</fullName>
+        <description>Send Price Hold Reject</description>
+        <protected>false</protected>
+        <recipients>
+            <type>accountOwner</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>Price_Hold_Approval/Price_Hold_Rejected</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>Set_Converted_Date</fullName>
+        <field>Converted_to_Customer_Date__c</field>
+        <formula>Today()</formula>
+        <name>Set Converted Date</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Contract_Price_Hold</fullName>
+        <field>Contract_Price_Hold__c</field>
+        <literalValue>No Price Hold</literalValue>
+        <name>Update Contract Price Hold</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Price_Hold_Checkbox</fullName>
+        <field>Contract_Price_Hold_Approved__c</field>
+        <literalValue>1</literalValue>
+        <name>Update Price Hold Checkbox</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_to_Customer</fullName>
+        <field>Type</field>
+        <literalValue>Customer</literalValue>
+        <name>Update to Customer</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Updated_Contract_Price_Hold_Approval</fullName>
+        <field>Contract_Price_Hold__c</field>
+        <literalValue>Approved</literalValue>
+        <name>Updated Contract Price Hold Approval</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>ringdna100__Unset_Account_RingDNA_Context</fullName>
+        <field>ringdna100__RingDNA_Context__c</field>
+        <literalValue>0</literalValue>
+        <name>Unset Account RingDNA Context</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <rules>
+        <fullName>Set to Customer</fullName>
+        <actions>
+            <name>Set_Converted_Date</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <actions>
+            <name>Update_to_Customer</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Account.AccPac_Account__c</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <description>Set to customer when AccPac number is added.</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>ringdna100__Unset Account RingDNA Context</fullName>
+        <actions>
+            <name>ringdna100__Unset_Account_RingDNA_Context</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Account.ringdna100__RingDNA_Context__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+</Workflow>

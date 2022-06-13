@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>Notify_the_Lead_Owner_of_new_lead_assignment_or_changed_ownership</fullName>
+        <description>Notify the Lead Owner of new lead assignment or changed ownership</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>unfiled$public/LeadsNewassignmentnotification</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>ringdna100__Unset_Lead_RingDNA_Context</fullName>
+        <field>ringdna100__RingDNA_Context__c</field>
+        <literalValue>0</literalValue>
+        <name>Unset Lead RingDNA Context</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <rules>
+        <fullName>Create Follow Up Task</fullName>
+        <actions>
+            <name>Imported_Lead_Follow_Up_2getherwecare</name>
+            <type>Task</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Lead.Lead_Source_Additional_Info__c</field>
+            <operation>equals</operation>
+            <value>Restaurant Canada Show 2020</value>
+        </criteriaItems>
+        <description>To be activated before importing Leads that require a task to be assigned when imported.
+(Update criteria)</description>
+        <triggerType>onCreateOnly</triggerType>
+    </rules>
+    <rules>
+        <fullName>Create Follow up task for Citron Lead Site</fullName>
+        <actions>
+            <name>Citron_Leads_Site_Task</name>
+            <type>Task</type>
+        </actions>
+        <active>true</active>
+        <description>This WF will create a new task when a lead is created and the lead source is &quot;Citron Lead Site&quot;</description>
+        <formula>ISPICKVAL( LeadSource , &apos;Citron Leads Site&apos;)</formula>
+        <triggerType>onCreateOnly</triggerType>
+    </rules>
+    <rules>
+        <fullName>Notify Lead Owner</fullName>
+        <actions>
+            <name>Notify_the_Lead_Owner_of_new_lead_assignment_or_changed_ownership</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <description>Notify the lead owner for new leads assigned to them or if leads have changed ownership</description>
+        <formula>AND($Profile.Name &lt;&gt; &apos;Sales Operations&apos;,  IF( OwnerId = LastModifiedById, FALSE, IF(ISNEW(),TRUE, ISCHANGED( OwnerId ))))</formula>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <rules>
+        <fullName>ringdna100__Unset Lead RingDNA Context</fullName>
+        <actions>
+            <name>ringdna100__Unset_Lead_RingDNA_Context</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Lead.ringdna100__RingDNA_Context__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <tasks>
+        <fullName>Citron_Leads_Site_Task</fullName>
+        <assignedToType>owner</assignedToType>
+        <description>Leads that originated from citron’s lead site.  Follow-up due in one day.
+
+Happy Selling!</description>
+        <dueDateOffset>1</dueDateOffset>
+        <notifyAssignee>false</notifyAssignee>
+        <offsetFromField>Lead.CreatedDate</offsetFromField>
+        <priority>High</priority>
+        <protected>false</protected>
+        <status>Not Started</status>
+        <subject>Citron Leads Site Task</subject>
+    </tasks>
+    <tasks>
+        <fullName>Imported_Lead_Follow_Up</fullName>
+        <assignedToType>owner</assignedToType>
+        <description>This lead came from the Spring Fest 2019 Tradeshow that took place on Mar 27th. 
+
+Please make sure each and every lead is contacted and marked so in SFDC status. Also, log all calls and events. 
+
+Happy Selling!</description>
+        <dueDateOffset>2</dueDateOffset>
+        <notifyAssignee>false</notifyAssignee>
+        <offsetFromField>Lead.CreatedDate</offsetFromField>
+        <priority>High</priority>
+        <protected>false</protected>
+        <status>Not Started</status>
+        <subject>Priority Leads - Spring Fest 2019</subject>
+    </tasks>
+    <tasks>
+        <fullName>Imported_Lead_Follow_Up_2getherwecare</fullName>
+        <assignedToType>owner</assignedToType>
+        <description>This lead came from The Restaurants Canada Show 2020, a Tradeshow for the hospitality industry that happened March 1-3 2020.
+
+Please contact every lead and mark the SFDC status accordingly. Also, log all calls and events. 
+
+Happy Selling!</description>
+        <dueDateOffset>1</dueDateOffset>
+        <notifyAssignee>false</notifyAssignee>
+        <offsetFromField>Lead.CreatedDate</offsetFromField>
+        <priority>High</priority>
+        <protected>false</protected>
+        <status>Not Started</status>
+        <subject>Priority Leads - Restaurant Canada Show 2020</subject>
+    </tasks>
+</Workflow>

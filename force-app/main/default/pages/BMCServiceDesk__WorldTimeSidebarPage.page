@@ -1,0 +1,130 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.WorldTimeSidebarController" standardStylesheets="false">
+	 <head>
+       
+      <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>  
+       
+     <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Portal.css" />
+     <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/stdcalalog.css" />
+     <style>
+    .clsComboStyle{width: 372px !important;}
+    html*.xsbc{width:0px !important;height: 0px !important; }
+    </style>
+    </head>
+    <c:CommonIncludes2 />
+    
+    
+    <script>
+    function callRefresh(caller){
+        if(caller == 'save'){
+            parent.window.hidePopupWindow();
+            window.parent.parent.refreshPortletByTitle('WorldTime');
+        }
+            
+    }   
+    
+    function saveBtnHandler(){
+        saveSettings();
+    }
+    
+    function cancelPage(){
+        
+        parent.window.closePopup();
+    }
+  
+    function saveOnEnter(e){
+		var key;
+		if(window.event)
+			key = window.event.keyCode;     //IE
+		else
+			key = e.which;     //firefox
+		if(key == 13){
+    		//saveBtnHandler();
+    		
+    		document.getElementById('{!$Component.formId.okbtn}').focus();
+    		document.getElementById('{!$Component.formId.okbtn}').click();
+    	//	saveBtnHandler();
+    		
+    		
+    		window.parent.refreshPortletByTitle('WorldTime');
+        return true;
+
+        }
+       	else
+           return false;
+               
+    }
+  
+   function okfocus(e){ 
+      var unicode=e.keyCode? e.keyCode : e.charCode;
+      
+      if(unicode == 39){
+      document.getElementById('{!$Component.formId.cancelbtn}').focus();
+      }
+   }   
+   function cancelfocus(e){
+  
+       var cunicode=e.keyCode? e.keyCode : e.charCode;
+      if(cunicode == 9){
+  		document.getElementById('testtext').focus();
+      	
+      }
+      if(cunicode == 37){
+      document.getElementById('{!$Component.formId.okbtn}').focus();
+      }
+   }   
+
+   
+    </script>
+    <apex:form id="formId" onkeypress="saveOnEnter(event);">
+    <apex:actionFunction name="saveSettings" action="{!save}" onComplete="callRefresh('save');" reRender="clockid"/>
+    <table  class="worldTimeSidebarPageTable" cellspacing="0" cellpadding="0" >
+        <input id="testtext" type="text" width="0" height="0" style="height:0px;width:0px;border:0px;" />
+        <apex:repeat var="clock" value="{!lstClock}">
+        <tr>
+            <td class="clsInputBoldLabelTDWT"><!--{!$Label.clockOne}-->{!clock.clocklabel}</td>
+			<INPUT type = "hidden" id="labelid"  name = "Page"      value = "specialty pies" />
+        </tr>
+        <tr>
+            <td class="clsPadding10Pixel" ><div id="actionContents" /> 
+                <apex:selectList value="{!clock.timezone}" SIZE="1" styleClass="clsComboStyle">
+                    <apex:selectOptions value="{!timezones}" />
+                </apex:selectList>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td class="clsInputLabelTD">
+                            {!$Label.cityName}
+                        </td>       
+                        <td >
+                            <apex:inputtext id="cityName1" value="{!clock.city}" styleClass="clsInputTextBox" maxlength="50" title="{!$Label.bmcservicedesk__portletcityname}" onkeypress="saveOnEnter(event);" />
+                        </td>                 
+                        <td class="clsInputLabelTD">{!$Label.optional}</td>
+                    </tr>
+                </table>
+            </td>               
+        </tr>
+        </apex:repeat>            
+    </table>
+    <table cellspacing="0" cellpadding="0" width="100%" class="worldTimeSidebarPageFooterTable">
+        <tr>
+            <td >&nbsp;</td>  
+        </tr>
+        <tr><td>
+            <div class="div15pxVspacing"/>
+        </td></tr>
+        <tr class="worldTimeSidebarPageFooter">
+            <td class="worldTimeSidebarPageTDRightAlign">
+                <table cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td class="worldTimeSidebarPageTDRightAlign"> <apex:commandButton value="{!$Label.bmcservicedesk__ok}"  id="okbtn"  onClick="saveBtnHandler();"  styleClass="bgBtnGrey" onComplete="callRefresh('cmd');"  onKeydown="okfocus(event); "/>  </td>
+                        <td class="worldTimeSidebarPageTDLeftAlign"><apex:commandButton styleClass="bgBtnGrey"  id="cancelbtn" value="{!$Label.bmcservicedesk__cancel}" onClick="cancelPage();"  onKeydown="cancelfocus(event);" /> </td>
+                    </tr>
+                </table>
+           </td>
+        </tr>
+    </table>
+    </apex:form>
+</apex:page>

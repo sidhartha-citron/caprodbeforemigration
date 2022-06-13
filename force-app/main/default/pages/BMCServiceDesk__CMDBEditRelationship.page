@@ -1,0 +1,533 @@
+<apex:page controller="BMCServiceDesk.CMDBEditRelationship" showHeader="false" standardStylesheets="false" cache="true">
+    <head>
+        <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+        <link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" />
+        <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBGenericStyles.css" />
+		<link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    	<link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    	<link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+		<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBEditRelationship.css" />
+        <link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" />
+        <apex:outputPanel rendered="{!IF( userlocale=='iw', true, false )}">
+            <link rel="stylesheet" href="{!$Resource.SDEFStyles}/CMDBGenericStylesRTL.css" />
+            <link rel="stylesheet" href="{!$Resource.SDEFStyles}/CMDBManagerStylesRTL.css" />
+    		<link rel="stylesheet" href="{!$Resource.SDEFStyles}/CMDBEditRelationshipRTL.css" />
+	    </apex:outputPanel>
+        <style>
+        .clsInputLabelTD{
+             width: 100px;
+        }
+        .clsComboStyle{
+            width:190px;
+        }
+        .x-grid3-col-CMDBClassType{
+           padding-right : 27px !important;
+        }
+		.ext-ie .x-grid3-cell-inner{
+			width : auto;
+		}
+        .x-grid-empty {
+            color: #000000;
+            font-family: Tahoma, MS Sans Serif;
+            font-size: 11px;
+            padding: 12% 0% 0% 310px;
+        }
+    </style>
+    </head>
+    <script>
+        var EditRelationServerTime = 0;
+        var EditRelationStartTime = '{!starttime}';
+    </script>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" /> 
+    <script type="text/javascript">
+    /* Start of server rendered javascript */
+    {!ServerVariablesString};
+    /* End of server rendered javascript */ 
+
+    /*Performance Metrics*/
+    var windowloaddate = 0;
+    var networklatencystart = 0;
+    var serverstarttime = '{!serverstarttime}';
+    var etime = '{!serverendtime}';
+    var data = '';
+	var backLabel = '{!JSENCODE($Label.cmdbback)}';
+    data += '{!JSENCODE($Label.PM_servertime)}';
+    _ServerValues.CMDBRelationshipEditor = '{!JSENCODE($Label.CMDBRelationshipEditor)}';
+    _ServerValues.CMDBTextFieldLimitExceeded = '{!JSENCODE($Label.CMDBTextFieldLimitExceeded)}';
+    _ServerValues.NoRecordMsg = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+    _ServerValues.PageRefresh = '{!JSENCODE($Label.refresh)}';  
+    _ServerValues.PageNext = '{!JSENCODE($Label.next)}';
+    _ServerValues.PageFirst = '{!JSENCODE($Label.firstpage)}';      
+    _ServerValues.PageLast = '{!JSENCODE($Label.lastpage)}';
+    _ServerValues.PagePrevious = '{!JSENCODE($Label.previous)}';        
+    _ServerValues.Page = '{!JSENCODE($Label.page)}';        
+    _ServerValues.Of = '{!JSENCODE($Label.of)} {0}';
+    _ServerValues.LabelOf = "{!JSENCODE($Label.of)}"
+    _ServerValues.Records = "{!JSENCODE($Label.records)}"  
+    _ServerValues.RecordsPerPage = "{!JSENCODE($Label.records_per_page)}";
+    _ServerValues.NoRecordFoundMsg = "{!JSENCODE($Label.msgnorecordfoundsearchpage)}";
+    var instanceNameLabel = '{!JSENCODE($ObjectType.BMC_BaseElement__c.fields.Name__c.Label)}';
+    var userlocale = '{!JSENCODE(userlocale)}';
+    function senddata(){return data;}
+    </script>
+    <apex:outputPanel id="Classvalues">
+    <script>
+        var CMDBClassListJSON = '{!JSENCODE(CMDBClassListJSON)}';
+    </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="columns">
+        <script>
+            var columnsFromServer = '{!JSENCODE(columnsJSON)}';
+            if(columnsFromServer) {
+                columnsFromServer = JSON.parse(columnsFromServer);
+            }
+        </script>
+    </apex:outputPanel>
+    <div id="rfDPLReferenceDiv" >
+     
+    <apex:form id="relEditForm">
+        <table style="width:100%; ">
+            <tr>
+                <td id="ToolBarTD">
+                    
+                </td>
+            </tr>
+        </table>
+        <div id="relationship_editor">
+            
+            
+            <apex:outputPanel id="mainpanel" styleclass="background_form_color">
+                <div class="instances_relationship_table" >
+                    <apex:outputPanel rendered="{!IF(ISNULL(baseRelationObj.id),true,false)}">
+                        <table  border="0" class="parent_table_width" >
+                            <tr>
+                                <td style="width:50%; vertical-align: top;">
+                                    <div class="clsInputLabelTD" >
+                                        <apex:outputLabel styleClass="CMDB_FieldLabel"  value="{!JSENCODE($Label.bmcservicedesk__tocreaterelationship)}" />
+                                    </div>
+                                    <div class="clsInputTextBoxTD">
+                                        <input id="selectCiBtn" type="button" class="selectClassInstanceBtn" value="{!JSENCODE($Label.SelectCMDBInstances)}" onclick="selectCiToRelate();"/>   
+                                    </div>
+                                </td>
+                                <td  style="width:50%; vertical-align: top;">
+                                    <div class="clsInputLabelTD" >
+                                        <apex:outputLabel style="CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__ImpactDirection__c.label}" />
+                                    </div>
+                                    <div class="clsInputTextBoxTD" title="{!$ObjectType.BMC_BaseRelationship__c.fields.ImpactDirection__c.inlineHelpText}">
+                                        <apex:inputField id="relationshipType1" styleClass="rf-single-line-field [(CMDBControl:ApiFieldName=ImpactDirection__c:UniqueID=ImpactDirection__c:GroupName=ImpactDirection__c:DisplayType=STRING)]" required="true" value="{!baseRelationObj.BMCServiceDesk__ImpactDirection__c}" onchange="changeImageCombo(this.value);"/>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!IF(NOT(ISNULL(baseRelationObj.id)),true,false)}">
+                        <table  border="0" class="parent_table_width" >
+                            <tr>
+                                <td style="width:50%; vertical-align: top;">
+                                <div class="clsInputLabelTD" >
+                                    <apex:outputLabel style="CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__ImpactDirection__c.label}" />
+                                </div>
+                                <div class="clsInputTextBoxTD" title="{!$ObjectType.BMC_BaseRelationship__c.fields.ImpactDirection__c.inlineHelpText}">
+                                    <apex:inputField id="relationshipType2" styleClass="rf-single-line-field [(CMDBControl:ApiFieldName=ImpactDirection__c:UniqueID=ImpactDirection__c:GroupName=ImpactDirection__c:DisplayType=STRING)]" required="true" value="{!baseRelationObj.BMCServiceDesk__ImpactDirection__c}" onchange="changeImageCombo(this.value);"/>
+                                </div>
+                            </td>
+                            <td  style="width:50%; vertical-align: top;">    </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                    
+                    <table  border="0" class="parent_table_width" >
+                        
+                        <tr>
+                            <td style="width:50%; vertical-align: top;">
+                                <div class="clsInputLabelTD" >
+                                    <apex:outputLabel style="CMDB_FieldLabel" value="Direction" />
+                                </div>
+                                <div id="directionsPicklist" class="clsInputTextBoxTD" title="{!$ObjectType.BMC_BaseRelationship__c.fields.ImpactDirection__c.inlineHelpText}">
+                                </div>
+                            </td>
+                            <td style="width:50%; vertical-align: top;">
+                                <div class="clsInputLabelTD" >
+                                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__HasImpact__c.label}" />
+                                </div>
+                                <div class="clsInputTextBoxTD" title="{!$ObjectType.BMC_BaseRelationship__c.fields.HasImpact__c.inlineHelpText}">
+                                    <apex:inputField styleClass="rf-single-line-field input_pick_list" required="false" value="{!baseRelationObj.BMCServiceDesk__HasImpact__c}" />
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="parent_table_width" >
+                        <tr height="10">
+                        </tr>
+                        <tr>
+                            <td style="width: 35%; ">
+                                <div class="first_instance_table" id="first_instance_table">
+                                    <table style="width: 100%;" class="background_form_color">
+                                        <tr>
+                                            <td>
+                                                <div class="clsInputLabelTD" style="margin-top: 10px;">
+                                                    <apex:outputLabel style="CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__Name__c.label}" />
+                                                </div>
+                                                <div class="clsInputTextBoxTD" >
+                                                    <input style="width:90%" title="{!$Label.tooltiprelationshipeditorsourceciname}" type="text" readonly="readonly" class=" rf-single-line-field InputVirtualReadOnly" value="{!sourceObj.Name__c}" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="clsInputLabelTD" >
+                                                    <apex:outputLabel style="CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__ClassName__c.label}" />
+                                                </div>
+                                                <div class="clsInputTextBoxTD" >
+                                                    <input style="width:90%" title="{!$Label.tooltiprelationshipeditorsourceclassname}" type="text" readonly="readonly" class=" rf-single-line-field InputVirtualReadOnly" value="{!sourceObj.ClassName__c}" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="clsInputLabelTD" >
+                                                    <apex:outputLabel style="CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__ClassID__c.label}" />
+                                                </div>
+                                                <div class="clsInputTextBoxTD" >
+                                                    <input style="width:90%" title="{!$Label.tooltiprelationshipeditordestinationsourceclassid}" type="text" readonly="readonly" class=" rf-single-line-field InputVirtualReadOnly" value="{!sourceObj.ClassID__c}" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="clsInputLabelTD" >
+                                                    <apex:outputLabel style="CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__InstanceType__c.label}" />
+                                                </div>
+                                                <div class="clsInputTextBoxTD" style="margin-bottom: 20px !important;" >
+                                                    <input style="width:90%" type="text" readonly="readonly" class=" rf-single-line-field InputVirtualReadOnly" value="{!sourceObj.InstanceType__c}" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                            <td style="width: 15%;padding-right:2%;">
+                                <table style="margin:auto;">
+                                    <tr>
+                                        <td class="rf-relationship-img" ><img src="{!IF(ISNULL(sourceObj.CMDB_Class__r.Image__c), $Resource.CIForce+'/images/ci/', URLFOR($Action.Document.Download,sourceObj.CMDB_Class__r.Image__c,[retURL='']))}{!IF(ISNULL(sourceObj.CMDB_Class__r.Image__c), imagevalue, '')}{!IF(ISNULL(sourceObj.CMDB_Class__r.Image__c), '_32.svg', '')}" width="32" height="32"/></td>
+                                        <td class="rf-relationship-img-lr" ><apex:image id="arrow_lr" style="{!IF(renderArrowLR,'visibility:visible;','visibility:hidden;')}" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFimages/CI_Relationship_Arrow_LR.png"/></td>
+                                        <td class="rf-relationship-img-rl" ><apex:image id="arrow_rl" style="{!IF(renderArrowRL,'visibility:visible;','visibility:hidden;')}" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFimages/CI_Relationship_Arrow_RL.png"/></td>
+                                        <td class="rf-relationship-img" ><img id='destinationImage' style="{!IF(NOT(ISNULL(destinationObj)),'','display:none')}" src="{!IF(ISNULL(destinationObj.CMDB_Class__r.Image__c), $Resource.CIForce+'/images/ci/', URLFOR($Action.Document.Download,destinationObj.CMDB_Class__r.Image__c,[retURL='']))}{!IF(ISNULL(destinationObj.CMDB_Class__r.Image__c), destinationimagevalue, '')}{!IF(ISNULL(destinationObj.CMDB_Class__r.Image__c), '_32.svg', '')}" width="32" height="32"/></td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td style="width: 35%; ">
+                                <div class="second_instance_table" id="second_instance_table" style="width:89%;background: rgb(252,252,252)">
+                                        <table style="width: 100%;" id="tableID" class="background_form_color">
+                                        <tr>
+                                            <td>
+                                                <div class="clsInputLabelTD" style="margin-top: 10px;">
+                                                    <apex:outputLabel style="CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__Name__c.label}" />
+                                                </div>
+                                                <div class="clsInputTextBoxTD">
+                                                    <input style="width:90%" title="{!$Label.tooltiprelationshipeditordestinationciname}" type="text" readonly="readonly" class=" rf-single-line-field InputVirtualReadOnly" value="{!destinationObj.Name__c}" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="clsInputLabelTD" >
+                                                    <apex:outputLabel style="CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__ClassName__c.label}" />
+                                                </div>
+                                                <div class="clsInputTextBoxTD">
+                                                    <input style="width:90%" title="{!$Label.tooltiprelationshipeditordestinationclassname}" type="text" readonly="readonly" class=" rf-single-line-field InputVirtualReadOnly" value="{!destinationObj.ClassName__c}" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="clsInputLabelTD" >
+                                                    <apex:outputLabel style="CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__ClassID__c.label}" />
+                                                </div>
+                                                <div class="clsInputTextBoxTD" >
+                                                    <input style="width:90%" title="{!$Label.tooltiprelationshipeditordestinationsourceclassid}" type="text" readonly="readonly" class=" rf-single-line-field InputVirtualReadOnly" value="{!destinationObj.ClassID__c}" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="clsInputLabelTD" >
+                                                    <apex:outputLabel style="CMDB_FieldLabel" value="{!$ObjectType.BMCServiceDesk__BMC_BaseElement__c.fields.BMCServiceDesk__InstanceType__c.label}" />
+                                                </div>
+                                                <div class="clsInputTextBoxTD" style="margin-bottom: 20px !important;">
+                                                    <input style="width:90%" type="text" readonly="readonly" class=" rf-single-line-field  InputVirtualReadOnly" value="{!destinationObj.InstanceType__c}" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                            <td style="width: 15%;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="{!IF(NOT(ISNULL(baseRelationObj.id)),'height:0px;','height:10px;')}"></td>
+                        </tr>
+                    </table>
+                </div>
+                <apex:outputPanel >
+                    <table class="parent_table_width" >
+                        <tr>
+                            <td >
+                                <div class="clsInputLabelTD" >
+                                    <apex:outputLabel styleClass="clsInputBoldLabelTableTD" value="{!$Label.bmcservicedesk__relationshipdetails}" />
+                                </div>
+                                <hr class="rfDPL-section-underline"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td height="2">
+                            </td>
+                        </tr>    
+                    </table>
+                    <table id="editRelationshipForm" border="0" class="parent_table_width" >
+                        <tr>
+                            <td style="width:50%; vertical-align: top;">
+                                <div class="clsInputLabelTD" >
+                                    <apex:outputLabel styleClass="CMDB_FieldLabel [(CMDBControl:ApiFieldName=NAME__C:UniqueID=NAME__C:GroupName=NAME__C:DisplayType=STRING:Readonly=false:MaxLength=254:Required=true)]"  value="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__Name__c.label}" />
+                                    <apex:outputLabel id="required" styleClass="requiredField" value="({!JSENCODE($Label.bmcservicedesk__required)})" ></apex:outputLabel>
+                                </div>
+                                <div class="clsInputTextBoxTD" >
+                                    <apex:inputText id="relationshipName2" maxlength="254" title="{!$Label.bmcservicedesk__tooltiprelationshipeditorrelationshipname}" styleClass="clsInputTextBox rf-single-line-field [(CMDBControl:ApiFieldName=NAME__C:UniqueID=NAME__C:GroupName=NAME__C:DisplayType=STRING:Readonly=false:MaxLength=254:Required=true)]" value="{!baseRelationObj.BMCServiceDesk__Name__c}" />
+                                    <apex:image id="expandImage" styleClass="CMDB_ExpandImage d-icon-align_left rf-editor-icon rfdplIconFontSize [(CMDBControl:ApiFieldName=NAME__C:UniqueID=NAME__C:GroupName=NAME__C:DisplayType=STRING:Readonly=false:MaxLength=254:Required=true)]" />
+                                </div>
+                            </td>
+                            <td  style="width:50%; vertical-align: top;">
+                                <div class="clsInputLabelTD"  >
+                                    <apex:outputLabel style="CMDB_FieldLabel"  value="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.CreatedDate.label}" />
+                                </div>
+                                <div class="clsInputTextBoxTD"  >
+                                    <input type="text" readonly="readonly"  class="rf-single-line-field rfDPL-read-only"  value="{!CreatedDate}" title="{!$Label.tooltiprelationshipeditorcreateddate}"  />
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width:50%; vertical-align: top;">
+                                <div class="clsInputLabelTD" >
+                                    <apex:outputLabel styleClass="CMDB_FieldLabel [(CMDBControl:ApiFieldName=ShortDescription__C:UniqueID=ShortDescription__C:GroupName=ShortDescription__C:DisplayType=STRING:Readonly=false:MaxLength=254:Required=false)]" value="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__ShortDescription__c.label}" />
+                                </div>
+                                <div class="clsInputTextBoxTD" >
+                                    <apex:inputText id="descriptionField" maxlength="254" title="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__ShortDescription__c.InlineHelpText}" styleClass="clsInputTextBox rf-single-line-field [(CMDBControl:ApiFieldName=ShortDescription__C:UniqueID=ShortDescription__C:GroupName=ShortDescription__C:DisplayType=STRING:Readonly=false:MaxLength=254:Required=false)]" value="{!baseRelationObj.BMCServiceDesk__ShortDescription__c}" />
+                                    <apex:image id="expandImage_desc" styleClass="CMDB_ExpandImage d-icon-align_left rf-editor-icon rfdplIconFontSize [(CMDBControl:ApiFieldName=ShortDescription__C:UniqueID=ShortDescription__C:GroupName=ShortDescription__C:DisplayType=STRING:Readonly=false:MaxLength=254:Required=true)]"  />
+                                </div>                        
+                            </td>
+                            <td style="width:50%; vertical-align: top;">
+                                <div class="clsInputLabelTD" >
+                                    <apex:outputLabel styleClass="CMDB_FieldLabel [(CMDBControl:ApiFieldName=LastModifiedByName__c:UniqueID=LastModifiedByName__c:GroupName=LastModifiedByName__c:DisplayType=STRING:Readonly=true:MaxLength=254:Required=false)]"  value="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__LastModifiedByName__c.label}" /> 
+                                </div>
+                                <div class="clsInputTextBoxTD">
+                                    <input type="text" title="{!$ObjectType.BMC_BaseRelationship__c.fields.LastModifiedByName__c.InlineHelpText}" class=" rf-single-line-field rfDPL-read-only [(CMDBControl:ApiFieldName=LastModifiedByName__c:UniqueID=LastModifiedByName__c:GroupName=LastModifiedByName__c:DisplayType=STRING:Readonly=true:MaxLength=254:Required=false)]" value="{!LastModifiedby}" />
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width:50%; vertical-align: top;">
+                                <div class="clsInputLabelTD" >
+                                    <apex:outputLabel styleClass="CMDB_FieldLabel [(CMDBControl:ApiFieldName=ClassId__c:UniqueID=ClassId__c:GroupName=ClassId__c:DisplayType=STRING:Readonly=true:MaxLength=254:Required=false)]"  value="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__ClassId__c.label}" />
+                                </div>
+                                <div class="clsInputTextBoxTD" >
+                                    <input type="text" title="{!$ObjectType.BMC_BaseRelationship__c.fields.ClassId__c.InlineHelpText}" class=" rf-single-line-field rfDPL-read-only [(CMDBControl:ApiFieldName=ClassId__c:UniqueID=ClassId__c:GroupName=ClassId__c:DisplayType=STRING:Readonly=true:MaxLength=254:Required=false)]" value="{!Classid}" />
+                                    <apex:image rendered="{!IF(ISNULL(baseRelationObj.id),false,true)}" styleClass="CMDB_ExpandImage d-icon-align_left rf-editor-icon rfdplIconFontSize [(CMDBControl:ApiFieldName=ClassId__c:UniqueID=ClassId__c:GroupName=ClassId__c:DisplayType=STRING:Readonly=true:MaxLength=254:Required=false)]" />
+                                </div>                    
+                            </td>
+                            <td style="width:50%; vertical-align: top;">
+                                <div class="clsInputLabelTD" >
+                                    <apex:outputLabel style="CMDB_FieldLabel"  value="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.LastModifiedDate.label}" />
+                                </div>
+                                <div class="clsInputTextBoxTD">
+                                    <input type="text" title="{!$Label.tooltiprelationshipeditorlastmodifieddate}" readonly="readonly" class=" rf-single-line-field rfDPL-read-only" value="{!LastModifiedDate}" />
+                                </div>
+                            </td>
+                        </tr>
+                        <tr >
+                            <td style="width:50%; vertical-align: top;">
+                                <div class="clsInputLabelTD" >
+                                    <apex:inputCheckbox id="markasDeleteField" title="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__MarkAsDeleted__c.InlineHelpText}"  styleClass="clsInputCheckBox [(CMDBControl:ApiFieldName=MARKASDELETED__C:UniqueID=MARKASDELETED__C:GroupName=MARKASDELETED__C:DisplayType=BOOLEAN:Readonly=false:Required=false)]" value="{!baseRelationObj.BMCServiceDesk__MarkAsDeleted__c}"/>
+                                    
+                                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__MarkAsDeleted__c.label}" rendered="{!$ObjectType.BMCServiceDesk__BMC_BaseRelationship__c.fields.BMCServiceDesk__MarkAsDeleted__c.Accessible}"/>
+                                </div>
+                            </td>
+                            <td style="width:50%; vertical-align: top;"></td>
+                        </tr>
+                    </table>
+                </apex:outputPanel>
+                <table class="parent_table_width" >
+                    <tr>
+                        <td height="20"></td>
+                    </tr>
+                </table>
+            </apex:outputPanel>
+        </div>
+        <apex:actionFunction name="SaveClick" reRender="afterSavePanel,mainpanel" oncomplete="hideWaitMsgBar();onSaveComplete();enableButton();" action="{!Save}">
+            <apex:param name="currentDir" value=""  ></apex:param>
+            <apex:param name="destinationList"  value="" assignTo="{!destinationList}" />
+
+        </apex:actionFunction>
+
+        <apex:actionFunction name="CreateMultpleRelationship" reRender="afterSavePanel,mainpanel" oncomplete="hideWaitMsgBar();onSaveComplete();enableButton();" action="{!Save}">
+            <apex:param name="destinationList"  value="" assignTo="{!destinationList}" />
+            <apex:param name="currentDir"       value=""    ></apex:param>
+        </apex:actionFunction>
+
+        <apex:actionFunction name="selectOtherCI" action="{!selectOtherCI}"  reRender="mainpanel," oncomplete="hideWaitMsgBar();createControlMap();renderElementsByType();dirCombo=getDirectionCombo();">
+            <apex:param name="destInstanceId"   value="" assignTo="{!destInstanceId}"></apex:param>
+            <apex:param name="currentDir"       value=""    ></apex:param>
+        </apex:actionFunction>
+
+        <apex:actionFunction name="getSelectedInstances" action="{!selectOtherCI}" reRender="cilist" oncomplete="hideWaitMsgBar();">
+            <apex:param name="destInstanceId"   value=""  assignTo="{!destInstanceId}"></apex:param>
+        </apex:actionFunction>
+
+        <apex:actionFunction name="getColumns" action="{!getColumns}" rerender="columns" oncomplete="getInstanceListStore();">
+            <apex:param name="selectedClass" value="" assignTo="{!selectedClass}"></apex:param>
+            <apex:param name="selectedTab" value="" assignTo="{!selectedTab}"></apex:param>
+        </apex:actionFunction>
+
+        <apex:actionFunction name="updateClassJson" action="{!CMDBClassJson}" rerender="Classvalues" oncomplete="refreshLeftPanel();">
+            <apex:param name="selectedTab" value="" assignTo="{!selectedTab}"></apex:param>
+    	</apex:actionFunction>
+    </apex:form>
+	
+    </div>
+    <apex:outputpanel id="afterSavePanel">
+        <script>
+         var relationshipName="{!JSENCODE(baseRelationObj.Name__c)}";
+        _ServerValues.savestatus = {!savestatus};
+        _ServerValues.savestatusMessage = '{!JSENCODE(savestatusMessage)}';
+        isNewRec ={!isNewRecord};
+        </script>
+    </apex:outputpanel>
+    <script>
+        var relationshipNameId                      = '{!$Component.relEditForm.relationshipName2}';
+        var markasDeleteField                       = '{!$Component.relEditForm.markasDeleteField}';
+        var expandImage                             = '{!$Component.relEditForm.expandImage}';
+        var required                                = '{!$Component.relEditForm.required}';
+        var destinationImage                        = "{!$Resource.CIForce+'/images/others/multi_relationship.svg'}";
+        _ServerValues.selecteCMDBInstanceLabel      = '{!JSENCODE($Label.SelectCMDBInstances)}';
+        _ServerValues.SelectedInstances             = '{!JSENCODE($Label.SelectedInstances)}';
+        _ServerValues.ClearAll                      = '{!JSENCODE($Label.RemoveAll)}';
+        _ServerValues.ClearSelectionWarningMessage  = '{!JSENCODE($Label.ClearSelectionWarningMessage)}';
+        _ServerValues.Auto_Generate                 = '{!JSENCODE($Label.AutomaticGenerated)}';
+
+        var tooltipFieldsLabel = {
+            'name'           :'{!JSENCODE($ObjectType.BMC_BaseElement__c.fields.Name__c.Label)}',
+            'className'      :'{!JSENCODE($ObjectType.BMC_BaseElement__c.fields.ClassName__c.Label)}',
+            'classID'        :'{!JSENCODE($ObjectType.BMC_BaseElement__c.fields.ClassID__c.Label)}',
+            'instanceType'   :'{!JSENCODE($ObjectType.BMC_BaseElement__c.fields.InstanceType__c.Label)}'
+
+        };
+        
+        var CIFORCE_RES_PATH = '{!$Resource.CIForce}',
+        srcInstanceId = '{!JSENCODE(sourceObj.InstanceID__c)}',
+        isBRCreatable = {!isBRCreatable},
+        isBREditable ={!isBREditable},
+        isStdForm= {!JSENCODE($CurrentPage.parameters.isStdForm)},
+		dirCombo,currentDir;
+		var isCMDBClassPermissionsEnable = {!isCMDBClassPermissionsEnable};
+		var isCMDBUpgradeCustomer = {!isCMDBUpgradeCustomer};
+		var fallBackToUpgrade = isCMDBUpgradeCustomer && !isCMDBClassPermissionsEnable;
+		var fallBackToFresh = !isCMDBUpgradeCustomer && !isCMDBClassPermissionsEnable;
+        var pageloaddate = new Date();
+        var renderingstartitme = pageloaddate.getTime();
+        function getrelationshipName(){
+            var relationship_element=document.getElementById('{!$Component.relEditForm.relationshipName1}');
+            if(!relationship_element){
+               relationship_element= document.getElementById('{!$Component.relEditForm.relationshipName2}')
+            }
+            return relationship_element;
+        }
+        function getArrow_lrEle(){
+            return document.getElementById('{!$Component.relEditForm.arrow_lr}');
+        }
+        function getArrow_rlEle(){
+            return document.getElementById('{!$Component.relEditForm.arrow_rl}');
+        }
+        function getTypePicklistEle(){
+            var relationship_type_element=document.getElementById('{!$Component.relEditForm.relationshipType1}');
+            if(!relationship_type_element){
+               relationship_type_element= document.getElementById('{!$Component.relEditForm.relationshipType2}')
+            }
+            return relationship_type_element;
+        }
+        function enableButton(){
+            Ext.getCmp('ciExplorerBtn').setDisabled(false);
+            var saveBtn = Ext.getCmp('saveId');
+			if(isCMDBClassPermissionsEnable || fallBackToFresh){
+            if((isBRCreatable!= null && isBRCreatable !='null' && isBRCreatable== true && isNewRec == true)||(isBREditable!= null && isBREditable !='null' && isBREditable== true)){
+					saveBtn.setDisabled(false);
+				}else{
+					saveBtn.setDisabled(true);
+				}
+			}else{
+            if((isBRCreatable!= null && isBRCreatable !='null' && isBRCreatable== true && isNewRec == true)||(isBREditable!= null && isBREditable !='null' && isBREditable== true)){
+                if(isFlattenedCmdb){
+                    enableDisableSaveAndSelectInstBtn();
+                }
+            }else{
+                saveBtn.setDisabled(true);
+            }
+        }
+        }
+        if({!renderArrowLR}){
+            currentDir='lr';
+        }else if({!renderArrowRL}){
+            currentDir='rl';
+        }
+    </script>
+    <script src="{!$Resource.SDEFCommonJS}/CMDBControls.js"/>
+    <script src="{!$Resource.SDEFCommonJS}/CMDBFormGeneral.js"/>
+    <script src="{!$Resource.SDEFCommonJS}/IconCombo.js"/>
+	<script  src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"/>
+    <script src="{!$Resource.SDEFCommonJS}/CMDBUtils.js"/>
+    <script src="{!$Resource.SDEFCommonJS}/CMDBEditRelationship.js"/>
+    <script>
+        var EditRelationEndTime = '{!endtime}';
+        EditRelationServerTime = (EditRelationEndTime - serverstarttime);
+        
+        data += EditRelationServerTime;
+        data += '<br>';
+        //time to calculate page rendertime 
+        
+        var isFlattenedCmdb = '{!isFlattenedCmdb}';
+        var isAssetManagementEnabled = '{!isAssetManagementEnabled}';
+        var isCIManagementEnabled = '{!isCIManagementEnabled}';
+        var selectedTab = '{!JSENCODE(selectedTab)}';
+        var userId = '{!$User.Id}';
+		var CILabel = '{!JSENCODE($Label.CMDB_TAB_CIs)}';
+		var AssetLabel = '{!JSENCODE($Label.CMDB_TAB_Assets)}';
+		var AllLabel = '{!JSENCODE($Label.All)}';
+		var pleaseWaitMsg = '{!JSENCODE($Label.PleaseWait)}'; 
+		var ClearLbl = '{!JSENCODE($Label.Clear)}';
+		var showCI = {!CIShow};
+        var showAsset = {!AssetShow};
+        var updateCI = {!CIUpdate};
+        var updateAsset = {!AssetUpdate};
+        var instanceType = '{!JSENCODE(instanceType)}';
+        var tabName = '{!JSENCODE(tabName)}';
+        var classNameTitle = '{!JSENCODE($CurrentPage.parameters.classNameTitle)}';
+        var dynamicPicklistMap = new Map();
+        var dynamicPicklistMapMultiSelect = new Map();
+        var selectedList = '';                
+    </script>
+    <apex:outputPanel id="cilist">
+        <script>
+            if('{!destinationList}') {
+                selectedList = JSON.parse('{!JSENCODE(destinationList)}');
+                createInstanceTags();
+            }
+    </script>
+    </apex:outputPanel>
+	<style>
+		#classListPanelId .x-grid3-row-first .x-grid3-td-CMDBClassType  {
+		 width:0px !important
+		}
+		#classListPanelId .x-grid3-row-first .x-grid3-td-DisplayName  {
+		 width:233px !important
+		}
+    </style>
+</apex:page>

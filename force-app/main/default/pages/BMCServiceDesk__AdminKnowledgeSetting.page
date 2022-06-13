@@ -1,0 +1,210 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.KnowledgeSetting" standardstylesheets="false">
+    <c:CommonIncludes />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <link href="{!$Resource.SDEFStyles}/AdminKnowledgeSetting.css" rel="Stylesheet" type="text/css" />
+    <apex:form id="frmKss">    
+		<div id="kssavetoolbar" > </div>	
+		<div id="helpDiv" style="margin-right: 15px;">
+        <div style='width: 100%;text-align: right;margin-top: 5px;' ><a class="clsHelpAnchorStyle" href="#" title="{!JSENCODE($Label.AdminContextHelpTooltip)}" onClick="if(isNewContextpage() && wikiUrl!='' && wikiUrl!= undefined){window.open(wikiUrl,false,'width='+screen.width+',height='+screen.height+',resizable = 1,scrollbars=yes,status=1,top=0,left=0',false)}else{window.open(helpResouces+'/configuring_global_search.htm',false,'width='+screen.width+',height='+screen.height+',resizable = 1,scrollbars=no,status=1,top=0,left=0',false);}">
+                            <span class="helpLinkCls" style="vertical-align: bottom;">{!JSENCODE($Label.AdminContextHelpText)}</span>
+                            <img id="helpIcon" style="padding-left: 1px;" src= "{!$Resource.SDEFStyles}/SDEFicons/help_icon.png" alt="" class="helpIconCls"></img></a></div>
+        </div>
+		<div id="noteSec" style="margin-top:5px;">{!$Label.GSNote}</div>
+		<div id ="searchField" style="margin-left:20px;">
+			<div class="divMargin">
+            	<apex:inputCheckbox value="{!propSearchRFKnowledge}" id="RFKnowledge" title="" onclick="updateFeedback(this)"/>
+            	<label class="clsKonwledgeInputCheckBoxLabel">{!$Label.SearchRFKnowledge}</label>
+            	<div  style="margin-left:35px;margin-bottom:4px;line-height:90%;" >   
+            		<input id="ManageKABtn" type="button" class="ManageKAButton" value="{!$Label.ManageArticle}" onclick="ManageArticlePopup();" title="{!$Label.ManageArticleTooltip}" style="height: 25px;"/>
+				 </div>          
+            </div>
+		    <div id="RFKnowledgeSettings" style="margin-left:35px;">		        
+				<div class="divMargin"> 		        
+		            <apex:inputCheckbox value="{!propShowKMRating}" id="enableRating" title="" onclick="checkShowRating(this)"/>
+			        <label class="clsKonwledgeInputCheckBoxLabel lineHeight">{!$Label.ShowRating}</label>
+			    </div>
+			    <div class="divMargin">
+		            <apex:inputCheckbox value="{!propKMRatingMandatory}" id="ratingRequired" title=""/>
+			        <label class="clsKonwledgeInputCheckBoxLabel lineHeight">{!$Label.MakeRatingsMandatory}</label>
+			    </div>
+			    <div class="divMargin2" id="copyRadio"> 
+			       	<label class="clsKonwledgeInputCheckBoxLabel">{!$Label.Default_useofknowledge}</label>
+		        	<apex:selectRadio styleClass="copyKSRadio" value="{!CopyArticleValue}">     
+						<apex:selectOption itemLabel="{!$Label.bmcservicedesk__copyarticletext}" itemValue="text"/>                                       
+						<apex:selectOption itemLabel="{!$Label.bmcservicedesk__copyarticlelink}" itemValue="link"/>                                       
+					</apex:selectRadio>
+		        </div>            
+		    </div>
+            <apex:outputpanel id="btnEnable"> 
+	            <div class="divMargin" style="line-height:90%;margin-bottom:3px;">
+		            <apex:inputCheckbox value="{!propSearchSFKnowledge}" id="SFKnowledge" title="" onclick="displaySearchBtn();"/>
+			 		<label class="clsKonwledgeInputCheckBoxLabel">{!$Label.SearchSFKnowledge}</label>      
+			 	</div>
+			 	<div  style="margin-left:35px;margin-bottom:4px;line-height:90%;" >   
+			 		<input id="searchBtn" style="height: 25px;" type="button" class="AddButton" value="{!$Label.Get_article_types}" onclick="jssaveSFArticleTypes(); onclickGetArticleDisable();" title="{!$Label.Get_article_types_tooltip}" />
+		 		</div> 
+				<apex:inputHidden value="{!articletypes}" id="articletype"/> 
+			</apex:outputpanel>
+			<apex:outputpanel id="RAKnowledgeSettings" styleClass="divMargin" rendered="{!RightAnswersIntegrated}">
+				<apex:inputCheckbox value="{!propSearchRAKnowledge}" id="RAKnowledge" title="" />
+			 	<label class="clsKonwledgeInputCheckBoxLabel">{!$Label.bmcservicedesk__searchraknowledge}</label>
+		    </apex:outputpanel>
+			<div style="line-height:90%;margin-bottom: 12px;">
+				<apex:inputCheckbox value="{!propSearchReferenceFields}" id="referenceFieldsStyleClass" title=""/>
+            	<label class="clsKonwledgeInputCheckBoxLabel">{!$Label.SearchReferenceFields}</label> 
+            </div>      
+		</div>
+		
+	    <div id = "display__fields_div" ><label class = "display_field_cls">{!$Label.Display_Fields}</label></div>  
+	    <div id="toolbar" > </div>
+	    <div id ="ksgrid"></div> 
+	     
+	     <apex:actionFunction Name="jsSaveKSSettings" action="{!saveksSettings}" onComplete="saveDone('{!success}')" >
+	    	<apex:param name="kssData" value="" assignTo="{!kssdata}" /> 
+		</apex:actionFunction>
+		<apex:actionFunction Name="jssaveSFArticleTypes" action="{!saveSFArticleTypes}" onComplete="onCompleteMsg()" reRender="btnEnable,articletype"/>
+	  
+	   
+    
+    <script>
+		var wikiUrl='{!wikiUrl}';
+    	var enablesavebtn 			= {!enablesavebutton};
+    	var wid2 					= '{!JSENCODE($CurrentPage.parameters.wid)}';
+    	var SFArticleSaveMessage 	= '{!JSENCODE($Label.SFArticleTypeMessageBoxTitle)}';
+	    var SDEFPath				= '{!$Resource.SDEFStyles}';
+		var lblDataSource 			= '{!JSENCODE($Label.DataSource)}';
+		var lblTipDataSource		= '{!JSENCODE($Label.TooltipGlobalSearchSettingsDataSource)}';
+		var lblDataField 			= '{!JSENCODE($Label.DataField)}';
+		var lblTipDataField 		= '{!JSENCODE($Label.TooltipGlobalSearchSettingsDataField)}';
+		var lblAdd 					= '{!JSENCODE($Label.Add)}';
+		var lblGlobalSearchTitle	= '{!JSENCODE($Label.GlobalSearch)}';
+		var lblValidatorMsg 		= '{!JSENCODE($Label.GSValidationMessage)}';
+		var lblEmptyValidationMsg 	= '{!JSENCODE($Label.GSEmptyValidationMessage)}';
+		var lblRemove 				= '{!JSENCODE($Label.Remove)}';
+		var lblUp 					= '{!JSENCODE($Label.Up)}';
+		var lblDown 				= '{!JSENCODE($Label.Down)}';
+		var lblSave 				= '{!JSENCODE($Label.Save)}';
+		var lblCannotDeleteMsg 		= '{!JSENCODE($Label.Cannotdeleteselectedrecords)}';
+		var lblSaveSucessfully 		= '{!JSENCODE($Label.SavedSuccessfully)}';
+		var lblSaveError	 		= '{!JSENCODE($Label.MsgSaveError)}';
+		var lblArticleSaveMsg		= '{!JSENCODE($Label.Get_article_types_save_message)}';
+ 		var lblArticleNullMsg 		= '{!JSENCODE($Label.Get_article_types_null_message)}' ;
+ 		var lblManageArticle ='{!JSENCODE($Label.ManageArticle)}' ;
+		var clickedOnce 			= false;     
+		var masterObjectFieldList 	= null;
+	    var masterObjectFieldRecord = null;
+	    var KSSstore;
+	    var lastObjectSelected = '';
+	    var firstRecordFlag 		= false;
+	    var helpResouces = parent.getStdFormHelpPath();
+	     //KSS settings from its object
+	        var strTempKS = 'var arrKsSettings = [ ';
+	        <apex:repeat value="{!ksSettings}" var="kss" id="ksSettingsRepeat">
+                strTempKS += "['{!kss.Id}','{!kss.BMCServiceDesk__ObjectName__c}'.toLowerCase(),'{!kss.BMCServiceDesk__FieldName__c}',{!kss.BMCServiceDesk__IsSearchField__c},{!kss.BMCServiceDesk__DisplayOrder__c},{!kss.BMCServiceDesk__Solution__c}],";
+	        </apex:repeat>
+	        strTempKS += '];';
+	        strTempKS = strTempKS.replace(',];', '];');
+	        
+	    function doRestOfTheRendering()
+	    {
+	        	//Get all object(apiname, label)
+				var objectNameData =  <apex:outputText value="{!ObjectList}" escape="false"></apex:outputText> 
+	        	restOfTheRendering(objectNameData);
+	    }
+	    _RemotingActions={};
+        _RemotingActions.GetData= "{!$RemoteAction.KnowledgeSetting.GetData}";   
+	   </script>
+	<script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/CheckColumn.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminKnowledgeSetting.js"/> 
+    <script>
+                 
+        function onCompleteMsg(){
+	        var article = document.getElementById('{!$Component.frmKss.articletype}').value;
+	        var finalMessage;	        
+	        if(article.length > 1){
+	        	finalMessage = lblArticleSaveMsg + article;
+	        }else{
+	        	finalMessage = lblArticleNullMsg ;
+	        }
+	        
+            Ext.MessageBox.show({
+                     width: 350,
+                     title: SFArticleSaveMessage,
+                     msg: finalMessage,
+                     buttons: Ext.MessageBox.OK
+                 });
+			onclickGetArticleEnable();                    
+        }          
+        
+        function displaySearchBtn()
+        {        	
+        	if((document.getElementById('{!$Component.frmKss.SFKnowledge}').checked == true)&&({!isSFUser} == true)){
+        		document.getElementById('searchBtn').disabled = false;  
+        		document.getElementById('searchBtn').className = "AddButton";      		
+        	}
+        	else {
+        		document.getElementById('searchBtn').disabled = true;          		   
+        		document.getElementById('searchBtn').className = "AddButtonOff";  		
+        	}
+        }
+        
+        function checkboxState(){ 
+         if(document.getElementById('{!$Component.frmKss.RFKnowledge}').checked){	        
+	        	document.getElementById('{!$Component.frmKss.enableRating}').disabled = false;
+	        	if(document.getElementById('{!$Component.frmKss.enableRating}').checked){
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = false;
+	        	}else{
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = true;
+	        	}
+	        	updateRadioButtonstate(false);
+	        }else{
+	        	document.getElementById('{!$Component.frmKss.enableRating}').checked = false;
+	        	document.getElementById('{!$Component.frmKss.enableRating}').disabled = true;
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').checked = false;
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = true;
+	        	updateRadioButtonstate(true);
+	        }
+	        displaySearchBtn();
+        }
+        
+        function updateFeedback(input){
+	        if(input.checked){	        
+	        	document.getElementById('{!$Component.frmKss.enableRating}').disabled = false;	        	
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = true;	        	
+	        	updateRadioButtonstate(false);	        	
+	        }else{
+	        	document.getElementById('{!$Component.frmKss.enableRating}').checked = false;
+	        	document.getElementById('{!$Component.frmKss.enableRating}').disabled = true;
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').checked = false;
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = true;
+	        	updateRadioButtonstate(true);	        	
+	        }
+	        
+        }        
+        
+        
+        //If you want enable radio buttons, send false as parameter else send true
+        function updateRadioButtonstate(state){        
+        	var inputs = document.getElementsByTagName('input');
+	        for(var k=0;k<inputs.length;k++)
+				{
+					var input = inputs[k];
+					if(input.type == 'radio'){
+						  input.disabled = state;
+					}
+				}        
+        }
+        function checkShowRating(input){
+	        if(input.checked){
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = false;
+	        }else{	        	
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').checked = false;
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = true;	        	
+	        }
+        }
+        
+        checkboxState(); 
+        
+        </script>
+	</apex:form>
+</apex:page>

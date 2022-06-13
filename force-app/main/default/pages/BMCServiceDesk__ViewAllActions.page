@@ -1,0 +1,107 @@
+<apex:page showHeader="false"  controller="BMCServiceDesk.ViewAllActions" readOnly="true" >
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/ViewAllActions.css" type="text/css" />
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script> 
+
+<script>
+var newActionHandlerWindow;
+var confirmationMessage = '{!JSENCODE($Label.DeleteConfirmMessage)}';
+var ObjectId = '{!JSENCODE(ObjectId)}';
+var objType = '{!JSENCODE(objtype)}';
+var recordName = '{!JSENCODE($CurrentPage.parameters.recordName)}';
+var recordState = '{!JSENCODE($CurrentPage.parameters.recordState)}';
+var objectName  = '{!JSENCODE($CurrentPage.parameters.objectName)}';
+var RecIsClosed = '{!JSENCODE($Label.ClosedStage)}';
+var isUpdateable = {!IF(isUpdateable,true,false)};
+var insufficentcreateprivilege = '{!JSENCODE($Label.insufficentcreateprivilege)}';
+if(objType=='Projected_Service_Outage')
+    window.document.title= '{!JSENCODE($Label.Navigator_ProjectedServiceOutage)} {!JSENCODE($Label.Supporting_History)} {!JSENCODE($CurrentPage.parameters.recordName)}' ;
+else
+    window.document.title= objType + ' {!JSENCODE($Label.Supporting_History)} {!JSENCODE($CurrentPage.parameters.recordName)}' ;
+</script>
+<apex:pageBlock >
+<apex:form >
+ <apex:pageMessages />
+ <table style="height:50px;width:100%;background:#EBEBEB;border: 1px solid #AEBAC1;">
+            <tr>
+                <td width="70" class="clsPadding10">
+                <input type="button" class="btn" value="{!$Label.New_Action}" id="newActionBtnId" onclick="OpenPopup();"/>
+                </td>
+                <td width="50" >
+                <apex:selectList value="{!actionName}" size="1">
+                        <apex:selectOptions value="{!ActionsPicklist}"/>
+                        <apex:actionSupport event="onchange" action="{!getActionHistoryList}" rerender="FilterResult,printCntrId" status="filter"/>
+                    </apex:selectList></td>
+                <td width="170" class="clsPadding10" align="left">
+                <apex:outputPanel id="printCntrId"><input type="button" class="btn" value="{!$Label.print}" id="printBtnId" onclick="window.print();"/></apex:outputPanel>
+                </td>
+                <td> 
+<apex:actionStatus onStart="setMask('block');" onstop="setMask('none')" id="filter"/>
+                    <div id="overlay" class="overlay"><div align="center" id="divmsg" class="divmsg">
+                        <div style="position:relative; " id="mask" class="mask"> <apex:outputtext style="font-weight: bold;font-size: 12px;" value="{!JSENCODE($Label.bmcservicedesk__pleasewait)}..."></apex:outputtext>
+                            </div>
+                            </div>
+                    </div>                
+</td>
+            </tr>
+        </table>
+  </apex:form>      
+<apex:pageBlockSection collapsible="false">
+<apex:facet name="header">
+<apex:outputText value="{!IF(objType=='Projected_Service_Outage',objLabel+' :'+ $CurrentPage.parameters.recordName,objLabel+' #:'+ $CurrentPage.parameters.recordName)}" style="color:black;font-size:14px;"></apex:outputText>
+</apex:facet>
+</apex:pageBlockSection>
+
+<apex:outputPanel rendered="{!IF(size==0,false,true)}" id="FilterResult">
+<apex:repeat value="{!actionHistory}" var="historyObj" >
+<table height="100%" width="100%" class="noteTableCls">
+<tr>
+<td class="headerTd" width="100%" >
+<span>
+
+<b>{!JSENCODE($Label.DateAndTime)} : </b> <apex:outputField value="{!historyObj['date__c']}" rendered="{!IF(OR(objtype=='Incident',objtype=='Task',objtype=='Broadcast',objType=='Projected_Service_Outage'),TRUE,FALSE)}"/>
+<apex:outputField value="{!historyObj['createdDate']}" rendered="{!IF(OR(objtype=='Change Request',objtype=='Problem',objtype=='Release'),true,false)}" />
+&nbsp;&nbsp; 
+
+<b>{!JSENCODE($Label.IncidentsStaff)} : </b> {!IF(OR(objType=='Incident',objType='Task',objType=='Broadcast',objType=='Projected_Service_Outage'),historyObj['FKUser__r.name'],historyObj['FKCreated_By__r.name'])} &nbsp;&nbsp;  
+<apex:outputPanel id="durationPanel" rendered="{!IF(objType!='Projected_Service_Outage',TRUE,FALSE)}">
+<b>{!JSENCODE($Label.bmcservicedesk__duration)} : </b> {!IF(OR(objtype=='Incident',objtype=='Task',objtype=='Broadcast'),historyObj['duration__c'],historyObj['Formatted_Duration__c'])}
+</apex:outputPanel>
+</span>
+<br/>
+<span>
+<b>{!JSENCODE($Label.Description)} : </b> {!historyObj['description__c']}
+</span>
+</td>
+</tr>
+<tr>
+<td class="e" width="100%">
+<div>
+<b>{!JSENCODE($Label.Note)} :</b>
+<pre class="historyPrintBlock" id="{!historyObj['id']}">
+{!historyObj['note__c']}&nbsp;&nbsp;<a id="{!historyObj['id']}+anchorId" style="{!IF(LEN(historyObj['note__c'])>1000,'display:inline','display:none')};cursor:pointer;color:#015BA7;"  onclick="showMore('{!historyObj['id']}');">More</a>
+</pre>
+</div>
+</td>
+</tr>
+</table>
+
+</apex:repeat>
+</apex:outputPanel>
+</apex:pageBlock>
+<apex:outputPanel rendered="{!IF(size==0,true,false)}">
+<span>
+<strong style="padding-left:250px;">{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}</strong>
+</span>
+</apex:outputPanel>
+
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ViewAllActions.js"></script> 
+<script>
+
+    
+    var objType ='{!JSENCODE(objType)}';
+    _RemotingActions={}
+    _RemotingActions.getData= "{!$RemoteAction.ViewAllActions.getData}";
+   
+</script>
+
+</apex:page>

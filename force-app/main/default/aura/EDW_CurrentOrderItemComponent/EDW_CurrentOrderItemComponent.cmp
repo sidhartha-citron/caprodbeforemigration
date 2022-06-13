@@ -1,0 +1,70 @@
+<aura:component controller="EDW_ConfigureAppointmentController">
+    <aura:attribute name="index" type="Integer" />
+    <aura:attribute name="row" type="EDW_ViewModels.TableOrderItem" />
+    <aura:attribute name="isMultiRes" type="Boolean" />
+    <aura:attribute name="isPORequiredOnLineItem" type="Boolean" />
+    <aura:attribute name="numberOfRooms" type="String[]" />
+    <aura:attribute name="infestationLevels" type="String[]" />
+    <aura:attribute name="siteSurveyId" type="String" />
+    <aura:attribute name="accountId" type="String" />
+    
+    <aura:registerEvent name="deleteOrderItemEvent" type="c:EDW_DeleteOrderItemEvent" />
+    <aura:registerEvent name="recalculateOrderTotalPrice" type="c:EDW_RecalculateOrderTotalPriceEvent" />
+    <aura:registerEvent name="updateCurrentTableRowList" type="c:EDW_UpdateCurrentTableRowListEvent" />
+    <aura:registerEvent name="openAddSurveyLocationEvent" type="c:EDW_OpenAddSurveyLocationEvent" />
+    <aura:registerEvent name="orderItemSelectionChangeEvent" type="c:EDW_OrderItemSelectionChangeEvent" />
+    <aura:registerEvent name="validateSurveyLocationsEvent" type="c:EDW_ValidateSurveyLocationsEvent" />
+    
+    <aura:handler name="EDW_LookupRecordEvent" event="c:EDW_LookupRecordEvent" action="{!c.bindSurveyLocation}" />
+    
+    <div id="{!'overlay-' + v.row.orderItemId}" class="slds-hide">
+        <div class="overlay">
+            <lightning:spinner alternativeText="Loading" size="medium" aura:id="rowSpinner"/>
+        </div>
+    </div>
+    <tr>
+        <td>
+            <lightning:input class="ch-cb-select-row" type="checkbox-button" onchange="{!c.rowSelected}" />
+            <span>&nbsp;|&nbsp;<a onclick="{!c.deleteOrderItem}" data-row-index="{!v.row.orderItemId}">Delete Row</a></span>
+        </td>
+        <td>
+            <div class="ch-survey-location-cell">
+                <c:EDW_InputLookupComponent aura:id="surveyLocationLookup" selectedResult="{!v.row.surveyLocation}" sObjectType="Survey_Location__c" hasLabel="false" placeholder="Survey Locations" icon="custom:custom78" filterById="{!v.siteSurveyId}" isCompact="true" numberOfRooms="{!v.row.numberOfRooms}" />
+                <span>
+                    &nbsp;
+                    <lightning:button disabled="{!v.row.surveyLocation == null}" variant="base" label="Edit Location" title="Base action" onclick="{!c.openEditSurveyLocationForm}"/> |
+                    <lightning:button variant="base" label="Add Location" title="Add Location" onclick="{!c.openNewSurveyLocationForm}"/>
+                </span>
+            </div>
+        </td>
+        <aura:if isTrue="{!v.isMultiRes}">
+            <td>
+                <lightning:select variant="label-hidden" class="label-hidden" value="{!v.row.numberOfRooms}" onchange="{!c.updateOrderItem}">
+                    <option value="">{!$Label.c.Rooms_Not_Applicable}</option>
+                    <aura:iteration items="{!v.numberOfRooms}" var="num">
+                        <option value="{!num}">{!num}</option>
+                    </aura:iteration>
+                </lightning:select>
+            </td>
+        </aura:if>
+        <td>
+            <lightning:select variant="label-hidden" class="label-hidden" value="{!v.row.infestationLevel}" onchange="{!c.updateOrderItem}">
+                <aura:iteration items="{!v.infestationLevels}" var="level">
+                    <option value="{!level}">{!level}</option>
+                </aura:iteration>
+            </lightning:select>
+        </td>
+        <aura:if isTrue="{!v.isPORequiredOnLineItem}">
+            <td>
+                <lightning:input variant="label-hidden" value="{!v.row.orderItemPONumber}" class="slds-p-vertical_xx-small" onblur="{!c.updatePOToOrderItem}" />
+            </td>
+        </aura:if>
+        <td>{!v.row.selectedProduct.productName}</td>
+        <td>
+            <aura:if isTrue="{!v.row.orderItem.Has_Warranty__c}">
+            	<lightning:icon iconName="standard:reward" alternativeText="Warning!" variant="warning" size="small" aura:id="iconWarning" class="warning-icon" title="{!$Label.c.Warranty_Message + ' ' + v.row.warranty.Warranty_End__c}" />
+            </aura:if>
+            <ui:outputCurrency aura:id="curr" value="{!v.row.orderItem.Service_Price_Per_Unit__c}" format="$##,###,###,##0.00"/>
+        </td>
+    </tr>
+</aura:component>

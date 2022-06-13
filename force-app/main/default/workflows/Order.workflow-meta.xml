@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fieldUpdates>
+        <fullName>CPQ2_Stamp_Active_Check_Date</fullName>
+        <field>CPQ2_Last_Active_Check_Date__c</field>
+        <formula>NOW()</formula>
+        <name>CPQ2 Stamp Active Check Date</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <rules>
+        <fullName>CPQ2 End Date Active Re-eval</fullName>
+        <active>true</active>
+        <criteriaItems>
+            <field>Order.CPQ2_HC__c</field>
+            <operation>greaterThan</operation>
+            <value>0</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Order.EndDate</field>
+            <operation>greaterOrEqual</operation>
+            <value>TODAY</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Order.EndDate</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <description>Launches time based workflow o make sure that the order gets re-evaluated if it should be a part of the pricing model</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+        <workflowTimeTriggers>
+            <actions>
+                <name>CPQ2_Stamp_Active_Check_Date</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <offsetFromField>Order.EndDate</offsetFromField>
+            <timeLength>1</timeLength>
+            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+    </rules>
+    <rules>
+        <fullName>CPQ2 Start Date Active Re-eval</fullName>
+        <active>true</active>
+        <criteriaItems>
+            <field>Order.CPQ2_HC__c</field>
+            <operation>greaterThan</operation>
+            <value>0</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Order.EffectiveDate</field>
+            <operation>greaterThan</operation>
+            <value>TODAY</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Order.EffectiveDate</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <description>Launches time based workflow o make sure that the order gets re-evaluated if it should be a part of the pricing model</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+        <workflowTimeTriggers>
+            <actions>
+                <name>CPQ2_Stamp_Active_Check_Date</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <offsetFromField>Order.EffectiveDate</offsetFromField>
+            <timeLength>1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+    </rules>
+</Workflow>

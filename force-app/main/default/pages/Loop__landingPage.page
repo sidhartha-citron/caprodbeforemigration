@@ -1,0 +1,22 @@
+<apex:page sidebar="false" showHeader="false" >
+<script type="text/javascript">
+    var errorCode = '';
+    var errorId = '';
+    var query = window.location.search.substring(1);
+    if (query) {
+        var params = query.split('&');
+        for (var i = 0; i < params.length; i++) {
+            var parts = params[i].split('=');
+            if (parts[0].toLowerCase() == 'errorcode') {
+                errorCode = decodeURIComponent(parts[1]);
+            }
+            else if (parts[0].toLowerCase() == 'errorid') {
+                errorId = decodeURIComponent(parts[1]);
+            }
+        }
+    }
+    window.opener.handleOAuthResult((!errorCode).toString(), errorCode, errorId);
+    window.close();
+</script>
+Loading...
+</apex:page>
