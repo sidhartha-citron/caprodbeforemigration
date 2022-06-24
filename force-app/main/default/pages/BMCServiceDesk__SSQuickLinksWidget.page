@@ -1,0 +1,70 @@
+<apex:page controller="BMCServiceDesk.SSQuickLinkController" sidebar="false" showHeader="false" standardStylesheets="false">
+    <script>
+        Ext.ns('SDF.quicklinks');
+        
+        SDF.quicklinks.refresh = function() {
+            
+            refreshQuicklinks();
+        }
+    </script>
+    <style>
+		.corporateLinkCategorypanel{
+			white-space:nowrap;
+		}
+	</style> 
+
+ <apex:outputPanel id="quicklinksPanel">
+    <apex:form > 
+        <apex:outputPanel id="dummy"></apex:outputPanel>   
+         
+       <div id="mainQuickLinksContainer"> 
+       <div id="innerQuickLinksContainer">
+         <div id="coperateLinksDiv">
+         <table cellspacing="0" cellpadding="0" width="100%" height="100%">
+         <tr><td colspan='2' class="corporateLinkCategorypanel"><div class="quickLinkCategorybackgrond"><div class="categoryMyLinkTitle"><apex:outputLabel value="{!$Label.bmcservicedesk__corporatelinks}"></apex:outputLabel></div></div></td></tr>
+         <tr>
+            <td colspan='2' style="padding-left:7px; padding-bottom:7px;"> 
+                <apex:outputPanel id="dummypanel"> 
+                    <ul style="padding-left:5px;">
+                        <apex:repeat value="{!quickLinksList}" var="quicklink" rendered="true">
+                          <li><a href="{!quicklink.URL__c}" target="_blank" id='QLWidget_{!quicklink.id}' title='{!quicklink.LinkName__c}'>{!quicklink.LinkName__c}</a></li>
+                          <script>
+                          document.getElementById('QLWidget_{!quicklink.id}').innerHTML = Ext.util.Format.ellipsis('{!JSENCODE(quicklink.LinkName__c)}', 28);
+                          </script>
+                        </apex:repeat>
+                    
+                    </ul>
+                </apex:outputPanel>  
+            </td>
+         </tr>
+        </table>
+         </div>
+         <div id="myLinksDiv">
+          <table cellspacing="0" cellpadding="0" width="100%" height="100%">
+         <tr><td colspan="2" class="myLinkCategorypanel"><div class="quickLinkCategorybackgrond"><div class="categoryMyLinkTitle"><apex:outputLabel value="{!$Label.bmcservicedesk__mylinks}"></apex:outputLabel></div></div></td></tr>
+        <!--  <tr><td class="configureLinkCategorytitle">Configure Links</td>
+             <td style="padding: 7px 0px 4px 65px; align:right;"> <apex:commandButton value="Add Links" rerender="dummy,dummypanel,dummypanel123" onclick="openPopup();"/></td>
+         </tr> -->
+           <tr>
+              <td colspan="2" class="quickLinkCategorytitle" style="padding-bottom:7px;">
+                 <apex:outputPanel id="dummypanel123">
+                  <ul>
+                      <apex:repeat value="{!userQuickLinksList}" var="qLink" rendered="true">
+                             
+                                  <li style="margin-left:11px"><a href="{!qLink.URL__c}" target="_blank" id='QLWidget_{!qLink.id}' title='{!qLink.LinkName__c}'>{!qLink.LinkName__c}</a></li>
+                                  <script>
+                          document.getElementById('QLWidget_{!qLink.id}').innerHTML = Ext.util.Format.ellipsis('{!JSENCODE(qLink.LinkName__c)}', 28);
+                          </script>
+                                </apex:repeat>
+                   </ul>
+                 </apex:outputPanel>  
+             </td>
+          </tr> 
+        </table>  
+        </div>
+     </div>
+    </div>
+       <apex:actionFunction name="refreshQuicklinks" reRender="quicklinksPanel"/> 
+    </apex:form>
+    </apex:outputPanel>
+</apex:page>

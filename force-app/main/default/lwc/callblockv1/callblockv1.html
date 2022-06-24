@@ -1,0 +1,358 @@
+<template>
+    <template if:true={largedevice}>
+        <div class="slds-page-header">
+            <div class="slds-page-header__row">
+                <div class="slds-page-header__col-title">
+                    <div class="slds-media">
+                        <div class="slds-media__figure">
+                            <lightning-icon icon-name="action:log_a_call" alternative-text="Refresh"
+                                title="xx-small size">
+                            </lightning-icon>
+                        </div>
+                        <div class="slds-media__body">
+                            <div class="slds-page-header__name">
+                                <div class="slds-page-header__name-title">
+                                    <h1>
+                                        <span>Call Block Manager</span>
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <div class="slds-combobox_container slds-size_small">
+                                                    <div class={dropdownTriggerClass} aria-expanded="false"
+                                                        aria-haspopup="listbox" role="combobox">
+                                                        <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right"
+                                                            role="none" onclick={handleClickExtend}>
+                                                            <span
+                                                                class="slds-page-header__title slds-truncate">{currentFilter}
+                                                                <lightning-icon
+                                                                    class="slds-button__icon slds-icon-utility-down slds-icon_container forceIcon"
+                                                                    data-data-rendering-service-uid="232"
+                                                                    data-aura-rendered-by="371:0"
+                                                                    data-aura-class="forceIcon" icon-name="utility:down"
+                                                                    size="x-small">
+                                                                </lightning-icon>
+                                                            </span>
+                                                        </div>
+                                                        <div id="listbox-id-1"
+                                                            class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid"
+                                                            role="listbox">
+                                                            <ul class="slds-listbox slds-listbox_vertical"
+                                                                role="presentation">
+                                                                <template for:each={filterOptions} for:item="option">
+                                                                    <li role="presentation" class="slds-listbox__item"
+                                                                        key={option.value}>
+                                                                        <div class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small"
+                                                                            data-filter={option.value}
+                                                                            onclick={handleFilterChangeButton}>
+                                                                            <span
+                                                                                class="slds-media__figure slds-listbox__option-icon"
+                                                                                data-filter={option.value}></span>
+                                                                            <span class="slds-media__body"
+                                                                                data-filter={option.value}>
+                                                                                <span class="slds-truncate"
+                                                                                    title="Option A"
+                                                                                    data-filter={option.value}>{option.label}</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </li>
+                                                                </template>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <template if:true={blndaterange}>
+                    <div class="slds-page-header__col-actions">
+                        <div class="slds-page-header__controls">
+                            <div class="slds-page-header__control">
+                                <ul class="slds-button-group-list">
+                                    <li>
+                                        <lightning-input onchange={handlestartdate} type="date" name="Start Date"
+                                            value={startdate} label="Due Date Start"></lightning-input>
+                                    </li>
+                                    &nbsp;
+                                    <li>
+                                        <lightning-input class="eDate" onchange={handleenddate} type="date"
+                                            name="End Date" label="Due Date End" value={enddate}></lightning-input>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="slds-page-header__row">
+                <div class="slds-page-header__col-meta">
+                    <!-- <p class="slds-page-header__meta-text">
+                        <lightning-icon icon-name="action:following" alternative-text="Filter" size="xx-small"
+                            title="Filter">
+                        </lightning-icon>
+                        <span style="display:block;font-size:10px;">Follow Up Task</span>
+                    </p> -->
+                </div>
+                <div class="slds-page-header__col-controls">
+                    <div class="slds-page-header__controls">
+                        <div class="slds-page-header__control">
+                        </div>
+                        <div class="slds-page-header__control">
+                            <button onclick={refreshList}
+                                class="slds-button slds-button_icon slds-button_icon-border-filled"
+                                title="Refresh List">
+                                <lightning-icon icon-name="utility:refresh" alternative-text="Refresh" size="xx-small"
+                                    title="Refresh"></lightning-icon>
+                            </button>
+                        </div>
+                        <div class="slds-page-header__control">
+                            <button onclick={toggledaterange}
+                                class="slds-button slds-button_icon slds-button_icon-border-filled"
+                                title="Refresh List">
+                                <lightning-icon icon-name="utility:filterList" alternative-text="Filter" size="xx-small"
+                                    title="Filter"></lightning-icon>
+                            </button>
+                        </div>
+                        <div class="slds-page-header__control">
+                            <ul class="slds-button-group-list">
+                                <li>
+                                    <lightning-input label="test" value="" type="search" placeholder="Search"
+                                        variant="label-hidden" onchange={handleKeyChange} class="search">
+                                    </lightning-input>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </template>
+    <template if:true={taskSpinner}>
+        <lightning-spinner variant="brand" alternative-text="Loading Tasks" size="medium">
+        </lightning-spinner>
+    </template>
+    <template if:true={largedevice}>
+        <div class="" style="height:450px;">
+            <lightning-datatable class="slds-max-medium-table_stacked" default-sort-direction={defaultSortDirection}
+                data={recordsToDisplay} columns={columns} key-field="Id" sorted-by={sortBy}
+                sorted-direction={sortDirection} onsort={onHandleSort1} onrowaction={callRowAction}
+                show-row-number-column="true" draft-values={draftValues} onsave={handleSave}
+                oncellchange={handleCellChange}>
+            </lightning-datatable>
+        </div>
+        <c-confirmation-dialog title='Delete Call Block Task' message='Are you sure you want to delete this task?'
+            confirm-label='Delete' cancel-label='Cancel' visible={isDialogVisible} original-message={originalMessage}
+            name="confirmModal" onclick={handleDeleteEvent} oncancel={closeCancelDialog}>
+        </c-confirmation-dialog>
+        <template if:true={isRowDetailsVisible}>
+            <lightning-card>
+                <c-call-block-details oncallgettask={callgettask} rowdetails={rowdetails} onclosemodal={closemodal}>
+                </c-call-block-details>
+            </lightning-card>
+        </template>
+    </template>
+    <template if:false={largedevice}>
+        <div class="wrapper">
+            <!-- <div class="header">Header</div> -->
+            <div class="content">
+                <div style="height:1000px;">
+                    <article class="slds-card">
+                        <div class="">
+
+                            <div class="slds-scrollable">
+                                <!-- The rest of the page goes here -->
+                                <template for:each={recordsToDisplay} for:item="item" for:index="index">
+                                    <div class="" key={item.id} data-index={index}>
+                                        <article class={item.mobilefollowUpIcon} data-index={index}>
+                                            <div class="slds-grid slds-grid_align-spread slds-has-flexi-truncate">
+                                                <h3 class="slds-tile__title slds-truncate" title={item.Company}>
+                                                    <lightning-icon icon-name={item.iconToDisplay} size="x-small">
+                                                    </lightning-icon>&nbsp;
+                                                    <a href={item.comLink}>{item.Company}</a>
+                                                </h3>
+                                                <div class="slds-shrink-none">
+                                                    <lightning-icon variant={item.iconMobilePcss}
+                                                        class="slds-m-right_x-large" onclick={taskStatusAsHigh}
+                                                        data-index={index} icon-name={item.iconPriority} size="x-small">
+                                                    </lightning-icon>
+                                                    <lightning-button-menu alternative-text="Show menu"
+                                                        menu-alignment="right" label="" onselect={handleOnselect}
+                                                        variant="bare" data-index={index}>
+                                                        <lightning-menu-item value="Edit" label="Edit">
+                                                        </lightning-menu-item>
+                                                        <lightning-menu-item value="Delete" label="Delete">
+                                                        </lightning-menu-item>
+                                                    </lightning-button-menu>
+                                                </div>
+                                            </div>
+                                            <div class="slds-tile__detail">
+                                                <dl class="slds-list_horizontal slds-wrap">
+                                                    <dt class="slds-item_label slds-text-color_weak slds-truncate"
+                                                        title="First Label">Name:
+                                                    </dt>
+                                                    <dd class="slds-item_detail slds-truncate"
+                                                        title="Description for first label">{item.Name}
+                                                    </dd>
+                                                    <dt class="slds-item_label slds-text-color_weak slds-truncate"
+                                                        title="Second Label">Address:
+                                                    </dt>
+                                                    <dd class="slds-item_detail slds-cell-wrap"
+                                                        title="Description for second label">
+                                                        {item.Address}
+                                                    </dd>
+                                                    <dt class="slds-item_label slds-text-color_weak slds-truncate"
+                                                        title={item.Industry}>
+                                                        Industry:</dt>
+                                                    <dd class="slds-item_detail" title="Description for second label">
+                                                        {item.Industry}
+                                                    </dd>
+                                                    <dt class="slds-item_label slds-text-color_weak slds-truncate"
+                                                        title={item.Industry}>
+                                                        Due Date:</dt>
+                                                    <dd class="slds-item_detail" title="Description for second label">
+                                                        <div class="slds-grid">
+                                                            <div class="slds-col">
+                                                                <template if:true={item.readonly}>
+                                                                    <p>
+                                                                        <lightning-formatted-date-time
+                                                                            data-index={index}
+                                                                            ondblclick={toggleDueDate}
+                                                                            value={item.ActivityDate}>
+                                                                        </lightning-formatted-date-time>
+                                                                    </p>
+                                                                </template>
+                                                                <template if:false={item.readonly}>
+                                                                    <lightning-input type="date" data-index={index}
+                                                                        onchange={handleduedatechange}
+                                                                        onfocusout={handlefocusout}
+                                                                        value={item.ActivityDate} class="duedate">
+                                                                    </lightning-input>
+                                                                </template>
+                                                            </div>
+                                                            <!-- <div class="slds-col">
+                                                                <template if:true={item.readonly}>
+                                                                    <lightning-icon style="float:right"
+                                                                        icon-name="utility:edit" data-index={index}
+                                                                        size="xx-small" onclick={toggleDueDate}>
+                                                                    </lightning-icon>
+                                                                </template>
+                                                            </div> -->
+                                                        </div>
+                                                    </dd>
+                                                    <dt class="slds-item_label slds-text-color_weak slds-truncate"
+                                                        title="Created Date">
+                                                        Date Added:</dt>
+                                                    <dd class="slds-item_detail" title="Description for second label">
+                                                        {item.dateadded}
+                                                    </dd>
+                                                    <dt class="slds-item_label slds-text-color_weak slds-truncate"
+                                                        title="Second Label">Phone:
+                                                    </dt>
+                                                    <dd class="slds-item_detail" title="Description for second label">
+                                                        <lightning-formatted-phone value={item.Phone}>
+                                                        </lightning-formatted-phone>
+                                                    </dd>
+                                                </dl>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+            <lightning-accordion class="example-accordion" onsectiontoggle={handleToggleSection}
+                active-section-name={accordianSection} allow-multiple-sections-open>
+                <div class="slds-card" if:true={isSearch}>
+                    <lightning-input label="test" value="" type="search" placeholder="Search" variant="label-hidden"
+                        onchange={handleKeyChange} class="search">
+                    </lightning-input>
+                </div>
+                <div class="slds-card" if:true={isFilter}>
+                    <lightning-accordion-section name="A" label="Filter By">
+                        <lightning-layout multiple-rows vertical-align="center">
+                            <lightning-layout-item size="12" class="slds-border_bottom">
+                                <c-radiogroup options={filteroptions} label="Priority" orientation="vertical"
+                                    value="Priority" class="creaDate" onchange={handleradiochange}>
+                                </c-radiogroup>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </lightning-accordion-section>
+                </div>
+                <div class="slds-card" if:true={isSort}>
+                    <lightning-accordion-section name="B" label="Sort By">
+                        <lightning-layout multiple-rows vertical-align="center">
+                            <lightning-layout-item size="12" class="slds-border_bottom">
+                                <c-radiogroup options={options} label="Created Date" orientation="vertical"
+                                    value="CreatedDate" class="creaDate" onchange={handleradiochange}>
+                                </c-radiogroup>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="12" class="slds-border_bottom">
+                                <c-radiogroup options={options} label="Industry" orientation="horizontal"
+                                    value="Industry" onchange={handleradiochange}>
+                                </c-radiogroup>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="12" class="slds-border_bottom">
+                                <c-radiogroup value="Address" label="Address" orientation="horizontal" options={options}
+                                    onchange={handleradiochange}>
+                                </c-radiogroup>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="12" class="slds-border_bottom">
+                                <c-radiogroup options={options} label="Company Name" orientation="horizontal"
+                                    value="CompanyName" onchange={handleradiochange}>
+                                </c-radiogroup>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="12" class="slds-border_bottom">
+                                <c-radiogroup options={options} label="Contact Name" orientation="horizontal"
+                                    value="ContactName" onchange={handleradiochange}>
+                                </c-radiogroup>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </lightning-accordion-section>
+                </div>
+            </lightning-accordion>
+            <c-confirmation-dialog title='Delete Call Block Task' message='Are you sure you want to delete this task?'
+                confirm-label='Delete' cancel-label='Cancel' visible={isDialogVisible}
+                original-message={originalMessage} name="confirmModal" onclick={handleDeleteEvent}
+                oncancel={closeCancelDialog}>
+            </c-confirmation-dialog>
+            <div class="footer slds-card__footer">
+                <ul class="slds-button-group-list">
+                    <li>
+                        <button class="slds-button slds-button_icon" title="Search" onclick={handleMobileSearch}>
+                            <lightning-icon icon-name="standard:search" alternative-text="Search" size="medium"
+                                title="Search"></lightning-icon>
+                        </button>
+                    </li>
+                    &nbsp;&nbsp;
+                    <li>
+                        <button class="slds-button slds-button_icon" title="Sort" onclick={handlefilter}>
+                            <lightning-icon icon-name="action:filter" alternative-text="Sort" size="xx-small"
+                                title="xx-small size"></lightning-icon>
+                        </button>
+                    </li>
+                    &nbsp;&nbsp;
+                    <li>
+                        <button class="slds-button slds-button_icon" title="Sort" onclick={handlesort}>
+                            <lightning-icon icon-name="action:sort" alternative-text="Sort" size="xx-small"
+                                title="xx-small size"></lightning-icon>
+                        </button>
+                    </li>
+                    &nbsp;&nbsp;
+                    <li>
+                        <button class="slds-button slds-button_icon" title="Refresh" onclick={refreshData}>
+                            <lightning-icon icon-name="action:refresh" alternative-text="Refresh" size="xx-small"
+                                title="xx-small size"></lightning-icon>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </template>
+</template>

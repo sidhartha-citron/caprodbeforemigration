@@ -1,0 +1,68 @@
+<apex:page sidebar="false" controller="CTCT2.UploadWizardController" action="{!initStep1Page}" tabstyle="Uploads__tab">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script>
+    jQuery(document).ready(function() {
+    	// Fix Next button that Salesforce is removing the space between "Next" and ">".
+		jQuery(':submit').each(function() {
+			if (jQuery(this).val().indexOf('Next') === 0) {
+				jQuery(this).val('Next >');
+			}
+		});
+    });
+
+    function validateConfirm() {
+        if (!permissionConfirmCheckbox.checked) {
+            alert('Please confirm the {!uploadType}s are compliant.');
+            return false;
+        }
+        
+        return true;
+    }
+</script>
+
+    <apex:sectionHeader title="Constant Contact for Salesforce" subtitle="Upload {!uploadType}s"/>
+
+    <apex:form id="form">
+        <apex:pageBlock title="Step 1 of 3">
+            <p>
+                <b>Permission Confirmation Checklist</b><br/>
+                Only {!uploadType}s that have given you or your business prior consent to receive communications can be used in Constant Contact.<br/>
+                If your {!uploadType}s do not meet each condition on the list below, select Cancel.
+            </p>
+
+            <apex:outputPanel layout="block" style="padding: 10px 20px;">
+                <p><b>My {!uploadType}s are consent based</b> - All {!uploadType}s have given me or my business their prior consent to receive email communications.</p>
+                <p><b>My {!uploadType}s are NOT from a third party list</b> - My {!uploadType}s have not been purchased, rented, appended or given to me from any third party source.</p>
+                <p><b>My {!uploadType}s do NOT contain role addresses or distribution lists</b> - E.g. email addresses that may be received by more than one individual: sales@, support@, users@, list@, etc.</p>
+                <p><b>My {!uploadType}s do NOT contain email addresses</b> captured in my address book without prior consent. Including but not limited to: user group addresses, transactional addresses or auto-response addresses.</p>
+    
+                <p>
+                    <apex:inputCheckbox id="permissionConfirm" value="{!permissionConfirm}"/>
+                    <script>var permissionConfirmCheckbox = document.getElementById('{!$Component.permissionConfirm}');</script>
+                    <b>I confirm that {!uploadType}s that I add through this application are compliant with the list above.</b>
+                </p>
+            </apex:outputPanel>
+            
+            <p>
+                <b>Note:</b> Violation of these rules will make you subject to our Anti-Spam Policy and may result in the immediate termination of your account.<br/>
+                If you have questions, see the Constant Contact Anti-Spam policy. <a href="http://ui.constantcontact.com/CCSpamPolicy.jsp" target="_blank">"Constant Contact Anti-Spam policy"</a>
+            </p>
+
+			<apex:facet name="footer">
+				<apex:panelGroup >
+					<table width="100%">
+						<tr>
+							<td width="25%"><apex:commandButton action="{!cancel}" value="Cancel"/></td>
+							<td width="50%" align="center" class="pbButtonb">
+								<apex:commandButton action="{!step1Back}" value="< Back"/>
+								<apex:commandButton action="{!step1Next}" onclick="return validateConfirm();" value="Next >"/>
+							</td>
+							<td width="25%">&nbsp;</td>
+						</tr>
+					</table>
+				</apex:panelGroup>
+			</apex:facet>
+        </apex:pageBlock>
+    </apex:form>
+
+</apex:page>

@@ -1,0 +1,83 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.DashboardController" id="thePage" standardStylesheets="false">
+<head>
+    
+ <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>
+ 
+  <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/stdcalalog.css" />
+</head>
+<c:CommonIncludes2 />    
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/DashboardPage.js"/>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+   <style>
+   .x-toolbar {
+    padding-left: 0px; !important;       
+}
+.x-tool {
+    
+    margin-right: 2px; !important;  
+}
+.x-menu-list{
+Overflow: auto \0/;
+width : 100% \0/;
+}
+   </style>
+   <Script>
+   var wikiUrl ='{!wikiUrl}';
+   </Script>
+   <apex:outputPanel id="varsPanelId">
+        <script>
+
+            var isQVDeleted = {!isQVDeleted};
+            var wListStr = '{!wList}';
+            var lastQuickViewId = '{!JSENCODE(lastQuickViewId)}';
+            var lastId = '{!lastId}';
+            var lastQuickView = '{!JSENCODE(lastQuickView)}';
+            var wSize = '{!wListSize}';
+        </script>
+  </apex:outputPanel>
+  <apex:outputPanel id="op1">
+  <script type="text/javascript">
+    var labelTooltipClose = '{!JSENCODE($Label.Close)}',
+        labelTooltipMinimize = '{!JSENCODE($Label.TooltipMinimize)}',
+        labelTooltipMaximize = '{!JSENCODE($Label.TooltipMaximize)}',
+        labelTooltipRestore = '{!JSENCODE($Label.TooltipRestore)}',
+        labelTooltipHelp = '{!JSENCODE($Label.TooltipHelp)}',
+        labelSelectQuickViewMessage = '{!JSENCODE($Label.SelectQuickViewMessage)}',
+        labelQuickViewDeletedMessage = '{!JSENCODE($Label.QuickViewDeletedMessage)}',
+        labellayout = '{!JSENCODE($Label.Layout)}',
+        labelButtonCascade = '{!JSENCODE($Label.ButtonCascade)}',
+        labelButtonTile = '{!JSENCODE($Label.ButtonTile)}',
+        labelsave = '{!JSENCODE($Label.Save)}',
+        labeladdQuickView = '{!JSENCODE($Label.addQuickView)}',
+        labelrefresh = '{!JSENCODE($Label.Refresh)}';
+        
+        function repeatListOfWidgetsPage(){
+            <apex:repeat value="{!listOfWidgets}" var="customWidget">
+                addTab('{!customWidget.widget.BMCServiceDesk__xPos__c}','{!customWidget.widget.BMCServiceDesk__yPos__c}','{!customWidget.widget.BMCServiceDesk__width__c}', '{!customWidget.widget.BMCServiceDesk__height__c}', '{!customWidget.widget.Id}', '{!JSENCODE(customWidget.widget.FKSYSQVQuery__r.BMCServiceDesk__name__c)}', '{!customWidget.widget.FKSYSQVQuery__r.Id}', {!customWidget.minimized}, {!customWidget.maximized});
+                        
+            </apex:repeat>
+        }
+              
+  </script>        
+
+    <apex:form id="theForm">
+    <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+    <apex:actionFunction name="addToList" action="{!addToList}" oncomplete="addQVOnDashboard();" reRender="varsPanelId">
+        <apex:param assignTo="{!lastQuickViewId}" name="lastQuickView" value=""/>
+    </apex:actionFunction>    
+    
+    <apex:actionFunction name="saveState" action="{!save}" rerender="varsPanelId, validationComponent" onComplete="showError();" >
+        <apex:param assignTo="{!widgetsState}" name="widgetsState" value=""/>
+    </apex:actionFunction>
+    
+    <apex:inputHidden id="isQVDeleted" value="{!isQVDeleted}" immediate="true" />
+    
+    <div id="menubar"></div><br/>
+    <div  id="skyWind"></div>
+    <input type="button" id="btnID" onclick="" style="display:none;"/>
+    </apex:form>
+
+    </apex:outputPanel>
+<iframe id="timeoutframe" name="timeoutframe" src="/apex/TimeOutPage" frameborder="0" style="visibility:hidden;" />
+
+</apex:page>

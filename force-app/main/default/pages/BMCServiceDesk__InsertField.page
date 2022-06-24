@@ -1,0 +1,80 @@
+<apex:page controller="BMCServiceDesk.InsertFieldController" standardStylesheets="true" sidebar="false" showHeader="false" title="{!$Label.bmcservicedesk__insert} {!$Label.bmcservicedesk__ciexpfield}">
+    <apex:form >
+        <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/InsertField.css" />
+        <apex:outputpanel >
+            <apex:pagemessages id="pgMsg" />
+        </apex:outputpanel>
+        <div class  = "Header padding10px">
+            {!$Label.bmcservicedesk__insert} {!$Label.bmcservicedesk__ciexpfield}
+        </div>
+        <div id = "messageDiv" class = "messageDiv padding10px">
+            {!$Label.Insert_Field_Level_Restriction_Message}
+        </div>
+        <div class = "padding10px">
+            {!$Label.InsertFieldLookupMessage}
+        </div>
+        <div class = "MergeFieldPanel padding10px">
+                <apex:actionregion immediate="true">
+                <apex:outputpanel id="mergeFieldPanel" styleClass="displayInline">
+                    
+                        <table>
+                            <tr>
+                                <apex:repeat value="{!SOFields}" var="SOField" id="sofields">
+                                <td align='left' valign='top'><apex:selectList value="{!SOField.selected}" size="8" id="txtSelectedField"
+                                    onchange="setDisplayText('{!$Component.txtInsertField}', this, '{!SOField.Index}');" styleClass="mergeFieldFont">
+                                        <apex:selectOptions value="{!SOField.data}" />
+                                    </apex:selectList></td>
+                                </apex:repeat>
+
+                            <td style = "position:relative;">
+                                <apex:outputpanel styleClass="displayInline" rendered="{!isFieldSelected}">
+                                    <table class = "displayInline">
+                        <tr>
+                            <td align='left' valign='top'>
+                                                <div id="displayPanel">
+                                            <table class = "mergeFieldTable">
+                                <tr>
+                                                    <td class = "textAlignCenter mergeFieldFont">You have Selected :</td>
+                                </tr>
+                                <tr>
+                                                    <td class = "textAlignCenter mergeFieldFont"><b><apex:outputLabel value="{!SelectedField}" id="txtInsertField" /></b></td>
+                                </tr>
+                                <tr>
+                                                    <td class = "textAlignCenter mergeFieldFont">Merge Field :</td>
+                                </tr>
+                                <tr>
+                                                    <td class = "textAlignCenter mergeFieldFont">
+													<apex:outputText value="CRUDFLSCheck# Both CRUD & FLS check are not required. Selected field's apiname is displayed in mergeFieldText no reference to any Sobject field's value" rendered="false"/>
+													<apex:inputtext value="{!mergeFieldText}" id="txtInsertFieldAPI" disabled="true" size="25"/></td>
+                                </tr>
+                                <tr>
+                                                    <td class = "textAlignCenter mergeFieldFont"><input type="button"
+                                                        class="btn" value="{!$Label.Insert}"
+                                        onclick = "insertMergeField('{!$Component.txtInsertFieldAPI}');" />
+                                    </td>
+                                </tr>
+                            </table>
+                            </div>
+                            </td>
+                        </tr>
+                    </table>
+                </apex:outputpanel>
+                            </td>
+                        </tr>
+                    </table>
+                    <apex:actionFunction name="rerenderPanel"
+                        action="{!rerenderFields}" rerender="pgMsg,mergeFieldPanel"
+                        immediate="true">
+                        <apex:param name="index" value="{!SelectedIndex}"
+                            assignTo="{!SelectedIndex}" />
+                        <apex:param name="selectedField" value="{!selectedField}"
+                            assignTo="{!selectedField}" />
+                        <apex:param name="mergeField" value="{!mergeFieldText}" assignTo="{!mergeFieldText}"/>   
+                    </apex:actionFunction>
+
+                </apex:outputpanel>
+            </apex:actionregion>
+         </div>
+         <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/InsertField.js"></script>
+    </apex:form>
+</apex:page>

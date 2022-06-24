@@ -1,0 +1,119 @@
+<!-- while profile data is loading -->
+<div class="profile-inner" loading-spinner if="profileModel.profileDataIsLoading" centered="true"></div>
+<!-- "My Profile" container -->
+<div ng-if="!profileModel.profileDataIsLoading" class="profile">
+	<div class="layout-width profile-container">
+
+		<!-- "My Profile" info column -->
+		<div class="profile-info" >
+			<!-- "My Profile" main info (photo and name) -->
+			<div class="profile-inner profile-info__card-layout">
+				<div class="support-back-link-container profile-back-link">
+					<a id="backLink" class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goHome()" ng-keydown="$event.which === 13 || $event.which === 32 ? goHome() : null" tabindex="0" aria-label="{{selfServiceLabels.back}}" role="link">
+						<!--<span class="glyphicon glyphicon-chevron-left support-back-link__icon"></span>-->
+						&#10094; {{ selfServiceLabels.back }} 
+					</a>
+				</div>
+				<div id="profileInfo" tabindex="0" role="listbox" ng-keydown="profileDetailsNavigation($event,'profileInfo')">
+					<div class="profile-info-card">
+						<div class="profile-info-card__picture" >
+							<loading-spinner if="profileImageIsUpdating" overlay="true"></loading-spinner>
+							<div selectable ng-if="!profileImageIsUpdating" class="profile-user-image" tabindex="-1" role="option" ng-keydown="$event.which === 13 || $event.which === 32 ? uploadClick($event) : null">
+								<div id="photoUploadSection" class="photo-upload-section" aria-label="{{selfServiceLabels.UploadProfilePhoto}}"> 
+	                                <img ng-if="profileModel.profileImage" ng-src="{{profileModel.profileImage}}" class="profile-picture-user"> 
+	                                <div ng-if="!profileModel.user.isPortalUser" id="uploadLinkSection" class="photo-upload-link"> 
+	                                     <a id="uploadLink" href="" ng-if="!profileModel.user.isProfilePhotoAvailable" ng-click="uploadClick($event)" title="{{ selfServiceLabels.AddPhoto }}">{{ selfServiceLabels.AddPhoto }}</a> 
+	                                     <a id="uploadLink" href="" ng-if="profileModel.user.isProfilePhotoAvailable" ng-click="uploadClick($event)" title="{{ selfServiceLabels.Update }}">{{ selfServiceLabels.Update }}</a> 
+	                                </div> 
+	                            </div> 
+								<div ng-if="!profileModel.profileImage" class="profile-picture-placeholder style="width: 200px; height: 200px;" profile-picture-placeholder_user"></div>
+							</div>
+						</div>
+						<div id="userProfileDialog" selectable class="profile-info-card__name"  ng-bind-html="profileModel.user.displayName" ng-click="showMyProfileModal('userProfileDialog');" ng-class="{'user-name-hyperlink':showMyProfile==true}" tabindex="-1" role="option" aria-roledescription = "{{selfServiceLabels.userProfileInfo}}">
+					</div>
+				</div>
+	
+				<!-- User availability status -->
+				<div class="profile-info__status-info">
+					<user-profile-availability data="profileModel.user.availability"></user-profile-availability>
+				</div>
+	
+				<!-- "My Profile" info panel (address, phones, email) -->
+				<div class="profile-info__details" ng-if="profileModel.user.jobTitle || profileModel.user.emails.length || profileModel.user.phones.length">
+					<div class="profile-info__divider"></div>
+	
+					<!-- "My Profile" position and experience -->
+					<div class="profile-info__section_position" ng-if="profileModel.user.jobTitle">
+						<div class="profile-info__section-text">{{profileModel.user.jobTitle.value}}</div>
+						<!--<div class="profile-info__additional_time">{{userModel.experience}}</div>-->
+					</div>
+	
+					<!-- "My Profile" emails -->
+					<div selectable class="profile-info__section" tabindex="-1" role="option">
+						<div class="profile-info__section-text profile-info__email" title="{{profileModel.user.emails}}">
+							{{profileModel.user.emails}}
+						</div>
+						<div class="activity-icon">
+							<span class="i-mail_42"></span>
+						</div>
+					</div>
+					<div class="profile-info__divider" style="margin-bottom: 0px"></div>
+					<div style="margin-top: 8px">
+						<button selectable ng-if="supportModel.enableSaveAsDraft" ng-click="goToDrafts();" class="btn_nofill btn-view-activity-panel btn-draft" tabindex="-1" role="option">
+							<span class="btn-primary Branding-Right_Panel-default_button Branding-Right_Panel-button_outline btn-draft-count">{{ supportModel.savedDraftCount }}</span>
+							{{selfServiceLabels.Drafts}}
+						</button>
+					</div>
+				</div>
+				</div>
+			</div>
+		</div>	
+		<!-- Timeline -->
+		<div class="profile-activity-stream Branding-Right_Panel-activity">
+			<div class="profile-inner">
+				<!-- Separate view for approvals -->
+				<div ng-if="profileCtrlState.currentTimelineFilter.id === 'approvals'" ng-include="'views/approval/approvals.html'"></div>
+
+				<!-- Profile toolbat and timeline for everything except for approvals -->
+				<div ng-if="profileCtrlState.currentTimelineFilter.id !== 'approvals'">
+					<div class="timeline-toolbar">		
+						<div><ng-include src="templateUrls.filterUrl"/></div>
+						
+					</div>
+					
+					<div class="profile-activity-stream__loading-spinner-container">
+						<div class="profile-activity-stream__loading-spinner" loading-spinner if="(activityStreamModel.cache['user' + userModel.userId].isLoading || profileCtrlState.timelineLoadingFlagsByType[profileCtrlState.currentTimelineFilter.type]) && !isCsvCreation"></div>
+					</div>
+					<div aria-listnavigation id="activity-stream-all" tabindex="{{profileCtrlState.timelineItems.length == 0 ? -1 : 0}}" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'activity-stream-all')" role="listbox" list="profile">
+						<div selectable ng-repeat="activityItem in profileCtrlState.timelineItems | filter: filterActivityItems" activity-stream-item timeline-style="true" role="option" tabindex="-1"></div>
+					</div>
+						<div ng-show="!(activityStreamModel.cache['user' + userModel.userId].isLoading || profileCtrlState.timelineLoadingFlagsByType[profileCtrlState.currentTimelineFilter.type])">
+							<div class="support-back-link-container profile-back-link profile-page-navigator" >
+							<a tabindex="0" class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goToPrevPage()" ng-show="isPreviousEnabled" aria-label="{{selfServiceLabels.Previous}}" ng-keydown="$event.which === 13 || $event.which === 32 ? goToPrevPage() : null">
+									&#10094; {{ selfServiceLabels.Previous }} 
+								</a>
+							</div>	
+							<div tabindex="0" class="support-back-link-container profile-back-link profile-page-navigator" ng-show="isPreviousEnabled || isNextEnabled" aria-label="{{selfServiceLabels.Page}} {{currentPageNo}}">
+								{{ selfServiceLabels.Page }} {{currentPageNo}}
+							</div>
+							<div class="support-back-link-container profile-back-link profile-page-navigator profile-page-navigator-next" 
+							>
+							<a tabindex="0" class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goToNextPage()" ng-show="isNextEnabled" aria-label="{{selfServiceLabels.Next}}" ng-keydown="$event.which === 13 || $event.which === 32 ? goToNextPage() : null">
+									{{ selfServiceLabels.Next }} &#10095;
+								</a>
+							</div>
+						</div>
+						<div ng-show="profileCtrlState.timelineItems.length == 0" role="alert" aria-live="polite">
+							<h5 class="support-results__message my-activity-results__message">
+								{{selfServiceLabels.noResults}}
+							</h5>
+					</div>
+					<!--<div class="activity-stream__loading-more" ng-if="profileCtrlState.timelineItems &&  profileCtrlState.allowMorePastItems"
+						 past-items-loader
+						 load-past-activity-items="refreshActivityStream()">
+					</div>-->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

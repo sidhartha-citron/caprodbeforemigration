@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebLink xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CTCT2__Upload_to_Constant_Contact</fullName>
+    <availability>online</availability>
+    <displayType>massActionButton</displayType>
+    <linkType>javascript</linkType>
+    <masterLabel>Upload to Constant Contact</masterLabel>
+    <openType>onClickJavaScript</openType>
+    <protected>false</protected>
+    <requireRowSelection>true</requireRowSelection>
+    <url>var leadIds = {!GETRECORDIDS($ObjectType.Lead)};
+
+if (!leadIds || leadIds.length &lt; 1) {
+	alert(&apos;Please select at least one Contact to upload.&apos;);
+} else {
+	var baseUrl;
+	
+	var hostnameParts = location.hostname.split(&apos;.&apos;);
+	if (hostnameParts[0] == &apos;ctct2&apos;) {
+		baseUrl = &apos;https://ctct2.&apos; + hostnameParts[1] + &apos;.visual.force.com&apos;;
+	} else {
+		baseUrl = &apos;https://ctct2.&apos; + hostnameParts[0] + &apos;.visual.force.com&apos;;
+	}
+	
+	var form = document.createElement(&apos;form&apos;);
+	form.action = baseUrl + &apos;/apex/UploadWizardStep1&apos;;
+	form.method = &apos;post&apos;;
+	
+	var hiddenTypeField = document.createElement(&apos;input&apos;);
+	hiddenTypeField.id = &apos;type&apos;;
+	hiddenTypeField.name = &apos;type&apos;;
+	hiddenTypeField.type = &apos;hidden&apos;;
+	hiddenTypeField.value = &apos;Lead&apos;;
+	form.appendChild(hiddenTypeField);
+	
+	var hiddenUploadIdsField = document.createElement(&apos;input&apos;);
+	hiddenUploadIdsField.id = &apos;uploadIds&apos;;
+	hiddenUploadIdsField.name = &apos;uploadIds&apos;;
+	hiddenUploadIdsField.type = &apos;hidden&apos;;
+	hiddenUploadIdsField.value = leadIds;
+	form.appendChild(hiddenUploadIdsField);
+	
+	document.body.appendChild(form);
+	
+	form.submit();
+}</url>
+</WebLink>

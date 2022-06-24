@@ -1,0 +1,208 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.UnavailabilityHistoryController" standardStylesheets="false">
+<c:CommonIncludes />
+<!-- std layout changes -->
+<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js" />
+<style>
+.clsInputTextBox{
+    *height:13px !important;
+}
+.clsInputTextAreaTD1{
+    padding-right:5px;
+    padding-left:10px;
+}
+.bmcEmailClose {background-image: url({!$Resource.SDEFStyles}/SDEFbuttons/b_close.png) !important;}
+input[type="button"]:disabled {
+    opacity: .6 !important;
+}
+</style>
+
+<script>
+var actionIdName='{!JSENCODE(actionIdName)}';
+function closeWindow(){                 
+    if(errormsg==null||errormsg==''||errormsg=='{!JSENCODE($Label.SavedSuccessfully)}'){
+        if(window.opener.opener != null && window.opener.opener.refreshRelatedLists != undefined)
+			window.opener.opener.refreshRelatedLists();
+        window.opener.close();
+        window.close();  
+    }
+}
+
+var disableTrue = true;
+Ext.onReady(function(){
+
+var SaveBtnHandler = function(button,event) {
+         chkBoxValue=Ext.getCmp('idInactive').getValue(); 
+         save(chkBoxValue);};
+
+var DeleteBtnHandler = function(button,event) {  Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}', function(btn){
+                            if(btn === 'yes'){
+                            deleteUnavailabilityHistory();
+                                                             
+                            }
+                                                         
+                            });
+                        };         
+
+var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+                scale: 'medium',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.save)}',
+                iconCls: 'bmcSave',
+                id:'bmcSaveId',
+                disabled: false,
+                handler:SaveBtnHandler
+            },' ','-',' ', {
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.delete)}',
+                id:'deleteId1',
+                handler:DeleteBtnHandler
+            },
+            new Ext.Toolbar.Fill(), 
+            {
+               id :'idInactive',
+               xtype  : 'checkbox',
+               checked: false,
+               boxLabel:'<span class="checkboxLabelCls">{!JSENCODE($ObjectType.Unavailability_Action_History__c.fields.inactive__c.label)}</span>'
+               
+            }]
+        });
+
+});
+
+
+</script>
+<apex:outputPanel id="dummy"></apex:outputPanel>
+<apex:outputPanel id="errorId">
+        <script>       
+           errormsg = '{!JSENCODE(messageString)}';                    
+        </script>
+</apex:outputPanel>
+
+<apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form id="formId">            
+            <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            
+                <apex:actionFunction action="{!actionQuery}" name="setActionId" reRender="Action__c_id_name,Action__c_id_description">
+                    <apex:param assignTo="{!ActionId}" value="" name="saveActionId "/>
+                </apex:actionFunction>
+                
+                <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,errorId" oncomplete="showError();closeWindow();">
+                   <apex:param assignTo="{!chkBoxValue}" value="" name="idSetString "/>
+                </apex:actionFunction>
+                
+                <apex:actionFunction action="{!deleteUnavailabilityHistory}" name="deleteUnavailabilityHistory" onComplete="closeWindow();"/>
+            <apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object (Projected_Service_Outage__c) and is part of our process so fields of history object must be available to all users" rendered="false"/>
+			<apex:outputPanel rendered="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.Accessible}">
+            <div id="capsule" class="CapsuleDiv1">
+                    <table cellpadding="0" cellspacing="0" class="clsMainTable" style="border-width:0px">
+                        <tr class="clsRowGreyBg">
+                            <td>
+                                <div id="btnToolbar"></div>                                
+                            </td>
+                        </tr>  
+                         <tr>
+                            <td>
+                            <table cellpadding="0" cellspacing="0" class="clsTable">
+                            <tr>
+                                <td class="clsTopAlignment75">
+                                   <table cellpadding="0" cellspacing="0" class="clsTable">
+                                        <tr>
+                                            <td colspan="3"><div class="div15pxVspacing"/></td>
+                                        </tr>                                   
+                                         <tr>
+                                            <td class="clsInputLabelTD" style='width:58px;'><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__FKAction__c.label}"/><span class="clsRequiredBlack">*</span></td>
+                                            <td class="clsInputTextBoxTD">                                   
+                                                <apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object (Projected_Service_Outage__c) and is part of our process so fields of history object must be available to all users. CRUD check added in parent panel" rendered="false"/>
+												<apex:inputText title="{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__FKAction__c.inlineHelpText}" value="{!actionIdName}" id="Action__c_id_name" onblur="showalldata(event)" styleClass="clsInputTextBox"/>
+                                            </td>
+                                            <td class="lookupIconTD">
+                                              <div class="lookUpIconDiv">
+                                                <apex:commandButton onclick="if(!inProgress) {openPopupWithTitle('SearchPage?popupId=Action&isLookup=true&filterClause='+escape('appliesToServiceUnavailability__c = true and system__c=false'),setActionId,'',307,560);}" rerender="dummy" styleClass="lookupIconOn" disabled=""/>                                                  
+                                              </div>
+                                            </td>
+                                        </tr>                             
+                                                                               
+                                       </table>
+                                        <table class="clsTable" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td class="clsInputBoldLabelTDI" ><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__description__c.label}" rendered="{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__description__c.accessible}"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsInputTextBoxTD clsLeftPadding10 clsRightPadTD" colspan="3">
+                                                <div class="clsRelativePosition">
+                                                    <apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object (Projected_Service_Outage__c) and is part of our process so fields of history object must be available to all users. CRUD check added in parent panel" rendered="false"/>
+													<apex:inputTextarea title="{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__description__c.inlineHelpText}" value="{!unavailabilityHistory.BMCServiceDesk__description__c}" id="Action__c_id_description" styleClass="clsInputTextAreaPgWoSidePanel" />
+                                                </div>
+                                            </td>
+                                            <td class="lookupIconTD" style="vertical-align:top;">
+                                                <input type="button" id="inputTxtAreaButton" class="TextboxPopupIcon" style="display:inline" onclick="showTextEditor('{!$Component.formId.Action__c_id_description}', '{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__description__c.label}', '32000', '{!JSENCODE($Label.OK)}', '{!JSENCODE($Label.Cancel)}', 300);"/>
+                                            </td>
+                                        </tr>
+                                         </table>
+                                      
+                                      <table class="clsTable" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td class="clsInputBoldLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__note__c.label}"/></td>
+                                            
+                                        </tr>
+                                        <tr>
+                                            <td class="clsInputTextBoxTD clsLeftPadding10 clsRightPadTD" colspan="3">
+                                                <div class="clsRelativePosition">
+                                                    <apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object (Projected_Service_Outage__c) and is part of our process so fields of history object must be available to all users. CRUD check added in parent panel" rendered="false"/>
+													<apex:inputTextarea value="{!unavailabilityHistory.BMCServiceDesk__note__c}" title="{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__note__c.inlineHelpText}" id="Action__c_id_note" styleClass="clsInputTextAreaPgWoSidePanel"  />
+                                                </div>
+                                            </td>
+                                            <td class="lookupIconTD" style="vertical-align:top;">
+                                                <input type="button" id="inputTxtAreaButton" class="TextboxPopupIcon" style="display:inline" onclick="showTextEditor('{!$Component.formId.Action__c_id_note}', '{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__note__c.label}', '32000', '{!JSENCODE($Label.OK)}', '{!JSENCODE($Label.Cancel)}', 300);"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"><div class="div13pxVspacing"/></td>
+                                        </tr>
+                                      
+                                    </table>
+                                          <table class="clsTable" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__date__c.label}"/></td>
+                                             <td class="clsInputTextBoxTD" title="{!$ObjectType.Unavailability_Action_History__c.fields.date__c.inlineHelpText}"><apex:inputField id="dateAndTime" value="{!unavailabilityHistory.BMCServiceDesk__date__c}"  styleClass="clsInputTextBox" /></td>
+                                        </tr>    
+                                        <tr>
+                                            <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__FKUser__c.label}"/></td>
+                                            <td class="clsInputTextBoxTD">
+                                            <apex:outputText value="CRUDFLSCheck# Only CRUD check is required and performed, FLS check not required. History object is dependent on parent object (Projected_Service_Outage__c) and is part of our process so fields of history object must be available to all users. CRUD check added in parent panel" rendered="false"/>
+											<apex:inputText title="{!$ObjectType.BMCServiceDesk__Unavailability_Action_History__c.fields.BMCServiceDesk__FKUser__c.inlineHelpText}" value="{!staffUserName}" id="User_id_username"  styleClass="clsInputTextBox" />
+                                            </td>
+                                            <td class="lookupIconTD">  
+                                             <div class="lookUpIconDiv">  
+                                                <apex:commandButton rerender="dummy" styleClass="lookupIconOn" disabled="true" id="lookupIconOn"/>
+                                           </div>
+                                            </td>
+                                        </tr>
+                                           </table>
+                                           <div class="div13pxVspacing"/>
+                                </td>
+                              </tr>
+                            </table>
+                            
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+				</apex:outputPanel>
+                <c:TabOutComponent ></c:TabOutComponent> 
+             </apex:form>
+    </apex:outputPanel> 
+
+</apex:page>

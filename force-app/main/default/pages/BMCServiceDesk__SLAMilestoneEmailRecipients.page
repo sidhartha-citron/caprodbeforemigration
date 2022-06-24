@@ -1,0 +1,100 @@
+<apex:page showheader="false" controller="BMCServiceDesk.SLAMilestoneEmailRecipients">
+<c:CommonIncludes />
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SLAMilestone.css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SearchPage.css" />
+ <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/SLAMilestoneEmailRecipients.js" />
+<Script>
+//var isLoaded = false;
+var involvedUsersStoreData = {!involvedUsersJSON};
+var userRoleLabel = '{!JSENCODE($Label.userRole)}',
+    lastNameLabel= '{!JSENCODE($Label.LastName)}',
+    firstNameLabel= '{!JSENCODE($Label.FirstName)}',
+    emailAddressLabel= '{!JSENCODE($Label.EmailAdddress)}',
+    involvdeUsersRadioLabel= '{!JSENCODE($Label.involvedUsers)}',
+    allUsersRadioLabel= '{!JSENCODE($Label.allUsers)}',
+    selectFromLabel='{!JSENCODE($Label.selectFrom)}'+ ': ',
+    toTextAreaDomId= '{!$Component.recipientFormId.toTextAreaId}',
+    ccTextAreaDomId = '{!$Component.recipientFormId.ccTextAreaId}',
+    enabledButtonParam = '{!JSENCODE($CurrentPage.parameters.enabledButtonName)}' ;
+var DZHE = 'џ';// used for spliting to and cc
+var recipientWindow;
+
+</Script>
+<style>
+    .clsInputTextArea{
+        height: 16px;
+         width: 97%;
+        border-top-color: #bac3c8;
+        border-left-color: #bac3c8;
+    }
+    .clsButtonBarTD{
+        border:1px solid #bac3c8;
+        height: 39px;
+    }
+    .toolSpCls{
+        height: 39px;
+        background-color:#bac3c8;
+    }
+    .x-toolbar-left{
+        height: 39px;
+    
+    }
+    .x-toolbar{
+        border:none;
+    }
+	
+</style>
+
+<div id="toolbarDiv"/>
+<div id="allUsersDiv" style="display:none;height:362px;">
+ 
+</div>
+<div id="involvedUsersGridDiv" style="display:block"/>
+<div class="div10pxVspacing" />
+<apex:form id="recipientFormId">
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr>
+    <td colspan="2"><div class="div10pxVspacing" /></td>
+</tr>
+<tr>
+<td width="1%">
+<input type="button" value="{!$Label.To}  > " onClick="populateToAddress();"  id="ToButtonId"  class="clearBtnCls" style="display:inline"/>
+</td>
+<td width="60%">
+<apex:inputTextArea id="toTextAreaId" StyleClass="clsInputTextArea" value="{!toTextField}" onBlur="chkSize(this);"/>
+</td>
+</tr>
+<tr>
+    <td colspan="2"><div class="div10pxVspacing" /></td>
+</tr>
+<tr>
+<td>
+<input type="button" value="{!$Label.cc} >" onClick="populateccAddress()"  id="ccButtonId"  class="clearBtnCls" style="display:inline" />
+</td>
+<td>
+<apex:inputTextArea id="ccTextAreaId" StyleClass="clsInputTextArea" value="{!ccTextField}" onBlur="chkSize(this);"/>
+</td>
+</tr>
+<tr>
+    <td colspan="2"><div class="div10pxVspacing" /></td>
+</tr>
+<tr>
+    <td colspan="2"><div class="div10pxVspacing" /></td>
+</tr>
+<tr>
+    <td class="clsButtonBarTD" colspan="2">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+                <td width="90%" align="right">
+                    <input type="button" value="{!$Label.Ok}" onClick="sendAddressValue();"  id="OKBtnId"  class="clearBtnCls" style="display:inline" />
+                </td>
+                <td width="10%">
+                    <input type="button" value="{!$Label.Cancel}" onClick="cancelRecipients();"  id="CancelBtnId"  class="clearBtnCls" style="display:inline" />
+                </td>
+            </tr>
+        </table>    
+    </td>
+</tr>
+</table>
+</apex:form>
+</apex:page>

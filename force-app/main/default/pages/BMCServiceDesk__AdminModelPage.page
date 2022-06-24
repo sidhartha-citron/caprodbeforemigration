@@ -1,0 +1,342 @@
+<apex:page controller="BMCServiceDesk.AdminModelController" extensions="BMCServiceDesk.ConsoleRemoteActions" showHeader="false" standardStylesheets="true" id="thePage">  
+<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css"/>
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminModel.css"/>
+<apex:form id="modelForm">
+ <div id="northcontent"> 
+    
+    <!-- Start Record Navigation -->
+    <apex:inputText value="{!modelIdString}" id="modelString_Id" style="display:none"/>
+	<apex:actionFunction action="{!nextBtnHandler}" name="nextModelRecordHandler" rerender="errorMsg,namePanel,fieldSetPanel,ruleDataPanel,ScriptDataPanel,fldTypePanel,fieldSetDownPanel" oncomplete="RefreshWholeModelPage();prepareDropdownOnLoad();afterSave();"> 
+	</apex:actionFunction>
+	<apex:actionFunction action="{!previousBtnHandler}" name="previousModelRecordHandler" rerender="errorMsg,namePanel,fieldSetPanel,ruleDataPanel,ScriptDataPanel,fldTypePanel,fieldSetDownPanel" oncomplete="RefreshWholeModelPage();prepareDropdownOnLoad();afterSave();"> 
+	</apex:actionFunction>
+	<apex:actionFunction action="{!refreshBtnHandler}" name="refreshModelRecordHandler" rerender="errorMsg,namePanel,fieldSetPanel,ruleDataPanel,ScriptDataPanel,fldTypePanel,fieldSetDownPanel" oncomplete="RefreshWholeModelPage();prepareDropdownOnLoad();setTypeAheadForLookups();"> 
+	</apex:actionFunction>
+	<!-- End Record Navigation -->
+	
+	<apex:actionFunction name="populateFields" action="{!populateFields}" reRender="fldTypePanel" oncomplete="hideLoadingMask();" >
+		<apex:param name="CMDBClassName" assignTo="{!CMDBClass}" value=""/>
+	</apex:actionFunction>
+	<apex:actionFunction name="SaveRecord" action="{!SaveRecord}" reRender="fldTypePanel,errorMsg,ScriptDataPanel,fieldSetDownPanel" oncomplete="afterSave();setTypeAheadForLookups();"> 
+		<apex:param name="modelClass" assignTo="{!modelClass}" value=""/>
+		<apex:param name="isInactive" assignTo="{!isInactive}" value=""/> 
+	</apex:actionFunction> 
+	<apex:actionFunction name="DeleteRecord" action="{!DeleteRecord}" oncomplete="postDeleteAction();">
+	</apex:actionFunction>
+	<apex:actionFunction name="fetchclasses" action="{!fetchClasses}" rerender="fldTypePanel">
+        <apex:param assignTo="{!filterType}" name="selectedfilterType" value=""/>
+    </apex:actionFunction>
+	<apex:actionFunction name="SyncModelAttributes" action="{!SyncModelAttributes}" rerender="" >
+        <apex:param name="recordId" assignTo="{!recordId}"  value=""/>
+    </apex:actionFunction>
+    <script>
+        var mandatoryFields = {};
+        var Errors = '{!JSENCODE($Label.Error)}';
+		var nonPrint = '¬';
+        var mandatoryFieldValueValidationMsg = '{!JSENCODE($Label.mandatoryFieldValueValidationMsg)}';
+        var normalizationExceptionLinkModelWarningMsg = '{!JSENCODE($Label.ReservedLabel1)}';
+        var modelSyncWarningMsg = '{!JSENCODE($Label.ReservedLabel2)}';
+        var models = '{!JSENCODE($Label.Models)}';
+        var orgNamespace='{!orgNamespace}';
+        var manufacturerField = '';
+        function setFSFieldDetail(fieldLabel, fsRequired, fsDBRequired, fieldId) {
+            var objtitleval = document.getElementById(fieldId);
+            if (objtitleval) {
+                var fieldValue = objtitleval.value;
+                if (fsRequired || fsDBRequired)
+                    mandatoryFields[fieldId] = fieldLabel + nonPrint + fieldValue;                         
+            }                       
+        }     
+    </script>   
+    <div id="mainDiv">
+    <div id="btnToolbar" />
+    <div id="jsscripterrorId" class="message errorM3" style="display:none">
+        <table class="messageTable" cellspacing="0" cellpadding="0" border="0" style="padding: 0px; margin: 0px;">
+            <tr valign="top">
+                <td>
+                    <img class="msgIcon" title="{!JSENCODE($Label.Error)}" src="/s.gif" alt="{!JSENCODE($Label.Error)}" />
+                </td>
+                <td>
+                    <div id="errorDescId" class="messageText"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="SaveMessageDiv" class="msgCls" style="display:none">
+        <table class="messageTable" cellspacing="0" cellpadding="0" border="0" style="padding: 0px; margin: 4px 2px 4px 2px;">
+            <tr valign="top">
+                <td>
+					<apex:image styleClass="SaveSuccessIcon" title="{!$Label.bmcservicedesk__savedsuccessfully}" value="/s.gif" alt="{!$Label.bmcservicedesk__savedsuccessfully}" />
+                </td>
+                <td>
+                    <div id="SaveMessage"  style="margin-left: 6px;" ><apex:outputText value="{!$Label.bmcservicedesk__savedsuccessfully}" /></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id='autocompleteDiv' class="clsAutocompleteDiv" style="position:absolute; z-index:2;visibility:hidden;'">
+        <select id="selectAutoOptions" style="width: auto !important;" class="clsAutocompleteSelectOption" onmousedown="isAutocomplete = true;"  onclick="SelectAutoValue(this,'autocompleteDiv');" multiple="multiple"  >
+        </select>
+    </div>
+    <apex:pageMessages id="errorMsg"/>
+    <div class="rf-spacer-cls" />
+    <apex:pageBlock mode="edit" id="pBlock">
+        <apex:pageBlockSection id="namePanel" columns="1">
+                <apex:pageBlockSectionItem id="namePanelSection" >
+                    <apex:outputPanel ><apex:outputLabel value="{!JSENCODE($ObjectType.BMCServiceDesk__Model__c.fields.name.label)}"/><span>&nbsp;*</span></apex:outputPanel>
+                    <apex:outputPanel >
+                                <table id="tableId"  cellspacing="0" cellpadding="0">
+                                    <tr>
+                                        <td>
+                                            <apex:outputPanel >
+                                                <apex:inputField style="width:668px;" id="l_inputField" value="{!modelRecord.Name}"/>
+                                                <script>                                                  
+                                                    setFSFieldDetail('{!JSENCODE($ObjectType.BMCServiceDesk__Model__c.fields.name.label)}', true, true,'{!$Component.l_inputField}');
+                                                </script>
+                                            </apex:outputPanel>                                     
+                                        </td>
+                                    </tr> 
+                                </table> 
+                    </apex:outputPanel>                             
+                </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection title="{!$Label.bmcservicedesk__modelfor}" id="fieldSetPanel" columns="2">
+            <apex:pageBlockSectionItem rendered="{!isDisplayClassType}">
+                <apex:outputText value="{!JSENCODE($Label.bmcservicedesk__classtype)}"/>
+                <div id="classType" title="{!$Label.bmcservicedesk__modelclasstypemsg}"/>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                <apex:outputText value="{!JSENCODE($ObjectType.BMCServiceDesk__Model__c.fields.BMCServiceDesk__FKCMDB_Class__c.label)}"/>
+                <div id="CMDBclass" title="{!$ObjectType.BMCServiceDesk__Model__c.fields.BMCServiceDesk__FKCMDB_Class__c.inlineHelpText}"/>
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection id="fieldSetDownPanel" columns="2">
+            <apex:repeat id="modelRepeatId" value="{!ModelFieldSet}" var="mFS">
+                <apex:pageblockSectionItem >  
+                        <apex:outputLabel value="{!mFS.label}"/>
+                        <apex:outputPanel >
+                                <table id="tableId{!mFS.type}"  cellspacing="0" cellpadding="0">
+                                    <tr>
+                                        <td>
+                                            <apex:outputPanel >
+                                                <apex:inputField id="m_inputField" style="{!IF((JSENCODE($ObjectType.BMCServiceDesk__Model__c.fields[mFS.fieldPath].Type)=='boolean'),'width:18px;','width:204px;')}" value="{!modelRecord[mFS.fieldPath]}" onblur="addManufacturer('{!JSENCODE(mFS.fieldPath)}',this.value);" onclick="fieldApiName = '{!mFS.fieldPath}'; currentConsole = 'modelform';" />
+                                                <script>
+                                                    document.getElementById('{!$Component.m_inputField}').title='{!JSENCODE($ObjectType.Model__c.fields[mFS.fieldPath].inlineHelpText)}';
+                                                    fldType='{!JSENCODE($ObjectType.Model__c.fields[mFS.fieldPath].Type)}';
+                                                    if(!({!$ObjectType.Model__c.fields[mFS.fieldPath].Updateable})&&(fldType!='boolean')){
+                                                        var ele = document.getElementById('{!$Component.m_inputField}');
+                                                        var parentEle;
+                                                        if(typeof(ele)!=undefined)
+                                                            parentEle = ele.parentNode.parentNode;
+                                                        if(typeof(parentEle)!=undefined)
+                                                            parentEle.setAttribute('class', 'InputVirtualReadOnly');                                                        
+                                                    }
+                                                    if ('{!mFS.type}' == 'reference') {
+                                                        document.getElementById('{!$Component.m_inputField}').className = 'RFlookupClass';
+														document.getElementById('{!$Component.m_inputField}').autocomplete = 'off';
+                                                    }
+                                                    if ('{!JSENCODE(mFS.fieldPath)}' == orgNamespace+'Manufacturer__c') {
+                                                    	manufacturerField = document.getElementById('{!$Component.m_inputField}');
+                                                    }
+                                                    setFSFieldDetail('{!JSENCODE(mFS.Label)}', {!mFS.required}, {!mFS.DBRequired},'{!$Component.m_inputField}');
+                                                </script>
+                                            </apex:outputPanel>                                     
+                                        </td>
+                                    </tr> 
+                                </table> 
+                        </apex:outputPanel>
+                </apex:pageblockSectionItem> 
+			</apex:repeat>			
+		</apex:pageBlockSection>
+    </apex:pageBlock>
+	<table width="100%" border="0">
+		<tr>
+            <td colspan="3" height="15">
+				<span class="rf-lbl-bold">{!JSENCODE($Label.SetAttribute)}</span>
+			</td>
+		</tr>
+		<tr>
+            <td colspan="3">
+				<div id="helpText">
+					<span class="defaultFont">{!$Label.modelPageUIMsg}</span>
+				</div>
+			</td>
+		</tr>	
+		<tr><td colspan="3" height="5"></td></tr>	
+		<tr>
+			<td width="15%" class="fieldDropdown">
+				<div id="fieldSelDiv" title="{!$Label.modelFieldSelDivMsg}"/>
+			</td>
+			<td width="30%" style="padding-left:10px" title="{!$Label.modelSelectFieldComboMsg}">
+				<div id="selectFieldCombo"/>
+				<apex:inputText id="inputTxt" style="display:block;"  styleClass="filterInputEle" onkeyup="if (popUpString != '') {queryData(this, popUpString, event, '');}" onclick="currentConsole = 'model';" html-autocomplete="off"/>
+				<input type="text" id="referenceID" value=""  style="display:none;" />
+				<apex:inputTextarea id="inputTxtArea" style="display:none" styleClass="filterTextarea" onkeyup="validateLength('{!$Component.modelForm.inputTxtArea}',selectedTextAreaLength);"/>
+				<input type="button" id="lookUp" class="filterLookupIconOn" style="display:none;" onClick="openQualLookup();"/>
+				<input type="button" id="inputTxtAreaButtonEle" class="filterTextBoxPopupIcon" style="display:none" onclick="showTextEditor('{!$Component.modelForm.inputTxtArea}', selectedLabel, selectedTextAreaLength, '{!$Label.OK}', '{!$Label.Cancel}');" />
+				<div id="picklistCombo"/>   
+				<div id="booleanCombo"/>        
+			</td>
+			<td style="padding-left:10px">
+				<input type="button"  value="{!$Label.Add}"    onClick="addRuleQData();"  id="addRuleButtonId" title="{!JSENCODE($Label.Add)}" style="display:inline" />
+				<input type="button"  value="{!$Label.Update}" onClick="upadateRuleData();" id="updateRuleButtonId" title="{!JSENCODE($Label.Update)}" style="display:none"   /> 
+				<input type="button"  value="{!$Label.Remove}" onClick="removeRuleData();" id="removeRuleButtonId" title="{!JSENCODE($Label.Remove)}" style="display:inline"   /> 
+				<input type="button"  value="{!$Label.Clear}" onClick="clearSelection();" id="clearButtonId" title="{!JSENCODE($Label.Clear)}" style="display:inline"   /> 
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td colspan="2" >
+				<div id="divErrorMsg" style="color: #c00; font-weight:bold;" />
+			</td>
+		</tr>
+    </table>
+    <div id="gridDiv" />	
+	</div>
+	<apex:inputHidden id="applySTStr"  value="{!Expression}"/>
+	<apex:inputHidden id="lookupFieldId"  value="{!lookupFieldId}"/>
+	</div>
+<div id='content-div'></div>
+</apex:form>
+<script>
+	var serCIclass = '{!serCIclass}';
+	var serAssetclass = '{!serAssetclass}';
+	var serAllclass = '{!serAllclass}';
+    var strDescending = '{!JSENCODE($Label.Descending)}';
+    var strAscending = '{!JSENCODE($Label.Ascending)}';	
+	var lblLoading = '{!JSENCODE($Label.SSLoading)}...';
+	var lblInsert ='{!JSENCODE($Label.Insert)}';
+    var lblAll ='{!JSENCODE($Label.All)}';
+    var lblSelect ='{!JSENCODE($Label.Select)}'; 	
+	var classTypeJson = {!classTypeJson};
+	var lblNone = '--{!JSENCODE($Label.None)}--';
+    var lblCIClass = '{!JSENCODE($Label.CIClasses)}';
+    var lblAssetClass = '{!JSENCODE($Label.AssetClasses)}';
+	var lblLookupValueLength = '{!JSENCODE($Label.LookupValueLength)} ';
+    var lblInvalidNumber = '{!JSENCODE($Label.TemplateInvalidNumber)}';
+	var lblInvalidEmailAddress = '{!JSENCODE($Label.TemplateInvalidEmailAddress)}';
+	var lblInvalidPercent = '{!JSENCODE($Label.TemplateInvalidPercent)}';
+	var lblInvalidCurrency = '{!JSENCODE($Label.TemplateInvalidCurrency)}';
+	var lblInvalidPhone = '{!JSENCODE($Label.TemplateInvalidPhone)}';
+	var manufacturerName = '{!JSENCODE($Label.manufacturerName)}';
+	var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+	var deleteToolTip = '{!JSENCODE($Label.Delete)}';
+	var delCnfrmMsg = '{!JSENCODE($Label.ModelDeleteConfirmMessage)}';
+	var saveSucfulMsg = '{!JSENCODE($Label.SavedSuccessfully)}';
+	
+	var saveMaskMsg = '{!JSENCODE($Label.MobSaving)}';
+	var tooltipNew='{!JSENCODE($Label.New)}';
+	var tooltipSave='{!JSENCODE($Label.Save)}';
+	var tooltipCopy='{!JSENCODE($Label.Copy)}';
+	var tooltipDelete='{!JSENCODE($Label.Delete)}';
+	var tooltipRefresh='{!JSENCODE($Label.Refresh)}';
+	var tooltipPreviousRecord='{!JSENCODE($Label.PreviousRecord)}';
+	var tooltipNextRecord='{!JSENCODE($Label.NextRecord)}';
+	var tooltipSyncCI='{!JSENCODE($Label.SyncCI)}';
+	var tooltipInactive='{!JSENCODE($Label.Inactive)}';
+	var b_previous='{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif';
+	var b_next='{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif';
+	var InactiveLabelWithStyle= '<span id="InactiveLabel"  class="checkboxLabelCls">'+'{!JSENCODE($ObjectType.Model__c.fields.inactive__c.Label)}'+'</span>';
+	var inactiveLabel='{!JSENCODE($ObjectType.Model__c.fields.inactive__c.label)}'; 
+	var headerWinTab = '{!JSENCODE($ObjectType.Model__c.label)}';       
+	var EF ='ф';
+	var searchErrorMsg = '{!JSENCODE($Label.GsErrorMsg)}';
+    
+	var ruleClsFld = '{!JSENCODE($Component.modelForm.ruleClsId)}'; 
+    var DZHE ='џ';//used to split the picklist values
+
+    var PE = 'П';
+    var listData;
+	var Value = '{!JSENCODE($Label.Value)}';
+	var FieldLabel = '{!JSENCODE($Label.ACHardwareAttribute)}';
+	var labelModelSupportingInformation = '{!JSENCODE($Label.ModelSupportingInformation)}';
+    var isChildPanelCollapsed = true;
+    var isReadOnly = '{!JSENCODE($CurrentPage.parameters.isReadOnly)}';   
+    var copyRecordId = '{!JSENCODE(copyId)}';
+    var invalidLookupStringMsg = '{!JSENCODE($Label.invalidLookupString)}';
+	
+	function getInputTxtEle(){  return document.getElementById('{!$Component.modelForm.inputTxt}'); }
+	function getInputTextAreaEle(){ return document.getElementById('{!$Component.modelForm.inputTxtArea}');} 
+	function getDateTimeInputEle(){ return document.getElementById('{!$Component.modelForm.datetimeinput}');}
+	function getDateTimePickerImg(){ return document.getElementById('{!$Component.modelForm.dateTimePopupImg}'); }
+	function getDateInputEle(){ return document.getElementById('{!$Component.modelForm.inputDate}');}
+	function getDatePickerImg(){ return document.getElementById('{!$Component.modelForm.datePopupImg}'); }
+	function getLookupEle(){ return document.getElementById('lookUp'); }
+	function getUpdateBtnEle(){ return document.getElementById('updateRuleButtonId'); }
+	function getAddBtnEle(){ return document.getElementById('addRuleButtonId'); }
+	function getRemoveBtnEle(){ return document.getElementById('removeRuleButtonId'); }
+	function getSDFStylesResPath(){ return '{!$Resource.SDEFStyles}'; }  
+    function getApplySTStrEle() { return document.getElementById('{!$Component.modelForm.applySTStr}');} 	
+	function getlookupFieldIdEle() { return document.getElementById('{!$Component.modelForm.lookupFieldId}');}
+    _RemotingActions={}
+    _RemotingActions.getLookupFieldData = '{!$RemoteAction.ConsoleRemoteActions.getLookupFieldData}';
+	
+	var isfromNormExcep = '{!isfromNormExcep}';
+	if(isfromNormExcep.toLowerCase()=='true'){
+		var Model_NameDiv = document.getElementById('{!JSENCODE($Component.modelForm.pBlock.namePanel.namePanelSection.l_inputField)}');
+		if(Model_NameDiv != undefined){
+			Model_NameDiv.disabled = true;
+		}
+	}
+	
+	var _ObjectPermissions = {}
+	_ObjectPermissions.isModelCreateable = {!$ObjectType.BMCServiceDesk__Model__c.createable};
+	_ObjectPermissions.isModelUpdateable = {!$ObjectType.BMCServiceDesk__Model__c.updateable};
+	_ObjectPermissions.isModelDeletable = {!$ObjectType.BMCServiceDesk__Model__c.deletable};
+
+</script>  
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"/>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminModelPage.js"/>  
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/TypeAhead.js"/>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminJSCommon.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"/>   
+<script>
+	var ObjectPrefixMap = new Array(); 
+	var prefixMap;
+	var fieldApiName;
+	var result='{!ObjectPrefixMap}';
+	result= Ext.decode(result);
+	generateObjPreFixMap(result);	
+</script>
+<apex:outputPanel id="fldTypePanel">
+<script>
+	fldData = JSON.parse('{!JSENCODE(fieldData)}');
+	isSavedSuccessfully = {!isSavedSuccessfully};
+	var fieldSelComboObj=Ext.getCmp('fieldSelComboBox') ;
+	if(fieldSelComboObj != null && fieldSelComboObj != undefined)
+		fieldSelComboObj.store.loadData(fldData);
+	var modelname= '{!JSENCODE(modelRecord.name)}';
+</script>
+</apex:outputPanel>
+<apex:outputPanel id="ruleDataPanel">
+    <script>
+        listData = [];
+		var listDataString =JSON.parse('{!JSENCODE(AttributValueMapping)}');
+		for(var i = 0; i<listDataString.length;i++){
+			listData.push(listDataString[i].split('П'));
+		};
+    </script>
+</apex:outputPanel>  
+<apex:outputPanel id="ScriptDataPanel">
+ 	<script>
+		var isDisplayClassType = {!isDisplayClassType};
+		var CMDBClassName = '{!JSENCODE(CMDBClass)}';
+		var modelClass = '{!JSENCODE(modelClass)}';
+		var recordId = '{!JSENCODE(recordId)}';
+		var filterType = '{!JSENCODE(filterType)}';
+	    var modelString_ele = document.getElementById('{!$Component.modelForm.modelString_Id}');
+        var modelIdSet;
+        if(modelIdSet == null || modelIdSet == ''){
+            if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+                if(typeof(window.parent.returnListOfId)=='function')
+                    modelIdSet=window.parent.returnListOfId();
+            }else{
+                if(typeof(window.parent.parent.getIdArray)=='function')
+                    modelIdSet=window.parent.parent.getIdArray();
+                    window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+            }
+        } 		
+		var isInactive = {!isInactive};
+ 	</script>
+</apex:outputPanel> 
+</apex:page>

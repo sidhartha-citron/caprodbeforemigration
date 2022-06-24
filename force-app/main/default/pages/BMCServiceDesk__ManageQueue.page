@@ -1,0 +1,294 @@
+<apex:page controller="BMCServiceDesk.ManageQueueController" showHeader="false" standardStylesheets="false">
+    <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/ManageQueue.css" type="text/css" />
+
+    <apex:form id="QueueSelectionForm">
+    <table width="100%" id="tableCls" height="100%" >
+        <tr>
+            <td colspan="2">
+            <div id="divTB" tabindex="1"></div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" height="14"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type="button" id="btn_QueueAvailability" class="changeBtnCls" title="{!JSENCODE($Label.Queue_Availability)}" value="{!JSENCODE($Label.Queue_Availability)}" onclick="displayActiveTab(this);changeLabel(true);" />
+                <input type="button" id="btn_ManageQueueAssignment" class="changeBtnCls" title="{!JSENCODE($Label.Queue_Assignment)}" value="{!JSENCODE($Label.Queue_Assignment)}" onclick="displayActiveTab(this);changeLabel(false);" />
+            </td>
+            <td>
+                 <div id="helpDiv" class="clshelpDiv" tabindex="7"></div>
+            </td>
+        </tr>    
+        <tr>
+            <td colspan="2">
+                <div id="ManageQueueAvailabilityTab">
+                    <table class="tableClsGrid" height="100%" width="100%">                    
+                        <tr>
+                            <td colspan="2">
+                 <div class="clsPicklistDiv fontc" style="padding-left:15px">
+                          <div id="RFCLbl" class="floatLeft10px paddingTop4 "></div>
+                           <apex:selectList id="select" value="{!SelectedView}" tabindex="2" size="1" style="height:24px; vertical-align:middle;padding:2px 2px 3px 0px; margin-top:-1px;" onChange="ChangeGridDataOfStore();"  >
+                                   <apex:selectOptions value="{!items}"/>
+                           </apex:selectList>
+                 </div>
+             </td>
+        </tr>
+        <tr>
+            <td id ="configureConsoleId" style="visibility:visible;"  colspan="2" > 
+                <table  height="100%" width="95%" class="configureTblCls" >
+                   <tr id ="MenuOrgId" style="visibility:visible;display:block;">
+                       <td valign="top">
+                            <table style="font: 9pt arial !important;border: none" id="nestedTable" height="554px">
+                                <tr class="paddingLeft5">
+                                    <td valign="top">
+                                       <table>
+                                          <tr> 
+                                             <td class ="paddingTop5 gridHeaderCls BoltFontcls">{!JSENCODE($Label.ActiveQueues)}</td>
+                                             <td> </td>
+                                             <td class ="paddingTop5 gridHeaderCls BoltFontcls padingLeft10">{!JSENCODE($Label.InactiveQueues)}</td>
+                                             <td> </td>
+                                          </tr>
+                                          <tr>
+                                             <td valign="top">
+                                                <div id="QMenuId" tabindex="3"/> </td>
+                                             <td class="padingLeft10">
+                                                 <input type="button" tabindex="4" id="MoveNextButtonId" onkeypress="moveNext();" class="bmcButtonArrownext" onclick="moveNext();" style="margin-bottom: 5px !important"/> <br></br>
+                                                 <input type="button" tabindex="5" id="MovePrevButtonId" onkeypress="movePrevious();" class="bmcButtonArrowPrev"  onclick="movePrevious();" style="margin-bottom: 5px !important;"/> <br></br>
+                                              </td>
+                                              <td valign="top" class="padingLeft10">
+                                                <div id="HideQMenuId" tabindex="6"/></td>
+                                                
+                                          </tr>
+                                          <tr><td class="padingLeft10" height="8px"></td></tr>
+                                          <tr>
+                                            <td colspan="2"><div id="Notification" class="notecls"/></td>
+                                            <script>
+                                                var bullet = '\u2022 ';
+                                                document.getElementById('Notification').innerText= bullet+'{!JSENCODE($Label.BullletHeaderOnQueuePage)}'; 
+                                            </script>
+                                            
+                                          </tr>
+                                          <tr>
+                                            <td colspan="3">
+                                           <apex:outputLabel Style="padding: 8px" Styleclass="notecls" value="{!JSENCODE($Label.bmcservicedesk__note)}: {!JSENCODE($Label.bmcservicedesk__noteforqueuepage)}" />
+                                          </td>
+                                          </tr>
+                                          <tr>
+                                            <td height="10" colspan="3"> </td>
+                                          </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>     
+                        </td>
+                    </tr>
+                </table>
+            </td>
+      </tr>
+    </table> 
+                </div>
+                
+                
+                <div id="ManageQueueAssignmentTab">
+                    <table class="tableClsGrid" id="ManageQueueAssignmentId" height="100%" width="100%">
+                        <tr>
+                            <td class="paddingTop10 paddingLeft35">
+                            <div id="assignmentTitleLbl">
+                                <span class="BoltFontcls paddingLeft15">{!JSENCODE($Label.Manage_Assignment_Desc)}</span>
+                                <span class="paddingTop35 paddingLeft15">
+                                <apex:inputCheckbox styleClass="checkBoxPermision" Id="isAccount" value="{!isAccountSelected}"/> 
+                                <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__account)}" for="isAccount" styleClass="checkboxPannel"/>
+                                
+                                <apex:inputCheckbox styleClass="checkBoxPermision" Id="isProfile" value="{!isProfileSelected}"/>
+                                <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__profile)}" for="isProfile" styleClass="checkboxPannel"/>
+                                
+                                <apex:inputCheckbox styleClass="checkBoxPermision" Id="isRole" value="{!isRoleSelected}"/>
+                                <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__role)}" for="isRole" styleClass="checkboxPannel"/>
+                                </span>                                                       
+                            </div>
+                            </td>
+                                    
+                        </tr>
+                        <tr>
+                            <td class="assignmentQueueCls">
+                                <table id="tableClsAssignment" class="tableClsGrid"> 
+                        <tr style=" display: none;">
+                            <td class="enableConsoleCls" valign="top">
+                                <div class="floatLeft10px paddingtop12" id="QueueAssignmentId"> </div>
+                                <div  id="helpDiv"></div>
+                            </td>
+                        </tr>
+                         <tr>
+                            <td colspan="1" class="configureTrCls assignmentTdClass" id="ConsoleTd">
+                                <div id="consoleViewlabel" class="floatLeft10px paddingTop4 ">{!JSENCODE($Label.Queues_for)}</div>
+                                <div id="consoleViewPickList" class=" floatLeft10px"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td id ="configureAssignConsoleId" valign="top">
+                                <table class="configureTblCls" width="97%">                    
+                                    
+                                    <tr >                                   
+                                        <td width="50%" class="BoltFontcls tdgridCls paddingTop10 " valign="top"> 
+                                            <div id="selectionLbl" class="floatLeft10px paddingTop4 ">{!JSENCODE($Label.For_selected_text)}</div>
+                                            <div id="profilePickList" class="floatLeft10px"></div>
+                                            <div id="right-tab-header" class="paddingTop35"></div>                     
+                                        </td>
+                                            
+                                         <td width="50%" class="tdgridCls configurePadding30">
+                                            <table width="100%">
+                                                <tr>
+                                                                <td class="BoltFontcls tdgridCls" valign="top">
+                                                        <div id="actionQueueLbl">{!JSENCODE($Label.Entitled_Queues_in_RF_Form)}</div>
+                                                        
+                                                        <div id="actionAllQueue" class="paddingLeft1"> 
+                                                            <div id="actionAllQueueChkBox" class="divChkBoxClass"></div>
+                                                            <div id="actionAllQueuelabel" class="divLabelClass">{!JSENCODE($Label.Entitle_All_Queues)}</div>                                        
+                                                        </div>
+                                                                    <div id="actionId"></div> 
+                                                    </td>                                              
+                                                </tr>
+                                            </table>
+                                        </td>
+                                                    
+                                                </tr>                    
+                                            </table>
+                                        </td>
+                                    </tr>                    
+                                </table>
+                            </td>
+                        </tr>
+                     </table>
+                </div>  
+                
+                
+            </td>
+        </tr>
+    </table>
+
+    <script>
+    var Aid,Aname;
+    var isRFHotkeysDisabled={!isRFHotkeysDisabled}; 
+    var AvailablesQueueStoreData={!AvailableQueueListStore};
+    var HideQueueStoreData={!HiddenQueueListStore};
+    var HideQMenuItemStore,QMenuItemStore ,HiddenQMenuGrid,AvailableQMenuGrid;
+    var SaveInactiveQStore;
+    var saveMsg = '{!JSENCODE($Label.SavedSuccessfully)}';
+    var ObjectLabel = '{!JSENCODE($Label.Object)}';
+    var SaveLabel = '{!JSENCODE($Label.Save)}';
+    var InactiveSavedList ='{!JSENCODE(InactiveSavedList)}';
+    var RecordId,RecordName;
+    var wikiUrl = '{!wikiUrl}';
+    parent.addHelpOnPage(document.getElementById('helpDiv'),'managing_queues.htm',wikiUrl); 
+    var selectListID='';
+    var labelSrch = '{!JSENCODE($Label.search)}';
+    var labelPrevious = '{!JSENCODE($Label.PreviousPage)}';
+    var labelReset = '{!JSENCODE($Label.Reset)}';
+    var labelNext = '{!JSENCODE($Label.NextPage)}';
+    var labelQuestion = '{!JSENCODE($Label.Question)}';
+    var labelWarning = '{!JSENCODE($Label.Warning)}';
+    var labelError = '{!JSENCODE($Label.Error)}';
+    var labelInfo = '{!JSENCODE($Label.Information)}';
+    var WaitMaskMsg = "{!JSENCODE($Label.SSLoading)}...";
+    var labelMinChar = '{!JSENCODE($Label.GsErrorMsg)}';
+    var labelNoRecord = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+
+    function getselectListID(){
+     if(document.getElementById('{!$Component.QueueSelectionForm.select}')!= 'undefined' && document.getElementById('{!$Component.QueueSelectionForm.select}')!= null)
+        selectListID=document.getElementById('{!$Component.QueueSelectionForm.select}');
+    }
+    function getSDFStylesResPath(){
+        var resPath = '{!$Resource.SDEFStyles}';
+        return resPath;  
+    }
+    </script>
+
+    <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ManageQueue.js"></script> 
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"></script>
+
+    <apex:outputpanel id="Refreshstore">
+        <script>
+            AvailablesQueueStoreData={!AvailableQueueListStore};
+            if(QMenuItemStore!=null && QMenuItemStore!=undefined && AvailablesQueueStoreData!=null)
+                QMenuItemStore.loadData(AvailablesQueueStoreData);
+                
+             HideQueueStoreData={!HiddenQueueListStore};
+             if(HideQMenuItemStore!=null && HideQMenuItemStore!=undefined && HideQueueStoreData!=null)
+                HideQMenuItemStore.loadData(HideQueueStoreData);
+         
+        </script>
+    </apex:outputpanel>
+
+    <apex:actionFunction action="{!ChangeGridData}" name="ChangeGridData" rerender="Refreshstore" >
+    </apex:actionFunction>
+    <apex:actionFunction action="{!SaveData}" name="SaveData" oncomplete="showSaveMessage();" >
+        <apex:param name="InactiveSavedList" value="" assignTo="{!InactiveSavedList}" />
+    </apex:actionFunction>
+
+
+    <!-- manage Assignment action-->
+        <apex:actionfunction action="{!getGridData}" name="getGridData" rerender="reloadScript" onComplete="refreshQViewGrid();">
+            <apex:param name="selectedRoleProfileId" assignTo="{!selectedRoleProfileId}" value="" />
+         </apex:actionfunction>
+         <apex:actionfunction action="{!getAllAvailableQueue}" name="getAllAvailableQueue" rerender="reloadScript" onComplete="refreshQueuePanelGrid();">
+            <apex:param name="selectedConsoleView" assignTo="{!selectedConsoleView}" value="" />
+         </apex:actionfunction>
+         <apex:actionfunction action="{!getSelectedQueue}" name="getSelectedQueue" rerender="reloadScript" onComplete="refreshQueuePanelWithSelectedIds();">
+            <apex:param name="selectedConsoleView" assignTo="{!selectedConsoleView}" value="" />
+            <apex:param name="selectedRoleProfileName" assignTo="{!selectedRoleProfileName}" value="" />
+            <apex:param name="selectedRoleProfileId" assignTo="{!selectedRoleProfileId}" value="" />
+         </apex:actionfunction>
+         <apex:actionFunction action="{!getSearchRecords}" name="getSearchRecords" rerender="reloadScript" oncomplete="loadData();">
+            <apex:param assignTo="{!searchString}" name="searchstring" value="" />
+         </apex:actionFunction>
+         <apex:actionFunction action="{!prevPageRecords}" name="prevPageRecords" rerender="reloadScript" oncomplete="loadData();" />
+         <apex:actionFunction action="{!nextPageRecords}" name="nextPageRecords" rerender="reloadScript" oncomplete="loadData();" />
+        <apex:actionfunction action="{!SaveAssignmentQueue}" name="SaveAssignmentQueue" rerender="dummy" onComplete="onCompleteSaveQueueAssignment();">
+            <apex:param name="selectedConsoleView" assignTo="{!selectedConsoleView}" value="" />
+            <apex:param name="selectedRoleProfileName" assignTo="{!selectedRoleProfileName}" value="" />
+            <apex:param name="selectedRoleProfileId" assignTo="{!selectedRoleProfileId}" value="" />
+            <apex:param name="selectedCheckBoxValue" assignTo="{!selectedCheckBoxValue}" value="" />
+            <apex:param name="isAllQueue" assignTo="{!isAllQueue}" value="" />
+            <apex:param name="isFilterSettingChange" assignTo="{!isFilterSettingChange}" value="" />
+         </apex:actionfunction>
+         
+         <apex:outputPanel id="reloadScript">
+               <script>
+                    var resultDataList = [{!resultDataList}];
+                    var listAvailableQueue = {!listAvailableQueueStr};  
+                    var selectedQueueIds = '{!selectedQueueIds}';           
+                   function getPreFirstBtn(){
+                        return !{!IF(paginator.hasPrevious,'true','false')};    
+                    }
+                    function getNextLastBtn(){
+                        return !{!IF(paginator.hasNext,'true','false')};
+                    }                               
+               </script>
+         </apex:outputPanel> 
+
+    <script>
+        var StandAloneViewStore = {!consoleViewList};
+        var queueFilterViewStore = {!availableViewList};
+        var actionQueueTitleLbl = '{!JSENCODE($Label.Entitle_Queues)}';
+        var accountLabel = '{!JSENCODE($Label.bmcservicedesk__account)}';
+        var profileLabel = '{!JSENCODE($Label.bmcservicedesk__profile)}';
+        var roleLabel = '{!JSENCODE($Label.bmcservicedesk__role)}';
+        var accountName = '{!AccountString}';
+        var profileName = '{!ProfileString}';
+        var roleName = '{!RoleString}';
+        var loadingMsg = '{!JSENCODE($Label.SSLoading)}';
+        var warningMsg = '{!JSENCODE($Label.Availability_warning_msg)}';
+		function changeLabel(isAvailabilityTab){
+            if(isAvailabilityTab)
+                warningMsg = '{!JSENCODE($Label.Availability_warning_msg)}';
+            else
+                warningMsg = '{!JSENCODE($Label.Assignment_warning_msg)}';
+        }
+    </script>
+
+    </apex:form>
+    </apex:page>

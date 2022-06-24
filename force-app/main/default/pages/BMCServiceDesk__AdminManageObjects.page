@@ -1,0 +1,81 @@
+<apex:page Controller="BMCServiceDesk.AdminManageObjectsController" showHeader="false" action="{!checkInstance}">
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/createAndManageObjects.css" />
+    
+    <apex:form >
+		<Script>
+        var wikiUrl='{!wikiUrl}';
+        </Script>
+       <div style="text-align: right; margin-top:10px; margin-right:15px; ">
+            <a class="clsHelpAnchorStyle" href="#" onClick="if(isNewContextpage() && wikiUrl!='' && wikiUrl!= undefined){window.open(wikiUrl,false,'width='+screen.width+',height='+screen.height+',resizable = 1,scrollbars=yes,status=1,top=0,left=0',false)}else{window.open(parent.helpResouces+'/object_settings.htm',false,'width='+screen.width+',height='+screen.height+',resizable = 1,scrollbars=no,status=1,top=0,left=0',false);}"> 
+            <span class="helpLinkCls">{!JSENCODE($Label.AdminContextHelpText)}</span> 
+            <img class="helpIconCls" id="helpIcon" src="{!$Resource.SDEFStyles}/SDEFicons/help_icon.png" />
+            </a>
+        </div>
+        
+        <div style=" display:{!if(hasError,"block","none")}; margin-left: 20px; margin-top:5px; " class="clsInputLabelTD">
+        	    <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__remotesitemessage)} " /><br/><br/>
+        	    <apex:outputLabel value="{!$Label.bmcservicedesk__usetheremotesiteurlvalue} "/>
+                <apex:outputLabel value="{!baseUrl}" style="color:blue;text-decoration:underline;"/><br/><br/>
+                <apex:outputLabel value="{!$Label.bmcservicedesk__pastetheurlintheremotesiteurlfieldat} "/>
+        		<a onclick="window.open(window.parent.getSetupMenuUrl('REMOTE_SITE_SETTINGS'));" style="color:blue;text-decoration:underline;cursor:pointer;">{!JSENCODE($Label.sfremotesitesetting)}</a>
+     	</div>
+        
+        <div style="display:{!if(hasError,"none","block")};" class="clsInputLabelTD">
+	        <table width="300px" border="0" cellspacing="0" cellpadding="2px">
+	            <tr>
+	                <td style="width: 70px; vertical-align: text-top; text-align:center; " >{!JSENCODE($Label.Object)}</td>
+	                <td style="width: 230px; vertical-align: text-top; " class="clsInputLabelTD">
+	                <select id="lstObjects" onchange="readObject();"></select> 
+	                    <script type="text/javascript">
+	                        var select = '{!JSENCODE($Label.Select)}';
+	                        var type='';
+	                        var obj ;
+	                        var objObjectJSON = [{!ObjectJSONData}]; 
+	                        var winReference;
+               				var lastobj;
+	                    </script>
+	                    <div id="customOptions" style="display: none;" class="listcls" >
+	                        <table border="0" cellspacing="0" cellpadding="5px" class="clsInputLabelTD">
+	                            <tr>
+	                                <td><a href="#" onclick=" return openObjectPage('CUSTOMOBJ_FIELDS')" >{!JSENCODE($Label.CustomFieldsandRelationships)}</a> </td>
+	                            </tr>
+	                            <tr>
+	                                <td><a href="#" onclick=" return openObjectPage('CUSTOMOBJ_VALIDATIONS')" >{!JSENCODE($Label.ValidationRules)} </a></td>
+	                            </tr>
+	                            <tr>
+	                                <td><a href="#" onclick=" return openObjectPage('CUSTOMOBJ_FIELDSETS')" >{!JSENCODE($Label.FieldSets)}</a></td>
+	                            </tr>
+	                            <tr>
+	                                <td><a href="#" onclick=" return openObjectPage('CUSTOMOBJ_LIMITS')" >{!JSENCODE($Label.ObjectLimits)}</a></td>
+	                            </tr>
+	                        </table>
+	                    </div>
+	
+	                    <div id="standardOptions" style="display: none;" class="listcls">
+	                        <table border="0" cellspacing="0" cellpadding="5px" class="clsInputLabelTD">
+	                            <tr>
+	                                <td><a href="#" onclick=" return openObjectPage('STDOBJ_FIELDS')">{!JSENCODE($Label.Fields)}</a></td>
+	                            </tr>
+	                            <tr>
+	                                <td><a href="#" onclick=" return openObjectPage('STDOBJ_LAYOUTS')" >{!JSENCODE($Label.PageLayouts)}</a></td>
+	                            </tr>
+	                            <tr>
+	                                <td><a href="#" onclick=" return openObjectPage('STDOBJ_VALIDATIONS')" >{!JSENCODE($Label.ValidationRules)}</a></td>
+	                            </tr>
+	                            <tr>
+	                                <td><a href="#" onclick=" return openObjectPage('STDOBJ_FIELDSETS')" >{!JSENCODE($Label.FieldSets)}</a></td>
+	                            </tr>
+	                            <tr>
+	                                <td><a href="#" onclick=" return openObjectPage('STDOBJ_LIMITS')" >{!JSENCODE($Label.Limits)}</a></td>
+	                            </tr>
+	                        </table>
+	                    </div>
+	                </td>
+	            </tr>
+	        </table>
+        </div>
+    </apex:form>
+   <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminManageObjects.js"></script>
+   <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+</apex:page>

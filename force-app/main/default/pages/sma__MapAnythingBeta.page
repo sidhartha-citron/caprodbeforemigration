@@ -1,0 +1,99 @@
+<apex:page sidebar="false" title="MapAnything" controller="sma.MapAnything" extensions="sma.MARemoteFunctions">
+	
+	<script>
+        var MARemoting = {
+            phase_4 : '{!$RemoteAction.MARemoteFunctions.GetRecords}',
+            getShapes : '{!$RemoteAction.MARemoteFunctions.GetShapeInfo}',
+            placeSearch : '{!$RemoteAction.MARemoteFunctions.googleAPISearch}',
+            geocodeRecord : '{!$RemoteAction.MARemoteFunctions.geoCodeRecord}',
+            live_phase_4 : '{!$RemoteAction.MARemoteFunctions.GetLatestPosition}',
+            live_history: '{!$RemoteAction.MARemoteFunctions.GetLiveDeviceHistory}',
+            getEsriToken : '{!$RemoteAction.MARemoteFunctions.getEsriToken}',
+            getEsriRoute : '{!$RemoteAction.MARemoteFunctions.getEsriRoute}',
+            getDriveProfile : '{!$RemoteAction.MARemoteFunctions.getCustomDriveProfile}',
+            get_service_area: '{!$RemoteAction.MARemoteFunctions.getServiceArea}',
+            processAJAXRequest : '{!$RemoteAction.MARemoteFunctions.processAJAXRequest}',
+            processAJAXRequestReadOnly : '{!$RemoteAction.MARemoteFunctions.processAJAXRequestReadOnly}',
+            MapAnythingIORequest : '{!$RemoteAction.MARemoteFunctions.MapAnythingIORequest}',
+            searchMAObjectsForRecords : '{!$RemoteAction.MARemoteFunctions.searchMAObjectsForRecords}',
+            validateMABaseObjectTooltips : '{!$RemoteAction.MARemoteFunctions.validateMABaseObjectTooltips}',
+            MapAnythingIORequestPOST : '{!$RemoteAction.MARemoteFunctions.MapAnythingIORequestPOST}',
+            getRoute: '{!$RemoteAction.MARemoteFunctions.getRoute}'
+        }
+    </script>
+	
+	<!-- mapbox trial -->
+	<script src="{!URLFOR($Resource.Leaflet, 'mapBox/mapbox-gl.js')}"></script>
+    <link href="{!URLFOR($Resource.Leaflet, 'mapBox/mapbox-gl.css')}" rel='stylesheet' />
+    
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnything, 'jquery/jquery-3.4.1.min.js')}"></script>
+    
+    <!-- Lightning Design System 2.3.0 -->
+    <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.MapAnythingJS, 'styles/css/salesforce-lightning-design-system-2.4.6_scoped.min.css')}" />
+
+	<apex:outputPanel layout="none" rendered="false">
+		<p style='font-weight: bold;	'>This page has been deprecated, if you are seeing this message please contact your system administrator.</p>
+		<p>System Admins - In order to fix this issue you will need to update the MapAnything user permission for Version to Current. Please refer to this page for instructions.</p>
+		<p><a href='http://wiki.cloudbilt.com/mapanything/assign-user-permissions/' target='_blank' style='color: blue;'>http://wiki.cloudbilt.com/mapanything/assign-user-permissions/</a></p>
+	
+		<p style='color: #757575; font-size: 10px;'>Please contact MapAnything with any further questions.</p>
+	</apex:outputPanel>
+	
+	<apex:outputPanel layout="none" rendered="true">
+		<div class="slds-scope" id="pageWrapper">
+			
+			<div id="sidebar-content" class="slds-p-around_x-small">
+				<fieldset class="slds-form-element">
+					<legend class="slds-form-element__legend slds-form-element__label">Map Tiles</legend>
+					<div class="slds-form-element__control tileInfo"></div>
+				</fieldset>
+				<button style="margin: 15px 10px;" onclick="removeTile(true)" class="slds-button slds-button_brand">Remove Tile</button>
+			</div>
+			
+			<div id="mapcontainer">
+				<div id="mapdiv"></div>
+			</div>
+			
+		</div>
+		
+		<c:MA />
+		<!-- Build our map! -->
+		<script type='text/javascript' src="{!resourcePaths['Leaflet']}/mapBox.js"></script>
+	</apex:outputPanel>
+	
+	
+	
+	
+
+	<style>
+		#mapcontainer {    width: 100%;height: 500px; position: relative;}
+		#mapdiv {
+			width: 100%;
+			height: 100%;
+		}
+	
+		.noSidebarCell,
+		.outerNoSidebar {
+			padding: 0px !important;
+		}
+		#pageWrapper {
+			display:flex;
+		}
+		#sidebar-content {
+			width: 250px;
+			max-height: 500px;
+    		overflow: auto;
+		}
+		.slds-tabs_default__nav {
+			display : flex;
+		}
+		.slds-tabs_default__nav .slds-tabs_default__item {
+			flex-grow: 1;
+		    flex-basis: 0;
+		    text-align: center;
+		}
+		#templates {
+			display:none;
+		}
+	</style>
+</apex:page>

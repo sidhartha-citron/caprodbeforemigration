@@ -1,0 +1,672 @@
+<apex:page Controller="BMCServiceDesk.CustomCMDBClassesController" sidebar="false" showHeader="false" standardStylesheets="false">
+       <script>
+       var userDateTimeFormat = '{!userDateTimeFormat}'; 
+       </script>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css"/>
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/CustomCMDBClasses.css" type="text/css" />   
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" type="text/css" />  
+    
+    <script src="{!$Resource.ExtJS4_1_3}/ext-all.js"  type="text/javascript"/>
+    <script src="{!$Resource.SDEFCommonJS}/CustomCMDBClasses.js"  type="text/javascript"/>
+    <script src="{!$Resource.SDEFCommonJS}/JSCommon.js"  type="text/javascript"/>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+    <script>
+        var imageURL = '{!URLFOR($Action.Document.Download,'015000000000000000',[retURL=""])}';
+        var FilterLogicValidation = '{!JSENCODE($Label.FilterLogicValidation)}';
+        var FilterLogicAddCriteriaValidation = '{!JSENCODE($Label.FilterLogicAddCriteriaValidation)}';
+        var addAdvancedRuleLogic = '{!JSENCODE($Label.AddAdvancedRuleLogic)}';
+        var clearAdvancedRuleLogic = '{!JSENCODE($Label.ClearAdvancedRuleLogic)}';
+        var example = '{!JSENCODE($Label.Example)}'; 
+        var excep;
+        var newToolTip = '{!JSENCODE($Label.New)}';
+        var isCIPresent= '{!isCIPresent}';
+        var RuleBasedAsset = '{!JSENCODE($Label.RulebasedAssetOption)}';
+		var CannotHideCIClsMsg = '{!JSENCODE($Label.CannotHideCIClassWithActiveRBAcls)}';
+        var CI = '{!JSENCODE($Label.CMDB_TAB_CIs)}';
+        var Asset = '{!JSENCODE($Label.CMDB_TAB_Assets)}';
+        var CIandAsset = '{!JSENCODE($Label.CIAndAsset)}';
+        var btnSprcls='{!$Component.CMDBclsFrom.btnSprcls}';
+        var None = '{!JSENCODE($Label.None)}';
+        var AND = '{!JSENCODE($Label.SLM_AND)}';
+        var btnRemoveSrc = '{!$Resource.SDEFStyles}/SDEFbuttons/b_remove.png';
+        var labelInputDeleteConfirmMsg = '{!JSENCODE($Label.DeleteConfirmMessage)}';
+        var labelDelete = '{!JSENCODE($Label.Delete)}';
+        var btnUpdate = '{!$Resource.SDEFStyles}/SDEFbuttons/b_update.png';
+        var deleteToolTip = '{!JSENCODE($Label.Delete)}';
+        var saveToolTip = '{!JSENCODE($Label.Save)}';
+		var editToolTip = '{!JSENCODE($Label.CMDBEdit)}';
+        var delOOTBClsMsg = '{!JSENCODE($Label.wrngMsgOOTBCls)}';
+        var saveSucfulMsg = '{!JSENCODE($Label.SavedSuccessfully)}';
+        var reqFldMsg = '{!JSENCODE($Label.requiredFieldMsg)}';
+        var saveMaskMsg = '{!JSENCODE($Label.MobSaving)}';
+		var delMaskMsg = '{!JSENCODE($Label.CMDBClsDelMaskMsg)}';
+        var errorImageMsg = '{!JSENCODE($Label.CMDBImageWarningMessage)}';
+        var popupTitle = '{!JSENCODE($Label.CMDBCustomIcons)}';
+		var delCnfrmMsg = '{!JSENCODE($Label.DeleteConfirmMsgForCMDBClasses)}';
+        var MsgNoRecordFoundSearchPage = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+        var isAbstractClass = {!clsObj.BMCServiceDesk__Abstract__c};
+		var headerWinTab = '{!JSENCODE($ObjectType.CMDB_Class__c.label)}';
+        var saveAllowed={!allowSave};
+        var invldSprClsErrMsg = '{!JSENCODE($Label.errMsgInvldSprCls)}';
+		var sprNClsNameSameErr = '{!JSENCODE($Label.sprClsandClsNameCannotBeSame)}';
+		var AddImage= '{!JSENCODE($Label.AddImage)}';
+		var sprClsWrng = '{!JSENCODE($Label.cantChangeSprClsWrng)}';
+		var clsNameWrng = '{!JSENCODE($Label.cantChangeClsNameWrng)}';
+		var abtractWrng = '{!JSENCODE($Label.cantMakeClsAbstractWrng)}';
+		var hideWrng = '{!JSENCODE($Label.hidingClsWithCIWrng)}';
+		var delClsWithCIsWrng = '{!JSENCODE($Label.CannotDelClsWithCIs)}';
+		var invldClsNameErrorMsg = '{!JSENCODE($Label.bmcservicedesk__rmtsitestnginst)}';
+		var lblForFldSetLbl = '{!JSENCODE($Label.fldSetLbl)}';
+		var lblForFldSetName = '{!JSENCODE($Label.fldSetName)}';
+		var clsObjImage = '{!JSENCODE(clsObj.Image__c)}';
+        var clsObjErrorImage = '{!JSENCODE(clsObj.Error_Image__c)}';
+        var absTooltip = '{!JSENCODE($Label.absFieldTooltip)}';
+        var expTooltip = '{!JSENCODE($Label.CMDBClassExposureInformationMessage)}';
+        var defTabHeader = '{!JSINHTMLENCODE($ObjectType.CMDB_Class__c.Label)}';
+        var dupLblErrMsg = '{!JSENCODE($Label.existingLblErrMsg)}';
+        var rulesBasedGridHeader ='{!JSENCODE($Label.rulesBasedGridHeader)}';
+        var SelectFieldErrMsg='{!JSENCODE($Label.SelectField)}';
+        var SelectCmpOpMsg='{!JSENCODE($Label.SelectCompOpMessage)}';
+        var EnterValMsg='{!JSENCODE($Label.EnterValueMsg)}';
+        var removeButton = document.getElementById('{!$Component.CMDBclsfrom.removeRuleButtonId}');
+        var ootbCls = {!ootbCls};
+        var jsSprClsName = '{!JSENCODE(SprClsName)}';
+        var nCls;
+        var clsLabelVal;
+        var initSprCls;
+        var initAbsVal;
+        var initClsNm; 
+        var cId;
+        var classID;
+        var CIcheck;
+        var subClsCheck; 
+        var hasActiveRBACls;
+        var sprClsLbl;
+		var CMDBClassTypeCombo = '{!JSENCODE(CMDBClassType)}';
+        var fldData;
+        var listData;
+		var CMDBClassTypeVal;
+        var RuleClassVal;
+        var ActivateVal;
+		
+		var fldSetRecReq = {!fldSetRecReq};
+		var rmtSiteSetReq = {!rmtSiteSettingReq};
+		var notBE = {!notBaseElement};
+		var EF = 'ф';
+        var DZHE ='џ'; //Cyrillic character
+        var nonPrint = '¬';
+        var PE = 'П';
+        var initSuperClassId = '{!initSuperClassId}';
+        var clsId;
+        var activateVar;
+        var isEncryptedFieldPresent;
+        var activateLbl = '{!JSENCODE($Label.Activate)}';
+        var deactivateLbl = '{!JSENCODE($Label.Deactivate)}';
+        var exceptionWhileAorD;
+		var statusMaskMsg = '{!JSENCODE($Label.statusMsg)}';
+		var ActivateSuccessLbl = '{!JSENCODE($Label.ActivationSuccessful)}';
+		var deactivateSuccessLbl = '{!JSENCODE($Label.DeactivationSuccessful)}';
+        var criteriaHasEncryptedFieldsLbl = '{!JSENCODE($Label.criteriaHasEncryptedFields)}';
+		var RBASaveMsg = '{!JSENCODE($Label.ClsHasBeenDeleted)}';
+		var syncStartedLbl = '{!JSENCODE($Label.SynchronizeJobStarted)}';
+		var ActBtnToolTipLbl = '{!JSENCODE($Label.ActivateBtnTooltip)}';
+		var DeactBtnToolTipLbl = '{!JSENCODE($Label.DeactivateBtnTooltip)}';
+		var CanNotChangeClassTypeToRBA = '{!JSENCODE($Label.CanNotChangeClassTypeToRBA)}';
+		var CanNotChangeClassTypeErrorMsg = '{!JSENCODE($Label.CanNotChangeClassTypeErrorMsg)}';
+		var RuleOnClsTooltip = '{!JSENCODE($Label.RuleOnClassTooltip)}';
+        var isAssetManagementEnabled = {!isAssetManagementEnabled};
+        var isCIManagementEnabled = {!isCIManagementEnabled};
+        var OrderIndex = '{!JSENCODE($Label.OrderIndex)}';
+        var operandField = '{!JSENCODE($Label.operandField)}';
+        var Operator = '{!JSENCODE($Label.Operator)}';
+        var Operand = '{!JSENCODE($Label.Operand)}';
+        var CIExpField = '{!JSENCODE($Label.CIExpField)}';
+        var LogicalOperator = '{!JSENCODE($Label.LogicalOperator)}';
+        var AssetClass = '{!JSENCODE($Label.AssetClass)}';
+        var Rule = '{!JSENCODE($Label.Rule)}';
+        var Namespace = '{!orgNamespace}'+'__';
+        var infoIconTooltip = '{!JSENCODE($Label.LimitaionsOfClassTypeConversion)}';
+		var lblInvalidCondition = '{!JSENCODE($Label.invalidCondition)}';
+        var lblErrorMsgEncryptedFldInCondition = '{!JSENCODE($Label.errorMsgEncryptedFldInCondition)}';
+        var lblQVEncryptionError = '{!JSENCODE($Label.QVEncryptionError)}';
+        var ruleGridData = new Array();
+        var filterLogic = '{!JSENCODE(FilterLogic)}';
+        var isAdvRulePresent = filterLogic ? true:false; 
+
+		var i=0;
+		<apex:repeat value="{!ruleGridAssetNames}" var="ruleGridAsset"  id="ruleGridAssetList">    
+               
+            ruleGridData[i] = new Array(4);
+            ruleGridData[i++]=['{!JSENCODE(ruleGridAsset)}','','',''];
+            
+              
+        </apex:repeat>  
+         
+        var j =0;
+        <apex:repeat value="{!ruleGridCriteriaList}" var="ruleGridCriteria"  id="ruleGridCriteriaList">    
+               
+            ruleGridData[j++][1]=['{!JSENCODE(ruleGridCriteria)}'];
+            
+        </apex:repeat>
+        
+        var k =0;
+        <apex:repeat value="{!ruleGridAssetIds}" var="AssetId"  id="AssetIdList">    
+            
+            ruleGridData[k++][2]='{!JSENCODE(AssetId)}';
+            
+        </apex:repeat>
+        
+        var l =0;
+        <apex:repeat value="{!ruleGridAssetIsCustom}" var="IsCustomCls"  id="IsCustomClsList">    
+            
+            ruleGridData[l++][3]='{!JSENCODE(IsCustomCls)}';
+            
+        </apex:repeat>
+        
+        function setClassName(){
+            var result = true;
+            var fromAToZ = new RegExp("[A-Z]");
+            var fromaToz = new RegExp("[a-z]");
+            var clsLabel = (document.getElementById('{!$Component.CMDBclsfrom.clsName}').value).trim();
+            if((document.getElementById('{!$Component.CMDBclsfrom.OverrideLabel}').value) != ''){
+                document.getElementById('{!$Component.CMDBclsfrom.OverrideLabel}').value = (document.getElementById('{!$Component.CMDBclsfrom.OverrideLabel}').value).trim();
+                result = true;
+            }
+            if(nCls == true && clsLabel != null && (document.getElementById('{!$Component.CMDBclsfrom.clsName}').value != '')){
+                if((clsLabel.search(/[^\w]/gi) != (-1)) || (clsLabel.search("__") != (-1)) || (clsLabel.charAt(clsLabel.length - 1) == "_") || !(fromAToZ.test(clsLabel.charAt(0)) || fromaToz.test(clsLabel.charAt(0)))){
+                    document.getElementById('{!$Component.CMDBclsfrom.OverrideLabel}').value = '';
+                    showMessage(invldClsNameErrorMsg);
+                    result = false;
+                }
+                else{
+                    document.getElementById('{!$Component.CMDBclsfrom.clsName}').value = clsLabel;
+                    result = true;
+                }
+            }
+            return result;
+        }
+        
+    </script>
+    <apex:form id="CMDBclsFrom" styleClass="formBorder">
+        <apex:outputPanel id="toolbarPnl">
+            <script>
+                activateVar = {!IsClsActive};
+                exceptionWhileAorD = '{!exceptionWhileActOrDeact}';
+                isEncryptedFieldPresent = {!isEncryptedFieldPresent};                                
+            </script>
+        </apex:outputPanel>
+    
+        <apex:actionFunction name="saveCls" action="{!saveCls}" oncomplete="saveComplete();" reRender="saveAllowPanel,excPnl,toolbarPnl,managePermissionsPanel">
+            <apex:param assignTo="{!SprClsName}" name="jsSprClsName" value="" />
+            <apex:param assignTo="{!CMDBClassType}" name="CMDBClassTypeCombo" value="" />
+            <apex:param assignTo="{!FilterLogic}" name="FilterLogic" value=""/>
+        </apex:actionFunction>
+    
+        <apex:actionFunction name="populateFields" action="{!populateFields}" reRender="fldTypePanel,ruleFieldSelDiv" >
+            <apex:param name="ruleClassName" assignTo="{!ruleClass}" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="activateDeactivateClass" action="{!activateDeactivateClass}" oncomplete="ActivationDeactivationComplete();" reRender="toolbarPnl"></apex:actionFunction>
+        <apex:actionFunction name="executeRule" action="{!executeRules}" oncomplete="syncStarted();" reRender="excPnl"></apex:actionFunction>
+    
+        <div id="tbar" style="margin-bottom: 15px;"></div>
+    
+        <apex:actionFunction name="CIandSubclassCheck" action="{!CIandSubclassCheck}" oncomplete="saveClsMethod();window.parent.changeTitle(wid,document.getElementById(clsNameFld).value,defTabHeader);" reRender="excPnl"></apex:actionFunction>
+    
+        <apex:actionFunction action="{!setSelectedDoc}" name="setImageCMDBClass" rerender="" oncomplete="">
+            <apex:param assignTo="{!savedID}" name="savedID" value="" />
+            <apex:param assignTo="{!browse}" name="browse1checked" value="" />
+        </apex:actionFunction>
+    
+        <apex:outputPanel id="excPnl">
+            <script>
+                excep = '{!excpn}';
+                nCls={!newCls};
+                clsLabelVal = '{!JSENCODE(clsObj.Class_Label__c)}';
+                initSprCls = '{!JSENCODE(initSprCls)}';
+                sprClsLbl = '{!JSENCODE(initSprClsLbl)}';
+                initAbsVal = {!initAbstVal};
+                initClsNm = '{!JSENCODE(initClsName)}';
+                CIcheck = {!CIcheck};
+                subClsCheck = {!subClsCheck};
+                hasActiveRBACls = {!haveActiveRBACls};
+                clsId = '{!clsId}';
+            
+                CMDBClassTypeVal = '{!JSENCODE(clsObj.CMDBClassType__c)}';
+                RuleClassVal = '{!clsObj.BMCServiceDesk__FKCMDB_Class__c}';
+                ActivateVal = {!clsObj.Activate__c};
+            
+                if (nCls == false){
+                    cId = '{!clsObj.Id}';
+                    classID = '{!JSENCODE(clsObj.ClassID__c)}';
+                }else{
+                    cid = '';
+                    classID = '';
+                }
+            </script>
+        </apex:outputPanel>
+        <apex:outputPanel id="saveAllowPanel" > 
+            <apex:outputPanel >
+                <script>         
+                    saveAllowed ={!allowSave};
+                    clsObjImage = '{!JSENCODE(clsObj.Image__c)}';
+                    clsObjErrorImage ='{!JSENCODE(clsObj.Error_Image__c)}';
+                    if(!saveAllowed)
+                        saveAllow();
+                 </script>  
+            </apex:outputPanel>
+        </apex:outputPanel>
+    
+        <table style="width: 95%;">
+            <tr style="display: {!IF(isAssetManagementEnabled, 'table-row', 'none')}">
+                <td style="width: 180px; height: 30px;">
+                    <div id="classTypeLabel" class="lblCSS">{!JSENCODE($Label.CMDBClassType)}</div>
+                </td>
+                <td style="width: 200px; height: 30px;">
+                    <div id="CMDBclassType" style="margin-left:-5px;"></div>
+                </td>
+				<td style="width: 75px; height: 30px;">
+                    <img id="file-info-icon" style="display: {!IF(isAssetManagementEnabled, 'block', 'none')}" src="{!$Resource.SSThemes}/SSDefaultTheme/SDEFicons/status-16-information.png" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 180px; height: 30px;">
+                    <apex:outputLabel styleClass="lblCSS">{!JSENCODE($ObjectType.BMCServiceDesk__CMDB_Class__c.Fields.BMCServiceDesk__SuperClass__c.Label)} *</apex:outputLabel>
+                </td>
+                <td style="width: 200px; height: 30px;">
+                    <apex:inputText id="sprCls" styleClass="sprClsFld" value="{!clsObj.BMCServiceDesk__SuperClass__c}" onchange="getSprCls()" required="true" disabled="true"/>
+                </td>
+				<td style="width: 75px; height: 30px;">
+                   <apex:commandButton id="btnSprcls" title="{!JSENCODE($Label.bmcservicedesk__sprclsselectbtntooltip)}"  styleClass="CMDBlookupIcon" onclick="openSprClsLookup()" oncomplete="displayCB()" rendered="{!lookUpBtnCheck}"/>
+                </td>
+                <td style="height: 30px;">
+                    <div id="sprClsTree" class="treecls"></div>
+                </td>
+            </tr>
+            <tr>
+                <td style="height: 30px;">
+                    <apex:outputLabel styleClass="lblCSS" >{!JSENCODE($ObjectType.BMCServiceDesk__CMDB_Class__c.Fields.BMCServiceDesk__ClassName__c.Label)} *</apex:outputLabel>
+                </td>
+                <td style="height: 30px;">
+                    <apex:inputText id="clsName" title="{!JSENCODE($Label.bmcservicedesk__rmtsitestnginst)}" styleClass="inpFld" value="{!clsObj.BMCServiceDesk__ClassName__c}" onblur="setClassLabel();" disabled="{!NOT(newCls)}" maxlength="{!ClassNameFieldLength}"/>
+                </td>
+                <td style="width: 75px; height: 30px;">
+                </td>
+                <td style="height: 30px;" id = "overrideLabelChk">
+                    <apex:outputLabel styleClass="clsLabelCss">{!JSENCODE($Label.bmcservicedesk__overridecheckboxlbl)}</apex:outputLabel>
+                    <apex:inputText id="OverrideLabel" styleClass="clsLblInp" value="{!clsObj.BMCServiceDesk__Class_Label__c}" onblur="setClassName();"  maxlength="{!ClassNameFieldLength}"/>
+                </td>
+            </tr>
+        </table>
+    
+        <div id="RuleSectionDiv" style="display:none;">
+            <apex:outputPanel id="RuleSection">
+                <table style="width: 95%; margin-bottom: 5px">
+                    <tr>
+                        <td style="width: 180px; height: 30px;" colspan="2">
+                            <b><apex:outputLabel styleClass="lblCSS">{!JSENCODE($Label.bmcservicedesk__cmdbassetrule)}:</apex:outputLabel></b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 180px; height: 30px;">
+                            <apex:outputLabel styleClass="lblCSS">{!JSENCODE($ObjectType.BMCServiceDesk__CMDB_Class__c.Fields.BMCServiceDesk__FKCMDB_Class__c.Label)}</apex:outputLabel>
+                        </td>
+                        <td style="height: 30px;">
+                            <apex:inputText id="ruleClsId" styleClass="inpFld" value="{!clsObj.FKCMDB_Class__r.BMCServiceDesk__ClassName__c}" disabled="true"/>
+                            <apex:inputHidden value="{!clsObj.BMCServiceDesk__FKCMDB_Class__c}" id="hiddenRuleClsId"/>
+                        </td>
+                    </tr>
+                </table>
+                
+                <table style="margin-left:10px;margin-right:15px;width:99%;height:39px;" bgcolor="#DEE0E0" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="width: 230px;" title='{!JSENCODE($Label.SelectField)}'>
+                            <div id="ruleFieldSelDiv" style="margin-left:15px;"/>
+                        </td>
+                        <td style="width: 150px;" title='{!JSENCODE($Label.SelectOperator)}'>
+                            <div id="ruleOperatorSelDiv"/>
+                        </td>
+                        <td style="width: 220px;">
+                            <table cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="padding-right: 5px;" title='{!JSENCODE($Label.EnterFieldValue)}'>
+                                        <apex:inputText id="inputTxt" style="display:block;"  styleClass="inpFld"/ >
+                                        <input type="text" id="referenceID" value=""  style="display:none;" />
+                                        <apex:inputText id="datetimeinput" styleClass="inpFld" disabled="true" style="display:none;"/>
+                                        <apex:inputText id="inputDate" styleClass="inpFld" disabled="true" style="display:none;"/>
+                                        <apex:inputTextarea id="inputTxtArea" style="display:none;" styleClass="clsQualTextarea" onkeyup="validateLength('{!$Component.CMDBclsFrom.inputTxtArea}',selectedTextAreaLength);"/>
+                                    </td>
+                                    <td>
+                                        <input type="button" id="lookUp" class="CMDBlookupIcon" style="display:none;" onClick="openQualLookup();"/>
+                                        <input type="button" id="inputTxtAreaButtonEle" class="TextboxPopupIcon" style="display:none;" onclick="showTextEditor('{!$Component.CMDBclsFrom.inputTxtArea}', selectedLabel, selectedTextAreaLength, '{!$Label.OK}', '{!$Label.Cancel}');" />
+                                        <apex:image id="dateTimePopupImg"  styleClass="CMDB_DatePickerImage" style="display:none;" width="19px" height="19px" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDateTimePicker();"/>
+                                        <apex:image id="datePopupImg"  styleClass="CMDB_DatePickerImage" style="display:none;" width="19px" height="19px" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDatePicker();"/>
+                                    </td>
+                                    <td>
+                                        <div id="picklistCombo"/>      
+                                    </td>
+                                    <td>         
+                                        <div id="booleanCombo"/>            
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>    
+                        <td style="width: 420px">
+                            <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_add.png" onClick="addRuleQData();"  id="addRuleButtonId" title="{!$Label.Add}"  />
+                            <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_update.png" style="display:none" onClick="upadateRuleData();" id="updateRuleButtonId" title="{!$Label.Update}" />   
+                            <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png"  onClick="removeRuleData();" id="removeRuleButtonId" disabled="true" title="{!$Label.Remove}"  />                                                           
+                        </td>
+                    </tr>
+                </table>
+                <div style="margin-left:10px;margin-right:15px;" id="ruleGridDiv" ></div>
+            </apex:outputPanel>
+        </div>
+        
+        <table style="width: 95%;">
+            <tr>
+                <td style="height: 24px; width: 180px;">
+                    <apex:outputLabel styleClass="lblCSS">{!JSENCODE($ObjectType.BMCServiceDesk__CMDB_Class__c.Fields.BMCServiceDesk__Exposure__c.Label)}</apex:outputLabel>
+                </td>
+                <td style="height: 24px;">
+                    <apex:inputField id="expCbFld" styleClass="expChkBx" value="{!clsObj.BMCServiceDesk__Exposure__c}" rendered="{!notBaseElement}"/>
+                    <apex:inputField id="expOpFld" styleClass="expChkBx" value="{!clsObj.BMCServiceDesk__Exposure__c}" rendered="{!baseElementCls}" html-disabled="true"/>     
+                </td>
+            </tr>
+            <tr>
+                <td style="height: 32px; width: 180px;">
+                    <apex:outputLabel styleClass="lblCSS">{!JSENCODE($ObjectType.BMCServiceDesk__CMDB_Class__c.Fields.BMCServiceDesk__Abstract__c.Label)}</apex:outputLabel>
+                </td>
+                <td style="height: 32px;">
+                    <apex:inputField id="absIpFld" styleClass="absChkBx" value="{!clsObj.BMCServiceDesk__Abstract__c}" rendered="{!custCls}"/>
+                    <apex:inputField id="absOpFld" styleClass="absChkBx" value="{!clsObj.BMCServiceDesk__Abstract__c}" rendered="{!ootbCls}" html-disabled="true"/>    
+                </td>
+            </tr>
+            <tr>
+                <td style="height: 50px; vertical-align: top; padding-top: 3px">
+                    <div style="margin-top: 6px"><apex:outputLabel styleClass="lblCSS">{!JSENCODE($Label.bmcservicedesk__cmdbclassicon)} </apex:outputLabel></div>
+                </td>
+                <td colspan="3">
+                    <table Class="noLeftMargin">
+                        <tr>
+                            <td>
+                                <apex:selectRadio id="radioimage" styleClass="radioclass" value="{!clsObj.BMCServiceDesk__Is_Custom_Image__c}" layout="pageDirection" onclick="RadioChecked();">
+                                    <apex:selectOption itemValue="false" itemLabel="{!JSENCODE($Label.bmcservicedesk__usedefault)}" />
+                                    <apex:selectOption itemValue="true" itemLabel="{!JSENCODE($Label.bmcservicedesk__selectcustom)}" />
+                                </apex:selectRadio>
+                            </td> 
+                            <td>
+                                <br/>
+                                <apex:outputLabel styleClass="lblCSS noLeftMargin">({!JSENCODE($Label.bmcservicedesk__cmdbiconsize)})</apex:outputLabel>
+                            </td> 
+                        </tr>   
+                    </table> 
+                </td>                    
+            </tr>
+            <tr>
+                <br/>
+                <td></td>
+                <table style="width: 95%; margin-top:5px;" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="width: 180px;"></td>
+                        <td class="clsImageTD">
+                            <div id="enclosingDiv">
+                                <apex:image value=""  id="Image_Id" height="32" width="32px"/>
+                            </div>
+                        </td> 
+                        <td style="width:20px;"></td>
+                        <td>
+                            <apex:outputLabel StyleClass="fontArial">{!JSENCODE($Label.bmcservicedesk__cmdbimage)}</apex:outputLabel>
+                            <br/><br/>
+                            <input class="selectBtnCls" id="browsebtn" type="button" value="{!JSENCODE($Label.Browse)}" disabled="true" onclick="openImagePopup();setBrowseButtonCheck('browsebtn1');"/>
+                        </td> 
+                    </tr>
+                </table>
+            </tr>
+            <tr>
+                <br/>
+                <td></td>
+                <table style="width: 95%;" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="width: 180px;"></td>
+                        <td class="clsImageTD">
+                            <div id="enclosingDiv2">
+                                <apex:image value=""  id="Image_Id_CI" height="32" width="32px"/>
+                            </div>
+                        </td>
+                        <td style="width:20px;"></td>
+                        <td>
+                            <apex:outputLabel StyleClass="fontArial">{!JSENCODE($Label.bmcservicedesk__cmdberrorimage)}</apex:outputLabel>
+                            <br/><br/>
+                            <input class="selectBtnCls" id="browsebtn2" type="button" value="{!JSENCODE($Label.Browse)}" disabled="true" onclick="openImagePopup();setBrowseButtonCheck('browsebtn2');"/>
+                        </td>
+                    </tr>
+                </table>  
+            </tr>
+        </table>
+        <div id="customOptions" class="linkdivDis">
+            <apex:outputLabel StyleClass="fontForMngAtt">{!JSENCODE($Label.bmcservicedesk__mngattr)}</apex:outputLabel>
+            <br/>
+            <apex:outputPanel rendered="{!NOT(rmtSiteSettingReq)}">
+                <div id="fldSetRecForActiveLinks" class="clslbldis">
+                    <apex:outputLabel StyleClass="fontArialForAttrInst">{!JSENCODE($Label.bmcservicedesk__customfldslinkinfo)}</apex:outputLabel>
+                    <a class="fontArial" href="#" onclick=" return openObjectPage('FieldSets')">{!JSENCODE($Label.bmcservicedesk__fldsetlnk)}</a>
+                    <apex:outputLabel StyleClass="fontArialForAttrInst">{!JSENCODE($Label.bmcservicedesk__customfldsnfldsetrecinfo)}</apex:outputLabel>
+                    <br/>
+                    <div id="fieldSetRecWithLink"></div>
+                    <br/>
+                </div>
+                <apex:outputLabel StyleClass="fontArialForAttrInst">{!JSENCODE($Label.bmcservicedesk__ssadd)}</apex:outputLabel>
+                    <a class="fontArial" href="#" onclick=" return openObjectPage('CustomFields')">{!JSENCODE($Label.bmcservicedesk__customfields)}</a>
+                <apex:outputLabel StyleClass="fontArial">{!JSENCODE($Label.bmcservicedesk__fldsetlinkinfo)}</apex:outputLabel>
+                    <a class="fontArial" href="#" onclick=" return openObjectPage('FieldSets')">{!JSENCODE($Label.bmcservicedesk__fldsetlnk)}</a>.
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!rmtSiteSettingReq}">
+                <apex:outputLabel escape="false" StyleClass="fontArialForAttrInst">{!($Label.bmcservicedesk__insttogotobaseelementobj)}</apex:outputLabel>
+                <br/>
+                <apex:outputLabel escape="false" StyleClass="fontArialForAttrInst">{!($Label.bmcservicedesk__saveclassfirst)}</apex:outputLabel>
+                <br/>
+                <div id="fldSetRecForNonActiveLinks" class="clslbldis">
+                    <apex:outputLabel rendered="{!custCls}" escape="false" StyleClass="fontArialForAttrInst">{!($Label.bmcservicedesk__fldsetlinkinst)}</apex:outputLabel>
+                    <br/>
+                    <div id="fieldSetRecWithoutLink"></div>
+                </div>
+            </apex:outputPanel>
+            <br/>
+        </div>
+		<apex:outputPanel styleClass="lblCSS" layout="block" id="managePermissionsPanel">
+            <apex:outputPanel rendered="{!AND(AND(AND(clsObj.Id != '',clsObj.Id != null),clsObj.BMCServiceDesk__Abstract__c == false),isCMDBClassPermissionsEnable)}">
+                <apex:outputLabel StyleClass="fontForMngAtt">{!($Label.bmcservicedesk__managepermissions)}:</apex:outputLabel>
+                <div id="MangeClsPermissions">
+                    <apex:outputLabel StyleClass="fontArialForAttrInst">{!($Label.bmcservicedesk__consoleadminconfigure)}</apex:outputLabel>
+                    <a class="fontArial" href="#" onclick="openCLS()">{!($Label.bmcservicedesk__permissions)}</a>
+                    <apex:outputLabel StyleClass="fontArialForAttrInst">{!($Label.bmcservicedesk__forthisclass)}</apex:outputLabel>
+                </div>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <apex:outputPanel id="fldTypePanel">
+            <script>
+                fldData = {!fieldData};
+                if(Ext.getCmp('fieldSelComboBox') != null && Ext.getCmp('fieldSelComboBox') != '' && Ext.getCmp('fieldSelComboBox') != undefined)
+                    Ext.getCmp('fieldSelComboBox').store.loadData(fldData);
+            </script> 
+        </apex:outputPanel> 
+        <apex:outputPanel id="ruleDataPanel">
+            <script>
+                listData = {!CMDBClassCriteriaApplyConditions};
+            </script>
+        </apex:outputPanel>
+        <apex:inputHidden id="applySTStr"  value="{!Expression}"/>
+        <div id="showrules" class="linkdiv">
+            <apex:outputLabel StyleClass="fontForMngAtt">{!JSENCODE($Label.bmcservicedesk__rulesbasedgrid)}:</apex:outputLabel><br/>
+            <div id="rulesTbar"></div>
+            <div id="linkedRules" style="width:100%"></div>
+        </div>   
+    </apex:form>
+    
+    <script>
+        _CMDBclsRemotingActions={}
+        _CMDBclsRemotingActions.getSprCls = "{!$RemoteAction.CustomCMDBClassesController.getSprCls}";
+        _CMDBclsRemotingActions.delCls = "{!$RemoteAction.CustomCMDBClassesController.delCls}";
+        
+        var ClsName = '{!JSENCODE(clsObj.ClassName__c)}';
+        var ruleClsFld = '{!JSENCODE($Component.CMDBclsFrom.ruleClsId)}';
+        var hiddenRuleClsId= '{!JSENCODE($Component.CMDBclsFrom.hiddenRuleClsId)}';
+        var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+        var sprClsFld = '{!JSENCODE($Component.CMDBclsFrom.sprCls)}';
+        var clsNameFld = '{!JSENCODE($Component.CMDBclsFrom.clsName)}';
+        var expCbFldRef = '{!JSENCODE($Component.CMDBclsFrom.expCbFld)}';
+        var AbsIpFldRef = '{!JSENCODE($Component.CMDBclsFrom.absIpFld)}';
+        var clsLabelFldRef = '{!JSENCODE($Component.CMDBclsFrom.OverrideLabel)}';
+        var clsNameFldRef = '{!JSENCODE($Component.CMDBclsFrom.clsLabel)}';
+        var sprClsBtnRef = '{!JSENCODE($Component.CMDBclsFrom.btnSprcls)}';
+		var RuleOnClsFld = '{!JSENCODE($Component.CMDBclsFrom.ruleClsId)}';
+		var objId = '{!JSENCODE(objId)}';
+        var custCls = {!custCls};
+        var sprClsId  =  '{!JSENCODE($Component.CMDBclsFrom.sprCls)}';
+        var CIFORCE_RES_PATH = '{!$Resource.CIForce}';
+        
+        var folder = '{!folderId}';
+         
+        document.getElementById(sprClsFld).value = sprClsLbl;
+        document.getElementById(ruleClsFld).value = sprClsLbl;
+        
+        var flgtf;
+        if(nCls == true){
+            flgtf = true;
+        }
+        else
+            flgtf = false;
+        
+        function getApplySTStrEle() {
+            return document.getElementById('{!$Component.CMDBclsFrom.applySTStr}');
+        }
+        
+        function openImagePopup(){
+            if(document.getElementById('{!$Component.CMDBclsfrom.radioimage}:1').checked){
+                openPopupDialog('DocPage?folderId='+ folder ,'',AddImage,232,470);
+            }
+        }
+        
+        function setImageSRC(imageElemId,attachmentId){
+            var iconImageElement = document.getElementById(imageElemId);
+            var tempDOCID = '015000000000000000';
+            if(iconImageElement && attachmentId){
+                iconImageElement.src = imageURL.replace(tempDOCID,attachmentId);
+            }
+        }
+
+        function getImageID(attachmentId){
+            if(browse1checked=='true'){
+                document.getElementById('{!$Component.CMDBclsfrom.Image_Id}').style.display= 'inline-block';
+                setImageSRC('{!$Component.CMDBclsfrom.Image_Id}',attachmentId);
+            }else if(browse1checked=='false'){
+                document.getElementById('{!$Component.CMDBclsfrom.Image_Id_CI}').style.display= 'inline-block';
+                setImageSRC('{!$Component.CMDBclsfrom.Image_Id_CI}',attachmentId);
+            }
+            setImageCMDBClass(attachmentId,browse1checked);
+        }
+        
+        function setInitialRadioChecked(){
+            if({!clsObj.BMCServiceDesk__Is_Custom_Image__c}){
+                customRadioChecked();
+            }
+            else{
+                defaultRadioChecked();
+            }
+        }
+        
+        function RadioChecked(){
+            if(document.getElementById('{!$Component.CMDBclsfrom.radioimage}:0').checked)
+                defaultRadioChecked();
+            if(document.getElementById('{!$Component.CMDBclsfrom.radioimage}:1').checked)
+                customRadioChecked();
+        } 
+        
+        function defaultRadioChecked(){       
+            document.getElementById('{!$Component.CMDBclsfrom.Image_Id}').style.display= 'inline-block';
+            document.getElementById('{!$Component.CMDBclsfrom.Image_Id_CI}').style.display= 'inline-block';
+            saveAllowed=true;          
+            document.getElementById('browsebtn').disabled = true;
+            document.getElementById('browsebtn').style.color = 'grey';
+            document.getElementById('browsebtn').style.cursor = 'default';
+            document.getElementById('browsebtn2').disabled = true;
+            document.getElementById('browsebtn2').style.color = 'grey';
+            document.getElementById('browsebtn2').style.cursor = 'default';
+            
+            if(custCls || nCls){
+                document.getElementById('{!$Component.CMDBclsfrom.Image_Id}').src = '{!$Resource.CIForce}/images/ci/BMC_Custom_32.svg';
+                document.getElementById('{!$Component.CMDBclsfrom.Image_Id_CI}').src = '{!$Resource.CIForce}/images/ci/BMC_Custom_32_Error.svg';
+            }
+            else{
+                document.getElementById('{!$Component.CMDBclsfrom.Image_Id}').src = '{!$Resource.CIForce}/images/ci/{!JSENCODE(clsObj.ClassName__c)}_32.svg';
+                document.getElementById('{!$Component.CMDBclsfrom.Image_Id_CI}').src = '{!$Resource.CIForce}/images/ci/{!JSENCODE(clsObj.ClassName__c)}_32_Error.svg';
+            }
+        }
+        
+        function customRadioChecked(){
+            if(clsObjImage == '') {
+                document.getElementById('{!$Component.CMDBclsfrom.Image_Id}').style.display = 'none';
+            }else{
+                document.getElementById('{!$Component.CMDBclsfrom.Image_Id}').style.display = 'inline-block';
+            }
+            if(clsObjErrorImage == '') {
+                document.getElementById('{!$Component.CMDBclsfrom.Image_Id_CI}').style.display = 'none';
+            }else{
+                document.getElementById('{!$Component.CMDBclsfrom.Image_Id_CI}').style.display = 'inline-block';
+            }
+            setImageSRC('{!$Component.CMDBclsfrom.Image_Id}',clsObjImage);
+            setImageSRC('{!$Component.CMDBclsfrom.Image_Id_CI}',clsObjErrorImage);
+            document.getElementById('browsebtn').disabled = false;
+            document.getElementById('browsebtn').style.color = '#004376';
+            document.getElementById('browsebtn').style.cursor = 'pointer';
+            document.getElementById('browsebtn2').disabled = false;
+            document.getElementById('browsebtn2').style.color = '#004376';
+            document.getElementById('browsebtn2').style.cursor = 'pointer';
+        }
+        
+        function getInputTxtEle(){
+            return document.getElementById('{!$Component.CMDBclsfrom.inputTxt}');
+        }
+        
+        function getInputTextAreaEle(){
+            return document.getElementById('{!$Component.CMDBclsfrom.inputTxtArea}');
+        } 
+        
+        function getDateTimeInputEle(){
+            return document.getElementById('{!$Component.CMDBclsfrom.datetimeinput}');     
+        }
+        
+        function getDateTimePickerImg(){
+            return document.getElementById('{!$Component.CMDBclsfrom.dateTimePopupImg}');
+        }
+        
+        function getDateInputEle(){
+            return document.getElementById('{!$Component.CMDBclsfrom.inputDate}');      
+        }
+        
+        function getDatePickerImg(){
+            return document.getElementById('{!$Component.CMDBclsfrom.datePopupImg}');
+        }
+        
+        function getLookupEle(){
+            return document.getElementById('lookUp');
+        }
+        
+        function getUpdateBtnEle(){
+            return document.getElementById('updateRuleButtonId');
+        }
+        
+        function getAddBtnEle(){
+            return document.getElementById('addRuleButtonId');
+        }
+        
+        function getRemoveBtnEle(){
+            return document.getElementById('removeRuleButtonId');
+        }
+        
+        function getSDFStylesResPath(){
+            return '{!$Resource.SDEFStyles}';
+        }
+        
+    </script>
+     
+</apex:page>

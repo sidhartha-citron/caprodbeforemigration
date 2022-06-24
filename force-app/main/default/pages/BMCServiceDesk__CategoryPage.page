@@ -1,0 +1,805 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.CategoryController" contentType="{!contetnTypeForIE}" standardStylesheets="false" id="CategoryPage">
+<link rel="Stylesheet" type="text/css" href="{!$Resource.BMCServiceDesk__SDEFStyles}/CategoryPage.css" />
+    <c:CommonIncludes />
+    <script>
+	var folder = '{!folderId}';
+	var savedSuccessfully = '{!JSENCODE($Label.SavedSuccessfully)}';
+    var wikiHelp = '{!wikiUrl}';
+     var enablesavebtn={!isPageAccessible};
+	var enablecopybtn = {!copybtnflag};
+	var enabledeletebtn = {!deletebtnflag};
+    var categoryName;               
+     var categoryId;
+     var isFromSRD = '{!JSENCODE($CurrentPage.parameters.isFromSRD)}';
+     
+     var errormsg;
+     var chkBoxValue;
+    var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+    var isForReqDef = '{!JSENCODE($CurrentPage.parameters.isForReqDef)}';
+    var categoryHeader = '{!JSENCODE($ObjectType.Category__c.label)}';
+	document.onclick = activateWindow; 
+	var showSelfHelp = parent.showSelfHelp;
+	var isLightningExperience = '{!isLightningExperience}';
+	var imageIDComponent = '{!$Component.categoryForm.Image_Id}';
+	var requireFollowUpComponent = '{!$Component.categoryForm.panelBarId1.panelBarItemId1.requireFollowUp}';
+	var cat_id_name = '{!$Component.categoryForm.Category__c_id_name}';
+	var catDescComponent = '{!$Component.CategoryForm.catDesc}'; 
+	var cidComponent = '{!$Component.CategoryForm.cid}';
+	var displayInSSComponent = '{!$Component.CategoryForm.panelBarId1.panelBarItemId2.displayInSS}';
+	var insufficentDeletePrivilege = '{!JSENCODE($Label.InsufficentDeletePrivilege)}';
+	var availableForSRComponent = '{!$Component.CategoryForm.panelBarId1.panelBarItemId2.availableForSR}';
+	var displayInSSComponent2 = '{!$Component.CategoryForm.panelBarId1.panelBarItemId2.displayInSS}';
+	var modName = "{!JSENCODE($CurrentPage.parameters.moduleName)}";
+	var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";
+	var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+	
+    var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+    var clickedOnce = false;  
+        
+    var resizeGrid= function resizeGrid(){
+        if(Ext.getCmp('southPanelSI')!=undefined)
+         Ext.getCmp('southPanelSI').setWidth(Ext.getCmp('southPanelSI').getWidth());
+        };
+        if(window.parent.refreshGridSI!=undefined)
+          window.parent.refreshGridSI(wid,resizeGrid);
+        
+        
+        var isLookup = "{!JSENCODE($CurrentPage.parameters.islookup)}";  
+        var isInactive = "{!JSENCODE($CurrentPage.parameters.isinactive)}";  
+        var isPopup = "{!JSENCODE($CurrentPage.parameters.isPopup)}";  
+       
+       if(isLookup||isPopup){
+            window.parent.changePopUpTitle('{!objLabel}');
+        }
+        var disableTrue = true;
+        var hide=false;
+        var disableForSRD=false;
+        Ext.onReady(function(){
+    
+        Ext.QuickTips.init();
+        if({!isRecDeleted}){
+			Ext.Msg.alert('{!JSENCODE($Label.Information)}', '{!JSENCODE($Label.DeletedRecord)}', function(){
+				if ((typeof(window.parent) != 'undefined') && (typeof(window.parent.popUpWindow) != 'undefined'))
+					window.parent.popUpWindow.close();
+					closeWindow();
+			});
+		}
+        if(isLookup||isPopup){
+            disableTrue = true;
+            hide=true;
+          }else{ 
+          disableTrue = false; 
+          hide=false;}
+        if(isFromSRD=='true')
+        {
+            
+            disableTrue = true;
+            hide=true;
+            disableForSRD=true;
+            
+        }
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event) { activeAllWindowFlag=false; openPage('CategoryPage',categoryHeader,categoryHeader); };
+        var SaveBtnHandler = function(button,event) {
+            var toggle = false;
+            var followUpCheck = document.getElementById('{!$Component.categoryForm.panelBarId1.panelBarItemId1.requireFollowUp}').checked;
+            var afterHrsValue = document.getElementById('{!$Component.categoryForm.panelBarId1.panelBarItemId1.after}').value;
+            if(followUpCheck === true){
+                if(typeof(afterHrsValue) != undefined && afterHrsValue != null && afterHrsValue != ''){
+                    toggle = true;
+                }else{
+                    Ext.MessageBox.show({ msg: '{!JSENCODE($Label.FollowUpCheckedAfterHrsReq)}', buttons: Ext.MessageBox.OK});
+                }
+            }else{
+                if(typeof(afterHrsValue) != undefined && afterHrsValue != null && afterHrsValue != '' && afterHrsValue!=0){
+                    Ext.MessageBox.show({ msg: '{!JSENCODE($Label.FollowUpMustChecked)}', buttons: Ext.MessageBox.OK, width:200});
+                    
+                }else{
+                    toggle = true;
+                }            
+            }
+            if(toggle){
+                    chkBoxValue=Ext.getCmp('idInactive').getValue();
+                    Ext.getCmp('saveId').setDisabled(true);
+                    waitbox(0); 
+                    save(chkBoxValue);
+            }else{return false;}
+            
+                
+        }  
+        var CopyBtnHandler = function(button,event) {activeAllWindowFlag=false;  callCopyPage(); };
+        var DeleteBtnHandler = function(button,event) { 
+                                                        
+                                                         Ext.MessageBox.confirm('{!JSENCODE($Label.Delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}', function(btn){
+                                                           if(btn === 'yes'){
+                                                                 deleteCategory();
+                                                           }});
+                                                      };
+        var ResetBtnHandler = function(button, event) {resetCategory(); };
+        var NextBtnHandler = function (button,event) { if(document.getElementById('nextId').disabled!=true) nextCategoryBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { if(document.getElementById('prevId').disabled!=true) previousCategoryBtnHandler1();};
+         var HelpHandler = function(button,event){
+             window.open(wikiHelp);
+         }  
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                iconCls: 'bmcNew',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.new)}',
+                hidden:disableTrue,
+                 id:'newId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                     
+                } ,
+                handler:NewBtnHandler
+             
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcSave',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.save)}',
+                 id:'saveId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                     
+                },
+                handler:SaveBtnHandler
+                
+                
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.copy)}',
+                id:'copyId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                    
+                },
+                handler:CopyBtnHandler
+                
+                
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType : 'title',
+                hidden:hide,
+                tooltip: '{!JSENCODE($Label.delete)}',
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                       this.setIconClass('bmcDelete');          
+                     }
+                     
+                },
+                handler:DeleteBtnHandler
+                
+               
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcRefreshDasboard',
+                tooltipType : 'title',
+                 tooltip: '{!JSENCODE($Label.Refresh)}',
+                 id:'resetId',
+                 hidden:disableForSRD,
+            handler:ResetBtnHandler                
+              
+            },' ',new Ext.Toolbar.Fill(), 
+            {
+                  id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               align:'top',
+               hidden:disableForSRD,
+               checked: false,
+               boxLabel:'{!JSENCODE($ObjectType.Category__c.fields.inactive__c.label)}',
+               cls:'chkStyle',
+               boxLabel:'<span class="checkboxLabelCls">{!JSENCODE($ObjectType.Category__c.fields.inactive__c.label)}</span>',
+               listeners:{
+                    render:function(){
+                        Ext.QuickTips.register({
+                            target:this,
+                            dismissDelay:20000,                      
+                            text:'{!JSENCODE($ObjectType.Category__c.fields.inactive__c.label)}'
+                        });
+                    }               
+               }
+           
+            
+              
+            }, {
+               
+               
+                  xtype : 'box',
+                  id    : 'prevId',
+                  hidden:disableForSRD,
+                autoEl:  {tag: 'img', 
+                          src:('{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_previous.gif'),   
+                         title:'{!JSENCODE($Label.previousRecord)}'
+                         },
+                          
+                cls:'cursorCls',
+               listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                             
+            },{
+               
+                xtype : 'box',
+                id    : 'nextId', 
+                hidden:disableForSRD,
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_next.gif',
+                          title:'{!JSENCODE($Label.nextRecord)}' },
+                cls:'cursorSpaceCls',
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+               
+                
+            },
+            {
+                xtype : 'box',
+                id    : 'helpId', 
+                hidden:!disableForSRD,
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFicons/help_icon.png',
+                          title:'{!JSENCODE($Label.TooltipHelp)}' },
+                cls:'cursorSpaceCls',
+                listeners : { render: function(f){f.el.on('click', HelpHandler)}}
+            }
+            ] 
+        });
+
+        if(isInactive){     	     	
+        Ext.getCmp('idInactive').setDisabled(true);       
+     	}
+        Ext.getCmp('idInactive').setValue('{!category.BMCServiceDesk__inactive__c}');
+
+        
+        categoryId = '{!JSENCODE(category.Id)}';
+        if(categoryId == null ||categoryId == ''){
+            Ext.getCmp('deleteId').setDisabled(true);
+            Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+            Ext.getCmp('copyId').setDisabled(true);
+            Ext.getCmp('resetId').setDisabled(true);            
+            Ext.getCmp('prevId').setDisabled(true);
+            Ext.getCmp('nextId').setDisabled(true);           
+        }
+        
+       resetbuttonstatus();
+       
+         
+            ///////////// // IE7-8 Related Changes
+                   var canvasPanel = new Ext.Panel({
+                         layout:'border',
+                        // width:'auto',    
+                        height:Ext.isIE7 ? 670: Ext.isIE ? 674:Ext.isSafari ? 695:680,
+                         border:false, 
+                         id:'canvasPanelId',
+                         cls:'canvasPanelCls',
+                         items:[{  
+                                xtype: 'panel', // TabPanel itself has no title    
+                                  layout: 'fit',                                                   
+                                overflow:'auto',
+                                autoScroll:true,
+                                split:false,
+                                width:'auto',    
+                                height:500, 
+                                cls:'northPanelCls',
+                                                                             
+                                region: 'center',                   
+                               // margins:'2 4 2 0',
+                                                       
+                                contentEl : Ext.isIE ? 'capsule' : '{!$Component.categoryForm}'
+                                
+                        },{                                                         
+                                xtype: 'panel', // TabPanel itself has no title
+                                layout: 'fit',  
+                                overflow:'auto',
+                                hidden:disableForSRD,
+                                 border:false, 
+                                 id:'southPanelSI',
+                                autoScroll:true,
+                                split:true,
+                                collapsible: true,
+                                collapseMode: 'mini',
+                                width:'auto',    
+                                height:Ext.isIE ?182:180,
+                                minHeight:Ext.isIE ?120:150,
+                                                                                  
+                                region: 'south',
+                               listeners : {
+                                    resize:function( obj,adjWidth,adjHeight,rawWidth,rawHeight ) { 
+                                    
+                                        if(Ext.getCmp('south-panel')!=undefined){
+                                               Ext.getCmp('south-panel').setHeight(adjHeight);
+                                        }
+                                   }
+                               },
+                              
+                               contentEl :'detailsDiv' 
+                        }],
+                        listeners: {
+                        afterlayout: function(c) {
+                            c.layout.south.miniSplitEl.dom.qtip = '{!JSENCODE($Label.DragResizeClickCollapse)}';
+                            c.layout.south.getCollapsedEl();
+                            c.layout.south.miniCollapsedEl.dom.qtip = '{!JSENCODE($Label.ClickToExpand)}';
+                        },
+                        single: true
+                    }
+                        
+                       
+                         
+                       
+    });
+
+                     var viewport = new Ext.Viewport({
+                     layout:'anchor',
+                    // renderTo:'viewPortDiv',
+                     width:'auto',
+                     id:'viewportId',
+                     border:false, 
+                     cls:'viewportCanvasCls',   
+                     //items:canvasPanel
+                     items:[{anchor: '100%', layout:'fit', items:canvasPanel} ]
+                    });
+/////////////// // End IE7-8 Related Changes
+        handleElemEvent();
+    if(categoryId == null ||categoryId == ''){
+        document.getElementById('{!$Component.categoryForm.cid}').focus();
+        }
+	setRestSelectCheckbox();	
+    });
+	
+    var categoryIdSet;
+	if(categoryIdSet == null || categoryIdSet == ''){
+		if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+		if(typeof(window.parent.returnListOfId)=='function')
+			categoryIdSet=window.parent.returnListOfId();
+	}else{
+		if(typeof(window.parent.parent.getIdArray)=='function')
+			categoryIdSet=window.parent.parent.getIdArray();
+			window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+		}
+	}
+    </script>
+    
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           categoryName = '{!JSENCODE(category.Name)}';               
+           categoryId = '{!JSENCODE(category.Id)}';      
+        
+        </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+    
+    <apex:outputPanel id="afterSavePanel">
+        <script>
+           function handleSave(){
+               var id = "{!JSENCODE(category.Id)}"; 
+			 if(!isPopup)
+               window.parent.handleSave(wid, id);
+        }    
+        </script>
+     </apex:outputPanel>
+    <apex:outputPanel id="titlePanel">
+        <script>
+        enablesavebtn={!isPageAccessible};
+        function resetSupportingInformation(isSave){
+                var newId = '{!JSENCODE(category.Id)}'; 
+                getCATid(newId,isSave);   
+       	}
+            function updateList(){
+               // window.parent.changeTitle(wid,newTitle,categoryHeader);
+                window.parent.refreshList();
+            }
+            function updateTitle(){
+	        	var newTitle= "{!JSENCODE(category.name)}";
+	        	if(newTitle != ""){						
+	                window.parent.changeTitle(wid,newTitle,categoryHeader);
+	            }            	
+            }
+        </script>
+    </apex:outputPanel> 
+    
+    <apex:outputPanel id="inactivePanel">
+        <script>
+           function updateInactive(){
+            Ext.getCmp('idInactive').setValue('{!category.BMCServiceDesk__inactive__c}');
+        }
+          
+    
+        </script>
+    </apex:outputPanel>
+  
+  <apex:form id="categoryForm">
+    <div id="capsule" class="CapsuleDiv1">
+    <apex:outputPanel >
+ 
+            <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,panelId,errorId,titlePanel,afterSavePanel" oncomplete="waitMsg.hide();enableSaveButton();saveCategory();callIsFromSRD();">
+            <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+                 </apex:actionFunction>
+            <apex:actionFunction action="{!newCategory}" name="newCategory" />
+            <apex:actionFunction action="{!reset}" name="resetCategory" oncomplete="updateInactive();handleResetChange();handleElemEvent();setCatIconImageDisplay('{!category.BMCServiceDesk__Image__c}');" rerender="tablePanel,afterSavePanel,panelBarId1,inactivePanel,Image_Id" />
+            <apex:actionFunction action="{!deleteCategory}" name="deleteCategory" oncomplete="completeDelete();" rerender="errorId,validationComponent"/>
+            <!--  <apex:actionFunction action="{!copyCategory}" name="copyCategoryNext" rerender="dummy"/> -->
+            <apex:actionFunction action="{!categoryTypeQuery}"
+                name="setCategoryType" reRender="CategoryTypes__c_id_name">
+                <apex:param assignTo="{!categoryType}" value=""
+                    name="saveCategoryType" />
+            </apex:actionFunction>
+
+            <apex:actionFunction action="{!parentCategoryQuery}"
+                name="setParentCategory" reRender="Category__c_id_name">
+                <apex:param assignTo="{!parentCategory}" value=""
+                    name="saveParentCategory" />
+            </apex:actionFunction>
+
+            <apex:actionFunction action="{!urgencyQuery}" name="setUrgency"
+                reRender="Urgency__c_id_name">
+                <apex:param assignTo="{!urgency}" value="" name="saveUrgency " />
+            </apex:actionFunction>
+            
+            <apex:actionFunction action="{!nextBtnHandler}" name="nextCategoryBtnHandler" 
+                                    rerender="validationComponent,panelId,errorId,titlePanel,afterSavePanel,tablePanel,Urgency__c_id_name,after,requireFollowUp,Image_Id" oncomplete="updateInactive();handleResetChange();resetSupportingInformation(false);handleElemEvent();reloadSupportInfo();updateTitle();">
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>  
+            </apex:actionFunction>
+            <apex:actionFunction action="{!previousBtnHandler}" name="previousCategoryBtnHandler" 
+                                        rerender="validationComponent,panelId,errorId,titlePanel,afterSavePanel,tablePanel,Urgency__c_id_name,after,requireFollowUp,Image_Id" oncomplete="updateInactive();handleResetChange();resetSupportingInformation(false);handleElemEvent();reloadSupportInfo();updateTitle();">
+                                        <apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+            </apex:actionFunction>
+			<apex:actionFunction action="{!setImageIcon}" name="setImageIcon" rerender="Image_Id">
+				<apex:param assignTo="{!savedImgID}" name="savedImgID" value="" />
+			</apex:actionFunction>
+            
+            <table class="clsMainTableSI" cellspacing="0" cellpadding="0">
+
+                <tr class="clsRowGreyBg">
+                    <td>
+                    <div id="btnToolbar"></div>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>
+                    <table  class="clsTable" cellspacing="0" cellpadding="0">  
+	                    <tr>
+	                    	<td class="clsInputLabelTD" colspan="3">
+	                     		<apex:outputpanel rendered="{!(!$ObjectType.Category__c.fields.UnAvailableForTasks__c.Accessible ||
+	                                        !$ObjectType.Category__c.fields.UnAvailableForProblems__c.Accessible ||
+	                                        !$ObjectType.Category__c.fields.UnAvailableForChangeRequests__c.Accessible ||
+	                                        !$ObjectType.Category__c.fields.UnAvailableForReleases__c.Accessible ||
+	                                        !$ObjectType.Category__c.fields.UnAvailableforBroadcasts__c.Accessible)}">
+	                            <table>
+	                          		<tr>
+										<td style="height:10px;"></td>
+	                    			</tr>
+	                    		</table>
+	                          	<table class="boxContainer">
+		                          	<tr>
+		                          		<td><img src="/img/msg_icons/warning24.png"/></td>
+		                            	<td>
+			                            	<apex:outputpanel rendered="{!NOT(isAdminUser)}">
+			                            		<apex:outputLabel value="{!$Label.bmcservicedesk__profilenonsysadminpermission}"/>
+			                            	</apex:outputpanel>
+			                            	<apex:outputpanel rendered="{!isAdminUser}">
+			                            		<apex:outputLabel value="{!$Label.bmcservicedesk__profilesysadminpermission}" />&nbsp;
+			                            		<apex:outputLink value="https://docs.bmc.com/docs/display/REMF/Performing+minimum+post-upgrade+procedures" target="_blank">{!$Label.bmcservicedesk__here}</apex:outputLink>
+			                            		<apex:outputText value="."/>
+			                            	</apex:outputpanel>
+		                            	</td>
+		                           	</tr>
+	                          	</table>
+	                         </apex:outputpanel>
+	                        </td>
+	                    </tr>
+                    
+                        <tr>
+                            <td class="clsTopAlignment75">
+                            <apex:outputPanel id="tablePanel">
+                             <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td colspan="3">
+                                        <div class="div15pxVspacing"></div>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.Name.label}" /><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                    <td class="clsInputTextBoxTD" colspan="2"><apex:inputText id="cid" title="{!$Label.bmcservicedesk__tooltipcategorycategoryid}" value="{!category.Name}"
+                                        styleClass="clsIdInputTextBox" tabindex="1"/></td>
+                                </tr>  
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__Abbreviation__c.label}" /></td>
+                                    <td class="clsInputTextBoxTD" colspan="2"><apex:inputText id="cid_abbreviation" title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__Abbreviation__c.InlineHelpText}" value="{!category.BMCServiceDesk__Abbreviation__c}"
+                                        styleClass="clsAbbrInputTextBox" tabindex="2"/></td>
+                                </tr> 
+                              
+                                <tr>
+                                    <td class="clsInputLabelTD">
+                                        <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__FKCategoryType__c.label}" />
+                                    </td>
+                                    <td class="clsInputTextBoxTD">
+                                        <apex:inputText title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__FKCategoryType__c.InlineHelpText}" value="{!fcategoryTypeId}"
+                                                        styleClass="clsInputTextBox" id="CategoryTypes__c_id_name"
+                                                        onblur="showalldata(event,'',escape('inactive__c = false'));" tabindex="3"/>
+                                    </td>
+                                    <td class="lookupIconTD" >
+                                    <div class="lookUpIconDiv">
+                                        <apex:commandButton id="categoryTypeLookup" onclick="if(!inProgress){openCategoryType();}" reRender="dummy"
+                                        styleClass="lookupIconOn" tabindex="4"/></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__FKParentCategory__c.label}" /></td>
+
+                                    <td class="clsInputTextBoxTD"><apex:inputText title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__FKParentCategory__c.InlineHelpText}" value="{!fparentCategoryId}"
+                                        styleClass="clsInputTextBox" id="Category__c_id_name"
+                                        onblur="showalldata(event,'',escape('inactive__c = false'));" tabindex="5"/>
+                                    </td>
+                                    <td class="lookupIconTD" >  
+                                    <div class="lookUpIconDiv">
+                                        <apex:commandButton id="categoryNameLookup" onclick="if(!inProgress){openParentCategory();}" rerender="dummy"
+                                            styleClass="lookupIconOn" tabindex="6"/></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                	<td class="clsInputLabelTD">
+                                		<apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__Category_Description__c.label}" />
+                                	</td>
+                                	<td colspan="5">
+                                		<apex:inputTextArea title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__Category_Description__c.InlineHelpText}" onchange="TruncateTextLen()" id="catDesc" value="{!category.BMCServiceDesk__Category_Description__c}" styleclass="clsInputTextArea" style="width:70%;margin-bottom: 8px;" tabindex="7"/>
+                                	</td>
+                                </tr>
+								<tr>
+									<td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__Image__c.label}" /></td>
+                                    <td colspan="5">
+                                    <table cellpadding="0" cellspacing="0" width="100%">
+										<tr>
+											
+										<td width="100%" class = "clsBottomPadTD">
+											<div style="display:inline-block;">
+												<table cellpadding="0" cellspacing="0">
+													<tr>
+													<td class="clsImageTD">
+														<div id="enclosingDiv"  >
+                                                        <apex:image value="{!IF(category.BMCServiceDesk__Image__c != null,URLFOR($Action.Document.Download,category.BMCServiceDesk__Image__c,[retURL='']),'')}"  id="Image_Id" height="96px" width="96px"  />
+														<image id="someImage" src="" class="clsImage" onError="ImgError(this)"/>
+														</div> 
+														<script>
+														document.getElementById('someImage').src='/';
+                                                        var imgId = '{!JSENCODE(category.Image__c)}';
+														setCatIconImageDisplay(imgId);
+														</script>
+													</td>
+													</tr>
+												</table>
+											</div>
+											<div style="display:inline-block; padding-left:40px;padding-bottom:10px">
+												<table cellpadding="0" cellspacing="0" width="100%">
+													<tr>
+													<td valign="Top">
+														<table>
+														<tr>
+															<td valign="Top">
+															<input type="radio" name="selectRadio" id="radioCom" onclick="document.getElementById('radioSF').checked = false;"/>
+															<apex:outputLabel styleClass="clsInputLabelTD" value="{!$Label.bmcservicedesk__selectfromcomputer}" />
+															</td>
+														</tr>
+														<tr>
+															<td ><input type="radio" checked="true" name="selectRadio" id="radioSF" onclick="document.getElementById('radioCom').checked = false;" />
+															<apex:outputLabel styleClass="clsInputLabelTD" value="{!$Label.bmcservicedesk__selectfromsalesforce}"/>
+															</td>
+														</tr>
+														<tr>
+															<td>
+															<input class="selectBtnCls" type="button" value="{!$Label.SelectButton}" onclick="openImagePopup();"/>
+															</td>
+														</tr>
+														</table>
+													</td>
+													</tr>
+												</table>
+											</div>
+											</td>
+										</tr>
+									</table>
+									</td>
+								</tr>
+								</table>                                
+                            </apex:outputPanel>
+                            </td>
+                            <td>
+                                <div class="div17pxHspacing" />
+									</td>
+                           <td class="clsTopAlignment25 clsInfoHandlingSRD">
+                            <div class="panelCapsule"><apex:panelBar headerClass="clsRowBlueBgPanel" headerStyle="width:318px;" switchType="ajax" id="panelBarId1"  >
+
+                                <apex:panelBarItem label="{!$Label.bmcservicedesk__appliesto}" expanded="true" headerClass="panelHeader IncidentHandlingInfoPanelHeader" id="panelBarItemId2" contentClass="panelContent" contentStyle="height:11em;">
+                                	<table class="clsTable" cellspacing="0" cellpadding="0">
+										<tr>
+                                            <td class="clsPanelInputCheckboxTDSA" colspan="2" style="border-bottom: thin solid;border-color:#C0C0C0">
+												<input type="checkbox" id="selectAll" tabindex="8" onclick="setResetSelectAllJS(this.checked);"/> 
+										<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__all)}" styleClass="clsPanelCheckBoxLabel" style="vertical-align:5px;"/>
+                                    </td>
+                                </tr>								
+                                <tr>
+											<td class="clsPanelInputCheckboxTDSA" colspan="2">
+												<apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__AvailableForIncidents__c.InlineHelpText}" value="{!category.BMCServiceDesk__AvailableForIncidents__c}" id="availableForIncident" tabindex="9" onclick="setResetParentAll();"/>
+                                        <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__AvailableForIncidents__c.label}" styleClass="clsPanelCheckBoxLabel" style="vertical-align:5px;"/>
+                                    </td>
+                                </tr>
+                                <tr>
+											<td class="clsPanelInputCheckboxTDSA" colspan="2">
+												<apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__AvailableForServiceCatalog__c.InlineHelpText}" value="{!category.BMCServiceDesk__AvailableForServiceCatalog__c}" id="availableForSR" tabindex="10" onclick="MakeDisplayForSS(this);setResetParentAll();"/> 
+                                        <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__AvailableForServiceCatalog__c.label}" styleClass="clsPanelCheckBoxLabel" style="vertical-align:5px;"/>
+                                    </td>
+										</tr>
+										<tr>
+                                            <td class="clsPanelInputCheckboxTDSA" colspan="2">
+												<apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__UnAvailableForTasks__c.InlineHelpText}" value="{!category.BMCServiceDesk__UnAvailableForTasks__c}" id="availableForTasks" tabindex="11" onclick="setResetParentAll();"/> 
+										<apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__UnAvailableForTasks__c.label}" styleClass="clsPanelCheckBoxLabel" style="vertical-align:5px;"/>
+                                   </td>							   
+                                </tr>	
+                                <tr>
+											<td class="clsPanelInputCheckboxTDSA" colspan="2">
+												<apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__UnAvailableForProblems__c.InlineHelpText}" value="{!category.BMCServiceDesk__UnAvailableForProblems__c}" id="availableForProblem" tabindex="12" onclick="setResetParentAll();"/> 
+										<apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__UnAvailableForProblems__c.label}" styleClass="clsPanelCheckBoxLabel" style="vertical-align:5px;"/>
+                                   </td>								   
+                                </tr>
+                                <tr>
+											<td class="clsPanelInputCheckboxTDSA" colspan="2">
+												<apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__UnAvailableForChangeRequests__c.InlineHelpText}" value="{!category.BMCServiceDesk__UnAvailableForChangeRequests__c}" id="availableForCR" tabindex="13" onclick="setResetParentAll();"/> 
+										<apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__UnAvailableForChangeRequests__c.label}" styleClass="clsPanelCheckBoxLabel" style="vertical-align:5px;"/>
+                                   </td>							   
+                                </tr>								
+                                <tr>
+											<td class="clsPanelInputCheckboxTDSA" colspan="2">
+												<apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__UnAvailableForReleases__c.InlineHelpText}" value="{!category.BMCServiceDesk__UnAvailableForReleases__c}" id="availableForRelease" tabindex="14" onclick="setResetParentAll();"/> 
+                                        <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__UnAvailableForReleases__c.label}" styleClass="clsPanelCheckBoxLabel" style="vertical-align:5px;"/>
+                                    </td>
+                                </tr>								
+                                <tr>
+                                            <td class="clsPanelInputCheckboxTDSA" colspan="2" style="border-bottom: thin solid;border-color:#C0C0C0;padding-bottom:4px">
+												<apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__UnAvailableforBroadcasts__c.InlineHelpText}" value="{!category.BMCServiceDesk__UnAvailableforBroadcasts__c}" id="availableForBR" tabindex="15" onclick="setResetParentAll();"/> 
+                                        <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__UnAvailableforBroadcasts__c.label}" styleClass="clsPanelCheckBoxLabel" style="vertical-align:5px;"/>
+                                    </td>
+                                </tr>							
+                                        <tr>
+                                            <td class="clsPanelInputCheckboxTDSA" colspan="2">
+                                                <apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__Display_In_SelfService__c.InlineHelpText}" value="{!category.BMCServiceDesk__Display_In_SelfService__c}" id="displayInSS" tabindex="16" onclick="setResetParentAll();"/> 
+                                                <apex:outputLabel value="{!$Label.bmcservicedesk__displayinselfservicedesk}" styleClass="clsPanelCheckBoxLabel" style="vertical-align:5px;"/>
+                                            </td>
+                                        </tr>
+                                        
+                                </table>                                
+                                </apex:panelBarItem>
+                                
+                            
+                                <apex:panelBarItem label="{!incidentHandlingInfoLabel}"
+                                    expanded="true" headerClass="panelHeader IncidentHandlingInfoPanelHeader" id="panelBarItemId1" contentClass="panelContent">
+                                    <script>
+                              			var IncidentInfoPanelBar = document.getElementById('{!$Component.panelBarItemId1}');
+                              			var i=0;
+			                			if(IncidentInfoPanelBar.childNodes.length > 0){
+				                 			for(i=0; i<IncidentInfoPanelBar.childNodes.length;i++){
+				                 				if(IncidentInfoPanelBar.childNodes[i] != null){
+				                 					if(IncidentInfoPanelBar.childNodes[i].className.indexOf('IncidentHandlingInfoPanelHeader') > 0){
+				                 						IncidentInfoPanelBar.childNodes[i].title = '{!JSENCODE($Label.IncidentHandlingInfo)}';
+				                 					}
+			                 					}
+				                 			}                               			
+			                			}
+                              		</script>
+                                    <table class="clsTable" cellspacing="0" cellpadding="0">
+
+                                        <tr>
+                                            <td >
+                                                <div class="div14pxVspacing" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                           <td class="clsPanelInputCheckboxTD" colspan="2"><apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__requireFollowUp__c.InlineHelpText}" value="{!category.BMCServiceDesk__requireFollowUp__c}" id="requireFollowUp" tabindex="7"/> <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__requireFollowUp__c.label}" styleClass="clsPanelCheckBoxLabel" />
+                                        </td>
+                                        </tr>
+                                         
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__followUpAfter__c.label}" /></td>
+                                            <td class="clsPanelInputTextboxTD"><apex:inputText id="after" title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__followUpAfter__c.InlineHelpText}" styleClass="clsPanelInputTextbox"
+                                                value="{!category.BMCServiceDesk__followUpAfter__c}" tabindex="8"/> </td><td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__followupafter}" /></td>
+
+
+                                        </tr>
+                                       
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__FKUrgency__c.label}" /></td>
+                                            <td class="clsPanelInputTextboxTD"><apex:inputText title="{!$ObjectType.BMCServiceDesk__Category__c.fields.BMCServiceDesk__FKUrgency__c.InlineHelpText}" styleClass="clsPanelInputTextbox"
+                                                value="{!furgencyId}" id="Urgency__c_id_name"
+                                                onblur="showalldata(event,'',escape('inactive__c = false'));" tabindex="9"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD"> 
+                                            <div class="lookUpIconDiv">                                         
+                                            <apex:commandButton id="urgencyLookup" onclick="if(!inProgress){openUrgency();}" rerender="dummy"
+                                                styleClass="lookupIconOn" tabindex="10"/></div></td>
+                                            
+                                        </tr>
+                                        <tr>
+                                        </tr>
+                                       
+
+                                    </table>
+                                </apex:panelBarItem>
+                            </apex:panelBar></div>
+                            </td>
+
+
+                        </tr>
+                    </table>
+                    </td>
+                </tr>
+            </table>
+
+            </apex:outputPanel> 
+            </div>
+               <!--  IE7-8 Related Changes -->
+           <div class="detailSectinDivCls">
+                      <table>
+                <tr>
+                    <td>
+                                           <c:SupportInformationComponent setinactive="{!category.BMCServiceDesk__inactive__c}" objectName="Category__c" fKeyValue="{!categoryId}" urlForStaticResource="{!$Resource.BMCServiceDesk__SDEFStyles}"/>
+                    </td>
+                </tr>
+            </table>
+           </div>
+           <apex:outputPanel id="dummy"></apex:outputPanel>
+           <c:TabOutComponent ></c:TabOutComponent>
+<!--  Ends IE7-8 Related Changes Taken div inside form-->
+        </apex:form>
+<script>
+var AddImage= '{!JSENCODE($Label.AddImage)}';
+if(isFromSRD=='true')
+{
+    uiChangesForSRD();
+    window.onchange = setDirtyFlag(true);
+    window.onkeypress  = setDirtyFlag(true);
+}
+</script>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CategoryIcon.js" />         
+</apex:page>

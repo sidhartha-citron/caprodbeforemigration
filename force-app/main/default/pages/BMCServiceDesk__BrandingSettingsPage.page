@@ -1,0 +1,531 @@
+<apex:page showHeader="false"  Controller="BMCServiceDesk.BrandingSettingsController" id="thePage" standardStylesheets="false">
+<c:CommonIncludes />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SelfServiceStyleSheet.css" />
+<style>
+.div10pxHspacing{
+   width: 10px;
+}
+.div200pxVspacing{
+   height: 90px;
+}
+.panelHeader {
+    padding-left: 10px;
+    padding-right: 10px;
+    width: 98.6%;
+    margin: 0px;
+    line-height: 2em;
+    height: 100%;
+    padding: 0 0 0 10px;
+   
+  } 
+  
+.clsInputLabelTDBranding {
+font-family:Tahoma,MS Sans Serif;
+font-weight:bold;
+font-size:11px;
+color: white; 
+padding-left:10px;
+vertical-align:middle;
+white-space:nowrap;
+
+}
+.clsInputLabelTDBrandingCurrentImage{
+font-family:Tahoma,MS Sans Serif;
+font-size:11px;
+padding-left:10px;
+vertical-align:middle;
+white-space:nowrap;
+}
+.brandingTrImagesDesc{
+background:transparent url(SDEFimages/blue_bg.gif) repeat scroll 0 0;
+font-family:Tahoma,MS Sans Serif;
+font-size:11px;
+height:25px;
+padding-left:10px;
+vertical-align:middle;
+width:275px;
+}
+.checkLabelST label {
+color:#000000;
+font-family:Tahoma,MS Sans Serif;
+font-size:11px;
+margin:0;
+padding-left:2px;
+padding-right:3px;
+padding-top:3px;
+vertical-align:top;
+white-space:nowrap;
+width:2%;
+}
+</style>
+
+<script>
+var  selectedvalue='{!JSENCODE(themeIndex)}' ;
+var  selectedLabel = '{!JSENCODE(themeLabel)}';
+var  defaultThemeId= '{!JSENCODE(defaultThemeId)}' ;
+var enablesavebtn = {!enablesavebutton};
+var radioName;
+var invalidCompanyURL='{!JSENCODE($Label.InvalidCompanyURL)}';
+var defaultThemeErrorMessage='{!JSENCODE($Label.DefaultThemeSelectionErrorMessage)}';
+
+function selectRemoveRadio0(){
+radioName = document.getElementsByName('{!JSENCODE($Component.BrandingSettingstForm.selectRadio0)}');
+commonRadioSelectFunction();
+}
+
+function selectRemoveRadio1(){
+radioName = document.getElementsByName('{!JSENCODE($Component.BrandingSettingstForm.selectRadio1)}');
+commonRadioSelectFunction();
+}
+function selectRemoveRadio2(){
+radioName = document.getElementsByName('{!JSENCODE($Component.BrandingSettingstForm.selectRadio2)}');
+commonRadioSelectFunction();
+}
+function selectRemoveRadio3(){
+radioName = document.getElementsByName('{!JSENCODE($Component.BrandingSettingstForm.selectRadio3)}');
+commonRadioSelectFunction();
+}
+
+function commonRadioSelectFunction(){
+if(radioName !=null){
+if(Ext.isIE7 || Ext.isIE8){// mean the browser is IE
+radioName[2].checked=true;
+}
+else{
+radioName[1].checked=true;
+}
+
+}
+}
+
+function setParameters() {
+// Set the selected theme Id,  so that its retain when the page is reloaded after save.
+var obj = document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.someparam)}');
+if (obj != null) obj.value = selectedvalue;
+
+// Set the selected theme Label,  so that its retain when the page is reloaded after save.
+var label = document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.labelparam)}');
+if (label != null) label.value = selectedLabel;
+
+}
+
+var SaveBtnHandler = function(button,event) {
+var URLvar = document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.companyURLID)}').value;
+if(URLvar!='')
+{
+    URLvar = httpIntranetUrlCheck(URLvar);
+    if(!URLvar){
+        Ext.Msg.show({
+            msg: invalidCompanyURL, 
+            buttons: Ext.Msg.OK            
+        });
+        return;
+    }
+}
+
+var chkboxVal= document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.defaultThemeChkbox)}');
+
+if(defaultThemeId == selectedvalue && chkboxVal.checked == false)
+{
+    Ext.Msg.show({
+            msg: defaultThemeErrorMessage, 
+            buttons: Ext.Msg.OK,
+            icon: Ext.MessageBox.ERROR
+        });
+    chkboxVal.checked = true;
+    return;
+}
+
+setParameters();
+saveSettings();
+
+};
+/*
+function clickImageRadio(button,event) {
+    setParameters();    
+    selectImageSettingsRadio();
+}*/
+
+function changeTheme(){
+setParameters();
+fetchImagesforSelectedTheme();
+}
+function showError(){
+ msg = '{!JSENCODE(errorMessage)}';
+   icon = Ext.MessageBox.ERROR ;
+  
+ Ext.Msg.show({
+            
+            title:'{!JSENCODE($Label.Navigator_SelfServiceSettings)}',
+            msg: msg,
+            buttons: Ext.Msg.OK,
+           // width: 400,       
+            icon: icon
+            
+       });
+}
+function showSaveConfirm(){
+msg = '{!JSENCODE($Label.savedSuccessfully)}';
+   icon = Ext.MessageBox.INFO ;
+  
+ Ext.Msg.show({
+            
+            title:'{!JSENCODE($Label.Navigator_SelfServiceSettings)}',
+            msg: msg,
+            buttons: Ext.Msg.OK,
+            width: 300,       
+            icon: icon
+            
+       });
+}
+Ext.onReady(function(){
+            Ext.QuickTips.init();             
+            var SamplePanel = Ext.extend(Ext.Panel, {
+                    renderTo: 'btnToolbar',
+                    defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+                });
+                
+           new SamplePanel({
+                    title: '',
+                cls:'toolSpCls',
+                    bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+                    tbar: [ {
+                        scale: 'medium',
+                        iconCls: 'bmcSave',
+                        tooltipType : 'title',
+                        tooltip: '{!JSENCODE($Label.save)}',
+                        id:'saveId',
+                        listeners: {
+                            mouseover: function(){
+                                this.setIconClass('bmcSaveOn');    
+                             },
+                            mouseout: function(){
+                                this.setIconClass('bmcSave');          
+                            }
+                        }, 
+                        handler:SaveBtnHandler
+                    }]
+                    
+                    });
+                if(!enablesavebtn)
+             {
+           
+                Ext.getCmp('saveId').setDisabled(true);
+             }  
+                  var ThemeArr = new Array();
+                var i=0;
+               <apex:repeat value="{!dataSourceNameList}" var="dataSourceName" >    
+                ThemeArr[i] = new Array(2);
+                ThemeArr[i++][0]='{!JSENCODE(dataSourceName)}';
+               // alert('{!dataSourceName}');
+              </apex:repeat>           
+            var i=0;
+            <apex:repeat value="{!dataSourceLabelList}" var="dataSourceLabel" >    
+                ThemeArr[i++][1]='{!JSENCODE(dataSourceLabel)}';
+            </apex:repeat>   
+                    // simple array store
+                var tempStore = new Ext.data.ArrayStore({
+                    fields: ['id', 'label'],
+                    data : ThemeArr
+                }); 
+                   var ThemesCombo = new Ext.form.ComboBox({
+                    renderTo:'Interface-Themes',
+                    store: tempStore,
+                    displayField:'label',
+                    id:'ThemesCombo',
+                    typeAhead: true,
+                    mode: 'local',
+                    triggerAction: 'all',
+                    valueField:'id',
+                    readOnly: true,
+                    forceSelection: true,
+                    emptyText:selectedLabel,
+                 //   emptyText:'Default',
+                    selectOnFocus:true,
+                    editable: false,
+                    listeners:{
+                            select: function(combo, record, index) {
+                           // var x = tempStore.getAt(index).get('id');
+                           
+                                          var text = record.get(combo.displayField);
+                                           selectedvalue = record.get(combo.valueField);
+                                           selectedLabel = record.get(combo.displayField);
+                                         //alert(selectedvalue);
+                                      // refreshThemesCombo1(selectedvalue);
+                                          changeTheme();                                
+                                       //  refreshThemesCombo(value);
+                                      }
+                            
+                    }
+                   
+                });
+            if('{!validationPass}'== 'false'){
+               showError();
+            }  
+            if('{!saveStatus}'== 'true'){
+               showSaveConfirm();
+            }   
+           
+            var chkboxVal= document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.defaultThemeChkbox)}');
+            //alert(chkboxVal.checked);
+            if(selectedvalue != defaultThemeId)
+            {                
+                //document.getElementById("defaultThemeLabel").style.visibility= "hidden";                                                
+                chkboxVal.checked = false;
+            }
+            else
+            {
+                 //document.getElementById("defaultThemeLabel").style.visibility = "visible";                            
+                 chkboxVal.checked = true;
+            }
+    
+     });
+     
+ /* function  toggleCustomImageSelector(){
+  
+  enableCustomImageSelector();
+  
+  }
+        
+   function refreshThemesCombo1(selectedvalue){
+      alert('selectedvalue'+selectedvalue);
+      refreshThemesCombo(selectedvalue);
+   }  */             
+</script>
+
+<apex:form id="BrandingSettingstForm">
+
+        <table class="clsMainTable" style="background-repeat: no-repeat; background-position: 0 0;"  cellspacing="0" cellpadding="0" border="0" >
+               <tr class="clsRowGreyBg" >
+                    <!--<td colspan="3">-->
+                    <td colspan="0">
+                        <div id="btnToolbar"></div>
+                     </td>
+                </tr>
+                
+                <tr>
+                    <td colspan="0"><div class="div15pxVspacing"/></td>
+                </tr>
+                
+                <tr>
+                   <td colspan="0">
+                      <table cellspacing="0" cellpadding="0">        
+                         <tr>
+                             <td class="clsInputLabelTD" style="width: 20%;">
+                                  <apex:outputLabel value="{!$Label.bmcservicedesk__userinterfacetheme}" />    
+                             </td> 
+                             <td style="width: 25%;">
+                                  <div title="{!$Label.TooltipUserInterfaceTheme}" id='Interface-Themes'> </div>                                     
+                              </td>
+                              <td>
+                              <div class="div10pxHspacing"/>      
+                              </td>
+                              <td id="defaultThemeLabel" class="defaultFont" style="width: 25%;">                                  
+                                   <apex:inputCheckbox id="defaultThemeChkbox" value="{!setAsDefault}" style="vertical-align: bottom;"/>&nbsp;
+                                   <apex:outputLabel value="{!$Label.bmcservicedesk__set_as_default}" />                                      
+                             </td>   
+                                          
+                             <td class="defaultFont"style="width: 30%;">
+                             <a href="JavaScript:void(0);" id="linkAccount" onclick="openPopupWithTitle('AccountSelector?themeid=' + selectedvalue ,'', '{!JSENCODE($Label.SelectAccountsForTheme)}',585, 510);">{!$Label.AssignThemeToAccounts}</a>
+                             </td>
+                                                   
+                                       
+                                                          
+                                       
+                          </tr>
+                       </table>
+                   </td>
+                </tr>
+                
+                   
+                <tr>
+                   <td colspan="0"><div class="div15pxVspacing"/></td>
+                </tr>    
+                
+                <tr>
+                   <td colspan="0">
+                     <div style="padding-left:10px; padding-right:10px;">
+                         <table> 
+                            <tr>
+                               <td colspan="0">
+                                 <table height="100%" width="100%">
+                                      
+                                      <!--for column headers-->
+                                      <tr style="background:url('{!$Resource.SDEFStyles}/SDEFimages/blue_bg.gif') repeat scroll 0 0 transparent; width:275px; line-height: 22px;" > 
+                                           <td class="clsInputLabelTDBranding" width="200px" >
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__brandingsettingslabelimage}"/> 
+                                           </td>
+                                           <td class="clsInputLabelTDBranding" width="350px">
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__brandingsettingslabelimageoptions}"/> 
+                                           </td>
+                                           <td class="clsInputLabelTDBranding" width="250px">
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__brandingsettingslabelreplacementimage}"/> 
+                                           </td>
+                                           <td class="clsInputLabelTDBranding" width="200px" >
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__brandingsettingslabelcurrentimage}"/> 
+                                          </td>
+                                       </tr>
+                                       <!--End of column header rows-->
+                                       
+                                       <!--Start of first row-->
+                                       <tr style="background:#FFFFFF;"> 
+                                           <td class="clsInputLabelTD" style="padding-right:10px;">
+                                                 <apex:outputLabel value="{!$Label.bmcservicedesk__applicationtitleonloginpage}"/> 
+                                            </td>
+                                            <td class="checkLabelST">
+                                                <apex:selectRadio layout="lineDirection" styleClass="checkLabelST" style="white-space:nowrap;" id="selectRadio0" value="{!loginHeaderImageOptions}">
+                                                <apex:selectOptions value="{!items}"/>
+                                                </apex:selectRadio>
+                                            </td>
+                                            <td style="padding-left:5px;">
+                                                <apex:inputFile fileName="{!attach0.name}" contentType="{!attach0.ContentType}" id="inputfileLoginTitle" style="font-family:Tahoma, MS Sans Serif;height:24px;" fileSize="225000"  value="{!attach0.body}" size="24" onclick="selectRemoveRadio0();" title="{!$Label.bmcservicedesk__brandingsettingsimagetooltip}"/>
+                                              
+                                            </td>
+                                            <td class="clsInputLabelTDBrandingCurrentImage" >
+                                               <apex:outputLabel value="{!attach0Label}"/> 
+                                            </td>
+                                       </tr>
+                                       <!--end of first row-->
+                                       
+                                       <!--Start of second row -->
+                                       <tr style="background:#E9E9E9;" > 
+                                           <td class="clsInputLabelTD" style="padding-right:10px;">
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__companylogoonloginpage}"/> 
+                                           </td>
+                                           <td class="checkLabelST">
+                                                <apex:selectRadio layout="lineDirection" styleClass="checkLabelST" style="white-space:nowrap;" id="selectRadio1" value="{!logoImageOptions}" >
+                                                <apex:selectOptions value="{!items}"/>
+                                                </apex:selectRadio>
+                                           </td>
+                                           <td style="padding-left:5px;">
+                                                 <apex:inputFile fileName="{!attach1.name}" contentType="{!attach1.ContentType}" id="inputfileLogo" style="font-family:Tahoma, MS Sans Serif;height:24px;" fileSize="225000" value="{!attach1.body}" size="24" onclick="selectRemoveRadio1();" title="{!$Label.bmcservicedesk__brandingsettingsimagetooltip}"/>
+                                           </td>
+                                           <td class="clsInputLabelTDBrandingCurrentImage">
+                                               <apex:outputLabel value="{!attach1Label}"/> 
+                                           </td>
+                                       </tr>
+                                                                            
+                                       <!-- End of Second row-->
+                                       
+                                       <!--Start of third row-->
+                                       <tr style="background:#FFFFFF;" > 
+                                           <td class="clsInputLabelTD" style="padding-right:10px;">
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__backgroundimageonloginpage}"/> 
+                                           </td>
+                                           <td class="checkLabelST">
+                                                <apex:selectRadio layout="lineDirection" styleClass="checkLabelST"  style="white-space:nowrap;" id="selectRadio2"value="{!backgroundImageOptions}">
+                                                <apex:selectOptions value="{!items}"/>
+                                                </apex:selectRadio>
+                                           </td>
+                                           <td style="padding-left:5px;">
+                                                 <apex:inputFile fileName="{!attach2.name}" contentType="{!attach2.ContentType}" id="inputfileBG" style="font-family:Tahoma, MS Sans Serif;height:24px;" fileSize="225000" value="{!attach2.body}" size="24" onclick="selectRemoveRadio2();" title="{!$Label.bmcservicedesk__brandingsettingsimagetooltip}"/>
+                                           </td>
+                                           <td class="clsInputLabelTDBrandingCurrentImage" >
+                                               <apex:outputLabel value="{!attach2Label}"/> 
+                                           </td>
+                                       </tr>
+                                       <!--End of third row-->
+                                       
+                                       <!--Start of fourth row-->
+                                       <tr style="background:#E9E9E9;" > 
+                                           <td class="clsInputLabelTD" style="padding-right:10px;">
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__applicationtitleonbanner}"/> 
+                                           </td>
+                                           <td class="checkLabelST">
+                                                <apex:selectRadio layout="lineDirection" styleClass="checkLabelST"  style="white-space:nowrap;" id="selectRadio3" value="{!bannerHeaderImageOptions}">
+                                                <apex:selectOptions value="{!items}"/>
+                                                </apex:selectRadio>
+                                           </td>
+                                           <td style="padding-left:5px;">
+                                                 <apex:inputFile fileName="{!attach3.name}" contentType="{!attach3.ContentType}" fileSize="{!filesize}" id="inputfileBannerTitle" style="font-family:Tahoma, MS Sans Serif;height:24px;"  value="{!attach3.body}" size="24" onclick="selectRemoveRadio3();" title="{!$Label.bmcservicedesk__brandingsettingsimagetooltip}"/>
+                                           </td>
+                                               <td class="clsInputLabelTDBrandingCurrentImage">
+                                               <apex:outputLabel value="{!attach3Label}"/> 
+                                           </td>
+                                       </tr>
+                                       
+                                     <!--End of fourth row-->  
+                                 </table>  
+                             </td>
+                           </tr>  
+                         </table>   
+                      </div>
+                   </td>
+                </tr>   
+                <tr>
+                   <td colspan="0"><div class="div15pxVspacing"/></td>
+                </tr> 
+                <tr>
+                    <td class="clsInputLabelTDBrandingCurrentImage">
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__companyurl}" style="padding-right:15px;"/>
+                    <apex:inputText id="companyURLID" value="{!companyURL}" size="57" title="{!$Label.bmcservicedesk__companyurltip}" style="font-family:Tahoma, MS Sans Serif;height:17px;"/>
+                    </td>                    
+                </tr>   
+                <tr>
+                   <td colspan="0"><div class="div10pxVspacing"/></td>
+                </tr> 
+                <tr>
+                    <td class="clsInputLabelTDBrandingCurrentImage">
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__urltiptext}" style="padding-right:21px;"/>
+                    <apex:inputText id="URLTipTextID" value="{!URLTipText}" size="57" title="{!$Label.bmcservicedesk__urltiptexttip}" style="font-family:Tahoma, MS Sans Serif;height:17px;"/>
+                    </td>
+                </tr>               
+                <tr>
+                   <td colspan="0"><div class="div15pxVspacing"/></td>
+                </tr>     
+                <tr>
+                   <td>    
+                      <table style=" padding-left:15px;" cellspacing="0" cellpadding="0" >   
+                         <tr>
+                             <td class="clsInputBoldLabelTableFirstRowTD"  style="*padding-left:15px;">
+                                  <apex:outputLabel value="{!$Label.bmcservicedesk__brandingsettingsdisplaylegend}"/> 
+                             </td>
+                          </tr>
+                          <tr>
+                              <td height="100%" width="100%" style="*padding-left:15px;" >
+                                    <apex:image value="{!URLFOR($Resource.BMCServiceDesk__SSjs, themeResourceName)}"/>
+                               </td>
+                          </tr>
+                      </table>
+                   </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="div200pxVspacing"></div>
+                    </td>
+                </tr>                  
+          </table>
+          
+<apex:inputhidden id="someparam" value="{!themeIndex}"/>
+<apex:inputhidden id="labelparam" value="{!themeLabel}"/>
+   <apex:actionFunction action="{!save}" name="saveSettings"/>  
+ 
+   <apex:actionFunction action="{!refreshImagesforSelectedTheme}" name="fetchImagesforSelectedTheme"/>   
+   
+ <!--  <apex:param name="selectedvalue" assignTo="{!themeIndex}" value=""/>
+    <apex:actionFunction action="{!toggleImageSelection}" name="selectImageSettingsRadio" />
+    <apex:actionFunction action="{!dummy}" name="refreshThemesCombo" rendered="false" >
+  
+               <apex:param name="selectedvalue" assignTo="{!JSENCODE(themeIndex)}" value=""/>
+   </apex:actionFunction> -->   
+  
+   
+   
+   
+ </apex:form>    
+<script>
+function dpf(f) {
+    var adp = f.adp;
+    if (adp != null) {
+        for (var i = 0;i < adp.length;i++) {
+            try {
+                f.removeChild(adp[i]);
+            }
+            catch (e) {
+                adp[i].parentNode.removeChild(adp[i]);
+            }
+        }
+    }
+}
+</script>           
+</apex:page>

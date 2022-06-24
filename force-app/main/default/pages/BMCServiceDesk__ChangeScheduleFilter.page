@@ -1,0 +1,165 @@
+<apex:page controller="BMCServiceDesk.ChangeScheduleFilterController" extensions="BMCServiceDesk.ConsoleRemoteActions" showHeader="false">
+    <link rel="stylesheet" type="text/css"  href="{!$Resource.SDEFStyles}/AdvancedSearchFilter.css"/>
+    <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" />
+   
+<apex:form id="FilterForm">
+    <div class="MainDivCls">
+    <div id = "MainPanel" Class="MainPanelCls">
+        <Table id="SearchTable" width="100%">
+            <tr><td><apex:outputLabel StyleClass="HeaderColor boldFont" value="{!JSENCODE($Label.bmcservicedesk__filter)}"></apex:outputlabel></td></tr>
+            <tr Style="height:10px;"><td></td></tr>
+            <tr>
+                <td colspan="4"> <div id="SelectedFilterDiv" /> </td>
+                
+            </tr>
+            <tr Style="height:10px;"><td></td></tr>
+            <tr class="borderBotton"><td colspan="4"></td></tr>
+            <tr Style="height:10px;"><td></td></tr>
+            <tr id="selectedFilterRow" style="display:none;">
+                <td colspan="4"> <div id="SelectedFiterNameDiv" /> </td>
+                
+            </tr>
+            </table>
+            <div id="filterDiv" style="max-height:140px; overflow-y:auto;">
+            <table id="FilterCriteria">
+            </table></div>
+            <table>
+            <tr Style="height:10px;"><td></td></tr>
+            <tr id="AddLink">
+                <td><a class="HeaderColor" Style="cursor: pointer;margin-left:5px;" onclick="AddRow(true);" href="#!" id="addRow" title="{!JSENCODE($Label.AddRowQVWizQueryPage)}">{!JSENCODE($Label.AddRowQVWizQueryPage)}</a></td>        
+            </tr>
+            <tr Style="height:20px;"><td></td></tr>
+            <tr style ="height: 20px;">
+                <td>
+                    <span>
+                        <button type="button" id="ApplyBtnId" disabled="true" class="rf-disabled" title="{!JSENCODE($Label.ApplyFilterTooltipChangeSchedule)}" onClick="Apply();">{!JSENCODE($Label.Apply)}</button>
+                        <button type="button" id="cancelBtnId"  class="rf-btn" onClick="CancelFilter();parent.deleteAllCookies();" title="{!JSENCODE($Label.SSCancel)}">{!JSENCODE($Label.Cancel)}</button>
+                    </span>&nbsp;
+                    
+                </td>
+                <td>
+                 <span>
+                    <a class="HeaderColor" Style="cursor: pointer;right: 40px;position: absolute;" onclick="handleClearFilter();" href="#!" id="ClearAppliedFilter" title="{!JSENCODE($Label.ClearAppliedFilter)}">{!JSENCODE($Label.ClearAppliedFilter)}</a>
+                    </span>
+                </td>
+            </tr>
+            <tr Style="height:10px;"><td></td></tr>
+            
+           
+        </Table>
+    </div>
+   
+    </div>
+    
+    <script>
+     _SearchRemotingActions={} 
+        var loggedInuserId = '{!$User.Id}';
+		var releaseLabel = '{!JSENCODE($Label.Release)}';
+        var changeLabel = '{!JSENCODE($Label.Change_Request)}';
+        var NoneLabel= '{!JSENCODE($Label.None1)}';   // this is '---None---'
+        var DeleteRowLabel = '{!JSENCODE($Label.DeleteRow)}';
+        var ForLabel = '{!JSENCODE($Label.For)}';
+        var notlike = '{!JSENCODE($Label.NotLike)}';
+        var like = '{!JSENCODE($Label.Like)}';
+        var startWith = '{!JSENCODE($Label.STARTSWITH)}';
+        var lblDelete = '{!JSENCODE($Label.Delete)}';
+        var compStore = new Object();
+        var selectedFilterStore ;
+        var labelField = '{!JSENCODE($Label.SelectField )}';
+        var labelOperator = '<' + '{!JSENCODE($Label.Operator)}' + '>';
+        var SelFilterLabel = '{!JSENCODE($Label.SelectObject)}';  
+        var fieldsStoreData = [];
+        var releaseFieldsStoreData = [];
+        var HiddenInputId;
+        var orgNamespace = '{!nameSpace}';
+        var SDEDateFormat = '{!userDateFormat}';
+        var rowCount=1;
+        var APINameOfSelectedField;
+        var RowSeperator = 'ф';
+        var CellSeperator ='џ';
+        var PE = 'П';
+        var ANDLabel = '{!JSENCODE($Label.SLM_AND)}';
+        var JsonConditionString;
+        var SpecifyOperatorMsg = '{!JSENCODE($Label.SpecifyOperator)}';
+        var userId = '{!getUserId}';  
+        var classNameValue = '{!JSENCODE($CurrentPage.parameters.className)}';
+        var AppliedFilterName = '{!JSENCODE($CurrentPage.parameters.AppliedFilter)}';
+        var waitMsg ='{!JSENCODE($Label.PleaseWait)}...';
+        var classpicklistStr = '';
+        var ServerConditionLimit='{!ConditionLimit}';
+        var ConditionLimit = ServerConditionLimit;
+        var FilterNameLabel = '{!JSENCODE($Label.FilterName)}';
+        var RecordDeletedLabel ='{!JSENCODE($Label.RecordDeleted)}';
+        var ClearAppliedFilter ='{!JSENCODE($Label.ClearAppliedFilter)}';
+        var searchErrorMsg = '{!JSENCODE($Label.GsErrorMsg)}';
+		
+        //This is used for type ahead functinality
+        _RemotingActions={}
+        _RemotingActions.getLookupFieldData = '{!$RemoteAction.ConsoleRemoteActions.getLookupFieldData}';
+        var currentConsole = 'searchAndLinkInFilter';
+        var isAutocomplete = false;
+        var sdefStylesResource = '{!$Resource.SDEFStyles}';
+        var selectedFilterName = '{!JSENCODE(SelectedFilterName)}';
+        var yesLbl = '{!JSENCODE($Label.ExtjsMessageYes)}';
+        var noLbl = '{!JSENCODE($Label.ExtjsMessageNo)}';
+        var nameLengthValidation = '{!JSENCODE($Label.nameLengthValidation)}';
+        var filterNameRequired = '{!JSENCODE($Label.filterNameRequired)}';
+        var ConfirmLabel ='{!JSENCODE($Label.Confirm_Action)}';
+        
+         _SearchRemotingActions={} 
+    
+        function getFilterCondition(isForLookup, lkpObject, lookupType, tempVar, txtId) {
+        if(lkpObject == 'User' || lkpObject == 'AllUser' || lkpObject == 'Account')
+            {
+                return escape('Isactive = true ');
+            }
+            if (typeof(lkpObject) != 'undefined' && lkpObject != 'User' && lkpObject != 'Account' && lkpObject.indexOf('__c') < 0)
+                return '';
+        }
+        function setDivPosition(obj){ 
+        var rtn=[obj.offsetLeft,obj.offsetTop];
+        var topOffset;
+        while(obj.offsetParent!=null){
+            var objp=obj.offsetParent; 
+            rtn[0]+=objp.offsetLeft-objp.scrollLeft; 
+            topOffset = objp.offsetTop-objp.scrollTop;
+            if(topOffset < 0)
+                topOffset = 0; 
+            rtn[1]+=topOffset;
+            obj=objp;
+        }
+     return rtn;
+    }
+    var results=[];
+    </script>
+    <apex:actionFunction action="{!refreshFields}" name="refreshFields" rerender="refreshFieldsData" oncomplete="ReloadStoreAndConditions();">
+    </apex:actionFunction>
+     </apex:form>
+     
+   <apex:outputpanel id="fiterListPanel">
+   <script>
+        selectedFilterStore = {!SelectedFilter};
+        ConditionLimit = ServerConditionLimit; 
+    </script>
+   </apex:outputpanel>
+   <apex:outputpanel id="RowDataPanel">
+    <script>
+      results= {!resultJSON};
+    </script>
+   </apex:outputpanel>
+   <apex:outputpanel id="refreshFieldsData">
+    <script>
+      fieldsStoreData = {!changeFields};
+      releaseFieldsStoreData = {!releaseFields};
+    </script>
+   </apex:outputpanel>
+   
+   <div id='autocompleteDiv' class="clsAutocompleteDiv">
+        <select id="selectAutoOptions" style="width: 150px !important;overflow: auto;" class="clsAutocompleteSelectOption" onmousedown="isAutocomplete = true;"  onclick="SelectAutoValue(this,'autocompleteDiv');" multiple="multiple"  >
+        </select>
+   </div>   
+    
+   <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ChangeScheduleFilter.js"> </script>
+   <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/TypeAhead.js"> </script>
+   </apex:page>

@@ -1,0 +1,155 @@
+<div error-panel type="global"></div>
+<div class="layout-width support-main" 
+		ng-class="{'support-main-table-layout': $state.$current.data.type === 'relatedTickets'}">
+	<div class="support-left-col Branding-Left_Panel-background full-height"  ng-if="$state.$current.data.type !== 'ViewServiceHealth'" >
+		<div class="support-left-col__inner" style="padding-top:25px" >
+			<ul aria-listnavigation id="{{'tileID' + $index}}" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'tileID'+$index);" class="vertical-nav support-menu doNotHighlight" role="listbox" tabindex="0">
+				<li selectable ng-mouseover="showTooltipDescription(menuItem.statePrefix,menuItem.customTileName)" ng-mouseleave="hideTooltipDescription(menuItem.statePrefix,menuItem.customTileName)" ng-focus="menuItem.selected = true" ng-blur="menuItem.selected = false" aria-selected="false" tabindex="-1" id="{{menuItem.statePrefix}}" ng-repeat="menuItem in menu" class="doNotHighlight" aria-label="{{menuItem.title}},{{menuItem.tileDescription}}" role="option" ng-click="goToState(menuItem.state); menuItem.customTileName!=null && setCurrentTile(menuItem.customTileName,menuItem.title)">
+					<a class="nowrap-line"
+						ng-class="{
+							'support-menu__item-link': $state.current.data.type !== menuItem.statePrefix,
+							'support-menu__item-link_selected': $state.current.data.type === menuItem.statePrefix,
+							'Branding-Left_Panel-mouse_hover' : $state.current.data.type === menuItem.statePrefix
+
+						}">
+						<div ng-if="menuItem.tileDescription">
+							<div class="ssTileDiv">
+								<span class="{{ menuItem.icon }} support-menu__item-link-icon"></span>
+								
+								<span ng-bind-html="menuItem.title" class="tileTextTruncate"></span>
+							</div>
+							<div class="infoIconDiv">
+								<span id="info{{menuItem.statePrefix}}{{menuItem.customTileName}}" ng-if="isSwitchToEnhancedUI && menuItem.tileDescription!=undefined" class="d-icon-info_circle tileDescriptionInfoIcon" ng-mouseleave="clearTooltip()" data-boundary="window" data-placement="bottom" data-toggle="popover" data-tilename={{menuItem.title}} data-tiledesc={{menuItem.tileDescription}} ss-tile-desc-tooltip></span>
+							</div>
+							
+						</div>
+						<span ng-if="!menuItem.tileDescription">
+							<span class="{{ menuItem.icon }} support-menu__item-link-icon"></span>
+							<span ng-bind-html="menuItem.title"></span>
+						</span>
+					</a>
+				</li>	
+			</ul>		
+
+			<div class="support-view-activity-panel"
+				 ng-if="showExistingTicketsLink">
+				 <span class="d-icon-activity_feed_clock_o support-view-activity-icon"></span>
+                <span id="viewInActivityDesc" class="support-view-activity-panel__title">
+					{{selfServiceLabels.existingAppointmentsAndRequests}}
+				</span>
+				<button ui-sref="profile({ activityTab: 'request' })" class="btn_nofill btn-view-activity-panel-multiline" aria-describedby="viewInActivityDesc">
+					{{selfServiceLabels.viewActivity}}
+				</button>
+				<button ng-if="supportModel.enableSaveAsDraft" ng-click="goToState('support.draft-requests.all');" class="btn_nofill btn-view-activity-panel btn-draft" aria-describedby="viewInActivityDesc">
+					<span class="btn-primary Branding-Right_Panel-default_button Branding-Right_Panel-button_outline btn-draft-count">{{ supportModel.savedDraftCount }}</span>
+					{{selfServiceLabels.Drafts}}
+				</button>
+			</div>
+		</div>
+	</div>
+	<div class="support-right-col full-height">
+		<div style="width: 100%;" ng-style="$state.$current.data.type === 'search' ? {'padding': '0px 30px 10px 30px'} : {'padding': '40px 30px 10px 30px'}" ng-if="(!$state.$current.data.type || $state.$current.data.type === 'search')">
+				<div style="width: 100%; height: 40px;" ng-if="getTitle() && $state.$current.data.type === 'search'">
+					<a class="search-home-link Branding-Right_Panel-hyperlink" ng-click="goHome()" ng-show="getTitle()" style="float:right;padding-top: 10px;padding-right: 0px;" tabindex="0">
+						{{ selfServiceLabels.home }} &#10095;
+					</a>
+				</div>
+				<div tabindex="1" id="searchDiv" class="support-search ng-star-inserted support-search-active" ng-blur="searchBarHandler(false)" ng-focus="searchBarHandler(true)">
+					<div class="support-search-icon">
+						<span class="d-icon-search" ></span>
+					</div>
+					
+					<div class="support-search-field-wrapper">
+						<textarea rows="1" cols="50" type="search" class="support-search-field support-search-field-ellipsis search-inputbox support-search-input"
+						ng-model="supportCtrlState.searchText"
+						ng-change="onSearchTextChange()"
+						focus-elm="isAccessibilityMode ? '' : !supportCtrlState.searchText"
+						ng-focus="onSearchTextChange()"
+						ng-blur="searchBarHandler(false)"
+						ng-keypress="preventEnter($event)"
+						id="superboxId"
+						aria-label="{{selfServiceLabels.SSDescribeYourIssue}}"
+						placeholder="{{ selfServiceLabels.SSDescribeYourIssue}}..." >
+						</textarea>
+					  
+					</div>
+				</div>
+				<div class="search-input-cross-icon">
+					<span class="d-icon-cross" ng-click="clearSearchText()" ng-keyup="$event.keyCode === 13 || $event.keyCode === 32 ? clearSearchText() : null"  ng-show="supportCtrlState.searchText.length" tabindex="{{supportCtrlState.searchText.length > 0 ? 0 : -1}}" role="button" aria-label="{{ $root.selfServiceLabels.ClearSearch }}"/>
+				</div>
+				<div class="search-header-panel" ng-show="$state.$current.data.type === 'search'">
+	
+					<div class="search-sub-panel">
+						<div tabindex="{{section.count > 0 ? 0 : -1}}" role="tab"
+							aria-selected="{{section.selected}}" 
+							ng-blur="section.selected = false;"
+							id="{{section.id+'_Section'}}"
+							aria-controls="{{section.id}}" ng-repeat="section in supportSearchModel.sections"
+							class="search-result-header-section doNotHighlight superBoxTabs"
+							ng-keyPress="selectTab($event)"
+							ng-click="section.count > 0 ? changeSectionType(section) :'';section.selected = true; " ng-class="{'Branding-tab_Panel-active-border bold-text' : section.isSelected, 'default-cursor-style' : (section.count == 0 && !section.isSelected)}">
+							<div class="search-result-header" 
+							>{{section.description}} 
+								<span class=" search-section__item-count" ng-class="section.count == 0 ? 'edit-profile__picture-info' : 'Branding-Right_Panel-default_button'" aria-label="{{section.count + ' ' + selfServiceLabels.searchTitle}}">{{section.count}} </span>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+		</div>
+		
+		
+		<div class="support-right-col__inner" ng-style="(($state.$current.data.type === 'ViewServiceHealth' || $state.$current.data.type === 'relatedTickets') ? {'padding-left':'0px','padding-right':'0px','padding-top':'0px'} : ((!$state.$current.data.type || $state.$current.data.type === 'search') ? {'padding-top':'0px','padding-right':'30px','padding-bottom':'30px', 'padding-left':'30px'} : {}) )" ng-class="$state.$current.data.type === 'manageApprovals' || $state.$current.data.type === 'ViewCIsAssets' ? 'support-right-col__inner_home' : ''">
+			<div style="width: 100%; margin-bottom: 15px; height: 40px;" ng-if="getTitle() && $state.$current.data.type != 'search'">
+				<div aria-shifttabnavigation="{{$state.$current.data.type}}" id="firstElementFocusId" class="search-home-title" tabindex="0">					
+					<h3 ng-if="getTitle()" ng-bind-html ="getTitle()" role="text"></h3>
+				</div>
+				<a class="search-home-link Branding-Right_Panel-hyperlink" ng-click="goHome()" ng-show="getTitle()" tabindex="0" aria-label="{{selfServiceLabels.home}}" ng-keydown="$event.which === 13 || $event.which === 32 ? goHome() : null">
+					{{ selfServiceLabels.home }} &#10095;
+				</a>
+			</div>
+			
+			<div style="padding-top: 10px;" class="support-back-link-container" 
+				 ng-if="$state.$current.data.type !== 'how-to' && backLinkTitle.length && !supportModel.dataLoading && showBackLink">
+				<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goBack()">
+					<!--<span class="glyphicon glyphicon-chevron-left support-back-link__icon"></span>-->
+					&#10094; {{ selfServiceLabels.back }} 
+				</a>
+			</div>
+			<div class="support-back-link-container" 
+				 ng-if="$state.$current.data.type === 'how-to' && backLinkTitle.length && !howToModel.dataLoading && showBackLink">
+				<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goBack()">
+					<!--<span class="glyphicon glyphicon-chevron-left support-back-link__icon"></span>-->
+					&#10094; {{ selfServiceLabels.back }}
+				</a>
+			</div>
+			<div ui-view autoscroll="false"></div>
+			<div class="support-back-link-container" 
+				 ng-if="$state.$current.data.type !== 'how-to' &&  !supportModel.dataLoading && showBackLink">
+				<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goBack()">
+					<!--<span class="glyphicon glyphicon-chevron-left support-back-link__icon"></span>-->
+					&#10094; {{ selfServiceLabels.back }}
+				</a>
+			</div>
+			<div class="support-back-link-container" 
+				 ng-if="$state.$current.data.type === 'how-to' && backLinkTitle.length && !howToModel.dataLoading && showBackLink">
+				<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goBack()">
+					<!--<span class="glyphicon glyphicon-chevron-left support-back-link__icon"></span>-->
+					&#10094; {{ selfServiceLabels.back }}
+				</a>
+			</div>
+		</div>
+	</div>
+	
+	<div class="footer-container" ng-show="getTitle()" ng-if="$state.$current.data.type === 'search' && submitINSR != 'NONE' && submitLabel != ''">
+		<div class="support-left-col"></div>
+		<div style="background:#fff">																										    
+			<div class="footer-submit-btn">
+				<div style="text-align: center;">{{selfServiceLabels.submitMessage}}
+					<button type="button" class="btn btn-primary Branding-Right_Panel-default_button Branding-Right_Panel-button_outline" style="margin-left:5px;" ng-click="submitTicket()" >{{ submitLabel }}</button>
+				</div>	
+			</div>
+		</div>
+	</div>
+</div>
+

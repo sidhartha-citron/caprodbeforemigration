@@ -1,0 +1,24 @@
+<apex:page controller="BMCServiceDesk.AcDevicesController" showHeader="false" standardStylesheets="false">
+<c:AcRestCommon isGridRequired="true"/>
+   <link rel="stylesheet" href="{!$Resource.SDEFStyles}/ACCMDBActions.css" type="text/css" />
+<script>
+proxyData = window.parent.proxyData;
+strFields = window.parent.strFields;
+strColumns = window.parent.strColumns;
+var imagePath = '{!JSENCODE($Resource.SDEFStyles)}', noActionsAvail = '{!JSENCODE($Label.ACNoActionsAvailable)}', devMenuItems = '';
+var isActionMenuMapAlreadyFilled = '{!JSENCODE($CurrentPage.parameters.isActionMenuMapAlreadyFilled)}';
+</script>
+<apex:form >
+ <apex:actionFunction name="getSupportedActionsForDevice" action="{!SupportedActionsForDevice}" rerender="dataPanel" onComplete="onCompleteFunction();">
+     <apex:param name="ciListSelectedAssemblyId" value=""/>
+ </apex:actionFunction>
+<apex:outputPanel id="dataPanel">
+    <script>
+    	menuItems = {!menuItems};
+    	msgStr = '{!errorMessage}';
+    	isConsoleAuthRequired = {!isConsoleAuthRequired};
+    </script>
+</apex:outputPanel> 
+</apex:form>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AcDevices.js" />
+</apex:page>

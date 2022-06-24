@@ -1,0 +1,106 @@
+<apex:page controller="BMCServiceDesk.AdminStaffAndQueueAssignmentController"  showHeader="false" sidebar="false" contentType="{!contetnTypeForIE}" standardStylesheets="false">  
+    <c:CommonIncludes />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/Knowledge.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminStaffQueueAssignment.css" /> 
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />    
+    <body>
+    <script>
+        var StartLbl = '{!JSENCODE($Label.ACStartservice)}';
+        var StopLbl  = '{!JSENCODE($Label.ACStopservice)}';
+    </script>
+    <apex:outputPanel id="loadStatusFields">
+		<script>
+		    var AvailableStatus 		= new Array();  
+		    var SelectedStatustodisplay = new Array();
+		    var selectedCustomObject 	= '{!(SelectedObjName)}';
+		    var i						= 0;
+		    var status 					= '{!status}';
+		     
+		    <apex:repeat var="AvailList" value="{!AcknowledgeStatusList}"  >    
+		        AvailableStatus[i] = new Array(2);
+		        AvailableStatus[i++][0]='{!(AvailList)}'; 
+		    </apex:repeat>
+		    
+		    i=0;
+		    <apex:repeat var="AvailLabelList" value="{!AcknowledgeStatusLabelList}"  >    
+		        AvailableStatus[i++][1]='{!(AvailLabelList)}'; 
+		    </apex:repeat>  
+		    
+		    i=0;
+		    <apex:repeat var="selectedList" value="{!SelectedStatusList}" >    
+		        SelectedStatustodisplay[i] = new Array(2);
+		        SelectedStatustodisplay[i++][0]='{!(selectedList)}';
+		    </apex:repeat>
+		    
+		    i=0;
+		    <apex:repeat var="selectedLabelList" value="{!SelectedStatusLabelList}">    
+		        SelectedStatustodisplay[i++][1]='{!(selectedLabelList)}';
+		    </apex:repeat>
+		</script>
+	</apex:outputPanel>
+   
+	<div id="Header"></div>
+	<div id="helpDiv" class="clshelpDiv"></div>
+	<div id="headerPanel"></div>
+	<div class="containerCls">
+		<div id="Combobox"></div>               
+		<div id="Msgid"></div>
+		<div id="MultipicklistLabels" ></div>
+	  	<div id="Multipicklist"></div>
+  	</div>
+    <apex:form id="templateFormId">
+        <apex:actionFunction name="GetStatus" action="{!getSelectedObjectStatus}" onComplete="setData();" reRender="loadStatusFields">
+                <apex:param assignTo="{!SelectedObjName}" name="SelectedObject" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="save" action="{!Save}"  reRender="loadStatusFields" onComplete="isComplete('{!status}');">
+                <apex:param assignTo="{!SelectedStatus}" name="SelectedStatus" value=""/>
+                <apex:param assignTo="{!EnableQueueAndUserAssignment}" name="propEnableQueueAndUserAssignment" value=""/> 
+        </apex:actionFunction>
+        <apex:actionFunction name="startSchedulerActions" action="{!startSchedulerActions}" reRender="statusPanel" onComplete="updateStatus()"/>
+        <apex:actionFunction name="stopSchedulerActions" action="{!stopSchedulerActions}" reRender="statusPanel" onComplete="updateStatus()"/>
+        <apex:outputPanel id="statusPanel">
+            <script>
+                isSchedulerRunning = '{!isSchedulerRunning}';
+            </script>
+        </apex:outputPanel>
+    </apex:form>
+              
+    <script>
+	    var AvailableStatusStore;
+        var isSchedulerRunning;
+	    var SelectedStatusStore;
+	    var propEnableQueueAndUserAssignment ;
+	    var waitMsg;
+	    var enableQueueAndUserAssignmentLbl = '{!JSENCODE($Label.Enable_Queue_and_User_Assignment)}';
+	    var AutoAssignmentLbl 				= '{!JSENCODE($Label.AutoAssignment)}';
+	    var saveLbl 						= '{!JSENCODE($Label.Save)}';
+	    var forLbl							= '{!JSENCODE($Label.For)}';
+	    var autoAssignMsgLbl 				= '{!JSENCODE($Label.Auto_Assign_message)}';
+	    var avaliableStatusValuesLbl 		= '{!JSENCODE($Label.Available_Status_Values)}';
+		var selectedStatusValuesLbl 		= '{!JSENCODE($Label.Selected_Status_Values)}';
+		var queueAndUserAssignmentLbl		= '{!JSENCODE($Label.QueueAndUserAssignment)}'; 
+		var SDEFStylesPath  				= '{!$Resource.SDEFStyles}';
+		var SDEFExtJSPath					= '{!$Resource.SDEFExtJS}';
+		var WaitImg							= "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+		var SuccessMsg 						= '{!JSENCODE($Label.SavedSuccessfully)}';
+		var ErrorMsg						= '{!JSENCODE($Label.MsgSaveError)}';
+		var CustomObjectsList				= '{!CustomObjectsList}';
+		var RecordAssignmentLbl				= '{!JSENCODE($Label.RecordAssignment)}';	
+		var EnableQueueUserAssignment		= '{!JSENCODE(EnableQueueAndUserAssignment)}';
+        var AutoAssignmentService           = '{!JSENCODE($Label.AutoAssignmentService)}';
+        var AutoAssignmentServiceSubHeader  = '{!JSENCODE($Label.AutoAssignmentServiceSubHeader)}';
+        var configureStaffAutoAssignmentLbl = '{!JSENCODE($Label.ConfigureStaffAutoAssignment)}';
+		var staffAutoAssignmentLbl = '{!JSENCODE($Label.StaffAutoAssignment)}';		
+	
+		if(EnableQueueUserAssignment.toUpperCase() == 'FALSE'){
+			 propEnableQueueAndUserAssignment = false;
+		} else {
+			 propEnableQueueAndUserAssignment = true;
+		}
+		var wikiUrl='{!wikiUrl}';
+        parent.addHelpOnPage(document.getElementById('helpDiv'),'record_assignment.htm',wikiUrl);
+	</script>
+	</body>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AppAdminItemselector.js" id="itemselector"/>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminStaffQueueAssignment.js" id="staffQueueAssignmentJs"/>
+</apex:page>

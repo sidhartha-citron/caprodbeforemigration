@@ -1,0 +1,170 @@
+<!--
+- @FileName: ServicePlanManagerForm
+- @Description: Form for creating and modifying Service Plans
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       12/4/2019         Created
+*************************************************************  
+-->
+
+<aura:component description="ServicePlanManagerForm"
+                controller="ServicePlanCtrl" >
+
+    <ltng:require scripts="{!$Resource.LightningUtils}" />
+
+    <aura:attribute name="spinner" type="Boolean" default="false" />
+    <aura:attribute name="permissionLevel" type="String" />
+    <aura:attribute name="accountId" type="String" />
+    <aura:attribute name="dataWrapper" type="Map" />
+    <aura:attribute name="variety" type="String" />
+    <aura:attribute name="servicePlanRecord" type="Map" />
+    <aura:attribute name="servicePlanRecordCache" type="Map" />
+    <aura:attribute name="servicePlanRecordCacheStart" type="Map" />
+    <aura:attribute name="assets" type="List" />
+    <aura:attribute name="keyFieldChange" type="Boolean" default="false" />
+    <aura:attribute name="routeSearchString" type="String" />
+    <aura:attribute name="routeLookupFilter" type="Map" />
+    <aura:attribute name="routeQueryFilter" type="String" />
+    <aura:attribute name="routeComparisonField" type="String" />
+    <aura:attribute name="routeDisplayFields" type="List" />
+    <aura:attribute name="scheduleSearchString" type="String" />
+    <aura:attribute name="scheduleLookupFilter" type="Map" />
+    <aura:attribute name="scheduleQueryFilter" type="String" />
+    <aura:attribute name="scheduleComparisonField" type="String" />
+    <aura:attribute name="picklistValues" type="Map" />
+    <aura:attribute name="confirmed" type="Boolean" default="false" />
+    <aura:attribute name="anchorDatePassed" type="Boolean" default="false" />
+
+    <aura:registerEvent name="ServicePlanManagerRefresh" type="c:ServicePlanManagerRefreshEvt" />
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <aura:handler name="ServicePlanManagerConfirmation" event="c:ServicePlanManagerConfirmationEvt" action="{!c.confirmation}" />
+
+    <aura:method name="onChange" action="{!c.checkFields}" />
+    <aura:method name="resetPlan" action="{!c.doInit}" />
+
+    <aura:if isTrue="{!v.spinner}">
+        <div class="slds-is-relative" style="height:100px;">
+            <c:Util_LoadingSpinner />
+        </div>
+    </aura:if>
+
+    <div class="{!v.spinner ? 'slds-hide' : 'slds-show'}">
+        <div class="slds-grid slds-grid_align-end">
+            <lightning:button variant="neutral"
+                              label="{!$Label.c.Cancel_Label}"
+                              onclick="{!c.refresh}" />
+
+            <aura:if isTrue="{!v.permissionLevel == 'Read/Write'}">
+                <lightning:button variant="brand"
+                                  label="{!v.variety == 'Manage' ? $Label.c.Update_And_Assign : $Label.c.Create_And_Assign}"
+                                  onclick="{!c.createOrUpdateServicePlan}" />
+            </aura:if>
+        </div>
+
+        <div class="slds-grid">
+            <div class="slds-col slds-size_1-of-4 slds-p-around_medium">
+                <aura:if isTrue="{!v.variety == 'Manage'}">
+                    <p class="slds-text-heading_large">{!v.servicePlanRecord.Name}</p>
+
+                    <aura:set attribute="else">
+                        <p class="slds-text-heading_large">{!$Label.c.SPM_Create_A_Service_Plan}</p>
+                    </aura:set>
+                </aura:if>
+                <div class="slds-m-top_small">
+                    <c:Util_LightningLookup aura:id="lookupField"
+                                            label="{!$Label.c.Route}"
+                                            parent="{!this}"
+                                            searchString="{!v.routeSearchString}"
+                                            filtersByObject="{!v.routeLookupFilter}"
+                                            queryFilters="{!v.routeQueryFilter}"
+                                            comparisonField="{!v.routeComparisonField}"
+                                            displayFields="{!v.routeDisplayFields}"
+                                            resultLimit="10"
+                                            searchSOQL="true"
+                                            selectedResultId="{!v.servicePlanRecord.Route__c}"
+                                            required="true"
+                                            disabled="{!v.permissionLevel == 'Read Only'}" />
+                </div>
+
+                <lightning:select aura:id="selectField"
+                                  class="slds-m-top_small"
+                                  label="{!$Label.c.Job_Type}"
+                                  value="{!v.servicePlanRecord.Job_Type__c}"
+                                  required="true"
+                                  onchange="{!c.checkFields}"
+                                  disabled="{!or(v.anchorDatePassed, v.permissionLevel == 'Read Only')}" >
+                    <aura:iteration items="{!v.dataWrapper.picklistOptions.jobTypes}" var="option">
+                        <option value="{!option.key}" >{!option.label}</option>
+                    </aura:iteration>
+                </lightning:select>
+
+                <aura:if isTrue="{!v.servicePlanRecord.Job_Type__c == 'Recurring Service'}">
+                    <lightning:select aura:id="selectField"
+                                      class="slds-m-top_small"
+                                      label="{!$Label.c.Line_of_Business}"
+                                      value="{!v.servicePlanRecord.Line_of_Business__c}"
+                                      required="true"
+                                      onchange="{!c.checkFields}"
+                                      disabled="{!or(v.anchorDatePassed, v.permissionLevel == 'Read Only')}" >
+                        <aura:iteration items="{!v.dataWrapper.picklistOptions.linesOfBusiness}" var="option">
+                            <option value="{!option.key}" >{!option.label}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </aura:if>
+
+                <lightning:select aura:id="selectField"
+                                  class="slds-m-top_small"
+                                  label="{!$Label.c.Frequency}"
+                                  value="{!v.servicePlanRecord.Frequency__c}"
+                                  required="true"
+                                  onchange="{!c.checkFields}"
+                                  disabled="{!or(v.anchorDatePassed, v.permissionLevel == 'Read Only')}" >
+                    <aura:iteration items="{!v.dataWrapper.picklistOptions.frequencies}" var="option">
+                        <option value="{!option.key}" >{!option.label}</option>
+                    </aura:iteration>
+                </lightning:select>
+
+                <div class="slds-m-top_small">
+                    <c:Util_LightningLookup aura:id="lookupField"
+                                            label="{!$Label.c.Schedule_Type}"
+                                            parent="{!this}"
+                                            searchString="{!v.scheduleSearchString}"
+                                            filtersByObject="{!v.scheduleLookupFilter}"
+                                            queryFilters="{!v.scheduleQueryFilter}"
+                                            comparisonField="{!v.scheduleComparisonField}"
+                                            resultLimit="10"
+                                            searchSOQL="true"
+                                            selectedResultId="{!v.servicePlanRecord.Schedule_Type__c}"
+                                            required="true"
+                                            disabled="{!or(empty(v.servicePlanRecord.Frequency__c), v.permissionLevel == 'Read Only')}"/>
+                </div>
+
+                <lightning:input aura:id="inputField"
+                                 class="slds-m-top_small"
+                                 type="Date"
+                                 label="{!$Label.c.Anchor_Date}"
+                                 value="{!v.servicePlanRecord.Effective_Date__c}"
+                                 required="true"
+                                 onchange="{!c.checkFields}"
+                                 disabled="{!or(v.anchorDatePassed, v.permissionLevel == 'Read Only')}" />
+
+            </div>
+            <div class="slds-col slds-size_3-of-4 slds-m-around_medium">
+                <c:ServicePlanManagerItemList aura:id="itemList"
+                                              dataWrapper="{!v.dataWrapper}"
+                                              variety="{!v.variety}"
+                                              accountId="{!v.accountId}"
+                                              servicePlan="{!v.servicePlanRecord}"
+                                              assets="{!v.assets}"
+                                              permissionLevel="{!v.permissionLevel}" />
+            </div>
+        </div>
+
+        {!v.body}
+
+    </div>
+
+</aura:component>

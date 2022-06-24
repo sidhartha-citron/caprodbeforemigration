@@ -1,0 +1,739 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.ServiceRequestDetail">
+<body id='docBody' onload="initiateSelfClosing()" />
+	<c:CommonIncludes />
+	<script src="{!$Resource.SDEFExtJS}/ex/ux/Spinner.js" />
+	<script src="{!$Resource.SDEFExtJS}/ex/ux/SpinnerField.js" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Spinner.css" />
+	
+	<script src="{!$Resource.SDEFCommonJS}/JSCommon.js"/>
+	<script src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"/>
+	<script src="{!$Resource.SDEFCommonJS}/ServiceRequestDetail.js"/>
+	
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomViews.css" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ServiceLevelTarget.css" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJSUX}/ex/ux/css/GroupTab.css" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.Themes}/SSDefaultTheme/SSIncident.css" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SIStyleSheet.css"/>
+	<link rel="stylesheet" type="text/css" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css"/> 
+	<link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}"/> 
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css"/>
+	<style>
+		.htmlDetailElementTable .sfdc_richtext img {
+            width:auto !important ;
+            height:auto !important ;
+            max-width:46vw !important ; 
+            max-height:46vw !important ;
+        }
+		.x-panel-header0 {
+			background: url("{!$Resource.SDEFStyles}/SDEFimages/btn_background_blue_01.gif") repeat scroll 0 0 transparent;
+			border-color:#99BBE8;
+			color:#FFFFFF;
+			font-family: Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+			font-size:13px;
+			font-weight:bold;
+			height: 25px;
+			padding-left:5px;
+		}
+		.lineSeparatorCls {
+			border-bottom: 1px solid #D9D9D9;
+		}
+		
+		.requestTableClass {
+			width:100%;
+		}
+		.x-toolbar-right {
+			background-color: #CCD8E7;
+		}
+		
+		.inputMainCls{padding-left:10px;}
+		.rightFSTdCls{padding-left:5px;}
+		.x-toolbar .x-btn-tl, .x-toolbar .x-btn-tr, .x-toolbar .x-btn-tc, .x-toolbar .x-btn-ml, .x-toolbar .x-btn-mr, .x-toolbar .x-btn-mc, .x-toolbar .x-btn-bl, .x-toolbar .x-btn-br, .x-toolbar .x-btn-bc {
+			background-color: #CCD8E7;
+		}
+		.x-grid3-hd-inner {
+			background: #f2f3f3;
+			border-left: thin solid #d3d3d3;
+			border-top: thin solid #d3d3d3;
+			border-bottom: thin solid #d3d3d3;
+			border-right: 0px #d3d3d3;
+			color: #222 !important;
+			font-family: Arial,Helvetica,sans-serif !important;
+			font-size: 11px !important;
+			font-weight: bold;
+		}
+		.x-grid-body{ 
+			border: thin #d3d3d3;
+			padding: 0px;
+		}
+		.removeDotFromList{
+			list-style-type: none;
+		}
+		#quantitySpinner{
+	    	padding: 2px 10px 2px 10px;
+	    	font-size: 14px !important;
+	    	color: #333 !important;
+	    	background-image: none;
+	    	height: 17px !important;
+		}
+		.clsPanelInputLabelLblTD{
+	    	font-size: 14px;
+			color: #333;
+			display: inline-block;
+			margin-bottom: 5px;
+			margin-top: 10px;
+    	}
+    	.rf-static-data-table{
+    		padding-bottom: 5px; 
+    	}
+		.srTitlecls_SR {
+			border: none;
+		}
+		.buttonBar{
+		    width: unset !important;
+		    height: unset !important;
+		}
+		.calToday {
+		    font-size: 91% !important;
+	    }
+   </style>
+	<script>
+		officialNamespace='';
+		window.document.title = '{!JSENCODE($Label.ServiceRequestDetail)}';
+		var standardLayout = '{!JSENCODE($CurrentPage.parameters.standardLayout)}';
+		var isEdit = '{!JSENCODE($CurrentPage.parameters.isEdit)}';
+		var showQuantity={!showQuantity};
+		var succesvar='{!JSENCODE($Label.SavedSuccessfully)}';
+		var userLanguage = '{!userLanguage}';
+		var enableLocaleNumberFormat = Boolean('{!JSENCODE(IF(enableLocaleNumberFormat,"true", ""))}');
+		var localeDecimalSeparator = '{!JSENCODE(localeDecimalSeparator)}';
+		
+		Ext.ns("ServiceRequestPage");
+		ServiceRequestPage.Labels = {
+			Save: '{!JSENCODE($Label.Save)}',
+			Reset: '{!JSENCODE($Label.Refresh)}',
+			Error: '{!JSENCODE($Label.Error)}',
+			MoreInfo: '{!JSENCODE($Label.MoreInformation)}',
+			Print: '{!JSENCODE($Label.Print)}' ,
+			Input:'{!JSENCODE($Label.PromptQuestionHeader)}',
+			Date:'{!JSENCODE($Label.Date)}',
+			ValueBefore:'{!JSENCODE($Label.SRHistoryValueBefore)}',
+			ValueAfter:'{!JSENCODE($Label.SRHistoryValueAfter)}',
+			User:'{!JSENCODE($Label.User)}'
+		}
+		var isShowHistoryLink = true;
+		var labelShowHistory = '{!JSENCODE($Label.SRShowInputHistory)}';
+		var labelHideHistory = '{!JSENCODE($Label.SRHideInputHistory)}';
+		var nameSpacePrefix='BMCServiceDesk__';
+		var requestDetailId; 
+		var quantitySpinnerState = {!isViewMode};
+		var incidentWithRequest = {!incidentWithRequest};
+		var isConsole = getUrlParameter('isConsole');
+		var incidentId = getUrlParameter('incidentId');
+		var srd = '{!JSENCODE(requestBean.serviceRequest.SRDUrl__c)}';
+		var editSR = {!editSRValue};
+		var editDisableFlag = {!editDisableFlag};
+		var mandatoryfields= [];
+		var focuscontrol = [];
+		var fieldlevelmsg= [];
+		var inctype="{!JSENCODE($CurrentPage.parameters.inctype)}";
+		var IncidentSegregationEnabled={!IncidentSegregationEnabled};
+		function getInitialCost(){
+			return {!requestBean.serviceRequest.customerPrice__c};
+		}
+		function getDetailQuantity(){
+			return {!requestBean.serviceRequest.BMCServiceDesk__Quantity__c};
+		}
+		function fetchQuantityText(){
+			return document.getElementById('{!$Component.serviceDetail.quantityText}');
+		}
+		function getQuantityViewId(){
+			return document.getElementById('{!$Component.serviceDetail.quantityViewId}');
+		}
+		function toggleHistory(elementLink) {
+			var elementHistoryGridPanel = document.getElementById('{!$Component.serviceDetail.inputHistoryGridPanel}');
+			var historySeparator = document.getElementById('separatorHistoryGridPanel');
+			if(isShowHistoryLink) {
+				elementLink.title = labelHideHistory;
+				if(Ext.isIE)
+					elementLink.innerText = labelHideHistory;
+				else
+					elementLink.text = labelHideHistory;
+				elementHistoryGridPanel.style.display='block';
+				historySeparator.style.display='block';
+				setInputHistoryData();
+				if ({!isForSROnly})
+					parent.AdjustIframeHeight(document.getElementById('{!$Component.serviceDetail}').scrollHeight);
+				elementHistoryGridPanel.focus();
+				elementHistoryGridPanel.scrollIntoView();
+			} else {
+				elementLink.title = labelShowHistory;
+				if(Ext.isIE)
+					elementLink.innerText = labelShowHistory;
+				else
+					elementLink.text = labelShowHistory;
+				elementHistoryGridPanel.style.display='none';
+				historySeparator.style.display='none';
+				if ({!isForSROnly})
+					parent.AdjustIframeHeight(document.getElementById('{!$Component.serviceDetail}').scrollHeight);
+			}
+			isShowHistoryLink = !isShowHistoryLink;
+		}
+		requestDetailId = '{!JSENCODE(requestBean.serviceRequest.Id)}';
+	</script>
+	<apex:outputPanel id="errorId">
+		<script> errormsg = '{!JSENCODE(messageString)}'; </script>
+	</apex:outputPanel>
+	<apex:outputPanel id="refreshFieldPanel" >
+		<script>
+			requestDetailId = '{!requestBean.serviceRequest.Id}';
+			
+			function getSDFStylesResPath(){
+				return '{!$Resource.SDEFStyles}';
+			}
+				
+			function setInputHistoryData() {
+				var inputHistory=[{!InputHistoryData}];
+				setInputDataStore(inputHistory);
+			}
+		</script>
+	</apex:outputPanel>
+	
+	<apex:form id="serviceDetail" >
+		<div id="rfDPLReferenceDiv">
+	 		<c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+	 		<apex:actionFunction action="{!save}" name="save" rerender="errorId,validationComponent,refreshFieldPanel,apexMessageErrorPanel" oncomplete="showErrorMessage();setIdToParent();buttonValidator();assignApexErrorMessage();setInputHistoryData();" >
+				<apex:param name="newDynamicInputString" value="" assignTo="{!newDynamicInputString}"/>         
+			</apex:actionFunction>
+			<apex:actionFunction action="{!replaceUrl}" name="replaceUrl" />
+			<apex:actionFunction action="{!editSR}" name="editServiceRequest"/>
+			
+			<apex:actionFunction action="{!refreshDynamicListDefaultWhenClientChanged}" name="refreshDynamicListDefaultWhenClientChanged" rerender="none" oncomplete="changeDefaultValueInSRInputs('{!inputWithClientValues}');checkVisibility('true');" >
+				<apex:param name="requestIdForDefaultValue" value="" assignTo="{!requestIdForDefaultValue}"/>      
+				<apex:param name="clientIdForDefaultValue" value="" assignTo="{!clientIdForDefaultValue}"/>            
+			</apex:actionFunction>
+  
+			<script>
+				function changeDefaultValueInSRInputs(inputs){
+					var inputLst=JSON.parse(inputs);
+					if(inputLst){
+					for(var i=0;i<inputLst.length;i++){
+						if(inputLst[i].BMCServiceDesk__ResponseType__c== 'Date/Time' || inputLst[i].BMCServiceDesk__ResponseType__c=='Date' ){
+							var dateFieldEle = document.getElementById('date_'+inputLst[i].Id);
+							dateFieldEle.value=inputLst[i].BMCServiceDesk__DefaultValue__c;
+							var divEle = document.getElementById(inputLst[i].Id);
+							divEle.previousSibling.previousSibling.value = dateFieldEle.value;
+						}else{
+								document.getElementsByClassName(inputLst[i].Id)[0].value=inputLst[i].BMCServiceDesk__DefaultValue__c;
+							}
+						}
+					}
+				}
+			</script>
+			
+
+
+			<apex:outputPanel id="apexMessageErrorPanel" >
+				<div id="apexMessageErrorPanelDiv" style="display:none;">
+					<apex:messages />
+				</div>
+			</apex:outputPanel>
+			
+			<table cellpadding="0" cellspacing="0" style="width:98%;margin: 0px 10px;">
+				<tr>
+					<td>
+						<div id="toolBar"></div>
+					</td>
+				</tr>
+				<tr>
+					<td class="{!if (isForSROnly, 'srTitlecls_SR', '')}" style="display: {!if (isForSROnly, 'block', 'none')};"  >
+						<div class="rfDPL-sr-title-header">
+							<a class="rfDPL-toggle-div" onclick="showSRPanel(this)">
+								<span class="d-icon-angle_down rfDPL-toggle-icon" id="SRToggleSpan"/>
+								{!$Label.ServiceRequestDetail}: {!serviceReqTitle}
+							</a>
+							<span style="float:right;">
+								<a href="#inputHistoryGridId" onclick="toggleHistory(this)" style="display: {!if (isShowHistoryVisible, 'block', 'none')};float:left;padding-right:15px;" class="rf-sr-a-link" title="{!$Label.SRShowInputHistory}">{!$Label.SRShowInputHistory}</a>
+								<a href="#" id="srd_print_id" class="rf-sr-a-link" onclick="window.print();">{!$Label.PrintDetails}</a>
+							</span>
+							<div class="rfDPL-section-underline"></div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td id="mainTD_Id" class="requestTableClass" >
+						<table class="rfDPLFullWidth"  cellspacing="0" cellpadding="0">
+							<tr>
+								<td style="width:100%;">
+									<table class="rf-static-data-table rfDPLFullWidth" cellspacing="0" cellpadding="0">
+										<tr> 
+											<td class="srTitlecls" style="display: {!if (isForSROnly, 'none', '')}; width:49%;"> {!serviceReqTitle} </td>
+											<td class="srTitlecls" style="display:{!IF(AND(isShowHistoryVisible,NOT(isForSROnly), IsRfconsole) ,'block','none')};float:right; width:50%;">
+												<a href="#" id="srd_show_History_id" onclick="toggleHistory(this)" title="{!$Label.SRShowInputHistory}" style="float: right; padding-right: 1%;">{!$Label.SRShowInputHistory}</a>
+											</td>
+										</tr>
+										<tr>
+											<td style="width:49%;vertical-align:top;padding-left:3px;">
+												<table cellspacing="0" class="rfDPLFullWidth">
+													<tr>
+														<td class="dataCol">
+															<table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+																<tr>
+																	<td class="{!IF(isViewMode, '', 'staticInputCls')}">
+																		<label class="rf-label">{!$Label.EntitleLabel}</label>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<label class="rf-data"> <apex:outputText value="{!entitled}"  id="entitled"/> </label>
+																	</td>
+																</tr>
+															</table>
+														</td>
+													</tr>
+													
+													<apex:outputPanel rendered="{!AND(showQuantity, $ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields.BMCServiceDesk__Quantity__c.Accessible)}">
+														<tr>
+															<td class="dataCol">
+																<table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+																	<tr>
+																		<td class="{!IF(isViewMode, '', 'staticInputCls')}"> <label class="rf-label"> {!$ObjectType.SRM_RequestDetail__c.fields.Quantity__c.label} </label> </td>
+																	</tr>
+																	<tr>
+																		<td>
+																			<apex:inputHidden value="{!requestBean.serviceRequest.BMCServiceDesk__Quantity__c}" id="quantityText"/>
+																			<apex:outputPanel rendered="{!isViewMode}">
+																				<apex:outputText value="CRUDFLSCHECK# Both CRUD & FLS check are not required ( SRM_RequestDetail__c is a metadata object)" rendered="false"/> 
+																				<label class="rf-data"> <apex:outputtext id="quantityViewId" value="{!requestBean.serviceRequest.BMCServiceDesk__Quantity__c}"/> </label>
+																			</apex:outputPanel>
+																			<div id="quantity" style = "display : {!if(!isViewMode,'block','none')}"> </div>
+																		</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+													</apex:outputPanel>
+													
+												
+													
+													<apex:outputPanel id="totalPriceDiv" rendered="{!AND(IF(hasPrice, IF((showPrice),true,false),false), $ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields.BMCServiceDesk__TotalPrice__c.Accessible)}">
+														<tr>
+															<td class="dataCol">
+																<table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+																	<tr>
+																		<td class="{!IF(isViewMode, '', 'staticInputCls')}"> <label class="rf-label">{!$ObjectType.SRM_RequestDetail__c.fields.TotalPrice__c.label}</label> </td>
+																	</tr>
+																	<tr>
+																		<td>
+																			<label class="rf-data">
+																				<span id="totalCost">{!requestBean.serviceRequest.customerPrice__c}</span>
+																				&nbsp;
+																				<apex:outputLabel value="{!currencyType}" styleclass="rf-data"></apex:outputLabel>
+																			</label> 
+																		</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+													</apex:outputPanel>
+													<tr>
+														<td class="dataCol">
+															 <apex:outputPanel rendered="{!AND(showDateReq, $ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields.BMCServiceDesk__DateRequired__c.Accessible)}">
+															<table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+																<tr>
+																	<td class="{!IF(isViewMode, '', 'staticInputCls')}">
+																		<label class="rf-label">{!$ObjectType.SRM_RequestDetail__c.fields.DateRequired__c.label}</label>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																			<apex:inputField value="{!requestBean.serviceRequest.BMCServiceDesk__DateRequired__c}" id="serviceRequestDate" styleclass="rf-single-line-field" rendered="{!AND($ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields.BMCServiceDesk__DateRequired__c.Updateable,NOT(isViewMode))}"/>
+																			<label class="rf-data"> <apex:outputField value="{!requestBean.serviceRequest.BMCServiceDesk__DateRequired__c}" styleClass="clsPanelInputTextbox rf-data" rendered="{!isViewMode}"/> </label>
+																	</td>
+																 </tr>
+															</table>
+																</apex:outputPanel>
+														</td>
+													</tr>
+												</table>
+											</td>
+											<td style="width:50%;padding-left:5px;vertical-align:top;">
+												<table cellspacing="0" class="rfDPLFullWidth">
+												<tr>
+														<td class="dataCol">
+															<table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+																<tr>
+																	<td class="{!IF(isViewMode, '', 'staticInputCls')}"> <label class="rf-label">{!$Label.RequestedBy}</label> </td>
+																</tr>
+																<tr>
+																	<td> 
+																		<apex:outputLabel value="{!IF(incidentCreatedBy != null, incidentCreatedBy, '-')}" styleclass="rf-data"/>
+																	</td>
+																</tr>
+															</table>
+														</td>
+													</tr>
+														<apex:outputPanel id="priceDiv" rendered="{!AND(IF(hasPrice, IF((showPrice),true,false),false), $ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields.BMCServiceDesk__CustomerPrice__c.Accessible)}" >
+														<tr>
+															<td class="dataCol">
+																<table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+																	<tr>
+																		<td class="{!IF(isViewMode, '', 'staticInputCls')}"> <label class="rf-label">{!$Label.SRUnitPrice}</label> </td>
+																	</tr>
+																	<tr>
+																	<td style="width:50%;">
+																			<label class="rf-data">
+																				<span id="unitPrice" class="rf-data">{!requestBean.serviceRequest.CustomerPrice__c}</span>
+																				&nbsp;
+																				<apex:outputLabel styleclass="rf-data" value="{!currencyType} {!IF(OR(priceOption1 == null,  priceOption1 == ''), '', '/')} {!priceOption1} {!IF(OR(priceOption2 == null, priceOption2 == ''), '', '/')} {!priceOption2}"></apex:outputLabel>
+																			</label> 
+																		</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+													</apex:outputPanel>
+													
+													<tr>
+														<td class="dataCol">
+															<apex:outputPanel rendered="{!AND(showDateExp, $ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields.BMCServiceDesk__DateExpected__c.Accessible)}">
+                                                            <table cellspacing="0" cellpadding="0" class="rfDPLFullWidth">
+																	<tr>
+																		<td class="{!IF(isViewMode, '', 'staticInputCls')}"> 
+																			<label class="rf-label"> {!$ObjectType.SRM_RequestDetail__c.fields.DateExpected__c.label} </label>
+																		</td>
+																	</tr>	
+																	<tr>	
+																		<td>
+																			<label class="rf-data"><apex:outputField value="{!requestBean.serviceRequest.BMCServiceDesk__DateExpected__c}" styleclass="rf-data"/></label>
+																		</td>
+																	</tr>
+																</table>
+															</apex:outputPanel>
+														</td>
+													</tr>
+													
+												</table>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td class="requestTableClass">
+									<table style='width:100%; margin-left:-2px;' >
+										<tr>
+											<td style='width:50%;vertical-align:top;'>
+												<table  cellspacing="0" class="rfDPLFullWidth">
+													<c:DynamicInputComponent inputList="{!dynamicInputTypeList}" id="test"  isViewmode="{!isViewMode}" requestDetail="{!requestBean}" rendered="{!NOT(isViewMode)}"/>
+													<apex:outputPanel rendered="{!isViewMode}">
+														<table class="rfDPLFullWidth" cellspacing="0" style="margin:0 0 15px 0;">
+															<tr>
+																<td width="48%" valign="top">
+																	<apex:outputPanel id="viewLeftFSId" rendered="{!if (isViewMode, true, false)}">
+																		<apex:repeat value="{!$ObjectType.BMCServiceDesk__SRM_RequestDetail__c.FieldSets.BMCServiceDesk__leftPanel}" var="srFs"> 
+																			<apex:outputPanel id="panel1" rendered="{!$ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].accessible}" >
+																				<apex:outputPanel id="panel3"  >
+																					<table cellpadding="0px" cellspacing="0px" class="rfDPLFullWidth">
+																						<tr>
+																							<td class="dataCol">
+																								<table  cellpadding="0px" cellspacing="0px" class="rfDPLFullWidth">
+																									<tr>
+																										<td>
+																											<apex:outputPanel rendered="{!CONTAINS($ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].type,'boolean')}">
+																												<apex:outputField value="{!requestBean.serviceRequest[srFs]}" />
+																											</apex:outputPanel>
+																											<apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].label}" styleClass="rf-label" />
+																										</td>
+																									</tr>
+																									<tr>
+																										<td title="{!$ObjectType.SRM_RequestDetail__c.fields[srFs].inlineHelpText}">                                                                
+																											<apex:outputPanel id="panel5" rendered="{!CONTAINS($ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].type,'reference')}" >
+																												<apex:outputLabel value="{!requestBean.serviceRequest[requestBean.referenceFieldMap[$ObjectType.BMCServiceDesk__SRM_RequestDetail__c.Fields[srFs].localname].referenceNameField][requestBean.referenceFieldMap[$ObjectType.BMCServiceDesk__SRM_RequestDetail__c.Fields[srFs].localname].referenceNameFieldSec]}" styleclass="rf-data"/>
+																											</apex:outputPanel>
+																											<label class="rf-data">
+																												<apex:outputPanel id="panel6" rendered="{!if((NOT(CONTAINS($ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].type,'reference')) ) && NOT(CONTAINS($ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].type,'boolean')), true, false)}">
+																													<apex:outputField value="{!requestBean.serviceRequest[srFs]}" />
+																												</apex:outputPanel>
+																											</label>
+																										</td>
+																									</tr>
+																								</table>
+																							</td>
+																						</tr>
+																					</table>
+																				</apex:outputPanel>                                                     
+																			</apex:outputPanel>
+																		</apex:repeat>
+																	</apex:outputPanel>
+																</td>
+																<td width="49%" valign="top" style="padding-left:3px;">
+																	<apex:outputPanel id="viewRightFSId" rendered="{!if (isViewMode, true, false)}">
+																		<apex:repeat value="{!$ObjectType.BMCServiceDesk__SRM_RequestDetail__c.FieldSets.BMCServiceDesk__rightPanel}" var="srFs"> 
+																			<apex:outputPanel id="panel1" rendered="{!$ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].accessible}" >
+																				<apex:outputPanel id="panel3" >
+																					<table cellpadding="0px" cellspacing="0px" class="rfDPLFullWidth">
+																						<tr>
+																							<td class="dataCol">
+																								<table  cellpadding="0px" cellspacing="0px" class="rfDPLFullWidth">
+																									<tr>
+																										<td>
+																											<apex:outputPanel rendered="{!CONTAINS($ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].type,'boolean')}">
+																												<apex:outputField value="{!requestBean.serviceRequest[srFs]}" styleclass="rf-data"/>
+																											</apex:outputPanel>
+																											<apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].label}" styleclass="rf-label"/>
+																										</td>
+																									</tr>
+																									<tr>
+																										<td title="{!$ObjectType.SRM_RequestDetail__c.fields[srFs].inlineHelpText}" >                                                                
+																											<apex:outputPanel id="panel5" rendered="{!CONTAINS($ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].type,'reference')}">
+																												<apex:outputLabel value="{!requestBean.serviceRequest[requestBean.referenceFieldMap[$ObjectType.BMCServiceDesk__SRM_RequestDetail__c.Fields[srFs].localname].referenceNameField][requestBean.referenceFieldMap[$ObjectType.BMCServiceDesk__SRM_RequestDetail__c.Fields[srFs].localname].referenceNameFieldSec]}" styleclass="rf-data"/>
+																											</apex:outputPanel>
+																											<label class="rf-data">
+																												<apex:outputPanel id="panel6" rendered="{!if((NOT(CONTAINS($ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].type,'reference')) ) && NOT(CONTAINS($ObjectType.BMCServiceDesk__SRM_RequestDetail__c.fields[srFs].type,'boolean')), true, false)}">
+																													<apex:outputField value="{!requestBean.serviceRequest[srFs]}" styleclass="rf-data"/>
+																												</apex:outputPanel>
+																											</label>
+																										</td>
+																									</tr>
+																								</table>
+																							</td>
+																						</tr>
+																					</table>
+																				</apex:outputPanel>                                                     
+																			</apex:outputPanel>
+																		</apex:repeat>
+																	</apex:outputPanel>
+																</td>
+															</tr>
+															<tr> <td colspan="2" class="rfDPL-sr-td-header-separator"> <hr class="rf-sepeartors"/> </td> </tr>
+														</table>
+														
+														<table class="rfDPLFullWidth" cellspacing="0px" style="margin: -20px -8px 0 0;">
+															<tr>
+																<td class="rfDPLFullWidth" valign="top">
+																	<table cellpadding="0" cellspacing="0" class="rfDPLFullWidth" border="0">
+																		<apex:repeat value="{!layoutObjList}" var="layoutObj"   id="requestTableRepeater">
+																			<apex:outputPanel layout="none" rendered="{!if(layoutObj.colOneInputType.BMCServiceDesk__Response__c=='header section', true, false)}">
+																				<tr>
+																					<apex:outputPanel rendered="{!IF(OR(ISNULL(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__AdditionalInfo__c),layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__AdditionalInfo__c <= 1),true,false)}">
+																						<td colspan="{!IF(isSecondColumnEmpty,'2','4')}" valign="top" > 
+																							<table class="tdHeaderSectionSRtable rfDPL-sr-td-header-separator">
+																								<tr>
+																									<td class="{! IF(layoutObj.colOneInputType.FKFulfillmentInputs__r.AdditionalInfo__c==1, 'tdHeaderSectionSR lineSeparatorCls', 'tdHeaderSectionSR')}">
+																										<apex:outputLabel value="{!layoutObj.colOneInputType.BMCServiceDesk__Input__c}"/>
+																									</td>
+																								</tr>
+																							</table>
+																						</td>
+																					</apex:outputPanel>
+																					<apex:outputPanel rendered="{!IF(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__AdditionalInfo__c==2,true,false)}">
+																						<td colspan="{!IF(isSecondColumnEmpty,'2','4')}"> 
+																							<table class="tdHeaderSectionSRtable rfDPLFullWidth rfDPL-sr-td-header-separator">
+																								<tr>
+																									<td class="tdHeaderSectionSRBar">
+																										<apex:outputLabel value="{!layoutObj.colOneInputType.BMCServiceDesk__Input__c}" />
+																									</td>
+																								</tr>
+																							</table>
+																						</td>
+																					</apex:outputPanel>
+																				</tr>
+																			</apex:outputPanel>
+																			<apex:outputPanel layout="none" rendered="{!AND(isSecondColumnEmpty,if(layoutObj.colOneInputType.BMCServiceDesk__Response__c!='header section', true, false))}">
+																				<tr>
+																					<td class="dataCol" valign="top">
+																						<table class="rfDPLFullWidth">
+																							<tr>
+																								<td valign="top"> 
+																									<apex:outputPanel rendered="{!if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box' && LOWER(layoutObj.colOneInputType.BMCServiceDesk__Response__c)=='true', true, false)}">
+																										<input type="checkbox" checked="true" disabled="true"> </input>
+																									</apex:outputPanel>
+																									<apex:outputPanel rendered="{!if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box' && LOWER(layoutObj.colOneInputType.BMCServiceDesk__Response__c)=='false', true, false)}">
+																										<input type="checkbox" disabled="true">  </input>
+																									</apex:outputPanel>
+																									
+																									<apex:outputLabel value="{!layoutObj.colOneInputType.BMCServiceDesk__Input__c}" styleclass="rf-label" rendered="{!if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c!='Hyperlink',true,false)}" style="{!IF(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box', 'margin-top: 18px;', '')}"/>
+																									<apex:outputLabel rendered="{!if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Hyperlink',true,false)}" styleclass="rf-label" style="margin-top: 18px;">
+																											{!layoutObj.colOneHyperlinkInputStringList[0]}<a href="{!layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__URLInfo__c}" target="_blank" title="{!layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__Tooltip__c}">{!layoutObj.colOneHyperlinkInputStringList[1]}</a>{!layoutObj.colOneHyperlinkInputStringList[2]}
+																									</apex:outputLabel>
+																								</td>
+																							</tr>
+																							<tr>
+																								<td valign="top">
+																									
+																									<apex:outputLabel value="{!layoutObj.colOneInputType.BMCServiceDesk__Response__c}" rendered="{!and(if(layoutObj.colOneInputType.BMCServiceDesk__Richtext_Response__c!='', false,true),if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box',false,true),if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c!='Hyperlink',true,false))}" styleclass="{!IF(LOWER(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c) == "text area", 'wrapContent rf-data', 'rf-data')}"/>
+																								</td>
+																							</tr>
+																							<apex:outputPanel rendered="{!if(layoutObj.colOneInputType.BMCServiceDesk__Response__c==''&&layoutObj.colOneInputType.BMCServiceDesk__Richtext_Response__c!='', true, false)}">
+																								<tr>
+																									<td colspan="2">
+																										<apex:inputField id="DisplaycolOnefullspanRTF" value="{!layoutObj.colOneInputType.BMCServiceDesk__Richtext_Response__c}" rendered="{!if(layoutObj.colOneInputType.BMCServiceDesk__Response__c==''&&layoutObj.colOneInputType.BMCServiceDesk__Richtext_Response__c!='', true, false)}" />	                                                                    
+																										<script>
+																											if({!JSENCODE(layoutObj.colOneInputType.Richtext_Response__c)!=null}){
+																												SRDetailrichBodyId= '{!$Component.DisplaycolOnefullspanRTF}';                                                               
+																												SRDetailvisibleLines=parseInt('{!JSENCODE(TEXT(layoutObj.colOneInputType.FKFulfillmentInputs__r.VisibleLines__c))}');                                                              
+																												SRDetaildelayFuncForRichText();
+																											}
+																										</script>
+																									</td>
+																								</tr>
+																							</apex:outputPanel>
+																						</table>
+																					</td>
+																				</tr>
+																			</apex:outputPanel>
+																			<apex:outputPanel layout="none" rendered="{!AND(!isSecondColumnEmpty,if(layoutObj.colOneInputType.BMCServiceDesk__Response__c!='header section', true, false))}">
+																				<tr>
+																					<td class="dataCol" valign="top">
+																						<table class="rfDPLFullWidth">
+																							<tr>
+																								<td> 
+																									<apex:outputPanel rendered="{!if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box' && LOWER(layoutObj.colOneInputType.BMCServiceDesk__Response__c)=='true', true, false)}">
+																										<input type="checkbox" checked="true" disabled="true">  </input>
+																									</apex:outputPanel>
+																									<apex:outputPanel rendered="{!if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box' && LOWER(layoutObj.colOneInputType.BMCServiceDesk__Response__c)=='false', true, false)}">
+																										<input type="checkbox" disabled="true">  </input>
+																									</apex:outputPanel>
+																									<apex:outputLabel rendered="{!if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c!='Hyperlink',true,false)}" value="{!layoutObj.colOneInputType.BMCServiceDesk__Input__c}" styleclass="rf-label" style="{!IF(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box', 'margin-top: 18px;', '')}"/>
+																									<apex:outputLabel id="colOneHyperlink"  rendered="{!if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c='Hyperlink',true,false)}" styleclass="rf-label" style="margin-top: 18px;">
+																									{!layoutObj.colOneHyperlinkInputStringList[0]}<a href="{!layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__URLInfo__c}" target="_blank" title="{!layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__Tooltip__c}">{!layoutObj.colOneHyperlinkInputStringList[1]}</a>{!layoutObj.colOneHyperlinkInputStringList[2]}
+																									</apex:outputLabel>
+																								</td>
+																							</tr>
+																							<apex:outputPanel rendered="{!and(if(layoutObj.colOneInputType.BMCServiceDesk__Richtext_Response__c!='', false,true),if(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box',false,true))}">
+																							<tr>
+																								<td>
+																									<apex:outputLabel value="{!layoutObj.colOneInputType.BMCServiceDesk__Response__c}" styleclass="{!IF(LOWER(layoutObj.colOneInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c) == "text area", 'wrapContent rf-data', 'rf-data')}"/>
+																								</td>
+																							</tr>
+																							</apex:outputPanel>
+																							
+																							<apex:outputpanel rendered="{!if(layoutObj.colOneInputType.BMCServiceDesk__Response__c==''&&layoutObj.colOneInputType.BMCServiceDesk__Richtext_Response__c!='', true, false)}">
+																								<tr>
+																									<td colspan="{!if(layoutObj.colOneInputType.fkfulfillmentinputs__r.displayinfullspan__c,2,1)}">
+																										<apex:inputField id="DisplaycolOneRTF" value="{!layoutObj.colOneInputType.BMCServiceDesk__Richtext_Response__c}" rendered="{!if(layoutObj.colOneInputType.BMCServiceDesk__Response__c==''&&layoutObj.colOneInputType.BMCServiceDesk__Richtext_Response__c!='', true, false)}" />	                                                                                                              
+																										<script>
+																											if({!JSENCODE(layoutObj.colOneInputType.Richtext_Response__c)!=null}){
+																												SRDetailrichBodyId= '{!$Component.DisplaycolOneRTF}';                                                               
+																												SRDetailvisibleLines=parseInt('{!JSENCODE(TEXT(layoutObj.colOneInputType.FKFulfillmentInputs__r.VisibleLines__c))}');                                                               
+																												SRDetaildelayFuncForRichText();
+																											}
+																										</script>
+																									</td>
+																								</tr>
+																							</apex:outputpanel>
+																						</table>
+																					</td>
+																					<td  class="dataCol" valign="top">
+																						<table class="rfDPLFullWidth">
+																							<tr>
+																								<td> 
+																									<apex:outputPanel rendered="{!if(layoutObj.colTwoInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box' && LOWER(layoutObj.colTwoInputType.BMCServiceDesk__Response__c)=='true', true, false)}">
+																										<input type="checkbox" checked="true" disabled="true">  </input>
+																									</apex:outputPanel>
+																									<apex:outputPanel rendered="{!if(layoutObj.colTwoInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box' && LOWER(layoutObj.colTwoInputType.BMCServiceDesk__Response__c)=='false', true, false)}">
+																										<input type="checkbox" disabled="true">  </input>
+																									</apex:outputPanel>
+																									<apex:outputLabel value="{!layoutObj.colTwoInputType.BMCServiceDesk__Input__c}" styleclass="rf-label" rendered="{!if(layoutObj.colTwoInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c!='Hyperlink',true,false)}" style="{!IF(layoutObj.colTwoInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box', 'margin-top: 18px;', '')}"/>
+																									<apex:outputLabel id="colTwoHyperlink"  rendered="{!if(layoutObj.colTwoInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Hyperlink',true,false)}" styleclass="rf-label" style="margin-top: 18px;">
+																											{!layoutObj.colTwoHyperlinkInputStringList[0]}<a href="{!layoutObj.colTwoInputType.FKFulfillmentInputs__r.BMCServiceDesk__URLInfo__c}" target="_blank" title="{!layoutObj.colTwoInputType.FKFulfillmentInputs__r.BMCServiceDesk__Tooltip__c}">{!layoutObj.colTwoHyperlinkInputStringList[1]}</a>{!layoutObj.colTwoHyperlinkInputStringList[2]}
+																									</apex:outputLabel>
+																								</td>
+																							</tr>
+																							<apex:outputPanel rendered="{!and(if(layoutObj.colTwoInputType.BMCServiceDesk__Richtext_Response__c!='', false,true),if(layoutObj.colTwoInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c=='Check box',false,true))}">
+																								<tr>
+																									<td>
+																										<apex:outputLabel value="{!layoutObj.colTwoInputType.BMCServiceDesk__Response__c}" styleclass="{!IF(LOWER(layoutObj.colTwoInputType.FKFulfillmentInputs__r.BMCServiceDesk__ResponseType__c) == "text area", 'wrapContent rf-data', 'rf-data')}"/>
+																									</td>
+																								</tr>
+																							</apex:outputPanel>
+																							<apex:outputpanel rendered="{!if(layoutObj.colTwoInputType.BMCServiceDesk__Response__c=='' && layoutObj.colTwoInputType.BMCServiceDesk__Richtext_Response__c!='', true, false)}">
+																								<tr>
+																									<td colspan="1">
+																										<apex:inputField id="DisplaycolTwoRTF" value="{!layoutObj.colTwoInputType.BMCServiceDesk__Richtext_Response__c}" rendered="{!if(layoutObj.colTwoInputType.BMCServiceDesk__Response__c==''&&layoutObj.colTwoInputType.BMCServiceDesk__Richtext_Response__c!='', true, false)}" />	                                                                                                              
+																										<script>
+																											if({!JSENCODE(layoutObj.colTwoInputType.Richtext_Response__c)!=null}){
+																												SRDetailrichBodyId= '{!$Component.DisplaycolTwoRTF}';                                                               
+																												SRDetailvisibleLines=parseInt('{!JSENCODE(TEXT(layoutObj.colTwoInputType.FKFulfillmentInputs__r.VisibleLines__c))}');                                                               
+																												SRDetaildelayFuncForRichText();
+																											}
+																										</script>
+																									</td>
+																								</tr>
+																							</apex:outputpanel>   
+																						</table>
+																					</td>
+																				</tr>
+																				
+																			</apex:outputPanel>
+																		</apex:repeat>
+																	</table>
+																</td>
+															</tr>
+														</table>
+													</apex:outputPanel>
+													<tr></tr>
+													<tr>
+														<td id="separatorHistoryGridPanel" style="display:none"> <hr/> </td>
+													</tr>
+													<tr></tr>
+													<tr>
+														<td>
+															<apex:outputPanel id="inputHistoryGridPanel" style="display:none;width:99%; padding-left:1%;">
+																<table class="rfDPLFullWidth" border="0">
+																	<tr>
+																		<td id="historyTitle" class="srTitlecls" style="font-size:13px !important;padding-left: 2px;">
+																			{!JSENCODE($Label.Supporting_History)}
+																		</td>
+																	</tr>
+																	<tr></tr>
+																	<tr></tr>
+																	<tr>
+																		<td> <div id="inputHistoryGrid" style="width:97%"/> </td>
+																	</tr>
+																</table>
+															</apex:outputPanel>
+														</td>
+													</tr>
+												</table>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<!--<tr> <td class="x-panel-header0" > {!$Label.RequestInput} </td> </tr>-->
+			</table>
+			<script>
+				if(IncidentSegregationEnabled && inctype=='ServiceRequest'){
+					var assignSR = function doSave(){
+						window.parent.startWaitMsgBar();
+						if({!NOT(isViewMode)}){
+							if(richInputHidden!=null && typeof(richInputHidden)!='undefined' && richBodyComponent!=null && typeof(richBodyComponent)!='undefined')	
+								document.getElementById(richInputHidden).value = RemedyForceHTMLProcessor.getElementHTML(richBodyComponent); 
+							var dynamicInputMapJSON=formJason();
+							save(dynamicInputMapJSON);
+						} else{
+							window.parent.parent.saveIncAfterSR();
+						}
+					}
+					if(window.parent.parent.assignSR!=undefined){
+						window.parent.parent.assignSR(assignSR);
+					}
+				}
+				serviceDetailFormId='{!$Component.serviceDetail}';
+				isForSROnly={!isForSROnly};
+				applyIconandHelpTextToMultiSelectPicklist_SRINPUTS();				
+			</script>
+		</div>
+		<c:RTFCopyPaste />
+		<div  style="display:none;">
+			<apex:inputField value="{!requestBean.serviceRequest.BMCServiceDesk__DateRequired__c}" id="dummyDate"/> 
+		</div>
+	</apex:form>
+	<apex:pageBlock rendered="{!If(userLanguage=='iw','true','false')}">
+		<link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFConsole-RTL.css" type="text/css" />
+	</apex:pageBlock> 	
+</apex:page>

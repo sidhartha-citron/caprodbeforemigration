@@ -1,0 +1,90 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 12-23-2020
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+  Modifications Log 
+  Ver   Date         Author                               Modification
+  1.0   11-28-2020   ChangeMeIn@UserSettingsUnder.SFDoc   Initial Version
+-->
+<template>
+    <div class="slds-theme_alt-inverse slds-p-around_small">
+        <div class="slds-grid">
+
+            <div class="slds-col slds-size_2-of-12 slds-text-heading--small slds-text-align_center">
+                <template if:true={scoreApplicable}>
+                    Account Ship To Score:<br />
+                    <template if:false={isSeasonal}>
+                        <template if:true={showScore}>
+                            <div class="slds-align_absolute-center">
+                                <lightning-icon size="small" variant={scoreIconClass} icon-name={scoreIcon}>
+                                </lightning-icon>
+                                <span class={scoreClasses}>{shipToScore}</span>
+                            </div>
+                        </template>
+                        <template if:false={showScore}>
+                            <lightning-button-icon icon-name="utility:rotate" size="large"
+                                alternative-text="Refresh Score" variant="bare-inverse" onclick={handleRefreshRequest}
+                                title="Refresh Score"></lightning-button-icon>
+                        </template>
+                    </template>
+                    <template if:true={isSeasonal}>
+                        Seasonal
+                    </template>
+                </template>
+            </div>
+            <div class="slds-col slds-size_2-of-12 slds-text-heading--small slds-text-align_center">
+                <template if:true={showApprovalStatus}>
+                    Opp. Approval Status:<br />
+                    <template if:true={showScore}>
+                        <template if:true={showDealImpacts}>
+                            <lightning-helptext icon-variant="warning" content={dealImpacts}></lightning-helptext>
+                        </template>
+                        <lightning-icon size="small" variant={approvalIconClass} icon-name={approvalIcon}>
+                        </lightning-icon>
+                        <span class={approvalProcessClasses}>{approvalStatus}</span>
+                    </template>
+                    <template if:false={showScore}>
+                        <lightning-button-icon icon-name="utility:rotate" size="large" alternative-text="Refresh Score"
+                            variant="bare-inverse" onclick={handleRefreshRequest} title="Refresh Score">
+                        </lightning-button-icon>
+                    </template>
+                </template>
+            </div>
+            <div class="slds-col slds-size_3-of-12 slds-text-heading--small slds-text-align_center">
+                {textOpp}Recurring Service Revenue ($):<br />
+                <lightning-formatted-number value={totalMonthlyRR} format-style="currency" currency-code={isoCode}>
+                </lightning-formatted-number>
+                &nbsp;(M)
+                <br />
+                <lightning-formatted-number value={totalAnnualRR} format-style="currency" currency-code={isoCode}>
+                </lightning-formatted-number>
+                &nbsp;(A)
+            </div>
+            <div class="slds-col slds-size_2-of-12 slds-text-heading--small slds-text-align_center">
+                {textOpp}Installation Total ($):<br />
+                <lightning-formatted-number value={totalInstallation} format-style="currency" currency-code={isoCode}>
+                </lightning-formatted-number>
+            </div>
+            <div class="slds-col slds-size_1-of-12 slds-text-heading--small slds-text-align_center">
+                {textOpp}Non-Service Total ($):<br />
+                <lightning-formatted-number value={totalNonService} format-style="currency" currency-code={isoCode}>
+                </lightning-formatted-number>
+            </div>
+            <template if:true={isOpp}>
+                <div class="slds-col slds-size_2-of-12 slds-text-heading--small slds-hide">
+                    Estimated {textOpp}Commission Payable ($):<br />
+                    <lightning-helptext icon-name="action:preview" icon-variant="warning"
+                        content="Estimated commission value shown ONLY considers subcategory multiplier and Ship To score multiplier.
+                    This estimate does NOT take consideration 6-month quota multiplier and cumulative year multiplier.                
+                    Please consult the preliminary commission report for full results once the opportunity is confirmed."></lightning-helptext>
+                    <span class="approval-score-yellow">
+                        <lightning-formatted-number value={estiCommission} format-style="currency"
+                            currency-code={isoCode}></lightning-formatted-number>
+                    </span>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

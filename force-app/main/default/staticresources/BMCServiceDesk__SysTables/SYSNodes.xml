@@ -1,0 +1,1341 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rows>
+	<SYSNODE__C>
+		<ID>id</ID>
+		<ISDELETED>boolean</ISDELETED>
+		<NAME>string</NAME>
+		<CREATEDDATE>datetime</CREATEDDATE>
+		<CREATEDBYID>reference</CREATEDBYID>
+		<LASTMODIFIEDDATE>datetime</LASTMODIFIEDDATE>
+		<LASTMODIFIEDBYID>reference</LASTMODIFIEDBYID>
+		<SYSTEMMODSTAMP>datetime</SYSTEMMODSTAMP>
+		<NAVIGATOR__C>reference</NAVIGATOR__C>
+		<INDEX__C>double</INDEX__C>
+		<LEVEL__C>double</LEVEL__C>
+		<PAGEREFERENCE__C>string</PAGEREFERENCE__C>
+		<PARENT__C>reference</PARENT__C>
+		<SECTION__C>picklist</SECTION__C>
+		<SEQUENCE__C>string</SEQUENCE__C>
+		<TIP__C>string</TIP__C>
+	</SYSNODE__C>
+	<row>
+		<SEQUENCE__C>1</SEQUENCE__C>
+		<NAME>Configuration Management</NAME>
+		<TIP__C>Configuration Management</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>4</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>2</SEQUENCE__C>
+		<NAME>Configuration Items</NAME>
+		<TIP__C>Create/Manage Configuration Items</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>1</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Configuration Items&amp;target=CMDBManager?id=1010%26height=670</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>3</SEQUENCE__C>
+		<NAME>Incident Management</NAME>
+		<TIP__C>Incident Management</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>4</SEQUENCE__C>
+		<NAME>Broadcasts</NAME>
+		<TIP__C>Create/Manage Broadcasts</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>3</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>3</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Broadcast List&amp;target=SearchPage?popupId=Broadcast%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>5</SEQUENCE__C>
+		<NAME>Global Search</NAME>
+		<TIP__C>Perform Global Search</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>4</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>3</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Global Search&amp;target=KnowledgeSearch</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>6</SEQUENCE__C>
+		<NAME>Incidents</NAME>
+		<TIP__C>Create/Manage Incidents</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>3</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Incident List - All Incidents&amp;target=SearchPage?popupId=Incident%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>7</SEQUENCE__C>
+		<NAME>Tasks</NAME>
+		<TIP__C>Create/Manage Tasks</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>3</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Task List&amp;target=SearchPage?popupId=Task%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>8</SEQUENCE__C>
+		<NAME>Configuration</NAME>
+		<TIP__C>Configure BMC Service Desk Express on Force.com</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>8</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>9</SEQUENCE__C>
+		<NAME>Accounts</NAME>
+		<TIP__C>View Accounts</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>9</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Account List&amp;target=SearchPage?popupId=Organization%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>10</SEQUENCE__C>
+		<NAME>Action</NAME>
+		<TIP__C>Create/Manage Actions</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>10</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Action List&amp;target=SearchPage?popupId=Action%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>11</SEQUENCE__C>
+		<NAME>Application Settings</NAME>
+		<TIP__C>Configure Application Settings</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>11</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Application Settings&amp;target=AppAdmin?id=1001</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>12</SEQUENCE__C>
+		<NAME>Category</NAME>
+		<TIP__C>Create/Manage Categories</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>12</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Category List&amp;target=SearchPage?popupId=Category%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>13</SEQUENCE__C>
+		<NAME>Category Type</NAME>
+		<TIP__C>Create/Manage Category Types</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>13</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Category Type List&amp;target=SearchPage?popupId=CategoryType%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>14</SEQUENCE__C>
+		<NAME>Clients</NAME>
+		<TIP__C>View Clients</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>14</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Client List&amp;target=SearchPage?popupId=Client%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>15</SEQUENCE__C>
+		<NAME>Global Search Settings</NAME>
+		<TIP__C>Configure Global Search Settings</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>16</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Global Search Settings&amp;target=KnowledgeSetting?id=1001</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>16</SEQUENCE__C>
+		<NAME>Impact</NAME>
+		<TIP__C>Create/Manage Impact Records</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>17</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Impact List&amp;target=SearchPage?popupId=Impact%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>17</SEQUENCE__C>
+		<NAME>Navigator Assignment</NAME>
+		<TIP__C>Configure Navigator Assignment</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>18</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Navigator Assignment&amp;target=NavigatorAssignment?id=1001</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>18</SEQUENCE__C>
+		<NAME>Priority</NAME>
+		<TIP__C>Create/Manage  Priority Records</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>19</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Priority List&amp;target=SearchPage?popupId=Priority%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>19</SEQUENCE__C>
+		<NAME>Standard Description</NAME>
+		<TIP__C>Create/Manage Standard Descriptions</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>20</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Standard Description List&amp;target=SearchPage?popupId=StandardDescription%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>20</SEQUENCE__C>
+		<NAME>Status</NAME>
+		<TIP__C>Create/Manage Status Records</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>21</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Status List&amp;target=SearchPage?popupId=Status%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>21</SEQUENCE__C>
+		<NAME>Templates</NAME>
+		<TIP__C>Create/Manage Templates</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>22</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Template List&amp;target=SearchPage?popupId=Template%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>22</SEQUENCE__C>
+		<NAME>Urgency</NAME>
+		<TIP__C>Create/Manage Urgency Records</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>23</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Urgency List&amp;target=SearchPage?popupId=Urgency%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>23</SEQUENCE__C>
+		<NAME>Self Service</NAME>
+		<TIP__C>Self Service Management</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>24</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>26</SEQUENCE__C>
+		<NAME>Self Service Settings</NAME>
+		<TIP__C>Configure Self Service Settings</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>27</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>23</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Self Service Settings &amp;target=SelfServiceSettingsCollection?popupId=SSSettings</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>27</SEQUENCE__C>
+		<NAME>Configuration Management</NAME>
+		<TIP__C>Configuration Management</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>4</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>28</SEQUENCE__C>
+		<NAME>Configuration Items</NAME>
+		<TIP__C>View/Configure CI Explorer</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>27</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Configuration Items&amp;target=CMDBManager?id=1010%26height=670</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>29</SEQUENCE__C>
+		<NAME>Incident Management</NAME>
+		<TIP__C>Incident Management</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>30</SEQUENCE__C>
+		<NAME>Broadcasts</NAME>
+		<TIP__C>Create/Manage Broadcasts</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>3</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>29</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Broadcasts List - All Available Broadcasts&amp;target=SearchPage?popupId=Broadcast%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>31</SEQUENCE__C>
+		<NAME>Global Search</NAME>
+		<TIP__C>Perform Global Search</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>4</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>29</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Global Search&amp;target=KnowledgeSearch</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>32</SEQUENCE__C>
+		<NAME>Incidents</NAME>
+		<TIP__C>Create/Manage Incidents</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>29</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Incident List&amp;target=SearchPage?popupId=Incident%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>33</SEQUENCE__C>
+		<NAME>Tasks</NAME>
+		<TIP__C>Create/Manage Tasks</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>29</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Task List - All Tasks&amp;target=SearchPage?popupId=Task%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>34</SEQUENCE__C>
+		<NAME>Clients</NAME>
+		<TIP__C>View Clients</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>8</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Client List&amp;target=SearchPage?popupId=Client%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>35</SEQUENCE__C>
+		<NAME>Accounts</NAME>
+		<TIP__C>View Accounts</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>9</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Account List&amp;target=SearchPage?popupId=Organization%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>36</SEQUENCE__C>
+		<NAME>Templates</NAME>
+		<TIP__C>Create/Manage Templates</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>10</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Template List&amp;target=SearchPage?popupId=Template%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>37</SEQUENCE__C>
+		<NAME>Incident Management Alignability Process Model</NAME>
+		<TIP__C>Incident Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>5</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>3</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Incident Process&amp;target=IncProcMgmtPage?id=1001</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>38</SEQUENCE__C>
+		<NAME>Incident Management Alignability Process Model</NAME>
+		<TIP__C>Incident Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>5</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>29</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Incident Process&amp;target=IncProcMgmtPage?id=1001</PAGEREFERENCE__C>
+	</row>
+        <row>
+		<SEQUENCE__C>39</SEQUENCE__C>
+		<NAME>Chatter</NAME>
+		<TIP__C>Chatter</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>8</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+    	</row>
+    	<row>
+		<SEQUENCE__C>40</SEQUENCE__C>
+		<NAME>Chatter Feed</NAME>
+		<TIP__C>Chatter Feed</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>39</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C></PAGEREFERENCE__C>
+    	</row>
+	<row>
+		<SEQUENCE__C>41</SEQUENCE__C>
+		<NAME>Chatter</NAME>
+		<TIP__C>Chatter</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>8</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+    	</row>
+    	<row>
+		<SEQUENCE__C>42</SEQUENCE__C>
+		<NAME>Chatter Feed</NAME>
+		<TIP__C>Chatter Feed</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>41</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C></PAGEREFERENCE__C>
+    	</row>
+	<row>
+		<SEQUENCE__C>43</SEQUENCE__C>
+		<NAME>Change Management</NAME>
+		<TIP__C>Change Management</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>3</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>94</SEQUENCE__C>
+		<NAME>Approval Management</NAME>
+		<TIP__C>Approval Management</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>7</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>95</SEQUENCE__C>
+		<NAME>Approval Management</NAME>
+		<TIP__C>Approval Management</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>7</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>96</SEQUENCE__C>
+		<NAME>Approval Management</NAME>
+		<TIP__C>Approval Management</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>7</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>	
+	<row>
+		<SEQUENCE__C>44</SEQUENCE__C>
+		<NAME>Change Management Alignability Process Model</NAME>
+		<TIP__C>Change Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>6</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>43</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Change Process&amp;target=ChangeProcMgmtPage?id=1002</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>47</SEQUENCE__C>
+		<NAME>Change Assessments</NAME>
+		<TIP__C>Create/Manage Change Assessments</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>43</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Change Assessments List - Change Assessments Assigned to Me&amp;target=SearchPage?popupId=ChangeAssessment%26view=list</PAGEREFERENCE__C>
+	</row>	
+	<row>
+		<SEQUENCE__C>49</SEQUENCE__C>
+		<NAME>Change Requests</NAME>
+		<TIP__C>Create/Manage Change Requests</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>43</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Change List - All Changes&amp;target=SearchPage?popupId=Change%26view=list</PAGEREFERENCE__C>
+	</row>	
+	<row>
+		<SEQUENCE__C>50</SEQUENCE__C>
+		<NAME>Problems</NAME>
+		<TIP__C>Create/Manage Problems</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>55</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Problem List - All Problems&amp;target=SearchPage?popupId=Problem%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>51</SEQUENCE__C>
+		<NAME>Projected Service Outages</NAME>
+		<TIP__C>Create/Manage Outages</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>5</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>43</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Projected Service Outage List - All Projected Service Outages&amp;target=SearchPage?popupId=ProjectedServiceOutage%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>55</SEQUENCE__C>
+		<NAME>Problem Management</NAME>
+		<TIP__C>Problem Management</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>56</SEQUENCE__C>
+		<NAME>Approvals</NAME>
+		<TIP__C>Create/Manage Approvals</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>3</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>94</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=My Approval List&amp;target=ApprovalListViewPage?id=1001</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>57</SEQUENCE__C>
+		<NAME>Change Schedule</NAME>
+		<TIP__C>Change Schedule</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>4</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>43</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Change Schedule&amp;target=ChangeSchedule?id=1080</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>61</SEQUENCE__C>
+		<NAME>Configuration Management</NAME>
+		<TIP__C>Configuration Management</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>4</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>62</SEQUENCE__C>
+		<NAME>Configuration Items</NAME>
+		<TIP__C>View/Configure CI Explorer</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>61</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Configuration Items&amp;target=CMDBManager?id=1010%26height=670</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>63</SEQUENCE__C>
+		<NAME>Incident Management</NAME>
+		<TIP__C>Incident Management</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>64</SEQUENCE__C>
+		<NAME>Broadcasts</NAME>
+		<TIP__C>Create/Manage Broadcasts</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>3</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>63</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Broadcasts List - All Available Broadcasts&amp;target=SearchPage?popupId=Broadcast%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>65</SEQUENCE__C>
+		<NAME>Global Search</NAME>
+		<TIP__C>Perform Global Search</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>4</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>63</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Global Search&amp;target=KnowledgeSearch</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>66</SEQUENCE__C>
+		<NAME>Incidents</NAME>
+		<TIP__C>Create/Manage Incidents</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>63</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Incident List&amp;target=SearchPage?popupId=Incident%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>67</SEQUENCE__C>
+		<NAME>Tasks</NAME>
+		<TIP__C>Create/Manage Tasks</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>63</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Task List - All Tasks&amp;target=SearchPage?popupId=Task%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>68</SEQUENCE__C>
+		<NAME>Clients</NAME>
+		<TIP__C>View Clients</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>8</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Client List&amp;target=SearchPage?popupId=Client%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>69</SEQUENCE__C>
+		<NAME>Accounts</NAME>
+		<TIP__C>View Accounts</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>9</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Account List&amp;target=SearchPage?popupId=Organization%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>70</SEQUENCE__C>
+		<NAME>Templates</NAME>
+		<TIP__C>Create/Manage Templates</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>10</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Template List&amp;target=SearchPage?popupId=Template%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>71</SEQUENCE__C>
+		<NAME>Incident Management Alignability Process Model</NAME>
+		<TIP__C>Incident Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>5</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>63</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Incident Process&amp;target=IncProcMgmtPage?id=1001</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>72</SEQUENCE__C>
+		<NAME>Chatter</NAME>
+		<TIP__C>Chatter</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>8</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+    	</row>
+    	<row>
+		<SEQUENCE__C>73</SEQUENCE__C>
+		<NAME>Chatter Feed</NAME>
+		<TIP__C>Chatter Feed</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>72</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C></PAGEREFERENCE__C>
+    	</row>
+	<row>
+		<SEQUENCE__C>74</SEQUENCE__C>
+		<NAME>Change Management</NAME>
+		<TIP__C>Change Management</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>3</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>75</SEQUENCE__C>
+		<NAME>Change Management Alignability Process Model</NAME>
+		<TIP__C>Change Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>6</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>74</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Change Process&amp;target=ChangeProcMgmtPage?id=1002</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>76</SEQUENCE__C>
+		<NAME>Change Assessments</NAME>
+		<TIP__C>Create/Manage Change Assessments</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>74</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Change Assessments List - Change Assessments Assigned to Me&amp;target=SearchPage?popupId=ChangeAssessment%26view=list</PAGEREFERENCE__C>
+	</row>	
+	<row>
+		<SEQUENCE__C>77</SEQUENCE__C>
+		<NAME>Change Requests</NAME>
+		<TIP__C>Create/Manage Change Requests</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>74</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Change List - All Changes&amp;target=SearchPage?popupId=Change%26view=list</PAGEREFERENCE__C>
+	</row>	
+	<row>
+		<SEQUENCE__C>78</SEQUENCE__C>
+		<NAME>Problems</NAME>
+		<TIP__C>Create/Manage Problems</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>80</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Problem List - All Problems&amp;target=SearchPage?popupId=Problem%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>79</SEQUENCE__C>
+		<NAME>Projected Service Outages</NAME>
+		<TIP__C>Create/Manage Outages</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>5</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>74</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Projected Service Outage List - All Projected Service Outages&amp;target=SearchPage?popupId=ProjectedServiceOutage%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>80</SEQUENCE__C>
+		<NAME>Problem Management</NAME>
+		<TIP__C>Problem Management</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>81</SEQUENCE__C>
+		<NAME>Approvals</NAME>
+		<TIP__C>Create/Manage Approvals</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>3</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>96</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=My Approval List&amp;target=ApprovalListViewPage?id=1001</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>97</SEQUENCE__C>
+		<NAME>Approvals</NAME>
+		<TIP__C>Create/Manage Approvals</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>3</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>95</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=My Approval List&amp;target=ApprovalListViewPage?id=1001</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>82</SEQUENCE__C>
+		<NAME>Change Schedule</NAME>
+		<TIP__C>Change Schedule</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>4</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>74</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Change Schedule&amp;target=ChangeSchedule?id=1080</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>83</SEQUENCE__C>
+		<NAME>Problem Management Alignability Process Model</NAME>
+		<TIP__C>Problem Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>55</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Problem Process&amp;target=ProblemProcMgmtPage?id=1003</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>84</SEQUENCE__C>
+		<NAME>Problem Management Alignability Process Model</NAME>
+		<TIP__C>Problem Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>80</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Problem Process&amp;target=ProblemProcMgmtPage?id=1003</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>85</SEQUENCE__C>
+		<NAME>Custom Actions</NAME>
+		<TIP__C>Custom Actions</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>15</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>8</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Custom Action List&amp;target=SearchPage?popupId=CustomActions%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>86</SEQUENCE__C>
+		<NAME>Service Level Management</NAME>
+		<TIP__C>Service Level Management</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>5</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>87</SEQUENCE__C>
+		<NAME>Service Level Management</NAME>
+		<TIP__C>Service Level Management</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>5</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>88</SEQUENCE__C>
+		<NAME>Service Level Management</NAME>
+		<TIP__C>Service Level Management</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>5</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>89</SEQUENCE__C>
+		<NAME>Service Level Agreements</NAME>
+		<TIP__C>Create/Manage Service Level Agreement</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>86</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Service Level Agreement List - All Agreements&amp;target=SearchPage?popupId=SLA%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>90</SEQUENCE__C>
+		<NAME>Service Level Agreements</NAME>
+		<TIP__C>Create/Manage Service Level Agreement</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>87</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Service Level Agreement List - All Agreements&amp;target=SearchPage?popupId=SLA%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>91</SEQUENCE__C>
+		<NAME>Service Level Agreements</NAME>
+		<TIP__C>Create/Manage Service Level Agreement</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>88</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Service Level Agreement List - All Agreements&amp;target=SearchPage?popupId=SLA%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>92</SEQUENCE__C>
+		<NAME>Service Request Management</NAME>
+		<TIP__C>Service Request Management</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>6</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>93</SEQUENCE__C>
+		<NAME>Request Definitions</NAME>
+		<TIP__C>Create/Manage Request Definitions</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>92</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Request Definitions List - All Available Request Definitions&amp;target=SearchPage?popupId=SRM_RequestDefinition%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>98</SEQUENCE__C>
+		<NAME>Service Request Management</NAME>
+		<TIP__C>Service Request Management</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>6</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>99</SEQUENCE__C>
+		<NAME>Service Request Management</NAME>
+		<TIP__C>Service Request Management</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>6</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>100</SEQUENCE__C>
+		<NAME>Request Definitions</NAME>
+		<TIP__C>Create/Manage Request Definitions</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>98</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Request Definitions List - All Available Request Definitions&amp;target=SearchPage?popupId=SRM_RequestDefinition%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>101</SEQUENCE__C>
+		<NAME>Request Definitions</NAME>
+		<TIP__C>Create/Manage Request Definitions</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>99</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Request Definitions List - All Available Request Definitions&amp;target=SearchPage?popupId=SRM_RequestDefinition%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>102</SEQUENCE__C>
+		<NAME>Incident Management</NAME>
+		<TIP__C>Incident Management</TIP__C>
+		<NAVIGATOR__C>4</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>103</SEQUENCE__C>
+		<NAME>Global Search</NAME>
+		<TIP__C>Perform Global Search</TIP__C>
+		<NAVIGATOR__C>4</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>102</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Global Search&amp;target=KnowledgeSearch</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>104</SEQUENCE__C>
+		<NAME>Change Management</NAME>
+		<TIP__C>Change Management</TIP__C>
+		<NAVIGATOR__C>4</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>105</SEQUENCE__C>
+		<NAME>Change Schedule</NAME>
+		<TIP__C>Change Schedule</TIP__C>
+		<NAVIGATOR__C>4</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>104</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Change Schedule&amp;target=ChangeSchedule?id=1080</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>106</SEQUENCE__C>
+		<NAME>Projected Service Outages</NAME>
+		<TIP__C>Create/Manage Outages</TIP__C>
+		<NAVIGATOR__C>4</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>104</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Projected Service Outage List - All Projected Service Outages&amp;target=SearchPage?popupId=ProjectedServiceOutage%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+			<SEQUENCE__C>107</SEQUENCE__C>
+			<NAME>Service Level Management</NAME>
+			<TIP__C>Service Level Management</TIP__C>
+			<NAVIGATOR__C>4</NAVIGATOR__C>
+			<INDEX__C>3</INDEX__C>
+			<LEVEL__C>0</LEVEL__C>
+			<PARENT__C/>
+			<SECTION__C>Administration</SECTION__C>
+			<PAGEREFERENCE__C/>
+	</row>
+	<row>
+			<SEQUENCE__C>108</SEQUENCE__C>
+			<NAME>Service Level Agreements</NAME>
+			<TIP__C>Create/Manage Service Level Agreement</TIP__C>
+			<NAVIGATOR__C>4</NAVIGATOR__C>
+			<INDEX__C>1</INDEX__C>
+			<LEVEL__C>1</LEVEL__C>
+			<PARENT__C>107</PARENT__C>
+			<SECTION__C>Administration</SECTION__C>
+			<PAGEREFERENCE__C>NavigatorPage?title=Service Level Agreement List - All Agreements&amp;target=SearchPage?popupId=SLA%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+			<SEQUENCE__C>109</SEQUENCE__C>
+			<NAME>Service Request Management</NAME>
+			<TIP__C>Service Request Management</TIP__C>
+			<NAVIGATOR__C>4</NAVIGATOR__C>
+			<INDEX__C>4</INDEX__C>
+			<LEVEL__C>0</LEVEL__C>
+			<PARENT__C/>
+			<SECTION__C>Administration</SECTION__C>
+			<PAGEREFERENCE__C/>
+	</row>
+	<row>
+			<SEQUENCE__C>110</SEQUENCE__C>
+			<NAME>Request Definitions</NAME>
+			<TIP__C>Create/Manage Request Definitions</TIP__C>
+			<NAVIGATOR__C>4</NAVIGATOR__C>
+			<INDEX__C>1</INDEX__C>
+			<LEVEL__C>1</LEVEL__C>
+			<PARENT__C>109</PARENT__C>
+			<SECTION__C>Administration</SECTION__C>
+			<PAGEREFERENCE__C>NavigatorPage?title=Request Definitions List - All Available Request Definitions&amp;target=SearchPage?popupId=SRM_RequestDefinition%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>111</SEQUENCE__C>
+		<NAME>Configuration</NAME>
+		<TIP__C>Configure BMC Service Desk Express on Force.com</TIP__C>
+		<NAVIGATOR__C>4</NAVIGATOR__C>
+		<INDEX__C>5</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+			<SEQUENCE__C>112</SEQUENCE__C>
+			<NAME>Clients</NAME>
+			<TIP__C>View Clients</TIP__C>
+			<NAVIGATOR__C>4</NAVIGATOR__C>
+			<INDEX__C>2</INDEX__C>
+			<LEVEL__C>1</LEVEL__C>
+			<PARENT__C>111</PARENT__C>
+			<SECTION__C>Administration</SECTION__C>
+			<PAGEREFERENCE__C>NavigatorPage?title=Client List&amp;target=SearchPage?popupId=Client%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+			<SEQUENCE__C>113</SEQUENCE__C>
+			<NAME>Templates</NAME>
+			<TIP__C>Create/Manage Templates</TIP__C>
+			<NAVIGATOR__C>4</NAVIGATOR__C>
+			<INDEX__C>3</INDEX__C>
+			<LEVEL__C>1</LEVEL__C>
+			<PARENT__C>111</PARENT__C>
+			<SECTION__C>Administration</SECTION__C>
+			<PAGEREFERENCE__C>NavigatorPage?title=Template List&amp;target=SearchPage?popupId=Template%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>114</SEQUENCE__C>
+		<NAME>Configuration</NAME>
+		<TIP__C>Configuration</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>115</SEQUENCE__C>
+		<NAME>Action</NAME>
+		<TIP__C>Create/Manage Actions</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>114</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Action List&amp;target=SearchPage?popupId=Action%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>116</SEQUENCE__C>
+		<NAME>Application Settings</NAME>
+		<TIP__C>Configure Application Settings</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>114</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Application Settings&amp;target=AppAdmin?id=1001</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>117</SEQUENCE__C>
+		<NAME>Category</NAME>
+		<TIP__C>Create/Manage Categories</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>3</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>114</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Category List&amp;target=SearchPage?popupId=Category%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>118</SEQUENCE__C>
+		<NAME>Category Type</NAME>
+		<TIP__C>Create/Manage Category Types</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>4</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>114</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Category Type List&amp;target=SearchPage?popupId=CategoryType%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>119</SEQUENCE__C>
+		<NAME>Global Search Settings</NAME>
+		<TIP__C>Configure Global Search Settings</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>5</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>114</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Global Search Settings&amp;target=KnowledgeSetting?id=1001</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>120</SEQUENCE__C>
+		<NAME>Impact</NAME>
+		<TIP__C>Create/Manage Impact Records</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>6</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>114</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Impact List&amp;target=SearchPage?popupId=Impact%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>121</SEQUENCE__C>
+		<NAME>Priority</NAME>
+		<TIP__C>Create/Manage  Priority Records</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>7</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>114</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Priority List&amp;target=SearchPage?popupId=Priority%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>122</SEQUENCE__C>
+		<NAME>Status</NAME>
+		<TIP__C>Create/Manage Status Records</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>9</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>114</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Status List&amp;target=SearchPage?popupId=Status%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>123</SEQUENCE__C>
+		<NAME>Urgency</NAME>
+		<TIP__C>Create/Manage Urgency Records</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>10</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>114</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Urgency List&amp;target=SearchPage?popupId=Urgency%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>124</SEQUENCE__C>
+		<NAME>Self Service</NAME>
+		<TIP__C>Self Service Management</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>0</LEVEL__C>
+		<PARENT__C/>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C/>
+	</row>
+	<row>
+		<SEQUENCE__C>125</SEQUENCE__C>
+		<NAME>Self Service Settings</NAME>
+		<TIP__C>Configure Self Service Settings</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>124</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Self Service Settings &amp;target=SelfServiceSettingsCollection?popupId=SSSettings</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>126</SEQUENCE__C>
+		<NAME>Accounts</NAME>
+		<TIP__C>View Accounts</TIP__C>
+		<NAVIGATOR__C>4</NAVIGATOR__C>
+		<INDEX__C>1</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>111</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Account List&amp;target=SearchPage?popupId=Organization%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>127</SEQUENCE__C>
+		<NAME>Standard Description</NAME>
+		<TIP__C>Create/Manage Standard Descriptions</TIP__C>
+		<NAVIGATOR__C>5</NAVIGATOR__C>
+		<INDEX__C>8</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>114</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Standard Description List&amp;target=SearchPage?popupId=StandardDescription%26view=list</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>128</SEQUENCE__C>
+		<NAME>Service Level Management Alignability Process Model</NAME>
+		<TIP__C>Service Level Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>1</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>86</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Service Level Process&amp;target=SLMProcMgmtPage?id=1004</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>129</SEQUENCE__C>
+		<NAME>Service Level Management Alignability Process Model</NAME>
+		<TIP__C>Service Level Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>2</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>87</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Service Level Process&amp;target=SLMProcMgmtPage?id=1004</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>130</SEQUENCE__C>
+		<NAME>Service Level Management Alignability Process Model</NAME>
+		<TIP__C>Service Level Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>3</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>88</PARENT__C>
+		<SECTION__C>Workspaces</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Service Level Process&amp;target=SLMProcMgmtPage?id=1004</PAGEREFERENCE__C>
+	</row>
+	<row>
+		<SEQUENCE__C>131</SEQUENCE__C>
+		<NAME>Service Level Management Alignability Process Model</NAME>
+		<TIP__C>Service Level Management Alignability Process Model Instructions</TIP__C>
+		<NAVIGATOR__C>4</NAVIGATOR__C>
+		<INDEX__C>2</INDEX__C>
+		<LEVEL__C>1</LEVEL__C>
+		<PARENT__C>107</PARENT__C>
+		<SECTION__C>Administration</SECTION__C>
+		<PAGEREFERENCE__C>NavigatorPage?title=Service Level Process&amp;target=SLMProcMgmtPage?id=1004</PAGEREFERENCE__C>
+	</row>
+</rows>

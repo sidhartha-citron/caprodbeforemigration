@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>Survey_Send_Bad_Survey_Email</fullName>
+        <description>Survey: Send Bad Survey Email</description>
+        <protected>false</protected>
+        <recipients>
+            <recipient>craymond@citronhygiene.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>ghayer@citronhygiene.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>mcapparelli@citronhygiene.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderAddress>donotreply@citronhygiene.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>Survey_Emails_Templates/Bad_Survey_Email</template>
+    </alerts>
+    <rules>
+        <fullName>Survey%3A Send Bad Survey Notification</fullName>
+        <actions>
+            <name>Survey_Send_Bad_Survey_Email</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <description>This workflow rule will send an email to internal citron recipients (per email alert settings) to notify them of a poor customer satisfaction reported on a Post-Installation Feedback survey</description>
+        <formula>AND(
+RecordType.Name = &apos;Post Installation Survey&apos;,
+OR(  Overall_Technician_Rating__c  &lt;= 2,  Satisfied_with_the_way_we_left_facility__c &lt;= 2,  Was_everything_installed_as_expected__c &lt;= 90,  How_likely_are_you_to_recommend_Citron__c &lt;= 5  )
+)</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+</Workflow>

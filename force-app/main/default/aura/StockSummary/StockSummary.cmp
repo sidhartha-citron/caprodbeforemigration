@@ -1,0 +1,251 @@
+<aura:component implements="force:lightningQuickAction,force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global" controller="StockSummary">
+    <aura:attribute name="columnAPINames" type="String[]" default="['WorkOrderLineItem.Product_Name__c','WorkOrderLineItem.Related_Product__c.Name','WorkOrderLineItem.Type_of_Service__c','WorkOrderLineItem.Quantity']"/>
+    <aura:attribute name="columnVmiAPINames" type="String[]" default="['WorkOrderLineItem.Product_Name__c','VMI_Product__c.Par_Level__c','WorkOrderLineItem.Type_of_Service__c','WorkOrderLineItem.Quantity']" />
+    <aura:attribute name="columns" type="StockSummary.ColumnRecord[]"/>
+    <aura:attribute name="vmiColumns" type="StockSummary.ColumnRecord[]"/>
+    
+    <aura:attribute name="startDate" type="Date"></aura:attribute>
+    <aura:attribute name="endDate" type="Date"></aura:attribute>
+    <aura:attribute name="groupByLocation" type="Boolean" default="false"></aura:attribute>
+    <aura:attribute name="filterRange" type="String"></aura:attribute>
+    <aura:attribute name="dateRange" type="String" default="Today"></aura:attribute>
+    
+    <aura:attribute name="filterIncorrect" type="Boolean" default="false"></aura:attribute>
+    <aura:attribute name="filterHidden" type="Boolean" default="true"></aura:attribute>
+    
+    <aura:attribute name="compareStartDate" type="Date"></aura:attribute>
+    <aura:attribute name="compareEndDate" type="Date"></aura:attribute>
+    
+    <aura:attribute name="lineItemsNotVmi" type="StockSummary.LineItem[]"/>
+    <aura:attribute name="lineItemsVmi" type="StockSummary.LineItem[]"/>
+    <aura:attribute name="lineItemsGrouped" type="List"/>
+    
+    <aura:attribute name="firstTime" type="Integer" default="0"/>
+    
+    <aura:attribute name="VIDisplay" type="Boolean" default="true"/>
+    
+    <aura:handler name="change" value="{!v.startDate}" action="{!c.handleChangeDate}"/>    
+    <aura:handler name="change" value="{!v.endDate}" action="{!c.handleChangeDate}"/> 
+    
+    <aura:handler event="aura:waiting" action="{!c.waiting}"/> 
+    <aura:handler event="aura:doneWaiting" action="{!c.doneWaiting}"/>
+    
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>    
+    
+    <div class="slds-box slds-box_white">
+        <div class="slds slds-grid slds-form-element__row size_1-of-1">
+            <div class="slds slds-size_5-of-6">
+                <div aura:id="textDiv">
+                    <div class="slds">
+                        <lightning:icon iconName="custom:custom31" size="medium" alternativeText="{!$Label.c.Stock_Summary}"/>
+                        <div aura:id="stockSummary" class="slds-hide citron_date-range-wrapper"><div class="slds-text-body_regular citron_date-range">{!$Label.c.Stock_Summary} ( {!v.dateRange} ) </div></div>
+
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slds slds-size_1-of-6">  
+                <div class="slds-text-align--right">
+                    <lightning:button variant="neutral" label="" iconName="utility:filter" onclick="{!c.toggleFilters}"/>
+                </div>
+            </div>     
+            
+        </div>
+        
+        <div aura:id="messageDiv" class="slds">
+            <div class="slds-notify slds-notify--alert slds-theme--alert-texture slds-hide" role="alert" aura:id="message">
+                <span class="slds-assistive-text">Info</span>
+                <div class="slds-text-body_regular">{!$Label.c.Info_No_Work_Order_Lines}</div>
+            </div>
+        </div>     
+        
+        <div aura:id="filters" class="slds-hide">          
+            <br/>
+            <div class="slds-grid slds-form-element__row">                
+                <div class="slds slds-size_1-of-2"> 
+                    <label class="slds-form-element__label">{!$Label.c.Start_Date}</label>
+                    <ui:inputDate class="slds-input" labelClass="slds-form-element__label" 
+                                  value="{!v.startDate}" displayDatePicker="true" aura:id="startDateInput"/>
+                </div>                 
+                <div class="slds slds-size_1-of-2"> 
+                    <label class="slds-form-element__label">{!$Label.c.End_Date}</label>
+                    <ui:inputDate class="slds-input" labelClass="slds-form-element__label" 
+                                  value="{!v.endDate}" displayDatePicker="true" aura:id="endDateInput"/>
+                </div> 
+            </div>
+            
+            <br/>
+            
+            <div class="slds-grid slds-form-element__row">
+                <lightning:button aura:id="GROUP_BY_LOCATION" variant="neutral" label="{!$Label.c.Group_By_Account}" onclick="{!c.checkBox}" class="slds-button_stateful slds-button_stateful slds-size--1-of-1" />
+            </div> 
+            <br/>
+            
+            <div class="slds-grid slds-form-element__row">
+                <lightning:button aura:id="Today" variant="neutral" label="{!$Label.c.Today}" onclick="{!c.filterTable}" value="Today" class="slds-button_brand slds-size--1-of-1" />
+            </div>
+            <br/>
+            
+            <div class="slds-grid slds-form-element__row">
+                <lightning:button aura:id="This_Week" variant="neutral" label="{!$Label.c.This_Week}" onclick="{!c.filterTable}" value="This_Week" class="slds-size--1-of-1" />
+            </div>
+            <br/>
+            
+            <div class="slds-grid slds-form-element__row">
+                <lightning:button aura:id="Next_Week" variant="neutral" label="{!$Label.c.Next_Week}" onclick="{!c.filterTable}" value="Next_Week" class="slds-size--1-of-1" />
+            </div>
+            <br/>
+            
+            <div class="slds-grid slds-form-element__row">
+                <lightning:button aura:id="This_Month" variant="neutral" label="{!$Label.c.This_Month}" onclick="{!c.filterTable}" value="This_Month" class="slds-size--1-of-1" />
+            </div>
+            <br/>
+            <div class="slds-grid slds-form-element__row">
+                <div class="slds-align--absolute-center">
+                    <lightning:button aura:id="APPLY" variant="brand" label="{!$Label.c.Apply_Filters}" onclick="{!c.applyFilters}" value="APPLY"/>
+                </div>
+            </div>
+            <br/>
+        </div> 
+        <br/>
+        <div class="slds slds-size_1-of-1" aura:id="table">
+            <table class="slds-table slds-table--bordered slds-table--fixed-layout">
+                <thead>
+                    <aura:iteration items="{!v.columns}" var="col" indexVar="i">
+                        <th class="slds-text-title--caps small slds-truncate" scope="col" title="{!col.name}">
+                            <span class="slds-cell-wrap" title="{!col.name}">{!col.label}</span>
+                        </th>
+                    </aura:iteration>
+                </thead>
+                <tbody>
+                    <aura:iteration items="{!v.lineItemsNotVmi}" var="l">
+                        <tr class="slds-hint-parent">                            
+                            <td role="gridcell" class="slds-cell-wrap">
+                                <div class="small slds-cell-wrap">{!l.ProductName}</div>
+                            </td>
+                            <td role="gridcell"  class="slds-cell-wrap">
+                                <div class="small slds-cell-wrap">{!l.RelatedProduct}</div>
+                            </td>
+                            <td role="gridcell"  class="slds-cell-wrap">
+                                <div class="small slds-cell-wrap">{!l.TypeOfService}</div>
+                            </td>
+                            <td role="gridcell"  class="slds-cell-wrap">
+                                <div class="small slds-cell-wrap">{!l.Quantity}</div>
+                            </td>
+                        </tr>
+                    </aura:iteration>    
+                </tbody>        
+            </table>
+            <aura:if isTrue="{!and(not(empty(v.lineItemsVmi)), !v.groupByLocation)}">
+                <table class="slds-table slds-table--bordered slds-table--fixed-layout slds-m-top_small">
+                    <thead>
+                        <aura:iteration items="{!v.vmiColumns}" var="col" indexVar="i">
+                            <th class="slds-text-title--caps small slds-truncate" scope="col" title="{!col.name}">
+                                <span class="slds-cell-wrap" title="{!col.name}">{!col.label}</span>
+                            </th>
+                        </aura:iteration>
+                    </thead>
+                    <tbody>
+                        <aura:iteration items="{!v.lineItemsVmi}" var="l">
+                            <tr class="slds-hint-parent">                            
+                                <td role="gridcell" class="slds-cell-wrap">
+                                    <div class="small slds-cell-wrap">{!l.ProductName}</div>
+                                </td>
+                                <td role="gridcell"  class="slds-cell-wrap">
+                                    <div class="small slds-cell-wrap">{!l.parLevel}</div>
+                                </td>
+                                <td role="gridcell"  class="slds-cell-wrap">
+                                    <div class="small slds-cell-wrap">{!l.TypeOfService}</div>
+                                </td>
+                                <td role="gridcell"  class="slds-cell-wrap">
+                                    <div class="small slds-cell-wrap">{!l.Quantity}</div>
+                                </td>
+                            </tr>
+                        </aura:iteration>    
+                    </tbody>        
+                </table>
+        	</aura:if>
+        </div>
+                 
+        <div class="slds-size_1-of-1" aura:id="tableGrouped">
+            <aura:iteration items="{!v.lineItemsGrouped}" var="street" indexVar="indx">       
+                <div class="slds-form-element__row">   
+                    <div class="slds-section" id="{!street.address}">
+                        <h3 class="slds-section__title">
+                            <lightning:button variant="neutral" label="{!street.address}" iconName="utility:chevronright" iconPosition="left" class="slds-button slds-section__title-action" onclick="{!c.openSection}" value="true">
+                                <span class="slds-cell-wrap small" title="Section Title">{!street.address}</span>
+                            </lightning:button>
+                        </h3>
+                        <div aria-hidden="false" class="slds-section__content">                   
+                            <aura:iteration items="{!street.itemsMap}" var="items">       
+                                <div class="slds-form-element__row">                           
+                                    <div class="slds-section" style="margin-left:2.5%;">
+                                        <h2 class="slds-section__title">
+                                            <lightning:button variant="neutral" label="{!items.serviceType+indx}" iconName="utility:chevrondown" iconPosition="left" class="slds-button slds-section__title-action" onclick="{!c.openGroupedSection}" value="false">
+                                                <span class="slds-cell-wrap small" title="Section Title">{!items.serviceType}</span>
+                                            </lightning:button>
+                                        </h2> 
+                                        <div aria-hidden="false" class="slds-section__content" id="{!items.serviceType+indx}">	                        
+                                            <table class="slds-table slds-table--bordered slds-table--fixed-layout">
+                                                <thead>
+                                                    <aura:iteration items="{!v.columns}" var="col" indexVar="i">
+                                                        <aura:if isTrue="{!and(items.serviceType == 'VMI', col.name != 'Type_of_Service__c')}">
+                                                            <aura:if isTrue="{!and(col.name != 'Type_of_Service__c', col.name != 'Related_Product__c')}">
+                                                                <th class="slds-is-sortable slds-text-title--caps slds-truncate small" scope="col" title="{!col.name}">
+                                                                    <span class="slds-cell-wrap" title="{!col.name}">{!col.label}</span>
+                                                                </th>
+                                                            </aura:if>
+                                                            <aura:if isTrue="{!and(col.name != 'Type_of_Service__c', col.name == 'Related_Product__c')}">
+                                                                <th class="slds-is-sortable slds-text-title--caps slds-truncate small" scope="col" title="{!col.name}">
+                                                                    <span class="slds-cell-wrap" title="{!col.name}">{!$Label.c.Par_Level}</span>
+                                                                </th>
+                                                            </aura:if>
+                                                        </aura:if>
+                                                        <aura:if isTrue="{!and(items.serviceType != 'VMI', col.name != 'Type_of_Service__c')}">
+                                                            <th class="slds-is-sortable slds-text-title--caps slds-truncate small" scope="col" title="{!col.name}">
+                                                                <span class="slds-cell-wrap" title="{!col.name}">{!col.label}</span>
+                                                            </th>
+                                                        </aura:if>
+                                                    </aura:iteration>
+                                                </thead>
+                                                <tbody>
+                                                    <aura:iteration items="{!items.itemsMap}" var="n">
+                                                        <tr class="slds-hint-parent">
+                                                            <td role="gridcell"><div class="slds-cell-wrap small">{!n.ProductName}</div></td>
+                                                            <td role="gridcell">
+                                                                <div class="slds-cell-wrap small">
+                                                                    <aura:if isTrue="{!n.isVMIProduct}">                                                                        
+                                                                    	{!n.parLevel}
+                                                                    </aura:if>
+                                                                    <aura:if isTrue="{!!n.isVMIProduct}">
+                                                                    	{!n.RelatedProduct}
+                                                                    </aura:if>
+                                                                </div>
+                                                            </td>
+                                                            <td role="gridcell"><div class="slds-cell-wrap small">{!n.Quantity}</div></td>
+                                                        </tr>   
+                                                    </aura:iteration> 
+                                                </tbody>        
+                                            </table>     
+                                        </div>
+                                    </div>
+                                </div>
+                            </aura:iteration>				   
+                        </div>
+                    </div>
+                </div>
+            </aura:iteration>
+        </div>
+        
+        
+        <div class="slds-hide" style="height:25rem" aura:id="spinner" >
+            <div role="status" class="slds-spinner--brand slds-spinner slds-spinner--medium">
+                <span class="slds-assistive-text">Loading</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div> 
+        
+    </div>
+</aura:component>

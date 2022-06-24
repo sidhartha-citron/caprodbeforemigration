@@ -1,0 +1,984 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.KnowledgeSetting" standardstylesheets="false">
+
+    <c:CommonIncludes />
+
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/Knowledge.css" />
+    <script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/CheckColumn.js"></script>
+<style>
+.divMargin{
+	margin-bottom: 1px;
+}
+.divMargin2{
+	margin-bottom: 8px;
+}
+	.get-type{		
+		opacity: 0.1;   
+	}
+	.copyKSRadio label {
+	    color: #000000;
+	    font-family: Tahoma,MS Sans Serif;
+	    font-size: 11px;
+	    padding-right: 15px;
+	    vertical-align: bottom;
+	    *vertical-align: top !important;
+	}
+	.clsKonwledgeInputCheckBoxLabel {
+	    color: #000000;
+	    font-family: Tahoma,MS Sans Serif;
+	    font-size: 11px;
+	    padding-left: 1px;
+	    padding-right: 5px;
+	    vertical-align: top;
+	}
+	.x-form-check-wrap{
+        display:block;
+        height:25px !important;
+        line-height:9px !important;
+    }
+	.x-panel-body .x-form-check-wrap{
+        display:block;
+        height:25px !important;
+        line-height:9px !important;
+    }
+    .AddButton {
+	background: url("/img/alohaSkin/btn_sprite.png") repeat-x scroll right top #E8E8E9 !important;
+	border-color: #B5B5B5 #B5B5B5 #7F7F7F;
+	border-style: solid;	
+	color: #000000;
+	height: 25px;	
+	margin-bottom:3px;
+	padding-bottom: 3px;
+	padding-left: 3px;
+	padding-right: 3px;
+	width: auto;
+		*width: 115px; important;   
+	}
+	
+	.AddButtonOff {
+	background-color: #DEE0E0;
+	border-color: #B5B5B5 #B5B5B5 #7F7F7F;
+	border-style: solid;	
+	color: #657383;
+	height: 25px;	
+	margin-bottom:3px;
+	padding-bottom: 3px;
+	padding-left: 3px;
+	padding-right: 3px;
+	width: auto;
+		*width: 115px; important;   
+	}
+
+
+</style>
+ 
+    <script>
+    	var enablesavebtn = {!enablesavebutton};
+    	var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+    	var SFArticleSaveMessage = '{!JSENCODE($Label.SFArticleTypeMessageBoxTitle)}'
+    	var clickedOnce = false;  
+	    function handleChange(){
+	        if(!clickedOnce){
+	            clickedOnce = true;
+	            window.parent.registerChange(wid2);
+	        }
+        }
+	        
+	    function handleResetChange(){
+	    	if(clickedOnce){
+               clickedOnce = false;
+               window.parent.registerSave(wid2);
+           }
+		}
+	       
+    var masterObjectFieldList = null;
+    var masterObjectFieldRecord = null;
+    var KSSstore;
+    var lastObjectSelected = '';
+    var firstRecordFlag = false;
+    Ext.onReady(function() {
+    
+    Ext.QuickTips.init();
+        masterObjectFieldList = new Ext.data.Store({
+            autoDestroy: true,
+            fields: [
+               { name: 'objectApi' },
+               { name: 'fieldStore' }
+            ]
+        });
+        masterObjectFieldRecord = Ext.data.Record.create([
+            { name: 'objectApi' },
+            { name: 'fieldStore' }
+        ])
+    
+       
+        //KSS settings from its object
+        var strTempKS = 'var arrKsSettings = [ ';
+        <apex:repeat value="{!ksSettings}" var="kss" id="ksSettingsRepeat">
+            strTempKS += "['{!kss.Id}','{!kss.BMCServiceDesk__ObjectName__c}','{!kss.BMCServiceDesk__FieldName__c}',{!kss.BMCServiceDesk__IsSearchField__c},{!kss.BMCServiceDesk__DisplayOrder__c},{!kss.BMCServiceDesk__Solution__c}],";
+        </apex:repeat>
+        strTempKS += '];';
+        strTempKS = strTempKS.replace(',];', '];');
+        
+        eval(strTempKS);
+        
+        KSSstore = new Ext.data.ArrayStore({
+            fields:[
+                {name:'ID'},
+                {name:'ObjectName'},
+                {name:'FieldName'},
+                {name:'IsSearchField'},
+                {name:'DisplayOrder'},
+                {name:'Solution'}
+            ]
+        });
+        
+        KSSstore.loadData(arrKsSettings);
+        
+        var uniqueObjectList = KSSstore.collect('ObjectName', false, true);
+        uoLength = uniqueObjectList.length;
+        for(var i=0; i<uoLength; i++)
+        {
+            fetchFieldListForObject(uniqueObjectList[i], uoLength);
+        }
+        if (uoLength == 0)
+            doRestOfTheRendering();
+        });
+        function renderFieldCombo(objectName){
+                 var index = masterObjectFieldList.find('objectApi', objectName);
+                 if (index >= 0)
+                {
+                    var rec = masterObjectFieldList.getAt(index);                   
+                    Ext.getCmp('FieldNameCombo_id').bindStore(rec.get('fieldStore'), true);
+                    lastObjectSelected = objectName;
+                }  
+                firstRecordFlag = false;  
+        }
+        function doRestOfTheRendering()
+        {
+        //Get all object(apiname, label)
+		var objectNameData =  <apex:outputText value="{!ObjectList}" escape="false"></apex:outputText> 
+        
+        var ObjectStore = new Ext.data.ArrayStore({
+            id:'objectStore',
+            fields:[
+                {name:'apiName'},
+                {name:'objectLabel'}
+            ]
+        });
+        
+        ObjectStore.loadData(objectNameData);
+        ObjectStore.sort('objectLabel');
+        
+        var ObjectNameCombo = new Ext.form.ComboBox({
+            id: 'ObjectNameCombo_id',    
+            typeAhead: true,
+            triggerAction: 'all',
+            mode: 'local',
+            store: ObjectStore,
+            valueField: 'apiName',
+            displayField: 'objectLabel',
+			editable: false,
+            autoLoad: true,
+            selectOnFocus: true
+
+        });
+        Ext.util.Format.objectComboRenderer = function(combo) {
+            return function(value) {
+                var record = combo.findRecord(combo.valueField, value);
+                return record ? record.get(combo.displayField) : combo.valueNotFoundText;
+            }
+        }
+        ObjectNameCombo.on('select', function(combo, record, index) {
+            
+            FieldNameCombo.enable();
+            fetchFieldListForObject(combo.value);
+            var rowSelected = kssDisplayGrid.getSelectionModel().getSelections();
+            var row = rowSelected[0];
+            row.set('FieldName', '');   //On selecting different object clear field value
+            handleChange()
+        });
+        
+        var FieldNameCombo = new Ext.form.ComboBox({
+            id: 'FieldNameCombo_id',
+            typeAhead: true,
+            mode: 'local',
+            triggerAction: 'all',
+            lastQuery: '',
+            clearFilterOnReset:true,
+            valueField: 'api',
+            displayField: 'dn',
+            selectOnFocus: true,
+			editable: false,
+            autoLoad: true,
+            selectOnFocus: true
+
+        });
+        
+        FieldNameCombo.on('select', function(combo, record, index) {
+        	handleChange();
+        });
+        FieldNameCombo.on('focus', function(combo) {
+            var rowSelected = kssDisplayGrid.getSelectionModel().getSelections();
+            var row = rowSelected[0];
+            var index = masterObjectFieldList.find('objectApi', row.get('ObjectName'));
+            combo.enable();
+            if (index >= 0)
+            {
+                var rec = masterObjectFieldList.getAt(index);
+                rec.get('fieldStore').clearFilter();
+                rec.get('fieldStore').filterBy(function myfilter(record) {
+                    
+                    for (var i=0; i<KSSstore.data.length; i++)
+                    {
+                        if (row.get('ObjectName') == KSSstore.getAt(i).get('ObjectName'))
+                        {
+                            if ((record.get('api') == KSSstore.getAt(i).get('FieldName')) && (row.get('FieldName') != KSSstore.getAt(i).get('FieldName')))
+                                return false;   
+                        }
+                    }
+                    return true;
+                });
+                combo.bindStore(rec.get('fieldStore'), true);
+                combo.clearValue();
+                combo.setValue(row.get('FieldName'));
+            }
+            else
+                combo.disable();
+        });
+        
+        FieldNameCombo.on('blur', function(combo) {
+            combo.getStore().clearFilter();
+        });
+        
+        Ext.util.Format.fieldComboRenderer = function(combo) {
+            return function(value, object, record) {
+                var index = masterObjectFieldList.find('objectApi', record.data.ObjectName);
+                if (index >= 0)
+                {
+                	if (lastObjectSelected != record.data.ObjectName)	//object not changed in combo so don't change the store
+                	{
+                    	var rec = masterObjectFieldList.getAt(index);
+                    	combo.bindStore(rec.get('fieldStore'), true);
+                   	}
+                    var comboRec = combo.findRecord(combo.valueField, value);
+                    lastObjectSelected = record.data.ObjectName;
+                    return comboRec ? comboRec.get(combo.displayField) : combo.valueNotFoundText;
+                }
+                
+            }
+        }
+        
+        function enableRemove(bolVal)
+        {
+            var btn = document.images['btnRemove'];
+            if (bolVal)
+            {
+                btn.src='{!$Resource.SDEFStyles}/SDEFbuttons/b_remove.png';
+                btn.style.cursor = 'pointer';
+                btn.setAttribute('isBtnDisabled',false);
+            }
+            else
+            {
+                btn.src='{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png';
+                btn.style.cursor = 'default';
+                btn.setAttribute('isBtnDisabled',true);
+            }
+        }
+        
+        function enableMoveUp(bolVal)
+        {
+            var btn = document.images['btnMoveUp'];
+            if (bolVal)
+            {
+                btn.src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up.png';
+                btn.style.cursor = 'pointer';
+                btn.setAttribute('isBtnDisabled',false);
+            }
+            else
+            {
+                btn.src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up_disable.png';
+                btn.style.cursor = 'default';
+                btn.setAttribute('isBtnDisabled',true);
+            }
+            
+        }
+        
+        function enableMoveDown(bolVal)
+        {
+            var btn = document.images['btnMoveDown'];
+            if (bolVal)
+            {
+                btn.src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down.png';
+                btn.style.cursor = 'pointer';
+                btn.setAttribute('isBtnDisabled',false);
+            }
+            else
+            {
+                btn.src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down_disable.png';
+                btn.style.cursor = 'default';
+                btn.setAttribute('isBtnDisabled',true);
+            }
+        }
+        
+        //Knowledge Search Settings Grid Columns
+        var sm = new Ext.grid.CheckboxSelectionModel({
+            listeners: {
+                // On selection change, set enabled state of the removeButton
+                // which was placed into the GridPanel using the ref config
+                selectionchange: function(sm) {
+                    
+                    enableRemove(false);
+                    enableMoveUp(false);
+                    enableMoveDown(false);
+                    var pGrid = Ext.ComponentMgr.get('grid_id');
+                    var gridrecord = pGrid.getSelectionModel().getSelected();
+                    var index = pGrid.getStore().indexOf(gridrecord);
+                    if(sm.getCount() == 1){
+                        if(index == 0){
+                            enableMoveDown(true);
+                        }
+                        if(index == (KSSstore.data.length - 1)){
+                            enableMoveUp(true);                        
+                        }
+                        if(index != 0 && index != (KSSstore.data.length - 1)){
+                           enableMoveDown(true);
+                           enableMoveUp(true);                               
+                        }
+                    } 
+                    if(sm.getCount() > 0){
+                    	 if( (gridrecord.get('FieldName') == 'Company' && gridrecord.get('ObjectName') == 'Lead')  ||
+                    	 		(gridrecord.get('ObjectName') == 'Contact' && gridrecord.get('FieldName') == 'AccountId') ||
+                					(gridrecord.get('ObjectName') == 'User' && gridrecord.get('FieldName') == 'AccountId')){                    		
+                    	 				enableRemove(false);
+                    	 }
+                    	 else{
+                         enableRemove(true);
+                    }              
+                         	
+                    }              
+                }
+            }
+        });
+        
+        var solutionColumn = new Ext.grid.CheckColumn({
+            header: 'Solution',
+            dataIndex: 'Solution',
+            width: 55,
+            hidden:true
+        });
+        var cm = new Ext.grid.ColumnModel([
+            sm, {
+                id: 'ID',
+                header: 'ID',
+                dataIndex: 'ID',
+                
+                hidden: true
+            }, {
+                header: '{!JSENCODE($Label.DataSource)}',
+                dataIndex: 'ObjectName',
+                tooltip: '{!JSENCODE($Label.TooltipGlobalSearchSettingsDataSource)}',
+                editor: ObjectNameCombo, // specify reference to combo instance
+                renderer: Ext.util.Format.objectComboRenderer(ObjectNameCombo) // pass combo instance to reusable renderer
+            }, {
+                header: '{!JSENCODE($Label.DataField)}',
+                dataIndex: 'FieldName',
+                tooltip: '{!JSENCODE($Label.TooltipGlobalSearchSettingsDataField)}',
+                editor: FieldNameCombo, // specify reference to combo instance
+                renderer: Ext.util.Format.fieldComboRenderer(FieldNameCombo) // pass combo instance to reusable renderer
+            },{
+                header: 'issearchable',
+                dataIndex: 'IsSearchField',
+                
+                value: true,
+                hidden: true
+            },{
+                header: 'displayorder',
+                dataIndex: 'DisplayOrder',
+                
+                value: '0',
+                hidden: true
+            }
+        ]);
+        
+        //Knowledge Search Seettings Search Grid
+        KSSstore.clearFilter();
+        KSSstore.filter('IsSearchField', false);
+        
+        var display_field= new Ext.Panel({ 
+       //       region: 'center',
+              layout: 'fit',
+              autoHeight: true,
+              contentEl: 'display__fields_div',
+              border: false
+         });
+
+        var tb = new Ext.Toolbar({
+         //  height: 30,
+         //  anchor:'100%',
+            id:'ks_settings_toolbar',
+            
+            renderTo:'toolbar',
+            items: [{
+                    xtype: 'box',
+                    id: 'btnAdd',
+                    autoEl: {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_add.png', title:'{!JSENCODE($Label.Add)}',name:'addBtn'},
+                    style : 'cursor:pointer;padding-left:5px;padding-right:5px;',
+                    listeners:{
+                        render: function(c) {
+                            c.getEl().on('click', function(){
+                            	if(KSSstore.data.length != 0){                            		
+                            		var fieldname = KSSstore.getAt(KSSstore.data.length - 1).get('FieldName');
+                            		if(fieldname == ''){
+                            			Ext.MessageBox.show({
+					                        width: 250,
+					                        title: '{!JSENCODE($Label.Navigator_GlobalSearchSettings)}',
+					                        msg: '{!JSENCODE($Label.GSValidationMessage)}',
+					                        buttons: Ext.MessageBox.OK
+					                    }); 
+					                    var saveToolbarBtn = Ext.getCmp('saveId'); 
+										saveToolbarBtn.enable();										
+					                    if(!enablesavebtn)
+									     {
+									     	
+											Ext.getCmp('saveId').setDisabled(true);
+									     }
+					                    return;
+                            		}	
+                            	}
+                                // access the Record constructor through the grid's store
+                                var lastObjName ='';
+                               
+                                if(KSSstore.data.length != 0){
+                                    lastObjName = KSSstore.getAt(KSSstore.data.length - 1).get('ObjectName');
+                                }                                 
+                                else
+                                {
+                                    lastObjName = ObjectStore.getAt(0).get('apiName');
+                                    firstRecordFlag = true;
+                                    
+                                }                                 
+                              	var recCnt = kssDisplayGrid.getStore().getCount();
+                                var newRow = kssDisplayGrid.getStore().recordType;
+                                
+                                var nr = new newRow({
+                                    ID: '',
+                                    ObjectName: lastObjName,
+                                    FieldName: '',
+                                    IsSearchField: false,
+                                    displayorder: 0,
+                                    Solution:false
+                                });
+                                
+                                /* Changes made by:anushri, on:23/02/10 for Bug No:1757 */
+                                var saveToolbarBtn = Ext.getCmp('saveId'); 
+                                saveToolbarBtn.enable();        
+                                if(!enablesavebtn)
+							     {
+							     	
+									Ext.getCmp('saveId').setDisabled(true);
+							     }
+                                kssDisplayGrid.stopEditing();
+                                KSSstore.insert(recCnt, nr);
+                                kssDisplayGrid.startEditing(recCnt, 2);
+                                fetchFieldListForObject(lastObjName);
+								handleChange();
+                            });
+                            c.getEl().on('mouseover', function(){
+                                    document.images['btnAdd'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_add_mouseover.png';
+                            });
+                            c.getEl().on('mouseout', function(){
+                                    document.images['btnAdd'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_add.png';
+                            });
+                        }
+                    }
+                },{
+                    xtype: 'box',
+                    id: 'btnRemove',
+                    autoEl: {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png', title:'{!JSENCODE($Label.Remove)}',name:'removeBtn'},
+                    style : 'cursor:default;padding-right:5px;',
+                    listeners:{
+                        render: function(c) {
+                            c.getEl().on('load', function(){
+                                if (document.images['btnRemove'].getAttribute('isBtnDisabled') == null)
+                                    document.images['btnRemove'].setAttribute('isBtnDisabled',true);
+                            });
+                            c.getEl().on('click', function(){
+                                deleteSelectedRow (kssDisplayGrid);
+                            });
+                            c.getEl().on('mouseover', function(){
+                                if (document.images['btnRemove'].getAttribute('isBtnDisabled') == "false")
+                                    document.images['btnRemove'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_mouseover.png';
+                            });
+                            c.getEl().on('mouseout', function(){
+                                if (document.images['btnRemove'].getAttribute('isBtnDisabled') == "false")
+                                    document.images['btnRemove'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_remove.png';
+                            });
+                        }
+                    }
+                },{
+                    xtype: 'box',
+                    id: 'btnMoveUp',
+                    
+                    autoEl: {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up_disable.png',title:'{!JSENCODE($Label.Up)}',name:'btnMoveUp'},
+                    style : 'cursor:default;padding-left:5px;',
+                    listeners:{
+                        render: function(c) {
+                            c.getEl().on('load', function(){
+                                if (document.images['btnMoveUp'].getAttribute('isBtnDisabled') == null)
+                                    document.images['btnMoveUp'].setAttribute('isBtnDisabled',true);
+                            });
+                            c.getEl().on('click', function(){
+                                moveSelectedRow(kssDisplayGrid, -1);
+                            });
+                            c.getEl().on('mouseover', function(){
+                                if (document.images['btnMoveUp'].getAttribute('isBtnDisabled') == "false")
+                                    document.images['btnMoveUp'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up_mouseover.png';
+                            });
+                            c.getEl().on('mouseout', function(){
+                                if (document.images['btnMoveUp'].getAttribute('isBtnDisabled') == "false")
+                                    document.images['btnMoveUp'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up.png';
+                            });
+                        }
+                    }
+                },{
+                    xtype: 'box',
+                    id: 'btnMoveDown',
+                    
+                    autoEl: {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down_disable.png', title:'{!JSENCODE($Label.Down)}',name:'btnMoveDown'},
+                    style : 'cursor:default;padding-right:5px;',
+                    listeners:{
+                        render: function(c) {
+                            c.getEl().on('load', function(){
+                                if (document.images['btnMoveDown'].getAttribute('isBtnDisabled') == null)
+                                    document.images['btnMoveDown'].setAttribute('isBtnDisabled',true);
+                            });
+                            c.getEl().on('click', function(){
+                                moveSelectedRow(kssDisplayGrid, 1);
+                            });
+                            c.getEl().on('mouseover', function(){
+                                if (document.images['btnMoveDown'].getAttribute('isBtnDisabled') == "false")
+                                    document.images['btnMoveDown'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down_mouseover.png';
+                            });
+                            c.getEl().on('mouseout', function(){
+                                if (document.images['btnMoveDown'].getAttribute('isBtnDisabled') == "false")
+                                    document.images['btnMoveDown'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down.png';
+                            });
+                        }
+                    }
+                
+                }]
+        });
+        
+        
+        var kssDisplayGrid = new Ext.grid.EditorGridPanel({
+            store: KSSstore,
+            cm: cm,
+            sm: sm,
+            id: 'grid_id',
+            layout:'fit',
+            sortable: false,
+            enableHdMenu:false,
+            stripeRows: false,
+            autoExpandColumn:true,
+			autoHeight:true,
+            height:350,
+            plugins: solutionColumn,
+            clicksToEdit:true,
+            border:false,
+            viewConfig: {
+                forceFit: true,
+                scrollOffset:0,
+                onAdd : function(ds, records, index){
+                    this.constructor.prototype.onAdd.apply(this, arguments);
+                    this.grid.getSelectionModel().selectRow(index);
+                    this.focusRow(index);
+                }
+            }       
+        });
+     
+        var ksgridPanel = new Ext.Panel({
+            renderTo:'ksgrid',
+            layout:'fit',
+            items:[kssDisplayGrid]
+        });
+  
+        Ext.EventManager.onWindowResize(ksgridPanel.doLayout, ksgridPanel);
+Ext.EventManager.onWindowResize(
+    function()
+    {
+ 
+    kssDisplayGrid.startEditing(0, 0);
+    
+    }
+);
+        var ksToolbar = new Ext.Panel({
+            id:'toolBarId',
+            renderTo:'kssavetoolbar',
+            cls:'toolSpCls',
+            
+            tbar: [{
+                scale: 'medium',
+                iconCls: 'bmcSave',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.Save)}',
+                id:'saveId',
+                
+                listeners: {
+                    mouseover: function(){
+                        this.setIconClass('bmcSaveOn');    
+                    },
+                    mouseout: function(){
+                        this.setIconClass('bmcSave');          
+                    }
+                },
+                handler : savehandler
+            }]
+        });
+
+        /* Changes made by:anushri, on:23/02/10 for Bug No:1757 */        
+        var saveToolbarBtn = Ext.getCmp('saveId'); 		
+            saveToolbarBtn.enable();        
+         //Rahul as there are checkboxes other than the grid, we need to keep the save button enabled all the time.   
+         if(!enablesavebtn)
+	     {
+	     	
+			Ext.getCmp('saveId').setDisabled(true);
+	     }    
+    }
+    </script>
+    <script>
+        var savehandler = function(button,event){
+		//Disable the save button when we the save process starts. Defect#61278
+           var saveToolbarBtn = Ext.getCmp('saveId'); 
+           saveToolbarBtn.disable();                        
+        	
+            var displayCnt = 1;
+            var strKSS = '';
+            for (var i=0; i<KSSstore.data.length; i++)
+            {
+                if(KSSstore.getAt(i).get('FieldName') == '' && KSSstore.getAt(i).get('ObjectName') != '')
+                {
+                    Ext.MessageBox.show({
+                        width: 250,
+                        title: '{!JSENCODE($Label.Navigator_GlobalSearchSettings)}',
+                        msg: '{!JSENCODE($Label.GSEmptyValidationMessage)}',
+                        buttons: Ext.MessageBox.OK
+                    }); 
+                    
+                    //Enable the save button...
+                    var saveToolbarBtn = Ext.getCmp('saveId'); 		
+            		saveToolbarBtn.enable();        
+                    if(!enablesavebtn)
+				     {
+				     	
+						Ext.getCmp('saveId').setDisabled(true);
+				     } 
+                    return;
+                }
+                else if(KSSstore.getAt(i).get('FieldName') != '' && KSSstore.getAt(i).get('ObjectName') != '')
+                {
+                    strKSS += String.format('{0},{1},{2},{3},{4};', KSSstore.getAt(i).get('ObjectName'), KSSstore.getAt(i).get('FieldName'), KSSstore.getAt(i).get('IsSearchField'), KSSstore.getAt(i).get('Solution'), displayCnt);
+                    displayCnt++;
+                }
+            }
+			/* Changes made by:anushri, on:23/02/10 for Bug No:1757 */            
+            jsSaveKSSettings(strKSS);
+            handleResetChange();
+            
+        }
+        function deleteSelectedRow(grid) {
+            var records = grid.getSelectionModel().getSelections();
+            if (!records) {
+                return;
+            }
+            for(var i=records.length; i>=0; i--)
+            {
+                var record = records[i];
+                
+                var index = grid.getStore().indexOf(records);
+                if(record != null){
+                	
+                	if( (record.get('ObjectName') == 'Lead' && record.get('FieldName') == 'Company') ||
+                			(record.get('ObjectName') == 'Contact' && record.get('FieldName') == 'AccountId') ||
+                				(record.get('ObjectName') == 'User' && record.get('FieldName') == 'AccountId') ){
+		                		 Ext.MessageBox.show({
+		                         width: 250,
+		                         title: '{!JSENCODE($Label.Navigator_GlobalSearchSettings)}',
+		                         msg: '{!JSENCODE($Label.Cannotdeleteselectedrecords)}',
+		                         buttons: Ext.MessageBox.OK
+                    });
+                	}
+                	else if( record != null){
+                grid.getStore().remove(record);
+            }
+                }
+              
+            }
+            handleChange();
+        }
+        
+        function moveSelectedRow(grid, direction) {
+            var record = grid.getSelectionModel().getSelected();
+            if (!record) {
+                return;
+            }
+            var index = grid.getStore().indexOf(record);
+            if (direction < 0){
+                index--;
+                if (index < 0) {
+                return;
+                }
+            } else {
+                index++;
+                if (index >= grid.getStore().getCount()) {
+                    return;
+                }
+            }
+            grid.getStore().remove(record);
+            grid.getStore().insert(index, record);
+            
+            //grid.getStore().fireEvent("update", grid.getStore(), record, Ext.data.Record.EDIT);
+            
+            grid.getSelectionModel().selectRow(index, true);
+        	handleChange();            
+        }
+        
+        function fetchFieldListForObject(objectName, totalRecords)
+        {
+           
+            var index = masterObjectFieldList.find('objectApi', objectName);
+            if (index >= 0) return;
+            
+            var url = '/apex/GetXmlData?FunctionName=getFieldItems&ObjectName='+objectName;
+            var tempStore = new Ext.data.XmlStore({
+                autoDestroy: false,
+                storeId: 'storeObjectName',
+                url: url,
+                sortInfo: {
+                    field: 'dn',
+                    direction: 'ASC'
+                },
+                record: 'field',
+                idPath: 'api',
+                fields: ['api', 'dn']
+        
+            });
+            tempStore.load();
+            tempStore.on('load', function(){
+                var objectRec;
+                objectRec = new masterObjectFieldRecord({
+                    objectApi: objectName,
+                    fieldStore: tempStore
+                });
+                if (tempStore.totalLength <= 0) return;
+                if (masterObjectFieldList.find('objectApi', objectName) < 0){
+                    masterObjectFieldList.add(objectRec);
+                }
+                if ((typeof(totalRecords) != "undefined"))
+                {
+                    if (masterObjectFieldList.data.length == totalRecords)
+                        doRestOfTheRendering();
+                }
+                if(firstRecordFlag){
+                    renderFieldCombo(objectName);                
+                }                
+            });
+        }
+    </script>
+    
+        <apex:outputPanel id="successId">
+        <script>
+            function saveDone(){
+            
+               
+                var success_message = '{!success}';  
+                if(success_message == 'success'){
+                    Ext.MessageBox.show({
+                        width: 250,
+                        title: '{!JSENCODE($Label.Navigator_GlobalSearchSettings)}',
+                        msg: '{!JSENCODE($Label.SavedSuccessfully)}',
+                        buttons: Ext.MessageBox.OK
+                    });
+                }
+                else{
+                     Ext.MessageBox.show({
+                        width: 250,
+                        title: '{!JSENCODE($Label.Navigator_GlobalSearchSettings)}',
+                        msg: '{!JSENCODE($Label.MsgSaveError)}' + success_message,
+                        buttons: Ext.MessageBox.OK
+                    });
+                } 
+                
+                //Enable the SaveButton later.
+		        /* Changes made by:anushri, on:23/02/10 for Bug No:1757 */
+                //Rahul need to enable the button 
+		        var saveToolbarBtn = Ext.getCmp('saveId'); 
+		            saveToolbarBtn.enable();
+		        if(!enablesavebtn)
+			     {
+			     	
+					Ext.getCmp('saveId').setDisabled(true);
+			     }            
+            }
+        </script>
+        </apex:outputPanel> 
+    <apex:form id="frmKss">    
+		<div id="kssavetoolbar" > </div>
+	  
+		<div id="noteSec" style="margin-top:15px;">{!$Label.GSNote}</div>
+		<div id ="searchField" style="margin-left:20px;">
+			<div class="divMargin">
+            <apex:inputCheckbox value="{!propSearchRFKnowledge}" id="RFKnowledge" title="" onclick="updateFeedback(this)"/>
+            	<label class="clsKonwledgeInputCheckBoxLabel">{!$Label.SearchRFKnowledge}</label>
+            </div>
+		        <div id="RFKnowledgeSettings" style="margin-left:35px;">		        
+			        <div class="divMargin"> 		        
+		            <apex:inputCheckbox value="{!propShowKMRating}" id="enableRating" title="" onclick="checkShowRating(this)"/>
+			            <label class="clsKonwledgeInputCheckBoxLabel lineHeight">{!$Label.ShowRating}</label>
+			        </div>
+			        <div class="divMargin">
+		            <apex:inputCheckbox value="{!propKMRatingMandatory}" id="ratingRequired" title=""/>
+			            <label class="clsKonwledgeInputCheckBoxLabel lineHeight">{!$Label.MakeRatingsMandatory}</label>
+			        </div>
+			        <div class="divMargin2" id="copyRadio"> 
+			            	<label class="clsKonwledgeInputCheckBoxLabel">{!$Label.Default_useofknowledge}</label>
+		            <apex:selectRadio styleClass="copyKSRadio" value="{!CopyArticleValue}">     
+						<apex:selectOption itemLabel="{!$Label.bmcservicedesk__copyarticletext}" itemValue="text"/>                                       
+						<apex:selectOption itemLabel="{!$Label.bmcservicedesk__copyarticlelink}" itemValue="link"/>                                       
+					</apex:selectRadio>
+		        </div>            
+		    </div>
+            <apex:outputpanel id="btnEnable"> 
+	            <div class="divMargin" style="line-height:90%;margin-bottom:3px;">
+		            <apex:inputCheckbox value="{!propSearchSFKnowledge}" id="SFKnowledge" title="" onclick="displaySearchBtn();"/>
+			 		<label class="clsKonwledgeInputCheckBoxLabel">{!$Label.SearchSFKnowledge}</label>      
+			 	</div>
+			 	<div  style="margin-left:35px;margin-bottom:4px;line-height:90%;" >   
+			 		<input id="searchBtn" style="height: 25px;" type="button" class="AddButton" value="{!$Label.Get_article_types}" onclick="jssaveSFArticleTypes(); onclickGetArticleDisable();" title="{!$Label.Get_article_types_tooltip}" />
+		 		</div> 
+				<apex:inputHidden value="{!articletypes}" id="articletype"/> 
+			</apex:outputpanel>
+			<apex:outputpanel id="RAKnowledgeSettings" styleClass="divMargin" rendered="{!RightAnswersIntegrated}">
+				<apex:inputCheckbox value="{!propSearchRAKnowledge}" id="RAKnowledge" title="" />
+			 	<label class="clsKonwledgeInputCheckBoxLabel">{!$Label.bmcservicedesk__searchraknowledge}</label>
+		    </apex:outputpanel>
+			<div style="line-height:90%;margin-bottom: 12px;"><apex:inputCheckbox value="{!propSearchReferenceFields}" id="referenceFieldsStyleClass" title=""/>
+            <label class="clsKonwledgeInputCheckBoxLabel">{!$Label.SearchReferenceFields}</label><br/>      </div>      
+		</div>
+		
+	    <div id = "display__fields_div" ><label class = "display_field_cls">{!$Label.Display_Fields}</label></div>  
+	    <div id="toolbar" > </div>
+	    <div id ="ksgrid"></div>  
+	    
+        <script>
+        
+        function onclickGetArticleDisable()
+        {
+        	//when the searchBtn event takes place disable the buuton & enable it after completing the process
+        	document.getElementById('searchBtn').disabled = true;          		   
+        	document.getElementById('searchBtn').className = "AddButtonOff";  
+        }
+        
+        function onclickGetArticleEnable()
+        {
+        	document.getElementById('searchBtn').disabled = false;  
+        	document.getElementById('searchBtn').className = "AddButton"; 
+        }
+        
+         
+        function onCompleteMsg(){
+	        var article = document.getElementById('{!$Component.frmKss.articletype}').value;
+	        var finalMessage;	        
+	        if(article.length > 1){
+	        	finalMessage = '{!JSENCODE($Label.Get_article_types_save_message)}' + article;
+	        }else{
+	        	finalMessage = '{!JSENCODE($Label.Get_article_types_null_message)}' ;
+	        }
+	        
+            Ext.MessageBox.show({
+                     width: 350,
+                     title: SFArticleSaveMessage,
+                     msg: finalMessage,
+                     buttons: Ext.MessageBox.OK
+                 });
+			onclickGetArticleEnable();                    
+        }          
+        
+        function displaySearchBtn()
+        {        	
+        	if((document.getElementById('{!$Component.frmKss.SFKnowledge}').checked == true)&&({!isSFUser} == true)){
+        		document.getElementById('searchBtn').disabled = false;  
+        		document.getElementById('searchBtn').className = "AddButton";      		
+        	}
+        	else {
+        		document.getElementById('searchBtn').disabled = true;          		   
+        		document.getElementById('searchBtn').className = "AddButtonOff";  		
+        	}
+        }
+        
+        function checkboxState(){ 
+         if(document.getElementById('{!$Component.frmKss.RFKnowledge}').checked){	        
+	        	document.getElementById('{!$Component.frmKss.enableRating}').disabled = false;
+	        	if(document.getElementById('{!$Component.frmKss.enableRating}').checked){
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = false;
+	        	}else{
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = true;
+	        	}
+	        	updateRadioButtonstate(false);
+	        }else{
+	        	document.getElementById('{!$Component.frmKss.enableRating}').checked = false;
+	        	document.getElementById('{!$Component.frmKss.enableRating}').disabled = true;
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').checked = false;
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = true;
+	        	updateRadioButtonstate(true);
+	        }
+	        displaySearchBtn();
+        }
+        
+        function updateFeedback(input){
+	        if(input.checked){	        
+	        	document.getElementById('{!$Component.frmKss.enableRating}').disabled = false;	        	
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = true;	        	
+	        	updateRadioButtonstate(false);	        	
+	        }else{
+	        	document.getElementById('{!$Component.frmKss.enableRating}').checked = false;
+	        	document.getElementById('{!$Component.frmKss.enableRating}').disabled = true;
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').checked = false;
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = true;
+	        	updateRadioButtonstate(true);	        	
+	        }
+	        
+        }        
+        
+        
+        //If you want enable radio buttons, send false as parameter else send true
+        function updateRadioButtonstate(state){        
+        	var inputs = document.getElementsByTagName('input');
+	        for(var k=0;k<inputs.length;k++)
+				{
+					var input = inputs[k];
+					if(input.type == 'radio'){
+						  input.disabled = state;
+					}
+				}        
+        }
+        function checkShowRating(input){
+	        if(input.checked){
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = false;
+	        }else{	        	
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').checked = false;
+	        	document.getElementById('{!$Component.frmKss.ratingRequired}').disabled = true;	        	
+	        }
+        }
+        
+        checkboxState();
+        </script>
+        
+        
+	    <apex:actionFunction Name="jsSaveKSSettings" action="{!saveksSettings}" onComplete="saveDone()" reRender="successId" >
+	    	<apex:param name="kssData" value="" assignTo="{!kssdata}" /> 
+		</apex:actionFunction>
+		<apex:actionFunction Name="jssaveSFArticleTypes" action="{!saveSFArticleTypes}" onComplete="onCompleteMsg()" reRender="btnEnable,articletype"/>
+	</apex:form>
+     
+</apex:page>

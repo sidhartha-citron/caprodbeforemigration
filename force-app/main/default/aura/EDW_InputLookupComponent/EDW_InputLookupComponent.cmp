@@ -1,0 +1,94 @@
+<aura:component implements="force:lightningQuickAction,force:appHostable,flexipage:availableForAllPageTypes,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global" controller="EDW_InputLookup">
+    <aura:attribute name="searchResults" type="SObject[]"/>
+    <aura:attribute name="selectedResult" type="SObject"/>
+    <aura:attribute name="sObjectType" type="String" />
+    <aura:attribute name="label" type="String"/>
+    <aura:attribute name="icon" type="String"/>
+    <aura:attribute name="placeholder" type="String"/>
+    <aura:attribute name="searchString" type="String"/>
+    <aura:attribute name="value" type="Id"/>
+    <aura:attribute name="required" type="Boolean" default="false"/>
+    <aura:attribute name="isDisabled" type="Boolean" default="false"/>
+    <aura:attribute name="hasLabel" type="Boolean" default="true" />
+    <aura:attribute name="filterById" type="String" />
+    <aura:attribute name="numberOfRooms" type="String" />
+    <aura:attribute name="isCompact" type="Boolean" default="false" />
+    <aura:attribute name="isValueLockedIn" type="Boolean" default="false" />
+    
+    <aura:handler name="change" value="{!v.value}" action="{!c.valueChange}"/>
+    
+    <aura:registerEvent name="EDW_LookupRecordEvent" type="c:EDW_LookupRecordEvent" />
+    
+    <div aura:id="lookup" class="slds-form-element slds-lookup slds-p-vertical_xx-small" data-select="single">
+        <!-- this is here to force the selection of the survey location to work on the first instance -->
+        <div class="slds-hide">{!v.value}</div>
+        
+        <label class="form-element__label">
+            {!v.label}
+            <aura:if isTrue="{!v.required}"><abbr class="slds-required" title="required">*</abbr> </aura:if>
+        </label>
+        <div id="a" tabindex="-1" onfocusout="{!c.lookup_hide}">
+            <div class="slds-form-element__control">
+                <div class="slds-input-has-icon slds-input-has-icon--right">
+                    <aura:if isTrue="{!empty(v.selectedResult)}">
+                        <lightning:icon class="slds-input__icon" iconName="utility:search" size="x-small"/>
+                        <ui:inputText disabled="{!v.isDisabled}" aura:id="searchInput" class="{!v.isCompact ? 'slds-lookup__search-input slds-input ch-input-compact' : 'slds-lookup__search-input slds-input'}" placeholder="{!'Search ' + v.placeholder + '...'}" value="{!v.searchString}" updateOn="keyup" keyup="{!c.lookup_typeahead}" focus="{!c.lookup_show}"/>
+                        <aura:set attribute="else">
+                            <div class="{!v.isValueLockedIn ? 'slds-pill_container input-locked-in' : 'slds-pill_container'}">
+                                <span class="slds-pill">
+                                    <span class="slds-icon_container slds-icon-standard-account slds-pill__icon_container">
+                                        <lightning:icon class="slds-icon" iconName="{!v.icon}" size="x-small"/>
+                                        <span class="slds-assistive-text">{!v.sObjectType}</span>
+                                    </span>
+                                    <aura:if isTrue="{!!empty(v.selectedResult.MasterLabel)}">
+                                        <span class="slds-pill__label">{!v.selectedResult.MasterLabel}</span>
+                                    </aura:if>
+                                    <aura:if isTrue="{!empty(v.selectedResult.MasterLabel)}">
+                                        <aura:if isTrue="{!v.sObjectType == 'Case'}">
+                                        	<span class="slds-pill__label">{!v.selectedResult.CaseNumber}</span>
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.sObjectType == 'Contact'}">
+                                        	<div class="slds-lookup__result-text">{!v.selectedResult.Contact == null ? v.selectedResult.Name : v.selectedResult.Contact.Name}</div>
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.sObjectType == 'Account' || v.sObjectType == 'Survey_Location__c'}">
+                                        	<div class="slds-lookup__result-text">{!v.selectedResult.Name}</div>
+                                        </aura:if>
+                                    </aura:if>
+                                    <lightning:buttonIcon class="{!v.isValueLockedIn ? 'slds-hide' : 'slds-button slds-button--icon slds-pill__remove'}" iconName="utility:close" variant="bare" onclick="{!c.lookup_unselect}"/>
+                                </span>
+                            </div>
+                        </aura:set>
+                    </aura:if>            
+                </div>
+            </div>
+            <div class="slds-lookup__menu">
+                <div class="slds-lookup__item--label slds-text-body--small">"{!v.searchString}" in {!v.sObjectType}</div>
+                <ul class="slds-lookup__list" role="listbox">
+                    <aura:iteration items="{!v.searchResults}" var="r" indexVar="i">
+                        <li role="presentation">
+                            <a class="slds-lookup__item-action slds-media slds-media--center" id="{!i}" role="option" onclick="{!c.lookup_select}">
+                                <div class="slds-media__body">
+                                    <aura:if isTrue="{!!empty(r.MasterLabel)}">
+                                        <div class="slds-lookup__result-text">{!r.MasterLabel}</div>
+                                    </aura:if>
+                                    <aura:if isTrue="{!empty(r.MasterLabel)}">
+                                        <aura:if isTrue="{!v.sObjectType == 'Case'}">
+                                        	<span class="slds-pill__label">{!r.CaseNumber}</span>
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.sObjectType == 'Account' || v.sObjectType == 'Survey_Location__c'}">
+                                        	<div class="slds-lookup__result-text">{!r.Name}</div>
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.sObjectType == 'Contact'}">
+                                        	<!--<div class="slds-lookup__result-text">{!r.Contact.Name}</div>-->
+                                            <div class="slds-lookup__result-text">{!r.Name}</div>
+                                        </aura:if>
+                                    </aura:if>
+                                </div>
+                            </a>
+                        </li>
+                    </aura:iteration>
+                </ul>
+            </div>
+        </div>
+    </div>
+</aura:component>

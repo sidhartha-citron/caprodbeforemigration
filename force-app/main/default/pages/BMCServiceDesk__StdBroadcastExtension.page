@@ -1,0 +1,23 @@
+<apex:page standardController="BMCServiceDesk__Broadcasts__c" extensions="BMCServiceDesk.StdBroadcastExtensionController" id="thePage" action="{!doAction}" showHeader="false" standardStylesheets="false">
+  <head>
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/NavigatorStyleSheet.css"/>
+</head>   
+<apex:form >  
+    <c:StdLayoutStageProgression ObjectNameVal="Broadcasts__c" status="{!current_status}" rendered="{!IF($CurrentPage.parameters.messageString=='',true,false)}" />
+    <apex:actionFunction name="refreshBroadcast" action="{!refreshBroadcast}" />
+</apex:form>
+<apex:outputPanel rendered="{!IF($CurrentPage.parameters.messageString=='',false,true)}" >
+<script>
+     alert('{!JSENCODE($CurrentPage.parameters.messageString)}');
+         refreshBroadcast();
+</script>
+
+</apex:outputPanel>
+<script>
+var errorMsg = '{!JSENCODE(messageString)}';
+   	if (errorMsg.length > 0) {
+    	alert(errorMsg);
+    	refreshBroadcast();
+   	}
+</script>
+</apex:page>

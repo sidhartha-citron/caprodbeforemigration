@@ -1,0 +1,118 @@
+<apex:page sidebar="{!hideHeaderAndSideBar}" showHeader="{!hideHeaderAndSideBar}" showChat="true" controller="BMCServiceDesk.BroadcastConsoleController" title="{!JSENCODE($Label.bmcservicedesk__broadcast_console)}" action="{!LoadActionAgentItem}" extensions="BMCServiceDesk.JSRemoteActions">
+    <apex:includeScript value="/support/console/25.0/integration.js"/>
+    <c:ConsoleComponent ConsoleObjectName="Broadcasts__c" />
+<head>
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/incidentconsole.css" type="text/css" />
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" />
+</head>
+<script type="text/javascript">
+	var broadcastConsole = '{!$Page.BroadcastConsole}';
+	var wikiUrl='{!wikiUrl}';
+	var pkgNamespace='BMCServiceDesk__';
+	var AttRefGeneratorId = '';	
+    Ext.ns("BroadcastConsolePage");
+   BroadcastConsolePage.Labels = {
+        New: '{!JSENCODE($Label.New)}',
+        Save: '{!JSENCODE($Label.Save)}',
+        New_Broadcast: '{!JSENCODE($Label.New_Broadcast)}',
+        BroadcastForm: '{!JSENCODE($Label.BroadcastForm)}',
+        RelatedLists: '{!JSENCODE($Label.Details)}',
+        Undo: '{!JSENCODE($Label.CIExpReload)}',
+        Undo_Consolebtn_Tooltip: '{!JSENCODE($Label.CIExpReload)}',
+        labelcloseWindow : '{!JSENCODE($Label.closeWindow)}',
+        labelcloseWindowLabel : '{!JSENCODE($Label.closeWindowLabel)}',
+        Yes: '{!JSENCODE($Label.ExtjsMessageYes)}',
+        No: '{!JSENCODE($Label.ExtjsMessageNo)}',
+        AgentTools: '{!JSENCODE($Label.AgentTools)}',
+        KnowledgeSearch: '{!JSENCODE($Label.KnowledgeSearch)}',
+		Actions: '{!JSENCODE($Label.Actions)}',
+        NewAction: '{!JSENCODE($Label.New_Action)}',
+        AddNote: '{!JSENCODE($Label.Message1)}',
+        AttachFile: '{!JSENCODE($Label.AttachViewFiles)}',
+        Close: '{!JSENCODE($Label.Close)}',
+        Reopen: '{!JSENCODE($Label.Reopen)}',
+        Clone: '{!JSENCODE($Label.Clone)}',
+        ConfirmAction: '{!JSENCODE($Label.Confirm_Action)}',
+        Print: '{!JSENCODE($Label.Print)}',
+        PrintPDF: '{!JSENCODE($Label.PrintPDF)}',
+        closeConfirmMsg: '{!JSENCODE($Label.Console_closeConfirmMsg)}',
+        ViewActionHistory: '{!JSENCODE($Label.ViewActionHistory)}',
+		BroadcastRecordPrefix : '{!JSENCODE($Label.BroadcastRecordPrefix)}',
+		SubmitForApprovalLabel:'{!JSENCODE($Label.SubmitForApproval)}',
+		  LockRecord:'{!JSENCODE($Label.LockRecord)}', 
+        UnlockRecord: '{!JSENCODE($Label.UnlockRecord)}',
+        Locked:'{!JSENCODE($Label.Locked)}', 
+        Unlocked: '{!JSENCODE($Label.Unlocked)}',
+        LockedRecord:'{!JSENCODE($Label.LockedRecord)}', 
+        UnlockedRecord: '{!JSENCODE($Label.UnlockedRecord)}'
+    }
+	
+	 // common label should be removed later on from the indiviual page label.
+	
+	Ext.ns("ConsoleCommonLabels");
+	ConsoleCommonLabels.Labels = {
+		labelcloseWindowLabel : '{!JSENCODE($Label.closeWindowLabel)}',
+		ConfirmAction: '{!JSENCODE($Label.Confirm_Action)}',
+		Yes: '{!JSENCODE($Label.ExtjsMessageYes)}',
+		No: '{!JSENCODE($Label.ExtjsMessageNo)}',
+		ServiceTargetsOK: '{!JSENCODE($Label.ServiceTargetStatus_OK)}'
+	}
+	
+    
+	var isServiceCloudConsole = "{!JSENCODE($CurrentPage.parameters.isServiceCloudConsole)}";
+    var tabId = "{!JSENCODE($CurrentPage.parameters.tabId)}";
+  	
+  	_RemotingActions.reopen = '{!$RemoteAction.BroadcastConsoleController.reopen}';
+	_RemotingActions.pasteResolution = '{!$RemoteAction.BroadcastConsoleController.pasteResolution}';
+
+	if('{!JSENCODE($CurrentPage.parameters.record_name)}'!='' && isServiceCloudConsole=='true')
+   {
+	  
+	   sforce.console.setTabTitle(BroadcastConsolePage.Labels.BroadcastRecordPrefix +': '+'{!JSENCODE($CurrentPage.parameters.record_name)}');
+   }
+   
+    function setAttRefGeneratorId(val)
+ 	{
+ 	AttRefGeneratorId = val;
+ 	var broadcastDetailsFrameId = document.getElementById('broadcastDetailsFrameId');
+ 	if(broadcastDetailsFrameId != null)
+ 		broadcastDetailsFrameId.contentWindow.AssignAttRefGeneratorId(val);
+ 	
+ 	}
+</script>
+
+<script src="{!$Resource.SDEFCommonJS}/BroadcastConsole.js"  type="text/javascript" />
+<script src="{!$Resource.SDEFCommonJS}/ConsoleForm.js"  type="text/javascript" />
+<script>
+    LoadHandlerForActionItem();
+    LoadHandlerForAgentItem();
+    var ActionMenuItem = {!ActionMenuItem};
+    var AgentMenuItem ={!AgentMenuItem};
+    var orgNamespace  = '{!orgNamespace}';
+    var recordLock = '{!JSENCODE(recordLock)}';
+    var lockDuration = '{!JSENCODE(lockDuration)}';
+	var continueLockingRecord;
+	var readContinueMessage1 =  '{!JSENCODE($Label.RecordContinueLockingMsg1)}';
+	var isRFHotkeysDisabled={!isRFHotkeysDisabled};	
+</script>
+ <div id="topbar">
+    <div class="d-notification d-notification_warning d-notification_content">
+        <div class="d-notification__icon d-icon-left-exclamation_circle"></div>
+        <div class="d-notification__supporting-text">
+            <p style="float:left;" class="d-notification__item" id="time"></p>
+        </div>
+        <p class="d-notification__item_link centerCrossIcon">
+            <a id="continueLocking" href="#" onclick='continueLockingRecord()'>{!JSENCODE($Label.ContinueLocking)}</a>
+            <a href="#" style="margin-left: 30px;" class="d-icon-left-cross" onclick='closebar()'></a>
+        </p>
+    </div>
+</div>
+ 
+<div id="DetailFormDiv" style="height:100%">
+    <iframe id="broadcastDetailsFrameId" name="releaseDetailsFrame" frameborder="0" scrolling="yes" src ="" class="incidentRelatedListFrameCls"></iframe>
+    <iframe id="broadcastRelatedListFrameId" name="releaseRelatedListFrame" frameborder="0" scrolling="yes"  src ="" style="width:100%;height:100%;border:none;"></iframe>
+</div>
+<apex:outputPanel layout="none" rendered="{!If(userLanguage=='iw','true','false')}">
+	<link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFConsole-RTL.css" type="text/css" />
+</apex:outputPanel>
+</apex:page>

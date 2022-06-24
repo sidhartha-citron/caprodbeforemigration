@@ -1,0 +1,2295 @@
+﻿<apex:page showHeader="false" controller="BMCServiceDesk.TemplateController" contentType="{!contetnTypeForIE}" standardStylesheets="false">
+<c:CommonIncludes />
+<link rel="stylesheet" type="text/css" href="{!$Resource.BMCServiceDesk__SDEFStyles}/TemplateStyleSheet.css"/>
+<!-- specific to itemselector -->
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/itemselector.js" id="itemselector"/>  
+<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js" id="StdLayoutCommon-js"/>   
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/OpRulePopup.js" id="OpRulePopup-js"/>   
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/Template.js" id="template-js"/>   
+<apex:outputPanel id="dataPanel">
+    <script>
+        var listData = [{!listData}];                     
+    </script>
+  
+</apex:outputPanel>
+<script>
+var southPanelAvailable =true;
+var dirtyFlag=true;
+var wikiHelp = '{!wikiUrl}';
+var  isFromSRD= "{!JSENCODE($CurrentPage.parameters.isFromSRD)}";
+var  isForFulfillment = "{!JSENCODE($CurrentPage.parameters.isForFulfillment)}";
+var toggleImagePath = '{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFimages/twisties.gif';
+var popUpEnable = true;
+var popUpString ='';
+var selectedLabel = '';
+var selectedTextAreaLength = 0;
+var templateHeader = '{!JSENCODE($ObjectType.SYSTemplate__c.label)}';
+var isFlattenedCmdb = {!isFlattenedCmdb};
+var dateValue = '{!filterClauseDate}';
+var dateClause;
+if(!isFlattenedCmdb){
+	dateClause = escape('(end_date__c = null or end_date__c >=' + dateValue + ')');
+}else{
+	dateClause = escape('(enddate__c = null or enddate__c >=' + dateValue + ')');
+}
+ var okBtnLabel = '{!JSENCODE($Label.OK)}';
+ var cancelBtnLabel= '{!JSENCODE($Label.Cancel)}';
+ var selectORError = '{!JSENCODE($Label.SelectORMessage)}';
+ var isFPUserValidated = {!isFPUserValidated};
+  var PE       ='П'; //Cyrillic character
+  var errTitle = '{!JSENCODE($Label.Error)}';
+ var isChatterEnabled = '{!isChatterEnabled}';
+var descriptionLbl = '{!JSENCODE($Label.Description)}', chatterLbl = '{!JSENCODE($Label.ChatterFields)}';
+var chatterLinkLabel = '{!JSENCODE($Label.LinkToChatterPost)}', chatterBodyLabel = '{!JSENCODE($Label.ChatterPostBody)}', chatterAuthorLabel = '{!JSENCODE($Label.ChatterPostAuthor)}';
+var chatterHelpLabelText = '{!JSENCODE($Label.ChatterHelp)}';
+  //var isChatterEnabled = false;
+ var labelForChatterHelpDescription = '{!JSENCODE($Label.ChatterHelpText)}';
+ var strEnableQueueAndUserAssignment = '{!isStaffNQueueEnabled}';
+ var customLookUpField ;
+ var moduleIdString='';
+ var templateFor='{!JSENCODE(template.templateFor__c)}';
+ var isUpdateable = {!isUpdateable};
+ var  templateId = '{!template.Id}';
+ var hasRecurrence;
+  var queueId;
+ var ownerIDFlag;
+ var iStaffToRemoveOnConfiration = '{!iStaffToRemoveOnConfiration}';
+ var isOwnerIDAlreadyProcessed = '{!isOwnerIDAlreadyProcessed}';
+ var isConfirmationRequired = '{!isConfirmationRequired}';
+ var TemplateForValue='{!JSENCODE(template.templateFor__c)}';
+ var inactivelbl='';
+ if(window.navigator.userAgent.indexOf('Edge/') > 0) {
+ 	inactivelbl='display:table-cell';
+ }
+</script>
+<apex:outputPanel id="lookUpPanel">
+    <script>
+		var label_SelectOpRule = '{!JSENCODE($Label.SelectOpRule)}';			
+		var page_CMDBJsonGenerator = '{!$Page.CMDBJsonGenerator}';
+		
+        function openLookup(){     
+        	var templateFor='{!JSENCODE(template.templateFor__c)}'
+        	moduleIdString='';
+        	if(!customLookUpField){
+	        	if(popUpString.indexOf('FK') == 0){
+	        		popUpString = popUpString.substring(2,popUpString.length);
+	        	} 
+        	}
+        	    	
+        	if(popUpString.endsWith('__c')){
+        		popUpString = popUpString.substring(0,popUpString.length - 3);
+        	}
+        	if(popUpString == 'ACOpRuleID') {
+        		if(isFPUserValidated){
+        			return showORWindow();
+        		}else{
+        			openPopupWithTitle('ACFPUserCredentialPage',oncompleteFPvalidateJS,'{!JSENCODE($Label.ACFPlaunchWindowHeader)}',Ext.isIE?240:227,475);
+					return popUpWindow.center();
+        		}
+        	}
+        	if(popUpString == 'BMC BaseElement'){
+        		popUpString  = 'BMC_BaseElement';
+        	}else if(popUpString == 'ClosedBy' || popUpString == 'Closed_By' || popUpString == 'Initiator' || popUpString == 'ReleaseCoordinator'){
+        		popUpString = 'Client';
+        	} else if( popUpString == 'CIsAcquiredBy' ||popUpString == 'ContractsVerifiedBy' || popUpString == 'LicensesVerifiedBy' || popUpString == 'ConnectionReceive'
+        	||popUpString == 'TestingCompletedBy' ){
+        		popUpString ='OwnerId';// to show staff users on selection of above field
+        	}
+           
+            if(customLookUpField){
+           	 if(templateFor =='Change Request')
+            		moduleName = 'Change_Request__c';
+                                  
+            else if(templateFor =='Request Detail')
+                    moduleName = 'SRM_RequestDetail__c';  
+           	else 	
+            		moduleName = templateFor+'__c';
+            	moduleIdString = popUpString+'__c';
+            	openPopupRF('SearchPage' + '?moduleId='+moduleIdString+'&isLookup=true&popupId=&moduleName='+moduleName+'&isCustomLookup=true',preSetReferenceToText); 
+           
+            }
+            else if(popUpString == 'Status'){
+            	if(templateFor == 'Task'){
+            		openPopupRF('SearchPage?popupId='+popUpString+'&isLookup=true&filterClause='+escape("appliesToTask__c=true"), preSetReferenceToText);
+            	}else if(templateFor == 'Incident'){
+            		openPopupRF('SearchPage?popupId='+popUpString+'&isLookup=true&filterClause='+escape("appliesToIncident__c=true"), preSetReferenceToText);
+            	}else if(templateFor == 'Release'){
+            		openPopupRF('SearchPage?popupId='+popUpString+'&isLookup=true&filterClause='+escape("appliesToRelease__c=true"), preSetReferenceToText);
+            	}else{
+            		openPopupRF('SearchPage?popupId='+popUpString+'&isLookup=true&filterClause='+escape("appliesToChange__c=true"), preSetReferenceToText);
+            	}
+            }else if(popUpString == 'OpenBy' || popUpString == 'Staff'){
+              
+              if(strEnableQueueAndUserAssignment == 'true' || strEnableQueueAndUserAssignment == 'TRUE')
+              {
+              if(OwnerIDFlag=='true')
+              {
+                         openPopupRF('SearchPage?popupId=Client&fetchQMem=true&queueId=' + queueId + '&popupFor=QueueAssignment&isStaffViewChangeDisabled=true&standardLayout=true&isLookup=true&additional_columns=name,username,firstname,lastname,phone,extension,email&isAssignTo=true',preSetReferenceToText);
+              }
+              else
+              {
+                    openPopupRF('SearchPage?popupId=Client&isLookup=true&isStaffViewChangeDisabled=true&filterClause=IsStaffUser__c=true',preSetReferenceToText);
+                  }
+              }
+              else
+                openPopupRF('SearchPage?popupId=Client&isLookup=true&filterClause=IsStaffUser__c=true',preSetReferenceToText);
+            }else if(popUpString == 'BusinessService'){            	
+            	if(templateFor == 'Incident'){      
+            		openPopupRF('SearchPage?popupId=BMC_BusinessService&isLookup=true&filterClause=' + escape('serviceType__c != \'Offering\' and ')+ dateClause, preSetReferenceToText);
+            	}
+            	else{
+            	 openPopupRF('SearchPage?popupId=BMC_BusinessService&isLookup=true&filterClause=' + dateClause, preSetReferenceToText);
+            	} 
+            }else if(popUpString == 'ServiceOffering'){  //change 
+                popUpString  = 'BMC_BusinessService';  	
+               openPopupRF('SearchPage?popupId=BMC_BusinessService&isLookup=true&filterClause=' + escape('serviceType__c = \'Offering\' and ')+dateClause, preSetReferenceToText);//Change
+            }else if(popUpString == 'BMC_BaseElement'){
+                openPopupRF('SearchPage?popupId='+popUpString+'&isLookup=true', preSetReferenceToText,575,800);
+            }else if(popUpString != 'OwnerId'){
+                openPopupRF('SearchPage?popupId='+popUpString+'&isLookup=true'+'&templateFor='+templateFor, preSetReferenceToText);
+            }else{
+            	var templateFor='{!JSENCODE(template.templateFor__c)}';
+            	if(strEnableQueueAndUserAssignment == 'true' || strEnableQueueAndUserAssignment == 'TRUE')
+                {
+                
+                	if(templateFor =='Change Request')
+            			moduleName = 'Change_Request__c';
+           			else 	
+            			moduleName = templateFor+'__c';
+	                var sobjectType = 'sobjectType';
+	               	//Open search page with all queues only
+	               	var url = 'SearchPage?popupId=Queue&popupFor=QueueAssignment&isQueurorUser=true&isLookup=true&queueFor='+ moduleName +'&isOnlyQueueList=true&additional_columns=Queue.Name,QueueId&filterClause='+escape("sobjectType=\'"+templateFor + "\'");
+	                var vartestdummy ='testdummy';
+                    openPopupRF(url, preSetReferenceToText);
+                }
+                else //Original
+                {
+                openPopupRF('SearchPage?popupId=Client&isQueurorUser=true&isLookup=true&queueFor='+templateFor+'&filterClause='+escape("IsStaffUser__c=true"), preSetReferenceToText);
+            }                  
+        }
+        }
+		//Added for user lookup custom field        
+        function openLookup1(){
+        	moduleIdString='';
+			var templateFor='{!JSENCODE(template.templateFor__c)}';
+        	popUpString = 'Client';
+        	openPopupRF('SearchPage?popupId=' + popUpString + '&isLookup=true&templateFor=' + templateFor, preSetReferenceToText);
+        }
+                
+        popUpEnable = true;
+       function  preSetReferenceToText(id){
+       		var node = window.SelectedOpRuleNode;
+       		var extracontext = '';
+       		if(node!=null && typeof(node)!='undefined') {
+       			extracontext =  node.attributes.approval;
+       			
+       			extracontext += PE +node.attributes.text;
+       			if(node.attributes.notes!= null && node.attributes.notes!='') {
+       			 extracontext += ':' + node.attributes.notes;
+       			}
+       		}
+            setReferenceToText(id,popUpString,extracontext,moduleIdString);
+       		window.SelectedOpRuleNode = null; /// reset the variable
+        }
+        function oncompleteFPvalidateJS(validated){
+        	if(validated){
+				isFPUserValidated = true;
+				return showORWindow();
+			}
+        }
+    </script>  
+</apex:outputPanel>
+ <apex:outputPanel id="afterSavePanel">
+        <script>        
+        templateFor='{!JSENCODE(template.templateFor__c)}';
+        templateId = '{!template.Id}';
+        function handleAfterSave(){
+        	/*Defect: 57246 : By Usha Juge*/
+	       	if('{!JSENCODE(template.templateFor__c)}' == 'Incident'){
+				if(window.parent.parent.refreshPortletByTitle)
+					window.parent.parent.refreshPortletByTitle('Top Requests');	       	
+	       	}
+	        var id = "{!template.Id}";
+	        window.parent.handleSave(wid, id);
+     	} 
+     	function enableDisableRecurrenceBtn(){
+	   		var recBtn = Ext.getCmp('recurrBtnId');
+	   		if(recBtn != null && recBtn != 'undefined'){
+	   			if(templateId == '' || templateId == null || templateFor == 'Release' || templateFor == 'Request Detail'){
+		   			Ext.getCmp('recurrBtnId').setDisabled(true);
+		   			Ext.getCmp('recurrBtnId').setIconClass('bmcRecurrenceDisable');
+		   		}else{
+		   			Ext.getCmp('recurrBtnId').setDisabled(!isUpdateable);
+		   			Ext.getCmp('recurrBtnId').setIconClass('bmcRecurrence');
+		   		}
+	   		}
+	    }
+   		enableDisableRecurrenceBtn();	
+        </script>
+     </apex:outputPanel>
+<apex:outputPanel id="titlePanel">
+    <script>
+         
+        function updateTitle(){
+            var newTitle;
+            var templateNameStr = "{!JSENCODE(template.Name)}";
+			//added to fix bug 1705
+			if(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.SavedSuccessfully)}'){
+            if(templateNameStr != ''){
+                newTitle = templateNameStr;
+            }else{
+                newTitle = templateHeader;
+            }
+            var newTemplateId = '{!JSENCODE(template.Id)}';             
+            handleSave(newTemplateId,wid,newTitle);            
+        }
+        }
+    </script>  
+</apex:outputPanel>
+<apex:outputPanel id="reRenderTemplateFor">
+    <script>
+        function setTemplateHierarchy(){            
+            var templateFor='{!JSENCODE(template.templateFor__c)}';
+            setTemplateHierarchyNext(templateFor);            
+        }
+    </script>  
+</apex:outputPanel>
+
+     
+<script>
+    var templateName;               
+    var templateId;
+    var parentTemplateId;
+    var newColumnSize;
+    var errormsg;
+    var chkBoxValue; 
+    var field='';
+    var value='';
+    var locValue='';
+	var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+
+ 
+  	
+    function getWID(){
+          return '{!JSENCODE($CurrentPage.parameters.wid)}';
+    }	
+     var clickedOnce = false;          
+        function handleChange(){
+            if(!clickedOnce){
+                clickedOnce = true;
+                if(isFromSRD != 'true')
+              		  window.parent.registerChange(wid);
+            }
+			activateWindow();
+        }
+    var isLookup = "{!JSENCODE($CurrentPage.parameters.islookup)}";
+    var resizeGrid= function resizeGrid(){
+        if(Ext.getCmp('southPanelSI')!=undefined){
+         var SoutPanelWidth=Ext.getCmp('southPanelSI').getWidth();
+         Ext.getCmp('southPanelSI').setWidth(SoutPanelWidth);
+    
+        }
+		var parentWindowObj= window.parent.Ext.getCmp('winId'+wid);
+         if(parentWindowObj!=undefined && parentWindowObj !=null){
+		     Ext.getCmp('grid').setWidth(parentWindowObj.getWidth()-25);
+		 }
+     };
+     if(window.parent.refreshGridSI!=undefined){
+            window.parent.refreshGridSI(wid,resizeGrid);
+     }  
+    function afterSaveAction(){    	 
+        var modName = "{!JSENCODE($CurrentPage.parameters.module)}";  
+        var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";  
+        if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined' && errormsg=='{!JSENCODE($Label.savedSuccessfully)}'){
+             if( typeof(window.parent.parent.refreshSupportingInformation)== 'function'){
+				window.parent.registerSave(wid);
+               window.parent.parent.refreshSupportingInformation(parentWid,modName);
+             } 
+             	Ext.MessageBox.show({                       
+	                msg:'{!JSENCODE($Label.savedSuccessfully)}',width:300,height:'auto',buttons: Ext.MessageBox.OK,  fn: showParentTab
+	             });
+        }else{
+            showError();
+        }
+    }
+    function showParentTab()
+    {
+    	var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}"; 
+    	window.parent.closeTemplateTab(wid,parentWid);
+    }
+    function callNewPage(){             
+        if(getStandardLayout()){
+            window.parent.addTab("TemplatePage?standardLayout=true",templateHeader,templateHeader);
+        
+        }else{        
+            window.parent.addTab("TemplatePage",templateHeader,templateHeader);
+        }
+     }
+    function callCopyPage(){        
+           if(getStandardLayout()){        
+            	window.parent.addTab("TemplatePage?standardLayout=true&copyId="+templateId,templateHeader,templateHeader);
+            }else{
+            	window.parent.addTab("TemplatePage?copyId="+templateId,templateHeader,templateHeader);
+            }              
+     }
+     
+    function setTemplateHierarchyNext(templateFor){     
+        if(Ext.isIE7){
+    		openHierarchyPopup('TemplateHierarchy?templateFor='+templateFor,'',280,385, '{!JSENCODE($Label.close)}');
+    	}else{
+    		openHierarchyPopup('TemplateHierarchy?templateFor='+templateFor,'',270,375, '{!JSENCODE($Label.close)}');
+    	}           
+    }
+     
+    var parentWid = '{!JSENCODE($CurrentPage.parameters.parentWid)}';
+
+    function closeWindow(){
+         window.parent.refreshList();
+         if(Ext.isIE){
+         window.parent.closeTemplateTab(wid);
+         }else{
+         	window.parent.closeTab(wid);
+         }
+    }
+	function enableDisableNewSaveCopyDelBtn(){
+		 var isCreateable = {!isCreateable};
+    	var isDeletable = {!isDeletable};
+    	var isUpdateable = {!isUpdateable};
+    	Ext.getCmp('newBTN').setDisabled(!isCreateable);
+    	if(templateId != null && templateId != ''){
+    		Ext.getCmp('actionsave_id').setDisabled(!isUpdateable);
+    		Ext.getCmp('copyId').setDisabled(!isCreateable);
+    		Ext.getCmp('deleteId').setDisabled(!isDeletable);
+    	}else{
+    		Ext.getCmp('actionsave_id').setDisabled(!isCreateable);	
+    	}
+    }
+    Ext.reg('itemselector', Ext.ux.form.ItemSelector);
+    
+    //backwards compat
+    Ext.ux.ItemSelector = Ext.ux.form.ItemSelector;
+        var ds;
+        var ds1;    
+        var selectedValues ='';
+        var separator= '-';
+        Ext.onReady(function(){
+        
+        //To set warning icon on panelbar.	
+        var pBarItemId = document.getElementById('{!$Component.templateFormId.panelbarId.panelbarItemId}');
+        var imgPath ='{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/status-16-warning-ro.png';
+        if(pBarItemId != null && pBarItemId != '' && pBarItemId != 'undefined'){
+        	var textNode = document.createTextNode("{!HTMLENCODE($Label.ForUseBy)}");
+          var imageNode = document.createElement("img");
+          imageNode.setAttribute("style","padding-left:10px;vertical-align:middle;cursor: pointer;");
+          imageNode.setAttribute("title","{!JSENCODE($Label.TemplateWarningToolTip)}");
+          imageNode.setAttribute("src",imgPath);
+          while (pBarItemId.childNodes[1].firstChild) {
+              pBarItemId.childNodes[1].removeChild(pBarItemId.childNodes[1].firstChild);
+          }
+          pBarItemId.childNodes[1].appendChild(textNode);
+          pBarItemId.childNodes[1].appendChild(imageNode);
+        }	
+            Ext.QuickTips.init();
+        
+            // This function renders a block of buttons
+            var NewBtnHandler = function(button,event) { activeAllWindowFlag=false; callNewPage(); };
+            var SaveBtnHandler = function(button,event) {  
+                var record = Ext.getCmp('selectedListId').store;
+                var rowCount=record.data.length;
+                var i=0;
+                selectedValues='';
+                while(rowCount>i){
+                    var rec = record.getAt(i); 
+                    // var rec1 = comboStore.getById(rec.get('type'));
+                    selectedValues = selectedValues +rec.get('text')+ 'ф';
+                    i++;
+                }
+                 chkBoxValue=Ext.getCmp('idInactive').getValue();
+                 if(isFromSRD!= 'true')
+                	 Ext.getCmp('actionsave_id').setDisabled(true);
+                 waitbox(0);                  
+                 save(chkBoxValue); 
+            };
+            var CopyBtnHandler = function(button,event) { activeAllWindowFlag=false;  callCopyPage();};
+            var DeleteBtnHandler = function(button,event) {  
+														   	Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.deleteTemplatePage)}', function(btn){
+                                                            if(btn === 'yes'){
+                                                            	 waitbox(0);
+                                                                 deleteTemplate();
+                                                           }});
+                                                             };
+            var FindBtnHandler = function(button,event) {  /*searchTemplate();*/ };
+            var ResetBtnHandler = function(button,event) {
+            	var url = window.location.href;
+            	if(url.indexOf('&id=') == -1 && url.indexOf('?id=') == -1)
+            		url=url+'&id='+templateId;
+            	window.location.replace (url); Ext.getCmp('idInactive').setValue('{!template.BMCServiceDesk__inactive__c}'); };
+            var TemplateHierarchyBtnHandler = function(button,event) { setTemplateHierarchy(); };
+            var NextBtnHandler = function (button,event) { if(document.getElementById('nextId').disabled!=true) nextTemplateBtnHandler1();};
+            var PreviuosBtnHandler = function (button,event) { if(document.getElementById('prevId').disabled!=true) previousTemplateBtnHandler1(); };
+          	var setRecurrence = function(button, event){
+          		openHierarchyPopupWithTitle('RecurrencePage?templateId='+templateId,'' , '{!JSENCODE($Label.Recurrence)}', 375,460, '{!JSENCODE($Label.close)}');
+          	};
+          var IsneedtoHideTollbarBtns=(isFromSRD!='' && isFromSRD =='true')?true:false;
+          var HelpHandler = function(button,event){
+             window.open(wikiHelp);
+         }
+           var toobar=new Ext.Toolbar({
+                title: '',
+                bodyStyle:'padding:0px;margin:0px;zoom:0px;',
+                renderTo: 'btnToolbar',
+                items: [{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    tooltip: '{!JSENCODE($Label.new)}',
+                    id:'newBTN',
+                    iconCls: 'bmcNew',
+					hidden: IsneedtoHideTollbarBtns,
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcNewOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcNew');          
+                        }
+                    },            
+                    handler:NewBtnHandler
+                },{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    id: 'actionsave_id',
+                    tooltip: '{!JSENCODE($Label.save)}',
+                    iconCls: 'bmcSave', 
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcSaveOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcSave');          
+                        }
+                    },              
+                    handler:SaveBtnHandler
+                },' ',{
+                    scale: 'medium',
+					hidden: IsneedtoHideTollbarBtns,
+                    tooltipType:'title',
+                    iconCls: 'bmcCopy',
+                    tooltip: '{!JSENCODE($Label.copy)}',
+                    id:'copyId', 
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcCopyOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcCopy');          
+                        }
+                    },               
+                    handler:CopyBtnHandler
+                },' ',separator,' ',{
+             		hidden: IsneedtoHideTollbarBtns,
+                    scale: 'medium',
+                    tooltipType:'title',
+					
+                    iconCls: 'bmcDelete',
+                    tooltip: '{!JSENCODE($Label.delete)}',
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcDeleteOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcDelete');          
+                        }
+                    },
+                    id:'deleteId',
+                    handler:DeleteBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    iconCls: 'bmcRefreshDasboard',
+                    tooltip: '{!JSENCODE($Label.Refresh)}',
+                    id:'resetId',
+                    hidden: IsneedtoHideTollbarBtns,
+                handler:ResetBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    iconCls: 'bmcTemplateOrder',
+					hidden:getStandardLayout() || IsneedtoHideTollbarBtns,
+                    tooltip: '{!JSENCODE($Label.templateDisplayOrder)}',
+                    id:'templateHierarchyId',                    
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcTemplateOrderOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcTemplateOrder');   
+                        }       
+                    },                  
+                    handler:TemplateHierarchyBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    iconCls: 'bmcRecurrence',
+					tooltip: '{!JSENCODE($Label.Recurrence)}',
+                    id:'recurrBtnId',
+                    hidden: IsneedtoHideTollbarBtns,
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcRecurrenceOn');    
+                },
+                        mouseout: function(){
+                            this.setIconClass('bmcRecurrence');   
+                        }       
+                },
+                    handler:setRecurrence
+                },
+                new Ext.Toolbar.Fill(),
+                {
+                  id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               color :'#004376',
+               align:'top',
+               hidden: IsneedtoHideTollbarBtns,
+               checked: false,
+               boxLabel:'<span class="checkboxLabelCls" style="' + inactivelbl + '">{!JSENCODE($ObjectType.SYSTemplate__c.fields.inactive__c.label)}</span>',
+               listeners: { 
+            	render: function(c) { 
+                Ext.QuickTips.register({ 
+                    target: this, 
+                    text: '{!JSENCODE($ObjectType.SYSTemplate__c.fields.inactive__c.label)}', 
+                    dismissDelay: 20000 
+                }); 
+          
+          } 
+        } 
+            
+              
+            }, {
+               
+               
+                xtype : 'box',
+		        id    : 'prevId',
+                autoEl:  {tag: 'img', 
+                          src:('{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_previous.gif'),   
+                         title:'{!JSENCODE($Label.previousRecord)}'
+                         },
+                          
+                cls:'cursorCls',
+                hidden: IsneedtoHideTollbarBtns,
+               listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                             
+            },{
+               
+                xtype : 'box',
+         		id    : 'nextId',
+         		hidden: IsneedtoHideTollbarBtns,
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_next.gif',
+                          title:'{!JSENCODE($Label.nextRecord)}' },
+                cls:'cursorSpaceCls',
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+               
+                
+             },
+            {
+                xtype : 'box',
+                id    : 'helpId', 
+                hidden:!IsneedtoHideTollbarBtns,
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFicons/help_icon.png',
+                          title:'{!JSENCODE($Label.TooltipHelp)}' },
+                cls:'cursorSpaceCls',
+                listeners : { render: function(f){f.el.on('click', HelpHandler)}}
+                    }
+                ]
+            });
+            templateId = '{!template.Id}';
+            parentTemplateId = '{!JSENCODE(parentTemplateId)}';    
+            if(templateId == null ||templateId == ''){                
+                Ext.getCmp('deleteId').setDisabled(true);
+				Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+                Ext.getCmp('copyId').setDisabled(true);
+                Ext.getCmp('resetId').setDisabled(true);
+                Ext.getCmp('prevId').setDisabled(true);
+	            Ext.getCmp('nextId').setDisabled(true);
+            }
+            document.getElementById("{!$Component.templateFormId.removeButtonId}").disabled= true;
+            showTable();       
+            setData();
+            /* For Select profile SelectList--------------*/
+            //Ext.QuickTips.init();
+            Ext.form.Field.prototype.msgTarget = 'side';
+                    
+            var dataSourceData = new Array();
+                   
+            //setDataSourceName('');
+                    
+            var fieldList = new Array();
+            var profileList = new Array();
+                    
+            ds = new Ext.data.ArrayStore({
+                data: fieldList,
+                fields: ['value','text'],
+                sortInfo: {
+                    field: 'value',
+                    direction: 'ASC'
+                }
+            });
+            
+            ds1 = new Ext.data.ArrayStore({
+                data: profileList,
+                fields: ['value','text'],
+                sortInfo: {
+                    field: 'value',
+                    direction: 'ASC'
+                }
+            });
+             if(isLookup&&(templateId == null ||templateId == '')){Ext.getCmp('idInactive').setDisabled(true);}
+             Ext.getCmp('idInactive').setValue('{!template.BMCServiceDesk__inactive__c}'); 
+            /*
+            ** Ext.ux.form.ItemSelector Example Code
+            */
+            var path='{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFimages/';
+            var isForm = new Ext.Panel({
+                id: 'form',
+                title: '',
+                width:320,
+                
+                border: false,
+                bodyStyle: 'padding-left:5px;padding-bottom:10px;',
+                renderTo: 'itemselector',
+                    items:[{
+                        xtype: 'itemselector',
+                        name: 'itemselector',
+                        //iconUp:"up2.gif",
+                        //iconDown:"down2.gif",
+                        iconLeft:"left2.gif",
+                        iconRight:"right2.gif",
+                        //iconTop:"top2.gif",
+                        //iconBottom:"bottom2.gif",
+                        drawUpIcon:false,
+                        drawDownIcon:false,
+                        drawLeftIcon:true,
+                        drawRightIcon:true,
+                        drawTopIcon:false,
+                        drawBotIcon:false,
+                        fieldLabel: '',
+                        width :'auto',
+                        imagePath: path,
+                        multiselects: [{
+                            id:'profileListId',
+                            legend:false,
+                            width:140,
+                            height: 200,
+                            store: ds1,
+                            displayField: 'text',
+                            valueField: 'value',
+			    listeners: {
+                                render: function(multi) {
+
+                                    new Ext.ToolTip({
+                                        target: 'profileListId',
+                                        renderTo: document.body,
+                                        delegate: 'legend',
+                                        trackMouse: true,
+                                        anchor: 'right',
+                                        listeners: {
+                                            beforeshow: function(tip) {
+                                                tip.body.dom.innerText = '{!JSENCODE($Label.TooltipTemplatesForUseByAvailableProfile)}';
+                                            }
+                                        }
+                                    });
+                                
+                                    new Ext.ToolTip({
+                                        target: multi.el,
+                                        renderTo: document.body,
+                                        delegate: 'dl',
+                                        trackMouse: true,
+                                        anchor: 'right',
+                                        listeners: {
+                                            beforeshow: function(tip) {
+                                            	var rec = multi.view.getRecord(tip.triggerElement);
+                                                tip.body.dom.innerText = jsInHTMLDecode(rec.get('value'));
+                                            }
+                                        }
+                                    });
+                                },
+                                afterrender:function(){
+                                	setTimeout('toggleItemSelector()',1000);
+                                }
+                           }
+                           
+                        },{
+                            id:'selectedListId',
+                            width:140,
+                            legend:false,
+                            height: 200,
+                            store: ds,
+                            displayField: 'text',
+                            valueField: 'value',
+			    listeners: {
+                                render: function(multi) {
+                                
+                                    new Ext.ToolTip({
+                                        target: 'selectedListId',
+                                        renderTo: document.body,
+                                        delegate: 'legend',
+                                        trackMouse: true,
+                                        anchor: 'right',
+                                        listeners: {
+                                            beforeshow: function(tip) {
+                                                tip.body.dom.innerText = '{!JSENCODE($Label.TooltipTemplatesForUseBySelectedProfile)}';
+                                            }
+                                        }
+                                    });
+                              
+                                    new Ext.ToolTip({
+                                        target: multi.el,
+                                        renderTo: document.body,
+                                        delegate: 'dl',
+                                        trackMouse: true,
+                                        anchor: 'right',
+                                        listeners: {
+                                            beforeshow: function(tip) {
+                                            	    var rec = multi.view.getRecord(tip.triggerElement);
+	                                                if(rec != null && rec != 'null' && rec != 'undefined'){
+	                                                	tip.body.dom.innerText = jsInHTMLDecode(rec.get('value'));
+	                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                           }
+                            
+                        }],
+                        listeners: {
+                                change: function(){                                   
+                                   if(ds.data.length==0){
+                                   	   document.getElementById('{!$Component.templateFormId.panelbarId.panelbarItemId.radFCR8}').disabled =false;
+                                       toggleItemSelector();
+                                   }else{
+                                    document.getElementById('{!$Component.templateFormId.panelbarId.panelbarItemId.radFCR8}').checked = false;
+                                    document.getElementById('{!$Component.templateFormId.panelbarId.panelbarItemId.radFCR8}').disabled =true;
+                                     Ext.getCmp('form').getEl().unmask(); 
+                                   }
+                                }
+                        }
+                    }]
+                    
+                }); 
+                var panelHeight = 680;
+                var ie7Height = 670;
+                var ieHeight = 674;
+                var safariHeight = 695;
+                if(isFromSRD=='true')
+                {
+                    panelHeight = panelHeight-45;
+                    ie7Height =ie7Height-45;
+                    ieHeight=ieHeight-45;
+                    safariHeight=safariHeight-45;                   
+                }
+                var canvasPanel = new Ext.Panel({
+	             layout:'border',
+	            // width:'auto',    
+                 height:Ext.isIE7 ? ie7Height : Ext.isIE ? ieHeight : Ext.isSafari ? safariHeight :panelHeight,
+	             border:false, 
+	             id:'canvasPanelId',
+	             bodyStyle:{'background':'#FFFFFF'},
+	             cls:'canvasPanelCls',
+	             items:[{  
+	                    xtype: 'panel', // TabPanel itself has no title    
+	                      layout: 'fit',                                                   
+	                    overflow:'auto',
+	                    autoScroll:true,
+	                    split:false,
+	                    width:'auto',    
+	                    height:485, 
+	                    bodyStyle:{"border":"0px solid #999999", "border-bottom":"1px solid #999999"}, 
+	                    id:'northPanelSI',                                            
+	                    region: 'center',                   
+	                               
+	                    contentEl : Ext.isIE ? 'capsule' : '{!$Component.templateFormId}'
+	                    
+	            },{                                                         
+	                    xtype: 'panel', // TabPanel itself has no title
+	                    layout: 'fit',  
+	                    overflow:'auto',
+	                     border:false, 
+	                     id:'southPanelSI',
+	                    autoScroll:true,
+	                    split:true,
+	                    collapsible: true,
+	                    collapseMode: 'mini',
+	                    width:'auto',    
+	                    height:Ext.isIE ?182:180,
+	                    minHeight:Ext.isIE ?120:150,
+	                    bodyStyle:{'background':'#FFFFFF'},                                                
+	                    region: 'south',
+	                   listeners : {
+	                        resize:function( obj,adjWidth,adjHeight,rawWidth,rawHeight ) { 
+	                        
+	                            if(Ext.getCmp('south-panel')!=undefined){
+	                             
+	                                  Ext.getCmp('south-panel').setHeight(adjHeight);
+	                               
+	                               
+	                            }
+	                       }
+	                   },
+	                  
+	                   contentEl :'detailsDiv' 
+	            }],
+	            listeners: {
+	                afterlayout: function(c) {
+	                    c.layout.south.miniSplitEl.dom.qtip = '{!JSENCODE($Label.DragResizeClickCollapse)}';
+	                    c.layout.south.getCollapsedEl();
+	                    c.layout.south.miniCollapsedEl.dom.qtip = '{!JSENCODE($Label.ClickToExpand)}';
+	                },
+	                single: true
+	            }
+	            
+	           
+	             
+	           
+	    });
+	
+	         var viewport = new Ext.Viewport({
+	         layout:'anchor',
+	        // renderTo:'viewPortDiv',
+	         width:'auto',
+	         id:'viewportId',
+	         border:false, 
+	         cls:'viewportCanvasCls',
+	         bodyStyle:{'background':'#FFFFFF'},
+	         //items:canvasPanel
+	         items:[{anchor: '100%', layout:'fit', items:canvasPanel} ]
+	        });
+	        
+	        var tempHeight1=Ext.isIE ?182:180;	  
+	        var templateForStr = '{!JSENCODE(template.templateFor__c)}';      
+            if(templateForStr != 'Incident' && templateForStr != 'Change Request' && templateForStr != 'Release')
+            {
+	        	Ext.getCmp('southPanelSI').hide();	        	
+                southPanelAvailable = false;    
+	        } 
+            
+			var linkedTemplatePanel = Ext.getCmp('southPanelSI');
+            var mappingGridPanel = Ext.getCmp('grid');
+            if(linkedTemplatePanel && mappingGridPanel) {
+                linkedTemplatePanel.addListener('beforecollapse',function() {
+                    mappingGridPanel.setHeight(mappingGridPanel.height + 130);
+                });
+                linkedTemplatePanel.addListener('beforeexpand',function() {
+                    mappingGridPanel.setHeight(100);
+                });
+            }
+           
+			var chatterPanelMain = Ext.getCmp('chatterHelpMainPanel');
+            if(templateForStr == 'Incident' && !isFromSRD) {
+			if (isChatterEnabled == 'true') {
+			if ( typeof(chatterPanelMain) == 'undefined' || chatterPanelMain == 'undefined') {
+				createChatterHelp();
+				chatterPanelMain = Ext.getCmp('chatterHelpMainPanel');
+				enableTextSelection(chatterPanelMain);
+			}
+				chatterPanelMain.show();
+				chatterPanelMain.doLayout();
+				Ext.getCmp('viewportId').doLayout();
+			} 
+			 else {
+					
+					var el = document.getElementById('chatterHelpCollapsiblediv');
+        			el.style.display = 'none';
+					var el1 = document.getElementById('spaceDiveId1');
+                    el1.style.display = 'none';
+					
+							                                 	}
+			}
+            if(isFromSRD == 'true' ){
+				if(isForFulfillment != 'true'){
+                document.getElementById('spaceDiveId').style.display='none';
+                document.getElementById('spaceDiveId1').style.display='none';
+				}
+               
+            }
+		if(templateId == null ||templateId == ''){
+	      	document.getElementById('{!$Component.templateFormId.template_Id}').focus();
+	      }
+	      setData2();
+          handleElemEvent();
+	      enableDisableNewSaveCopyDelBtn();
+	      enableDisableRecurrenceBtn();
+        });    	
+    	
+        function setData2(){
+            ds.loadData(fieldList);
+            ds1.loadData(profileList);        
+            Ext.getCmp('form').doLayout();
+        }
+    
+        function generateData(){
+          
+            return gridData;
+        }
+        function handleModuleChange(){
+        	var modulename = document.getElementById('{!$Component.templateFormId.templateForId}').value;
+        	TemplateForValue=modulename;
+        	if(modulename == 'Request Detail'){
+        		document.getElementById('{!$Component.templateFormId.systemTemplateId}').disabled = true;
+        		document.getElementById('{!$Component.templateFormId.systemTemplateId}').checked = false;
+        	}else if(modulename == 'Release')
+        	{
+        		document.getElementById('{!$Component.templateFormId.systemTemplateId}').disabled = true;
+        	}
+        	else{
+  	        	document.getElementById('{!$Component.templateFormId.systemTemplateId}').disabled = false;
+        	}
+        	changeframesource();
+        	populateFields();
+        }
+        /* For set Grid Data*/
+        function setData(){
+            store.removeAll();
+            Ext.getCmp('grid').getView().refresh();
+            store.loadData(listData);
+            Ext.getCmp('grid').getView().refresh();
+        }
+        /*For Display grid*/
+        function showTable(){
+            store = new Ext.data.ArrayStore({
+                fields: [
+                    {
+                        name: 'field'
+                    },
+                    {
+                        name: 'value', 
+                        type: 'string'
+                    },
+                    {
+                        name: 'localValue', 
+                        type: 'string'
+                    }
+                ],
+                data : gridData
+            });
+           function renderTooltip(value, metaData, record, rowIndex, colIndex, store) { 
+           		var str =listData[rowIndex][colIndex];
+           		if(str.indexOf('"') != -1){
+           			str=str.replace(new RegExp('"','g'),'&#34;');
+           		}
+           		if(str.indexOf("'") != -1){
+           			str=str.replace("'","&#39;");
+           		}
+           	   metaData.attr = 'title="'+str+'"';
+               
+	           return value;     
+             };
+            function renderTruncatedValueWithTooltip(value, metaData, record, rowIndex, colIndex, store) {
+                renderTooltip(value, metaData, record, rowIndex, colIndex, store);
+                var truncatedValue = Ext.util.Format.ellipsis(value, newColumnSize/5);
+                return Ext.util.Format.htmlEncode(truncatedValue);
+     		}      
+                   
+              var widthForGridPanel='100%';
+            if(isFromSRD)   
+                  widthForGridPanel='99%';    
+            grid = new Ext.grid.GridPanel({
+                renderTo:'extGridPanel',
+                id:'grid',
+                width:widthForGridPanel,
+                border:true,
+                store: store,
+                columns: [{
+                    id:'FieldLabel',
+                    header: '{!JSENCODE($Label.FieldLabel)}', 
+                    width:50, 
+                    sortable: true, 
+                    dataIndex: 'field'
+                },{
+                    header: '{!JSENCODE($Label.Value)}', 
+                    renderer: renderTruncatedValueWithTooltip, 
+                    id:'ValueField',
+                    width:50, 
+                    sortable: true, 
+                    dataIndex: 'value'
+                },{
+                    header: '{!JSENCODE($Label.LocalValue)}', 
+                    renderer: renderTooltip,
+                    id:'LocalValueField',
+                    width:50, 
+                    sortable: true,
+                    hidden: true, 
+                    dataIndex: 'localValue'
+                }],
+                stripeRows: true,
+                autoExpandColumn: 'FieldLabel',
+                height:100,
+                layout: 'fit',
+                stateful: true,
+                stateId: 'grid',
+                autoScroll:false,
+                viewConfig:{
+                    forceFit:true,
+                    scrollOffset:0 
+                },
+                autoFitColumns: true,
+                    listeners: {
+                        rowClick :function(grid,a,b){
+                            var record = grid.store.getAt(a);
+                            field=record.get('field');
+                            value=record.get('value');
+                            locValue=record.get('localValue');
+                            selectedLabel = listData[a][0];
+                            setVisibilityOnClick(locValue);             
+							var SelectListEle=document.getElementById('{!$Component.templateFormId.id_selectList}');							
+                            SelectListEle.value=locValue;                          
+							document.getElementById("{!$Component.templateFormId.removeButtonId}").disabled= false;
+							setMaxInputLength(SelectListEle);
+                        }
+                    }        
+            });
+            grid.on('columnresize', textTruncationForValueField);
+	    	newColumnSize = grid.getColumnModel().getColumnWidth(1);
+          	
+        }
+        function textTruncationForValueField(index,size){
+            			store.loadData(listData);
+           				if( size != null && typeof size != 'undefined' && index == 1)
+           						newColumnSize = size;
+           				else if(size !=null && typeof size != 'undefined' && index == 0)
+								newColumnSize = grid.getWidth() - size;
+                grid.getView().refresh();
+          	}
+        var gridData= [];
+        var grid;
+        var store2;  
+     
+        function buttonValidator() {
+            if((templateName != null && templateName != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){ 
+                Ext.getCmp('deleteId').setDisabled(false);
+				Ext.getCmp('deleteId').setIconClass('bmcDelete');
+                Ext.getCmp('copyId').setDisabled(false);
+                Ext.getCmp('resetId').setDisabled(false);
+                 
+            }       
+        }
+    
+         var templateIdSet;
+		if(templateIdSet == null || templateIdSet == ''){
+			if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+			if(typeof(window.parent.returnListOfId)=='function')
+				templateIdSet=window.parent.returnListOfId();
+		}else{
+			if(typeof(window.parent.parent.getIdArray)=='function')
+				templateIdSet=window.parent.parent.getIdArray();
+				window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+			}
+		}
+		function showMsg(){
+            var msg = Ext.Msg.show({
+                 title:'',
+                 msg: errormsg,
+                 buttons: Ext.Msg.OK,
+                 icon: Ext.Msg.INFO
+            });
+         }
+
+        function previousTemplateBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            var modName = "{!JSENCODE($CurrentPage.parameters.module)}";  
+        	var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";
+        	if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined'){
+	        	var SIIdsArray=window.parent.parent.getParentSIIds(parentWid,modName);
+        		templateIdSet = SIIdsArray;
+        	}
+            while(templateIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=templateIdSet[i];
+                }else{
+                    idSetString=idSetString+','+templateIdSet[i];
+                }
+                i++;
+            }
+            document.getElementById('{!$Component.templateFormId.tempString_Id}').value = idSetString;
+            previousTemplateBtnHandler();
+        }
+        //templateIdSet=window.parent.returnListOfId(); 
+        function nextTemplateBtnHandler1(){
+            var idSetString='';
+            var modName = "{!JSENCODE($CurrentPage.parameters.module)}";  
+        	var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";
+        	if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined'){
+	        	var SIIdsArray=window.parent.parent.getParentSIIds(parentWid,modName);
+        		templateIdSet = SIIdsArray;
+        	}
+            var i=0;
+            while(templateIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=templateIdSet[i];
+                }else{
+                    idSetString=idSetString+','+templateIdSet[i];
+                }
+                i++;
+            }
+            document.getElementById('{!$Component.templateFormId.tempString_Id}').value = idSetString;
+            nextTemplateBtnHandler();        
+        }
+        
+        function refreshParentList(){
+            window.parent.refreshList();
+        }
+    
+        var parentObjId = "{!JSENCODE($CurrentPage.parameters.IncidentTemplate__Cid)}";    
+        function handleSave(templId,wid,newTitle){
+        
+            
+           	if(isLookup){
+                if(errormsg!= null && errormsg!= '' && errormsg!='{!JSENCODE($Label.savedSuccessfully)}' ){
+                    showError();
+                }else{
+                    var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";
+                   // window.parent.refreshPage(parentWid,parentObjId);
+                    //closeWindow();
+                    
+                }
+            }else{
+                showError();
+                rerenderIframe();
+                window.parent.changeTitle(wid,newTitle,newTitle);
+                window.parent.refreshList();
+                var modulename = document.getElementById('{!$Component.templateFormId.templateForId}').value;
+                if(modulename == 'Incident' || modulename == 'Change Request' || modulename == 'Release'){
+	                enableAll();
+					reloadSupportInfo();
+	            }
+            }
+        }
+        
+        function removeDataConfirm(){
+        	Ext.MessageBox.confirm('{!JSENCODE($Label.Remove)}', '{!JSENCODE($Label.removeSelectedFieldsTemplatePage)}', function(btn){
+                                if(btn === 'yes'){
+                                     removeData();
+                               }});
+        }
+         
+        function AddStaffAndQueueConfirm(addUpdate){
+        if(iStaffToRemoveOnConfiration != null && iStaffToRemoveOnConfiration != undefined
+          && parseInt(iStaffToRemoveOnConfiration) != -1 && isConfirmationRequired == 'true')
+           {
+            Ext.MessageBox.confirm('', '{!JSENCODE($Label.lblInvalidGroupMemberSelected)}', function(btn){
+                                if(btn == 'yes'){
+                                waitbox(0);
+                                if(addUpdate == 'add')
+                                     addAllData();
+                                else if(addUpdate == 'update')
+                                    updateData();
+                               }
+                               else 
+                               {
+                                    cancelOperation();
+                                    return false;
+                               }
+                               });
+            }
+        }
+        
+        function toggleItemSelector(){
+            var checkState = document.getElementById('{!$Component.templateFormId.panelbarId.panelbarItemId.radFCR8}').checked;
+            //if(!isLookup) { 
+				 if(Ext.getCmp('form')!=null && Ext.getCmp('profileListId')!=null && Ext.getCmp('selectedListId')!=null){
+					/*Ext.getCmp('form').setDisabled(checkState);          
+					Ext.getCmp('profileListId').setDisabled(checkState);
+					Ext.getCmp('selectedListId').setDisabled(checkState);*/
+					if(checkState )   
+                      Ext.getCmp('form').getEl().mask();
+                    else
+                      Ext.getCmp('form').getEl().unmask();  
+				 }
+            //}
+        }
+        function completeDelete(){   
+            var parentName = "{!JSENCODE($CurrentPage.parameters.parentName)}"; 
+                  
+            if(parentName == 'chatterListener'){                
+                window.parent.closeTab();           
+            }
+            else{           
+                
+                var tempWin = window.parent.document.getElementById('tabId');             
+                if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}' || errormsg == '{!JSENCODE($Label.TemplateWithServiceDefinitionLinkageDeleteMsg)}' || errormsg == '{!JSENCODE($Label.TemplateWithTemplateLinkageDeleteMsg)}'){
+                    showError();
+                }else{
+                    var modName = "{!JSENCODE($CurrentPage.parameters.module)}";  
+                    var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";  
+                    if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined'){
+                      
+                        window.parent.refreshPage(parentWid,parentObjId);                       
+                    }
+                    
+                    if(typeof(window.parent) != 'undefined' && typeof(window.parent.parent) != 'undefined' && typeof(window.parent.parent.refreshPortletByTitle) == 'function'){
+                    	window.parent.parent.refreshPortletByTitle('Top Requests');
+                    }	                                         
+                    //tempWin.parentNode.removeChild(tempWin); 
+                    closeWindow();
+                }
+            }
+        }
+        function disablePopup(){
+        	popUpEnable = false;
+        }
+   /*  Added For Performance Related changes **************/
+    
+    // All field lables are stored in fldData JSON string. 
+    var fldData='[]';
+    var fldValue;     
+    var isInList = false;
+    var compTypeNo = 0; 
+    
+    var DZHE     ='џ'; //Cyrillic character
+	var EF       ='ф'; //Cyrillic character
+   
+    function getPickListOptions(fieldname) {
+    	for (var i=0; i < fldData.length; i++) {
+    		var dataObj = fldData[i];
+        	var fldObjParts = dataObj['e'].split(EF);
+        	var fldObjLabel = fldObjParts[0];
+        	if (fldObjLabel == fieldname) {
+        		var ploptions = fldObjParts[1].split(DZHE);
+        		return ploptions;
+        	}
+    	}
+    	return null;
+    }
+    
+    function setPickListOptions(fld) {    	
+    	var objpicklist = document.getElementById('selectLst');//('{!$Component.templateFormId.selectLst}');
+    	if (objpicklist != null) {
+    		var plo = getPickListOptions(fld);
+    		/*for (var i = 0;i < plo.length;i++) {
+    			objpicklist.remove(i);
+    		}*/
+    		objpicklist.length=0;
+    		for (var i = 0;i < plo.length;i++) {
+    			var op=document.createElement("option");
+                if (plo[i] != '') {
+                	var optval = plo[i].split(PE);
+                	op.text=optval[0];
+                	op.value = optval[1];
+                	
+                	if(value!= '' && value == optval[0])
+                	{
+						value = optval[1];               		
+                	}
+                	
+                	if (Ext.isIE)
+	    				objpicklist.add(op);
+	    			else
+	    				objpicklist.add(op,null);
+                }
+    		}
+    	}
+    }
+    
+	function setVisibilityOnClick(localAPINAME){
+		var dataLength =  fldData.length;
+        for(var i = 0;i < dataLength ;i++)
+        {
+        	var dataObj = fldData[i];
+        	var fldObjParts = dataObj['e'].split(EF);
+        	var fldObjLabel = fldObjParts[0];
+        	if(dataObj['id'] == localAPINAME){
+        		var fielddatatype = dataObj['val'];
+        		if(fielddatatype.indexOf(':') > 0){
+        			selectedTextAreaLength = fielddatatype.split(':')[1];
+        			dataObj['val'] = fielddatatype.split(':')[0];
+        		}
+            	if(dataObj['val'] == 'text'){
+                    assignVisibility('inline','none','none','none','none','none',null,1)    
+                }else if(dataObj['val'] == 'phone'){
+                	assignVisibility('inline','none','none','none','none','none',null,10);  
+                }else if(dataObj['val'] == 'currency'){
+                	assignVisibility('inline','none','none','none','none','none',null,11);  
+                }else if(dataObj['val'] == 'percent'){
+                	assignVisibility('inline','none','none','none','none','none',null,9);  
+                }else if(dataObj['val'] == 'email'){
+                	assignVisibility('inline','none','none','none','none','none',null,8);  
+                }else if(dataObj['val'] == 'number'){
+                    assignVisibility('inline','none','none','none','none','none',null,7);    
+                }else if(dataObj['val'] == 'boolean'){
+                    assignVisibility('none','none','none','none','inline','none',null,2)
+                }else if(dataObj['val'] == 'textarea'){
+                    assignVisibility('none','none','inline','none','none','none',null,3)
+                }else if(dataObj['val'] == 'picklist'){
+                    setPickListOptions(fldObjLabel);
+                    assignVisibility('none','none','none','none','none','inline',null,4)
+                }else if(dataObj['val'] == 'reference'||dataObj['val'] == 'reference2'){
+                	assignVisibility('inline','inline','none','inline','none','none',dataObj['id'],5)
+                	if(dataObj['val'] == 'reference2'){
+                			customLookUpField = true;
+                	}
+					else{
+                			customLookUpField = false;
+                	}	
+                }
+                else if(dataObj['val'] == 'reference1'){ //Added for user lookup custom field
+                	assignVisibility('inline','inline','none','inline1','none','none',dataObj['id'],6)
+                }
+            }
+       }
+       document.getElementById("okButtonId").style.display = 'none';
+       document.getElementById("updateButtonId").style.display = 'inline';
+       document.getElementById("{!$Component.templateFormId.removeButtonId}").disabled= true;
+       document.getElementById("okButtonId").reRender = 'okButtonId';
+       addDataOnClick();  
+    } 
+
+    function setVisibilityData(selectedOpt){
+        isInList = false;
+        var dataLength =  fldData.length;
+        var e = document.getElementById('{!$Component.templateFormId.id_selectList}');
+        var fldLable = e.options[e.selectedIndex].value;
+		selectedLabel = e.options[e.selectedIndex].text;
+		var checkVisibilityOnSelect=true;
+		/*if(selectedOpt.value == 'FKBMC_BaseElement__c' || selectedOpt.value == 'FKBusinessService__c'){
+			checkVisibilityOnSelect=false;
+		}*/
+        if(listData.length != 0 && checkVisibilityOnSelect){
+        	for(i=0; i< listData.length ; i++){
+	            if(listData[i][2] == fldLable){	            	
+	                isInList = true;
+	                value = listData[i][1];
+	                setVisibilityOnClick(fldLable);
+	            }    
+        	}
+        }
+        if(isInList == false ){
+            for(var i = 0;i < dataLength ;i++)
+            {
+            	var dataObj = fldData[i];
+                var fldObjParts = dataObj['e'].split(EF);
+        		var fldObjLabel = fldObjParts[0];
+        		if(dataObj['id'] == fldLable){
+	        		var fielddatatype = dataObj['val'];
+	        		if(fielddatatype.indexOf(':') > 0){
+	        			selectedTextAreaLength = fielddatatype.split(':')[1];
+	        			dataObj['val'] = fielddatatype.split(':')[0];
+	        		}
+                	if(dataObj['val'] == 'text'){
+                        assignVisibility('inline','none','none','none','none','none',null,1)    
+                    }else if(dataObj['val'] == 'phone'){
+                    	assignVisibility('inline','none','none','none','none','none',null,10);  
+                    }else if(dataObj['val'] == 'currency'){
+                    	assignVisibility('inline','none','none','none','none','none',null,11);  
+                    }else if(dataObj['val'] == 'percent'){
+                    	assignVisibility('inline','none','none','none','none','none',null,9);  
+                    }else if(dataObj['val'] == 'email'){
+                    	assignVisibility('inline','none','none','none','none','none',null,8);  
+                    }else if(dataObj['val'] == 'number'){
+                        assignVisibility('inline','none','none','none','none','none',null,7);    
+                    }else if(dataObj['val'] == 'boolean'){
+                        assignVisibility('none','none','none','none','inline','none',null,2);
+                    }else if(dataObj['val'] == 'textarea'){
+                        assignVisibility('none','none','inline','none','none','none',null,3);
+                    }else if(dataObj['val'] == 'picklist'){
+                    	setPickListOptions(fldLable);
+                        assignVisibility('none','none','none','none','none','inline',null,4);
+                    }else if(dataObj['val'] == 'reference'||dataObj['val'] == 'reference2'){
+                    	assignVisibility('inline','inline','none','inline','none','none',dataObj['id'],5);
+                		
+                		if(dataObj['val'] == 'reference2'){
+                			customLookUpField = true;
+                		}
+                		else{
+                			customLookUpField = false;
+                		}
+               		 }
+                    else if(dataObj['val'] == 'reference1'){ //Added for user lookup custom field
+                        assignVisibility('inline','inline','none','inline1','none','none',dataObj['id'],6)
+                        customLookUpField = false;
+                    }
+                }
+            }
+	       document.getElementById("okButtonId").style.display = 'inline';
+	       document.getElementById("updateButtonId").style.display = 'none';
+	       document.getElementById("{!$Component.templateFormId.removeButtonId}").disabled= true;
+	       document.getElementById("okButtonId").reRender = 'okButtonId';
+       }
+    } 
+    
+    function assignVisibility(iTxt,iTextD,iTextArea,iLookUp, iRadio,ipickList, iPopUp, typeNo){
+        document.getElementById('{!$Component.templateFormId.inputTxt}').style.display  = iTxt;
+        document.getElementById('{!$Component.templateFormId.inputTxt}').value  = '';
+        document.getElementById('{!$Component.templateFormId.inputTxt}').disabled  = false;
+        document.getElementById('{!$Component.templateFormId.inputTxtArea}').style.display  = iTextArea;
+        document.getElementById('{!$Component.templateFormId.inputTxtArea}').value  = '';
+        document.getElementById('inputTxtAreaButton').style.display  = iTextArea;
+        if(iLookUp == 'inline' || iLookUp == 'none')
+        	document.getElementById('{!$Component.templateFormId.lookUp}').style.display  = iLookUp;
+        document.getElementById('{!$Component.templateFormId.lookUpUser}').style.display = 'none';
+        document.getElementById('{!$Component.templateFormId.selectRd}').style.display=iRadio;
+        document.getElementById('selectLst').style.display = ipickList;
+        
+        if(iLookUp == 'inline'){
+            document.getElementById('{!$Component.templateFormId.lookUp}').disabled  = false;
+            document.getElementById('{!$Component.templateFormId.lookUp}').style.display='inline';
+            document.getElementById('{!$Component.templateFormId.lookUpUser}').style.display='none';
+            document.getElementById('{!$Component.templateFormId.inputTxt}').disabled  = true;
+            document.getElementById('{!$Component.templateFormId.inputTxt}').value  = '';
+            popUpString = iPopUp;
+            popUpEnable = true;
+        }
+         if(iLookUp == 'inline1'){ //Added for user lookup custom field
+            document.getElementById('{!$Component.templateFormId.lookUpUser}').disabled  = false;
+            document.getElementById('{!$Component.templateFormId.lookUpUser}').style.display='inline';
+            document.getElementById('{!$Component.templateFormId.lookUp}').style.display='none';
+            document.getElementById('{!$Component.templateFormId.inputTxt}').disabled  = true;
+            document.getElementById('{!$Component.templateFormId.inputTxt}').value  = '';
+            popUpString = iPopUp;
+            popUpEnable = true;
+        }
+        document.getElementById('{!$Component.lookUpPanel}').rendered  = true;
+        compTypeNo = typeNo;
+    }    
+       
+   function assignfldValue(){
+        document.getElementById('{!$Component.templateFormId.inputTxt}').disabled = true;
+   }  
+   
+   function addTempData(){
+      var val;
+      var isLookUpField = false;
+      var errorFlag = 0;
+      if(compTypeNo != 0){
+        if(compTypeNo == 1  || compTypeNo == 7 || compTypeNo == 8 || compTypeNo == 9 || compTypeNo == 10 || compTypeNo == 11){
+            val = document.getElementById('{!$Component.templateFormId.inputTxt}').value;
+        }else if(compTypeNo == 2){
+            var e=document.getElementsByName('{!$Component.templateFormId.selectRd}');
+            for (var i=0; i < e.length; i++)
+            {
+                if (e[i].checked)
+                {
+                    val = e[i].value;
+                }
+            }
+        }else if(compTypeNo == 3){
+            val = document.getElementById('{!$Component.templateFormId.inputTxtArea}').value;
+        }else if(compTypeNo == 4){
+        	var el = document.getElementById('selectLst');
+            val = document.getElementById('selectLst').value;
+        }else if(compTypeNo == 5 || compTypeNo == 6){ //Added for user lookup custom field
+        	isLookUpField = true;
+            val = document.getElementById('{!$Component.templateFormId.inputTxt}').value;   
+                     
+        }
+        if(compTypeNo == 7){
+        	if(isNaN(val)){
+        		errorFlag = 1;
+        		Ext.MessageBox.show({
+                    width: 250,
+                    msg: '{!JSENCODE($Label.TemplateInvalidNumber)}',
+                    buttons: Ext.MessageBox.OK
+                });
+        	}
+        }
+        else if(compTypeNo == 8){
+			var emailRegEx = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+            if(!val.match(emailRegEx)){
+                errorFlag = 1;
+        		Ext.MessageBox.show({
+                    width: 250,
+                    msg: '{!JSENCODE($Label.TemplateInvalidEmailAddress)}',
+                    buttons: Ext.MessageBox.OK
+                });
+            }
+        }else if(compTypeNo == 9){
+        	if (isNaN(val) || val < 0 || val > 100) {
+   				errorFlag = 1;
+        		Ext.MessageBox.show({
+                    width: 250,
+                    msg: '{!JSENCODE($Label.TemplateInvalidPercent)}',
+                    buttons: Ext.MessageBox.OK
+                });
+   			}
+        }else if(compTypeNo == 11){
+        	var currencyRegEx = /^-?\d+(\.\d+)?$/;
+        	if(!val.match(currencyRegEx)){
+                errorFlag = 1;
+        		Ext.MessageBox.show({
+                    width: 250,
+                    msg: '{!JSENCODE($Label.TemplateInvalidCurrency)}',
+                    buttons: Ext.MessageBox.OK
+                });
+            }
+        }else if(compTypeNo == 10){
+        	var phoneRegEx = /^[-]?\d*?\d*$/;
+        	if(!val.match(phoneRegEx)){
+                errorFlag = 1;
+        		Ext.MessageBox.show({
+                    width: 250,
+                    msg: '{!JSENCODE($Label.TemplateInvalidPhone)}',
+                    buttons: Ext.MessageBox.OK
+                });
+            }
+        }
+      }
+      document.getElementById("{!$Component.templateFormId.fieldValue}").value = val;      
+      if(errorFlag == 0){      
+      waitbox(0);  
+      	addAllData(isLookUpField);
+      }
+      
+   }   
+   
+   function addUpadateData(){
+      var val;
+       var errorFlag = 0;
+      if(compTypeNo != 0){
+        if(compTypeNo == 1 || compTypeNo == 7 || compTypeNo == 8 || compTypeNo == 9 || compTypeNo == 10 || compTypeNo == 11){
+            val = document.getElementById('{!$Component.templateFormId.inputTxt}').value;
+        }else if(compTypeNo == 2){
+            var e=document.getElementsByName('{!$Component.templateFormId.selectRd}');
+            for (var i=0; i < e.length; i++)
+            {
+                if (e[i].checked)
+                {
+                    val = e[i].value;
+                }
+            }
+        }else if(compTypeNo == 3){
+            val = document.getElementById('{!$Component.templateFormId.inputTxtArea}').value;
+        }else if(compTypeNo == 4){
+            val = document.getElementById('selectLst').value;
+        }else if(compTypeNo == 5 || compTypeNo == 6){
+            val = document.getElementById('{!$Component.templateFormId.inputTxt}').value;
+            
+        }
+        if(compTypeNo == 7){
+        	if(isNaN(val)){
+        		errorFlag = 1;
+        		Ext.MessageBox.show({
+                    width: 250,
+                    msg: '{!JSENCODE($Label.TemplateInvalidNumber)}',
+                    buttons: Ext.MessageBox.OK
+                });
+        		
+        	}
+        }
+        else if(compTypeNo == 8){
+			var emailRegEx = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+            if(!val.match(emailRegEx)){
+                errorFlag = 1;
+        		Ext.MessageBox.show({
+                    width: 250,
+                    msg: '{!JSENCODE($Label.TemplateInvalidEmailAddress)}',
+                    buttons: Ext.MessageBox.OK
+                });
+        		
+            }
+        }else if(compTypeNo == 9){
+        	if (isNaN(val) || val < 0 || val > 100) {
+   				errorFlag = 1;
+        		Ext.MessageBox.show({ 
+	        		msg: '{!JSENCODE($Label.TemplateInvalidPercent)}', 
+	        		width:250,
+	        		buttons: Ext.MessageBox.OK
+        		});
+        		
+   			}
+        }else if(compTypeNo == 11){
+        	var currencyRegEx = /^-?\d+(\.\d+)?$/;
+        	if(!val.match(currencyRegEx)){
+                errorFlag = 1;
+        		Ext.MessageBox.show({
+                    width: 250,
+                    msg: '{!JSENCODE($Label.TemplateInvalidCurrency)}',
+                    buttons: Ext.MessageBox.OK
+                });
+            }
+        }else if(compTypeNo == 10){
+        	var phoneRegEx = /^[-]?\d*?\d*$/;
+        	if(!val.match(phoneRegEx)){
+                errorFlag = 1;
+        		Ext.MessageBox.show({
+                    width: 250,
+                    msg: '{!JSENCODE($Label.TemplateInvalidPhone)}',
+                    buttons: Ext.MessageBox.OK
+                });
+            }
+        }
+      }
+      document.getElementById("{!$Component.templateFormId.fieldValue}").value = val;
+      if(errorFlag == 0){
+      waitbox(0);
+      	updateData();
+      }
+   }   
+   
+   function addDataOnClick(){
+      var val;
+      
+      if(compTypeNo != 0){     
+        if(compTypeNo == 1 || compTypeNo == 7 || compTypeNo == 8 || compTypeNo == 9 || compTypeNo == 10|| compTypeNo == 11 ){  
+            document.getElementById('{!$Component.templateFormId.inputTxt}').value = value;
+        }else if(compTypeNo == 2){
+            var e=document.getElementsByName('{!$Component.templateFormId.selectRd}');
+                if (value.toLowerCase()=='{!JSENCODE($Label.True)}'.toLowerCase())
+                    if(Ext.isIE) e[1].checked= true;
+                    else e[0].checked= true;
+                else
+                	if(Ext.isIE) e[2].checked= true;
+                    else e[1].checked= true;
+                    //e[1].checked = true;    
+        }else if(compTypeNo == 3){
+            document.getElementById('{!$Component.templateFormId.inputTxtArea}').value = value;
+        }else if(compTypeNo == 4){
+            document.getElementById('selectLst').value = value;
+        }else if(compTypeNo == 5 || compTypeNo == 6){
+            document.getElementById('{!$Component.templateFormId.inputTxt}').value = value;
+            
+        }
+      }
+      document.getElementById("{!$Component.templateFormId.fieldValue}").value = value;
+   }   
+   
+    </script>
+    
+    <apex:outputPanel id="fldTypePanel">
+        <script>
+            fldData = JSON.parse("{!JSENCODE(fieldData)}");               
+    </script>
+    </apex:outputPanel>
+    
+    
+    <apex:outputPanel id="panelId">
+        <script>
+            templateName = "{!JSENCODE(template.Name)}";               
+            templateId = '{!JSENCODE(template.Id)}';
+            parentTemplateId = '{!JSENCODE(parentTemplateId)}';
+        </script>
+    </apex:outputPanel>
+        
+    <apex:outputPanel id="errorId">
+    <script>
+        errormsg = '{!JSENCODE(messageString)}';               
+    </script>
+    </apex:outputPanel>
+     <apex:outputPanel id="inactivePanel">
+        <script>
+           function updateInactive(){
+            Ext.getCmp('idInactive').setValue('{!template.BMCServiceDesk__inactive__c}');
+        }
+          
+     		function enableSaveButton() {
+        			Ext.getCmp('actionsave_id').setDisabled(false);
+      		} 
+        </script>
+    </apex:outputPanel>
+                   
+    <apex:outputpanel id="ModuleFieldsPanel">
+    <script>
+        fieldList = new Array();
+        var i=0; 
+        <apex:repeat value="{!fieldNameList}" var="fieldName" >    
+            fieldList[i] = new Array(2);
+            fieldList[i++][0]='{!JSINHTMLENCODE(fieldName)}';
+        </apex:repeat>
+        
+        var i=0; 
+        <apex:repeat value="{!fieldLabelList}" var="fieldLabel" >
+            fieldList[i++][1]='{!JSINHTMLENCODE(fieldLabel)}';
+        </apex:repeat>
+  
+        profileList = new Array();
+        var i=0; 
+        <apex:repeat value="{!profileNameList}" var="profileName" >    
+            profileList[i] = new Array(2);
+            profileList[i++][0]='{!JSINHTMLENCODE(profileName)}';
+        </apex:repeat>
+    
+        var i=0; 
+        <apex:repeat value="{!profileLabelList}" var="profileLabel" >
+            profileList[i++][1]='{!JSINHTMLENCODE(profileLabel)}';
+        </apex:repeat>
+    </script>
+    </apex:outputpanel>
+    
+  
+    <apex:outputPanel id="dummy" >
+    <script>
+     OwnerIDFlag='{!OwnerIDFlag}';
+     queueId='{!JSENCODE(qId)}';
+     iStaffToRemoveOnConfiration = '{!iStaffToRemoveOnConfiration}';
+     isOwnerIDAlreadyProcessed = '{!isOwnerIDAlreadyProcessed}';
+     isConfirmationRequired = '{!isConfirmationRequired}';
+     </script>
+    </apex:outputPanel>               
+    
+        <apex:form id="templateFormId" onclick="toggleItemSelector();">
+            <apex:inputText value="{!tempString}" id="tempString_Id" style="display:none"/>
+            <div id="capsule" class="CapsuleDiv1">
+            <apex:outputPanel id="formPanel" > <!-- Page body in this panel -->
+                <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+           		<c:TabOutComponent ></c:TabOutComponent>
+<!--           User Story Code for Consolidated UI-->
+           	<apex:actionFunction action="{!addQueueAndStaff}" name="setQueueAndStaff" oncomplete="setData();" rerender="id_selectList,widgetPanelGrp,dataTableId,dataPanel,validationComponent">
+		        <apex:param assignTo="{!queueId}" name="queueId" value=""/>
+		        <apex:param assignTo="{!staffId}" name="staffId" value=""/>
+    		</apex:actionFunction>
+            <apex:actionFunction Name="addAllData" action="{!addData}" 
+            oncomplete="AddStaffAndQueueConfirm('add');waitMsg.hide();showError(); setData(); "
+              reRender="dummy,id_selectList,widgetPanelGrp,dataTableId,dataPanel,validationComponent"
+                   >
+                     <apex:param assignTo="{!isLookUp}" name="isLookUp" value=""/>
+              </apex:actionFunction>       
+              <apex:actionFunction name="remveStaffOnConfirmation" action="{!remveStaffOnConfirmation}" />
+              <apex:actionFunction name="cancelOperation" action="{!cancelOperation}" rerender="dummy,id_selectList,widgetPanelGrp,dataTableId,dataPanel,validationComponent" />
+
+             <apex:actionFunction name="removeTemplateRecurrence" action="{!removeRecurrence}" rerender="errorId,recurrenceLabel,recurrenceValue" onComplete="showMsg();"/>   
+             <apex:actionFunction Name="setDataSourceName" action="{!FetchFieldItems}" reRender="ModuleFieldsPanel" onComplete="setData2();"/>
+             <apex:actionFunction Name="rerenderIframe" reRender=""/>
+             <apex:actionFunction Name="assignSelectedProfiles" action="{!assignSelectedProfiles}" reRender="ModuleFieldsPanel" >
+                    <apex:param assignTo="{!selectedProfiles}" name="selectedProfiles" value=""/>
+             </apex:actionFunction>
+             <apex:actionFunction name="populateFields" action="{!setFieldItems}" reRender="id_selectList,dataPanel,extGridPanel,lookUpPanel,widgetPanelGrp,ButtonPanelGrp,fldTypePanel,templateForDisablePanel" oncomplete="setData();setVisibilityData(this);"/>
+             
+               
+             <apex:actionFunction name="save" action="{!save}" reRender="titlePanel,recurrenceLabel,linkPanel,reRenderTemplateFor,scriptpanel,validationComponent,panelId,afterSavePanel,errorId,templateForDisablePanel" 
+                                oncomplete="waitMsg.hide();callAfterSave();" >
+                                 <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/>   
+                 </apex:actionFunction>
+                <apex:actionFunction name="newTemplate" action="{!newTemplate}"/>
+                <apex:actionFunction name="resetTemplate" action="{!reset}" rerender="recurrenceLabel,recurrenceValue" />
+                <apex:actionRegion >
+                <apex:actionFunction name="resetOnRecurrenceRemove" action="{!reset}" rerender="recurrenceLabel,recurrenceValue,errorId" oncomplete="showMsg();">
+                    <apex:param name="actionName" value="removeRecurrence"/>
+                </apex:actionFunction>
+                </apex:actionRegion>
+                <apex:actionFunction name="deleteTemplate" action="{!deleteTemplate}" reRender="errorId,validationComponent,titlePanel" oncomplete="waitMsg.hide();completeDelete();"/>             
+                 <apex:actionFunction action="{!nextBtnHandler}" name="nextTemplateBtnHandler" rerender="id_selectList,titlePanel,reRenderTemplateFor,scriptpanel,dataPanel,validationComponent,panelId,afterSavePanel,errorId,ModuleFieldsPanel,templateForDisablePanel,tablePanelFirst,tablePanelSec,SYSTemplate__c_id_name,SYSTemplate__c_id_id" oncomplete="changeframesource(); buttonValidator();setData();setData2();updateTitle();handleAfterSave();"> 
+                </apex:actionFunction>
+                <apex:actionFunction action="{!previousBtnHandler}" name="previousTemplateBtnHandler" rerender="id_selectList,titlePanel,reRenderTemplateFor,scriptpanel,dataPanel,validationComponent,panelId,afterSavePanel,errorId,ModuleFieldsPanel,templateForDisablePanel,tablePanelFirst,tablePanelSec,SYSTemplate__c_id_name,SYSTemplate__c_id_id" oncomplete="changeframesource(); buttonValidator();setData();setData2();updateTitle();handleAfterSave();"> 
+                </apex:actionFunction>
+                <apex:actionFunction name="setReferenceToText" action="{!assignReferenceToTextField}" reRender="inputTxt" oncomplete="assignfldValue();"> 
+                    <apex:param assignTo="{!savedId}" name="savedName" value=""/>                   
+                    <apex:param assignTo="{!popUpId}" name="popUpString" value=""/>                   
+                    <apex:param assignTo="{!contextDescription}" name="contextDescription" value=""/> 
+                    <apex:param assignTo="{!moduleId}" name="moduleIdString" value=""/>                    
+                </apex:actionFunction>
+                <apex:actionFunction name="setLinkTemplate" action="{!setLinkTemplate}" reRender="SYSTemplate__c_id_name,SYSTemplate__c_id_id" oncomplete="assignfldValue();"> 
+                    <apex:param assignTo="{!paramId}" name="paramId" value=""/>               
+                </apex:actionFunction>
+                
+               
+                <table class="clsMainTableSI" style="width:100%" cellspacing="0" cellpadding="0">
+                    <tr class="clsRowGreyBg">
+                        <td >
+                            <div id="btnToolbar"></div>
+                        </td>
+                    </tr>  
+                    <tr>
+                        <td >
+                         <apex:outputPanel id="tablePanel" >
+                            <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr >
+                                    <td id="templateForTDId" class="clsTemplateTopAlignment75">
+                                        
+                            <apex:outputPanel id="tablePanelFirst" >
+                                       <table class="clsTable" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td colspan="2"><div class="div15pxVspacing"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__templateFor__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                                </td>
+                                                <td title="{!$ObjectType.SYSTemplate__c.fields.templateFor__c.inlineHelpText}" class="clsInputTextBoxTD">
+                                                	<apex:inputText value="{!template.BMCServiceDesk__templateFor__c}" 
+                                                styleClass="clsPanelInputTextboxReadOnly" id="templateForTextId" onfocus="this.blur();" style="display:none;width:197px;height:16px;"/>
+                                                
+                                                    <apex:selectList value="{!template.BMCServiceDesk__templateFor__c}" id="templateForId" size="1" styleClass="clsTemplateSelectList" onchange="handleModuleChange();">
+                                                    	<apex:selectOptions value="{!templateForItems}"/>                                                 	
+                                                    </apex:selectList>
+                                                    <apex:outputpanel id="scriptpanel">
+                                                    <script>
+                                                        function changeframesource() {                                                        
+                                                            var modulename = document.getElementById('{!$Component.templateForId}').value;
+							                                var tempHeight1=Ext.isIE ?182:180;                               
+                                                            if(modulename != 'Incident' && modulename != 'Change Request' && modulename != 'Release'){
+							                                	Ext.getCmp('southPanelSI').hide();                                                                    	
+							                                }else{
+							                                	Ext.getCmp('southPanelSI').show();
+																if( templateId != null && templateId != '' )
+																	Ext.getCmp('south-panel').doLayout();
+							                                }
+							                                var mainPanelComponent;
+							                                 if(modulename == 'Incident' && isChatterEnabled == 'true') {
+							                                	mainPanelComponent =  Ext.getCmp('chatterHelpMainPanel');
+							                                	if (typeof mainPanelComponent == 'undefined') {
+																
+							                                	createChatterHelp();
+							                                 	showChatterHelpSectionDiv();
+																document.getElementById('spaceDiveId1').style.display = "block";
+							                                 	
+							                                  } else {
+							                                  	 var el = document.getElementById('chatterHelpCollapsiblediv');
+							                                  	if (el.style.display == 'none') {
+							                                  	showChatterHelpSectionDiv();
+																document.getElementById('spaceDiveId1').style.display = "block";
+							                                  	}
+							                                  
+							                                  }
+							                                 } else {
+							                                 		mainPanelComponent = Ext.getCmp('chatterHelpMainPanel');
+							                                 	if (typeof (mainPanelComponent) != 'undefined') {
+							                                 		mainPanelComponent.hide();
+							                                 		mainPanelComponent.doLayout();
+							                                 		 var el = document.getElementById('chatterHelpCollapsiblediv');
+        																el.style.display = 'none';
+																		var el1 = document.getElementById('spaceDiveId1');
+                                                                        el1.style.display = 'none';
+							                                 	}
+							                                 }
+                                                        }
+                                                    </script>
+                                                    </apex:outputpanel>
+                                                    
+                                               </td>
+                                               
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.Name.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                                </td>
+                                                <td class="clsInputTextBoxTD">
+                                                    <apex:inputText title="{!$Label.bmcservicedesk__tooltiptemplatestemplatename}" value="{!template.Name}" id="template_Id" styleClass="clsInputTextBox"/>
+                                                </td>
+                                                
+                                            </tr>
+                                            <tr id="lookuptr">
+                                             
+                                                <td class="clsInputLabelTD" style="padding-right:10px;" ><apex:outputLabel value="{!$Label.bmcservicedesk__incidenttemplate}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                                </td>
+                                                <td class="clsInputTextBoxTD">
+                                                    <apex:inputText title="{!$Label.bmcservicedesk__tooltiptemplatestemplatename}" value="{!srLinkTemplateName}" id="SYSTemplate__c_id_name" styleClass="clsInputTextBox" 
+                                                    			 onblur="showalldata(event,'',escape('inactive__c = false and templateFor__c= \'Incident\' and hasrecurrence__c = false'));"/>
+                                                    <input id="templateLookup" type="button" onclick="openPopupRF('SearchPage?popupId=Template&isLookup=true&filterClause='+escape('inactive__c = false and templateFor__c= \'Incident\' and hasrecurrence__c = false'),setLinkTemplate);" class="lookupIconOn"  />
+                                                	<apex:inputHidden id="SYSTemplate__c_id_id" value="{!srLinkTemplateId}"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD" style="padding-right:10px;padding-top: 0px;"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__systemTemplate__c.label}"/>
+                                                </td>
+                                                <td class="clsInputTextBoxTD"> <apex:inputCheckbox id="systemTemplateId" title="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__systemTemplate__c.inlineHelpText}" value="{!template.BMCServiceDesk__systemTemplate__c}"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                <apex:outputpanel id="linkPanel">
+                                                	<apex:outputPanel rendered="{!AND(NOT(ISNULL(template.id)),LOWER(template.BMCServiceDesk__templateFor__c)=='incident',NOT(ISBLANK(directLink)))}">		              
+		                                           	<table cellspacing="0" cellpadding="0" id="linkTbl" width="90%">
+		                                           		<tr>
+		                                           			<td class="clsInputLabelTD" style="padding-right:25px;">
+		                                           				<apex:outputLabel value="{!$Label.bmcservicedesk__selfservicelink}"/>
+                                                			</td>
+                                                			<td class="clsInputTextBoxTD">
+                                                    			<apex:inputText title="{!$Label.bmcservicedesk__directlinktemplateinfo}" value="{!directLink}" id="template_DirectLink" styleClass="clsInputTextBoxReadOnly" style="width:92%;" onkeypress="return false;" onclick="this.select();"/>
+                                                			</td>
+                                                		</tr>	
+                                                	</table>
+                                                	</apex:outputPanel>
+                                                </apex:outputpanel>	
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                           	<td colspan="2">
+                                           		<apex:outputpanel id="recurrenceLabel">
+                                                    <script>hasRecurrence={!template.BMCServiceDesk__HasRecurrence__c};</script>
+	                                           		<apex:outputpanel rendered="{!AND(template.BMCServiceDesk__HasRecurrence__c,NOT(ISNULL(template.id)))}">		              
+		                                           		<table cellspacing="0" cellpadding="0" id="innerTbl"  width="85%">
+		                                           			<tr >		                                           				                                           		
+				                                                <td class="clsInputBoldLabelTD" align="left">		                                                	                                        		                                               
+					                                                	<apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__Recurrence__c.label}" />			                                                		                                               
+				                                                </td>
+				                                                <td align="right" style="width:80%; font-family: Tahoma; font-size: 10pt;white-space:nowrap; ">				                                                		
+                                                                        <a onclick="removeTemplateRecurrence();" href="javascript:void(0);">                                                                                               
+                                                                            <apex:outputlabel styleClass="arial_s_normal cusrsorStyle" value="{!$Label.bmcservicedesk__removerecurrence}"></apex:outputlabel>
+				                                                		</a>
+				                                                </td>			                                            
+			                                                </tr>
+		                                                </table>
+	                                                </apex:outputpanel>
+                                                </apex:outputpanel>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputTextAreaTD" colspan="2">
+                                            	<apex:outputpanel id="recurrenceValue" >
+	                                            	<apex:outputpanel rendered="{!template.BMCServiceDesk__HasRecurrence__c}">
+                                                   <div class="clsRelativePosition">
+	                                                     <apex:inputTextarea rendered="{!template.BMCServiceDesk__HasRecurrence__c}" readonly="true"  title="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__Recurrence__c.inlineHelpText}" value="{!template.BMCServiceDesk__Recurrence__c}" styleClass="clsInputTextAreaDisabled" style="height:30px;"/>
+                                                   </div>  
+	                                                </apex:outputpanel>
+	                                             </apex:outputpanel>
+                                                </td>
+                                                
+                                            </tr>
+                                              
+                                            <tr>
+                                                <td class="clsInputBoldLabelTD"  colspan="2" ><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__description__c.label}"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputTextAreaTD" colspan="2">
+                                                   <div class="clsRelativePosition">
+                                                     <apex:inputTextarea id="descriptionId" title="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__description__c.inlineHelpText}" value="{!template.BMCServiceDesk__description__c}" styleClass="clsInputTextArea" style="width:100% !important"/>
+                                                   </div>  
+                                                 </td>
+                                              </tr>
+                                              
+                                              <tr id="Keywordsdiv">
+                                                <td class="clsInputBoldLabelTD"  colspan="2" ><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__keywords__c.label}"/>
+                                                </td>
+        
+                                            </tr>
+                                            <tr id="Keywordsdiv1">
+                                                <td class="clsInputTextAreaTD" colspan="2">
+                                                   <div class="clsRelativePosition">
+                                                     <apex:inputTextarea id="keywordsId" style="width:100% !important" title="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__keywords__c.inlineHelpText}" value="{!template.BMCServiceDesk__keywords__c}" styleClass="clsInputTextArea"/>
+                                                   </div>  
+                                                 </td>
+                                              </tr>
+                                            <!--<tr>
+        										<td  colspan = "2">
+        										<div id = "chatterHelpCollapsiblediv" height="10px">
+        										
+        										</div>
+        										</td>
+                                            </tr> -->
+                                              <!-- <tr>
+                                                <td>
+                                                    <div  style="height:55px"></div>
+                                                </td>
+                                                <td></td>
+                                             </tr> -->
+                                             
+                                             <tr>
+                                               <td>
+                           <div class="div15pxVspacing"  id="spaceDiveId"  ></div>
+                                                </td>
+                                                <td></td>
+                                             </tr>
+                                            
+                                             <tr>
+                                             	  <td class="clsInputTextAreaTD" colspan="2">
+                                                  
+                                                 
+													 <apex:outputPanel id="templateForDisablePanel">
+                                                        <script>
+                                                            var copyId= '{!JSENCODE($CurrentPage.parameters.copyId)}';
+                                                             
+                                                           if((templateId != null && templateId != '')|| (copyId != null && copyId != '') || (isFromSRD == 'true' && isForFulfillment != 'true'))
+                                                           {
+                                                              document.getElementById('{!$Component.templateForTextId}').value = document.getElementById('{!$Component.templateForId}').value;
+                                                              document.getElementById('{!$Component.templateForId}').style['display'] = 'none';
+                                                              document.getElementById('{!$Component.templateForTextId}').style['display'] = '';
+                                                              
+                                                           }
+                                                           
+                                                           	  if(TemplateForValue != 'Incident' || (isFromSRD == 'true' && isForFulfillment == 'true')){
+                                                           	  	
+                                                           	  	  document.getElementById('Keywordsdiv').style['display']= 'none';
+                                                           	  	  document.getElementById('Keywordsdiv1').style['display']= 'none';
+                                                           	  	  if(navigator.userAgent.toLowerCase().indexOf("msie 7") > -1){
+                                                           	  	  	document.getElementById('spaceDiveId').style['height']= '45px';
+                                                           	  	  }else{
+                                                           	  	  	document.getElementById('spaceDiveId').style['height']= '65px';
+                                                        	  	  }
+                                                           	  	  document.getElementById('spaceDiveId').style['display']= 'block';	
+                                                           	  }	
+                                                              else
+                                                              {
+                                                              	if(navigator.userAgent.toLowerCase().indexOf("msie 7") > -1) {
+                                                                  document.getElementById('Keywordsdiv').style['display']= 'inline';
+                                                           	  	  document.getElementById('Keywordsdiv1').style['display']= 'inline';
+                                                                }
+                                                                else {
+                                                              	  document.getElementById('Keywordsdiv').style['display']= 'table-row';
+                                                           	  	  document.getElementById('Keywordsdiv1').style['display']= 'table-row';
+                                                           	  	 }
+                                                           	  	 if(navigator.userAgent.toLowerCase().indexOf("msie 7") > -1){
+                                                           	  	 	document.getElementById('spaceDiveId').style['height']= '0px';
+                                                           	  	 }
+                                                           	  	 else{
+                                                           	  	 	document.getElementById('spaceDiveId').style['height']= '35px';
+                                                           	  	 }
+                                                           	  	  
+                                                           	  	 	
+                                                              }
+                                                              if(TemplateForValue == 'Request Detail'){
+                                                              	if(navigator.userAgent.toLowerCase().indexOf("msie 7") > -1) {
+                                                                  document.getElementById('lookuptr').style['display']= 'inline';
+                                                                }
+                                                                else {
+                                                                  document.getElementById('lookuptr').style['display']= 'table-row';
+                                                                }
+                                                                  document.getElementById('spaceDiveId').style['display']= 'block';
+                                                                  document.getElementById('{!$Component.templateFormId.systemTemplateId}').disabled = true;
+                                                              }else if(TemplateForValue == 'Release'){
+                                                              	  document.getElementById('{!$Component.templateFormId.systemTemplateId}').disabled = true;
+                                                              	  document.getElementById('lookuptr').style['display']= 'none';
+                                                              	  document.getElementById('spaceDiveId').style['display']= 'block';	
+                                                              }
+                                                              else{
+                                                                    document.getElementById('lookuptr').style['display']= 'none';  
+                                                                  
+                                                              }
+                                                         
+                                                           if(parentTemplateId != null && parentTemplateId != '')
+                                                           {   
+                                                              document.getElementById('{!$Component.templateForTextId}').value = document.getElementById('{!$Component.templateForId}').value;
+                                                              document.getElementById('{!$Component.templateForId}').style['display'] = 'none';
+                                                              document.getElementById('{!$Component.templateForTextId}').style['display'] = '';
+                                                           }
+                                                           
+                                                           
+                                                       </script>
+                                                    </apex:outputPanel> 
+													</td>
+                                             </tr>
+                                          
+                                        </table>
+                             </apex:outputPanel>           
+                                    </td>
+                                    <td class="visiblecls"><div class="div20pxHspacing"/></td>
+                                    <td class="clsTemplateTopAlignment25 visiblecls">
+                                         <div class="panelCapsule" id="panelDivId">
+                                              <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" id="panelbarId">
+                                                 <apex:panelBarItem label="{!$Label.bmcservicedesk__foruseby}" expanded="true" id="panelbarItemId" headerClass="panelHeader">
+                                                     <table class="clsTable" cellspacing="0" cellpadding="0">
+                                                        <tr>
+                                                            <td colspan="2"><div class="div15pxVspacing"/></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td colspan="2">
+                                                        <apex:outputPanel id="tablePanelSec" >
+                                                                <apex:inputCheckbox title="{!$Label.bmcservicedesk__tooltiptemplatesforusebyeveryone}" value="{!template.BMCServiceDesk__allProfile__c}" id="radFCR8" onclick="toggleItemSelector();" styleClass="clsPanelInputCheckboxTemp"/> 
+                                                                <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.bmcservicedesk__allprofiles}"/>
+														<script>
+                                                            document.getElementById('{!$Component.templateFormId.panelbarId.panelbarItemId.radFCR8}').checked=("{!JSENCODE(template.Name)}"=="" || {!template.BMCServiceDesk__allProfile__c});
+                                                            toggleItemSelector();
+                                                        </script>  
+                                                       </apex:outputPanel>
+                                                            </td>
+                                                        </tr>       
+														 <tr> 
+                                                         <td class="clsInputBoldLabelTD" style="white-space:normal;padding-top:0px;"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__availableprofiles)}" /></td>
+                                                         <td class="clsInputBoldLabelTD" style="white-space:normal;padding-top:0px;"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__selectedprofiles)}" /></td>      
+                                                      </tr>                                                    
+                                                         <tr>
+                                                            <td colspan="2"> <div id="itemselector" class="demo-ct"></div> </td>
+                                                         </tr>
+                                                                                                                     
+                                                     </table>
+                                                 </apex:panelBarItem>
+                                              </apex:panelBar>
+                                         </div>
+                                        
+                                    </td>
+                                </tr>
+                                </table>
+                         	</apex:outputPanel>
+                         </td>
+                       </tr>
+                       
+                       <tr>
+                          <td>
+                                                <table>
+                                                <tr>
+                                                <td colspan = "2">
+                                                <div id = "chatterHelpCollapsiblediv" height="10px">
+                                                
+                                 </div> 
+                                                </td>
+                                                </tr>
+                                                </table>
+                                                </td>
+</tr>
+<tr><td><div class="div15pxVspacing"  id="spaceDiveId1"></div></td></tr>                                               
+<tr>
+                          <td>
+                            <table style="width:100%">
+                                <tr>
+                                    <td style="width:98%">
+                                    
+                                <apex:outputPanel id="footerPanel">
+                                  
+                                  
+                                    <table>
+      
+                                        <tr>
+                                                  <td class="clsInputTextAreaTD" colspan="4">
+                                             <div class="clsRelativePosition">
+                                                    <span class="defaultFont">{!$Label.TemplatePageUIMsg}</span></div>
+                                </td></tr><tr style="width:100%">
+                                            <td Class="clsTemplateInputTextBoxTD" style="width: 27%;padding-right:20px">
+                                                <apex:inputText value="{!strFieldName}" id="testId" style="display:none"/>
+                                                <apex:selectList title="{!$Label.bmcservicedesk__tooltiptemplatesselectfield}" size="1" value="{!strFieldName}" onchange="disablePopup();setVisibilityData(this);setMaxInputLength(this);" styleClass="clsTemplateSelectList1" id="id_selectList">
+                                                         <apex:selectOptions value="{!fieldItems}" ></apex:selectOptions>   
+                                                 </apex:selectList>
+                                                      
+                                              </td> 
+                                             <td style="width: 34%"> 
+                                                    <apex:panelGroup id="widgetPanelGrp">
+                                                        <apex:inputText title="{!$Label.bmcservicedesk__tooltiptemplatesfieldvalue}" id="inputTxt" value="{!fieldValue}"  style="display:inline"  styleClass="clsTempInputTextBox" onkeyup="LimitText(this)"/>
+                                                        <apex:commandButton id="lookUp" styleClass="lookupIconOn" style="display:none" rerender="dummy" onClick="if(popUpEnable){return openLookup();}"/>
+														<!-- Added for user lookup custom field-->
+														<apex:commandButton id="lookUpUser" styleClass="lookupIconOn" style="display:none" rerender="dummy" onClick="if(popUpEnable){openLookup1();}"/>                                                                                                               
+														<apex:inputTextarea id="inputTxtArea" value="{!fieldValue}" style="display:none" styleClass="clsTemplateTextarea" onkeyup="validateLength('{!$Component.templateFormId.inputTxtArea}',selectedTextAreaLength);"/>
+														<input type="button" id="inputTxtAreaButton" class="TextboxPopupIcon" style="display:none" onclick="showTextEditor('{!$Component.templateFormId.inputTxtArea}', selectedLabel, selectedTextAreaLength, '{!JSENCODE($Label.OK)}', '{!JSENCODE($Label.Cancel)}');"/>
+                                                        <apex:selectRadio id="selectRd" value="{!fieldValue}" style="display:none" styleClass="checkLabelTemp">
+                                                            <apex:selectOptions value="{!booleanItems}" />
+                                                        </apex:selectRadio>
+                                                        
+                                                        <select id="selectLst" class="clsTemplateSelectList" size="1" style="display:none">
+                                                        </select>
+                                                        <!-- <apex:selectList id="selectLst" value="{!fieldValue}" style="display:none" size="1" styleClass="clsTemplateSelectList">
+                                                            <apex:selectOptions value="{!listItems}"/>
+                                                        </apex:selectList>-->
+                                                        <apex:inputhidden id="fieldValue" value="{!fieldValue}" />   
+                                                        <apex:inputhidden id="fldData" value="{!fieldData}" />
+                                                   </apex:panelGroup>
+                                             </td>
+                                             <td style="width: 39%">
+                                                  <apex:panelGroup id="ButtonPanelGrp">
+                                                     <input type="button" Class="bgBtnGrey"  value="{!$Label.Add}" onClick="addTempData();"  id="okButtonId"  style="display:inline" />
+                                                     <input type="button" Class="bgBtnGrey" value="{!$Label.Update}" onClick="addUpadateData();" id="updateButtonId" style="display:none"   />   
+                                                      <apex:actionFunction name="updateData" action="{!updateData}" 
+                                                        reRender="dummy,testId, id_selectList, widgetPanelGrp, ButtonPanelGrp, dataTableId,dataPanel,validationComponent" oncomplete="AddStaffAndQueueConfirm('update');waitMsg.hide();showError();setData();"/>
+                                                     <apex:commandButton styleClass="bgBtnGrey" value="{!$Label.bmcservicedesk__remove}" onClick="removeDataConfirm();" rerender="dummy" id="removeButtonId" disabled="{!removeButtonVisibility}"/>                                                           
+                                                     <apex:actionFunction name="removeData" action="{!removeData}" rerender="dummy,selectListPanel,widgetPanelGrp,dataPanel,ButtonPanelGrp,removeButtonId,id_selectList" oncomplete="setData();document.getElementById('{!$Component.templateFormId.removeButtonId}').disabled= true;"/>
+                                                   </apex:panelGroup>
+                                             </td>
+                                                
+                                         </tr>
+                                             
+                                     </table>
+                                  <div class="clsTemplateGridPanel" id="extGridPanel"></div> 
+                                
+                                 </apex:outputPanel>
+                                 </td>
+                                 
+                                    <td style="width:20px">
+                                    </td>
+                                </tr>
+                            </table>
+                                    
+                            </td>
+                          </tr>                          
+                    </table>                
+            </apex:outputPanel>
+            </div>
+            <script>
+             
+			if(isFromSRD == 'true'){
+					loadSRDUIonPageInit();
+				}
+		
+            </script>
+            <div class="detailSectinDivCls" id="divDetailSectionID">
+		     <table>
+		      <tr >		      		
+		          <td>
+		            <c:SupportInformationComponent setinactive="{!template.BMCServiceDesk__inactive__c}" objectName="IncidentTemplate__c" fKeyValue="{!template.Id}" multiSelectOption="true"  urlForStaticResource="{!$Resource.BMCServiceDesk__SDEFStyles}"/>		      	  		              
+		          </td>		          
+                        </tr>
+                    </table>                
+		   </div>
+        </apex:form>
+        <script> 
+        var templateForDiv='{!JSENCODE(template.templateFor__c)}';
+         if (templateForDiv != 'Incident') {
+			var el = document.getElementById('chatterHelpCollapsiblediv');
+			el.style.display = 'none';  
+			var sd1 = document.getElementById('spaceDiveId1');
+            sd1.style.display = 'none'; 
+			
+  		}
+       
+         function callAfterSave()
+        {
+            if(isFromSRD=='true' || isForFulfillment == 'true')
+            {
+                 
+				if(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.SavedSuccessfully)}')
+				{
+					var newTitle=document.getElementById('{!$Component.templateFormId.template_Id}').value;
+                    if(isFromSRD=='true'){
+                        var headerTextDom = parent.document.getElementById('headerTextVFpage');
+                        if(headerTextDom){
+                            headerTextDom.innerText = newTitle;
+                        }
+                    }
+                    else
+						window.parent.popUpWindow.setTitle(Ext.util.Format.htmlEncode( newTitle ));
+					Ext.Msg.show({
+					title:'',
+					msg : "{!JSENCODE($Label.SavedSuccessfully)}",
+					minWidth : 300,
+					buttons: Ext.Msg.OK,
+					fn : function(btn) 
+						{
+							if (isForFulfillment == 'true')
+							{
+								window.parent.addProcessTemplateAction(templateId);
+								window.parent.rfPopUpClose('rfModalVFPage');
+							}
+							else if(isFromSRD=='true')
+							{
+								setDirtyFlag(false);	
+								var rVal = new Array(4);
+                                rVal[0] =document.getElementById('{!$Component.templateFormId.template_Id}').value; 
+                                rVal[1] = templateId; 
+                                var  templateFor= "{!JSENCODE($CurrentPage.parameters.TemplateFor)}";
+                                if(templateFor=='rd'){
+                                   rVal[2] = document.getElementById('{!$Component.templateFormId.SYSTemplate__c_id_name}').value;
+                                   rVal[3]= document.getElementById('{!$Component.templateFormId.SYSTemplate__c_id_id}').value;
+                                 }
+								SendValueToParent(rVal);
+                                if(southPanelAvailable){
+								parentPageId = templateId;
+								
+								Ext.getCmp('addTemplate').setDisabled(true);
+								Ext.getCmp('editIncTemp').setDisabled(true);
+								Ext.getCmp('linkTemplates').setDisabled(false);
+								Ext.getCmp('unLinkTemplates').setDisabled(true);
+							}
+						}
+                        }
+					});
+				}
+				else
+					showError();
+			}
+            else
+            {
+                afterSaveAction();changeframesource();assignSelectedProfiles(selectedValues); buttonValidator(); updateTitle();enableSaveButton(); handleAfterSave();enableDisableNewSaveCopyDelBtn();
+            }
+            
+      }
+        function SendValueToParent(a)
+{
+        window.parent.setPopUpVar(a);
+        
+}
+        function setDirtyFlag(value)
+{
+            window.parent.setDirtyFlag(value);
+}
+if(isFromSRD=='true')
+{
+    window.change = setDirtyFlag(true);
+    window.onkeypress =setDirtyFlag(true);
+}
+     </script>
+</apex:page>

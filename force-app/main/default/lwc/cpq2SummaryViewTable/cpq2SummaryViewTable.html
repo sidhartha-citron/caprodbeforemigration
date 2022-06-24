@@ -1,0 +1,65 @@
+<!--
+ - Created by timothychiang on 2020-04-20.
+ -->
+
+<!-- Cpq 2 Summary View Table -->
+<template>
+	<tr class={titleTheme}>
+		<td class="slds-p-around_x-small" colspan={numCol}>
+			<span class="slds-text-heading_medium slds-truncate">
+				{tableName}
+			</span>
+		</td>
+	</tr>
+	<tr class="slds-line-height_reset slds-theme_shade">
+		<template
+			for:each={colHeaders}
+			for:item="header"
+			for:index="headerIndex">
+
+			<th key={header.id} scope="col" class={header.class}>
+				<div
+					class="slds-truncate"
+					title={header.name}>{header.name}
+				</div>
+			</th>
+		</template>
+	</tr>
+	<template
+		for:each={lineItems}
+		for:item="lineItem">
+		<template if:true={showLineItem}>
+			<c-cpq-2-summary-view-row key={lineItem.key}
+									  table-type={tableType}
+									  frequency-map={frequencyMap}
+									  line-item={lineItem}></c-cpq-2-summary-view-row>
+		</template>
+		<template if:true={showVmi}>
+			<c-cpq-2-summary-view-row-vmi key={lineItem.vmiRequest.key}
+										  line-item={lineItem}></c-cpq-2-summary-view-row-vmi>
+		</template>
+		<template if:true={showCoreList}>
+			<c-cpq-2-summary-view-row-core-list key={lineItem.coreListPriceRequest.key}
+										  line-item={lineItem}></c-cpq-2-summary-view-row-core-list>
+		</template>
+	</template>
+	<template if:true={showTotal}>
+		<tr class="slds-theme_shade">
+			<td  class="slds-p-around_x-small"  colspan={numCol}>
+				<div class="slds-text-heading_medium slds-text-align_right">
+					{totalLabel}:&nbsp;
+					<lightning-formatted-number
+						value={total}
+						format-style="currency"
+						currency-code={isoCode}
+					></lightning-formatted-number>
+				</div>
+			</td>
+		</tr>
+	</template>
+	<tr>
+		<td colspan={numCol}>
+			&nbsp;
+		</td>
+	</tr>
+</template>

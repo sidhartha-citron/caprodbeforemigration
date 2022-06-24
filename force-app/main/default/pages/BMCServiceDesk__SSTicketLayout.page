@@ -1,0 +1,382 @@
+<apex:page id="ssIncidentPage" controller="BMCServiceDesk.SelfServiceIncidentExtn"  standardStylesheets="true" showHeader="false" sidebar="false" >
+<head>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/ConsoleDetail.css" type="text/css" />
+    <script src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script> 
+</head>
+<style>
+body .secondaryPalette.bPageBlock{
+background:#ffffff !important;
+border:none;
+}
+body .apexp .bPageBlock.apexDefaultPageBlock .pbBottomButtons {
+    border-top: none !important;
+    }
+html,body{height:100%}
+.incCustomForm{min-height:100%;}
+.cke_toolgroup{
+    height:26px;
+}
+</style>
+<body >
+    <div id="themeDiv"></div> 
+    <script>
+        var enableSSSuggestions = {!enableSSSuggestions};
+        var enableWalkthroughFlow = "{!enableWalkthroughFlow}";
+        var userLanguage = "{!userLanguage}";
+        var isComponent = {!isComponent};
+        var activeTab, tabID;
+        if(!isComponent && window.frameElement){
+            activeTab = window.frameElement.getAttribute("id");
+            tabID = activeTab.slice(7);
+        }
+        var incName = '{!JSENCODE(incident.name)}';
+        var srTitleLabel = '{!JSENCODE($Label.ServiceRequestLabel)}';
+        var incTitleLabel = '{!JSENCODE($Label.SSTicket)}';
+        var incNewTitleLabel = '{!JSENCODE($Label.New)}';
+        var oldIncID = '{!oldIncID}'; 
+        var ext4Resource = '{!$Resource.ExtJS4_1_3}';
+        var isFirstSave ={!isFirstSave};
+
+        var displaySetting={!displaySettingsJSON};
+        var requestId;  
+        var incidentState,frameHeaderId,noteHeader,noteFrame;
+        var msg ='';
+        var txtmsg ;
+        var incDescriptionId='';
+        var incResolutionId='';
+		var incCategory=''; 
+        var incCatLookup='';
+        var orgNamespace ='{!orgNamespace}'; 
+        var enableDocumentation='true';
+        var fieldIdMap = {};
+        var ciId='';
+        var serviceId='';
+        var fieldApiName;
+        var readOnlyFieldMap = {};
+        var lookupFilterIDMap = {};
+        var incidentId = '{!JSENCODE(incident.Id)}';
+       	var allUsers = '{!allUsers}';
+    	var usersAssociatedWithSameAccount = '{!usersAssociatedWithSameAccount}';
+    	var usersBelowRole = '{!usersBelowRole}';
+		var changeLabels;
+        var rf_IncidentformId = '{!$Component.ssForm}';
+        var requiredFields = [];
+        
+        function setFSFieldDetail(fieldAPIName, fieldId, fieldHelpText,fieldUpdateableFlag,ftype,isRequired,isDBRequired) {
+	        var objtitleval = document.getElementById(fieldId);
+	        if (objtitleval) {
+	            var fieldValue = objtitleval.value;
+                if(lookupFilterIDMap[fieldAPIName]==null){
+                lookupFilterIDMap[fieldAPIName] = fieldId;
+                }
+                if(fieldUpdateableFlag == false) {
+    				if(readOnlyFieldMap[fieldId]==null){
+    					var elemVal=(ftype=='textarea')?null:document.getElementById(fieldId).value;
+    					readOnlyFieldMap[fieldId] = elemVal;
+    				}
+                }
+            	else{
+                    if(isRequired || isDBRequired){
+                        requiredFields.push(fieldId);
+                    }
+            	}
+
+                if(objtitleval != null && objtitleval != 'undefined') 
+					objtitleval.title = fieldHelpText;
+				if(fieldIdMap[fieldAPIName]==null){
+					fieldIdMap[fieldAPIName] = fieldId;
+				}
+				if(fieldAPIName == orgNamespace+'incidentDescription__c'){
+		            incDescriptionId = fieldId;
+                    requiredFields.push(fieldId);
+				}
+				if(fieldAPIName == orgNamespace+'incidentResolution__c'){
+		            incResolutionId = fieldId;
+				}
+				if(fieldAPIName == orgNamespace+'FKCategory__c'){
+                    incCategory = fieldId; 
+                    incCatLookup = fieldId +'_lkwgt';
+                }
+			}
+	    
+            if (fieldAPIName.indexOf('FKBMC_BaseElement__c') > 0) 
+                ciId = fieldId;
+            else if (fieldAPIName.indexOf('FKBusinessService__c') > 0) 
+                serviceId = fieldId;
+            else if (fieldAPIName.indexOf('FKServiceOffering__c') > 0) 
+                offeringId = fieldId;
+       }
+    </script>
+    <div style="width:100%;height:100%;">
+        <div id="ssFormDiv" style="float:left;height:100%;width:100%;">
+    <apex:form id="ssForm" styleClass="incidentForm">
+        <apex:outputPanel id="layout" layout="block" style="overflow:none;height:100%;width:100%">  
+            <apex:pageBlock id="pBlock" title="" >
+                <apex:facet name="header">
+                    <div class="rf-toolbar-header">
+                        <span style="float:left;">
+                            <button name="submitTicket" id="submitbtn" class="rf-toolbar-btn" title="{!$Label.SS_Submit} (Ctrl+Alt+S)" type="button" value="SubmitTicket" onClick="saveIncident();">{!$Label.SSContactUsSubmit}</button>
+                            <button name="closeTicket" id="closebtn" class="rf-toolbar-btn" title="{!$Label.SS_CloseTicketTooltip} (Ctrl+Alt+X)" type="button" value="closeTicket" onClick="checkBeforeCloseIncident();">{!$Label.CloseTicket}</button> 
+                            <button name="copyTicket" id="copybtn" class="rf-toolbar-btn" title="{!$Label.SS_Copy} (Ctrl+Alt+C)" type="button" value="copyTicket" onClick="copyIncident();">{!$Label.Copy}</button>
+                            <button name="reOpenTicket" id="reopenbtn" class="rf-toolbar-btn" title="{!$Label.SS_Reopen} (Ctrl+Alt+O)" type="button" value="reOpenTicket" onClick="beforeReopenIncident();">{!$Label.SSReopenTicket}</button>
+                        </span>
+                        <span style="{!IF(enableSSSuggestions,'display:inline;float:right;margin-right:20px;','display:none')}">
+                        	<input type="button" id="SSSmartSuggestionbtn" style="margin-top: -7px;" class="SSSuggestionPanelBtncls" onclick="togglePanel(true);" value="" title="{!$Label.SmartSuggestionsIconTooltip}"/>  
+                        </span> 
+                        <span style="float:right; margin-right: 10px;" id="onbehalfHeaderSpan">
+                            <input type="text" name="clientNameText" value="{!clientName}" disabled="disabled" style="width:250px;" class="rf-input-text" title="{!$Label.ServiceRequestForClient}"/>
+                            <button id ="onBehalfHeaderBtn" class="rf-lookup-icon" name="subject" title="{!$Label.ServiceRequestForClient}" type="button" value="LookUp" onClick="SDF.incident.openClientIDPopup();" ></button>                                                     
+                        </span>
+                        <div style="clear:both;"></div>
+                    </div>
+                </apex:facet>
+              	<div class="rf-mainDiv" style="height:100%;overflow-y:auto;">
+                    <apex:repeat value="{!lstOfFSWrapper}" var="fsWrapper"> 
+                        <apex:pageBlockSection id="pageSectionId" title="{!fsWrapper.fsLabel}" columns="{!columnSize}" collapsible="true">
+                            <apex:repeat value="{!fsWrapper.lstOfFSMember}" var="f">
+                                 <apex:pageblockSectionItem rendered="{!AND($ObjectType.BMCServiceDesk__Incident__c.fields[f.fieldPath].Accessible,OR(NOT(ISBLANK(incident.Id)),AND(ISBLANK(incident.Id),NOT($ObjectType.BMCServiceDesk__Incident__c.fields[f.fieldPath].Calculated))))}">  
+                                    <apex:outputLabel value="{!IF(CONTAINS(f.fieldPath,'FKCategory__c'),$Label.bmcservicedesk__sschoosecategory,IF(CONTAINS(f.fieldPath,'incidentDescription__c'),$Label.bmcservicedesk__ssdescribeyourissue,IF(CONTAINS(LOWER(f.fieldPath),LOWER('BLANK__c')) || CONTAINS(LOWER(f.Label),LOWER('<BLANK>')),' ',f.label)))}" rendered="{!OR(!CONTAINS(f.fieldPath,'OwnerId'),AND(!ISBLANK(incident.Id),CONTAINS(f.fieldPath,'OwnerId')))}"/>
+                                    <apex:outputPanel rendered="{!NOT(CONTAINS(LOWER(f.Label),LOWER('<BLANK>')))}">
+                                        <table id="tableId{!f.type}"  cellspacing="0" cellpadding="0" class="tableId{!f.type}">
+                                        	<tr>
+                                            	<td id="{!f.fieldPath}" class="rf-inc-field" title="{!$ObjectType.Incident__c.fields[f.fieldPath].inlineHelpText}">
+                                  						<apex:inputField id="inputField" value="{!incident[f.fieldPath]}" styleClass="{!If(f.type == 'reference', 'RFlookupClass', '')}" onclick="setFieldAPIName('{!f.fieldPath}');" required="{!OR(f.required,f.DBRequired,CONTAINS(f.fieldPath,'incidentDescription__c'))}" rendered="{!NOT(OR(CONTAINS(f.fieldPath,'OwnerId'),CONTAINS(f.fieldPath,'FKOpenBy__c')))}" />
+                                                       <script>
+                                                              setFSFieldDetail('{!f.fieldPath}', '{!$Component.inputField}', '{!JSENCODE($ObjectType.Incident__c.fields[f.fieldPath].inlineHelpText)}',{!$ObjectType.Incident__c.fields[f.fieldPath].updateable},'{!JSENCODE(f.type)}',{!f.required},{!f.DBRequired});
+                                                       </script>
+                                                       <apex:outputLabel value="{!incident['Owner.name']}" rendered="{!IF(CONTAINS(f.fieldPath, 'OwnerId'), true, false)}"/>
+                                                       <apex:outputpanel rendered="{!AND(!ISBLANK(incident.Id),CONTAINS(f.fieldPath, 'FKOpenBy__c'))}" >
+                                                           <input type="hidden" id="FKOpenBy"/>
+                                                           <apex:outputField value="{!incident[f.fieldPath]}" rendered="{!IF(CONTAINS(f.fieldPath, 'FKOpenBy__c'), true, false)}" styleClass="{!f.fieldPath}"/>
+                                                       </apex:outputpanel>
+                                               	</td>
+                                              	 	<td  class ="rf-editor-Btn-td">
+                                                    <input type="button" id="textAreaBtn" class="rf-editor-icon" onclick="viewTextEditor('{!$Component.inputField}','{!f.label}', '32000', '{!$Label.Ok}', '{!$Label.Cancel}',document.getElementById('{!$Component.inputField}').readOnly,true, {!AND(CONTAINS(f.fieldPath, 'incidentDescription__c'),NOT(isComponent))}==true?smartSuggestionsHandler:null);" style="{!IF(AND(f.type=='textarea',NOT(rtfFields[f.fieldPath])),'display:inline','display:none')}" title="{!f.label}"/>
+                                               	</td>
+                                           	</tr> 
+                                       	</table>
+                                       	<apex:inputtext id="hiddenVar"  title="{!f.fieldPath}" rendered="{!CONTAINS(f.type,'reference')}" Style="display:none" />
+									</apex:outputPanel>
+                              		</apex:pageblockSectionItem>
+                          		</apex:repeat>
+                      		</apex:pageBlockSection>
+                  		</apex:repeat>
+              	 	<div class="rf-label-td">
+                    	<apex:outputLabel id="noteAttachmentHeader" value="{!$Label.bmcservicedesk__ssattachfileorurl}"/>
+               		</div>
+               		<div style="padding-top:10px;">
+               			<iframe name="noteFrame" id="noteFrame" width="100%" height="175" frameborder="0" style="display:none;"/>
+            		</div>
+				</div>  
+	            <apex:outputpanel id="hiddenVars">
+                    <apex:inputHidden value="{!incident.BMCServiceDesk__FKClient__c}" id="HiddenClientId" />
+                </apex:outputpanel>
+                <apex:facet name="footer">
+                    <div class="rf-toolbar-header">
+                        <span style="float:left;">
+                            <button name="submitTicket" id="submitbtn" class="rf-toolbar-btn" title="{!$Label.SS_Submit} (Ctrl+Alt+S)" type="button" value="SubmitTicket" onClick="saveIncident();">{!$Label.SSContactUsSubmit}</button>
+                            <button name="closeTicket" id="closebtn" class="rf-toolbar-btn" title="{!$Label.SS_CloseTicketTooltip} (Ctrl+Alt+X)" type="button" value="closeTicket" onClick="checkBeforeCloseIncident();">{!$Label.CloseTicket}</button> 
+                            <button name="copyTicket" id="copybtn" class="rf-toolbar-btn" title="{!$Label.SS_Copy} (Ctrl+Alt+C)" type="button" value="copyTicket" onClick="copyIncident();">{!$Label.Copy}</button>
+                            <button name="reOpenTicket" id="reopenbtn" class="rf-toolbar-btn" title="{!$Label.SS_Reopen} (Ctrl+Alt+O)" type="button" value="reOpenTicket" onClick="beforeReopenIncident();">{!$Label.SSReopenTicket}</button>
+                        </span>
+                        <span style="float:right; margin-right: 10px;" id="onbehalfFooterSpan">
+                            <input type="text" name="clientNameText" value="{!clientName}" disabled="disabled" style="width:250px;" class="rf-input-text" title="{!$Label.ServiceRequestForClient}"/>
+                            <button id ="onBehalfFooterBtn" class="rf-lookup-icon" name="subject" type="button" title="{!$Label.ServiceRequestForClient}" value="LookUp" onClick="SDF.incident.openClientIDPopup();" ></button>
+                        </span>
+                        <div style="clear:both;"></div>
+                    </div>
+                </apex:facet>    
+            </apex:pageBlock> 
+        </apex:outputPanel>
+        
+        <apex:actionFunction name="saveRecord" action="{!saveRecord}" reRender="displayMessage,apexMessageErrorPanel" onComplete="assignApexErrorMessage();showerror();">
+            <apex:param name="AttRefGeneratorID" assignTo="{!AttRefGeneratorID}" value=""/>
+        </apex:actionFunction> 
+        <apex:actionFunction name="closeIncident"  action="{!closeIncident}" rerender="displayMessage,apexMessageErrorPanel"  onComplete="assignApexErrorMessage();showerror();"/>
+        <apex:actionFunction name="reopenIncident"  action="{!reOpenIncident}" onComplete="afterIncidentReopen();assignApexErrorMessage();showerror();" rerender="displayMessage,apexMessageErrorPanel" />    
+        <apex:actionFunction name="saveRecordWR" action="{!saveRecord}" reRender="layout,displayMessage,btnEnablePanel,apexMessageErrorPanel,refreshAttRefGeneratorId" onComplete="showHideWithServer();win.hide(); aftersaveRecord();assignApexErrorMessage(); showerror(); checkForSubmit(); SDF.util.showMsgPopup();">
+            <apex:param name="AttRefGeneratorID" assignTo="{!AttRefGeneratorID}" value=""/>
+        </apex:actionFunction> 
+        <apex:actionFunction name="closeIncidentWR"  action="{!closeIncident}" rerender="displayMessage,btnEnablePanel,layout,refreshAttRefGeneratorId,apexMessageErrorPanel"  onComplete="showHideWithServer();assignApexErrorMessage();showerror();"/>
+        <apex:actionFunction name="reopenIncidentWR"  action="{!reOpenIncident}" onComplete="assignApexErrorMessage();showHideWithServer();afterIncidentReopen();" rerender="displayMessage,btnEnablePanel,layout,refreshAttRefGeneratorId,apexMessageErrorPanel" />       
+        
+        <apex:outputPanel id="apexMessageErrorPanel" >
+            <div id="apexMessageErrorPanelDiv" style="display:none;">
+                <apex:messages />
+            </div>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="displayMessage">
+		    <script type="text/javascript">
+		        msg = '{!displayMessage}';
+		        var isError = {!isError};
+		     </script>
+	    </apex:outputPanel>
+    
+        <apex:outputpanel id="refreshAttRefGeneratorId">
+	        <script>
+	            var incID = '{!incident.id}';
+	            var AttRefGeneratorID='{!JSENCODE(AttRefGeneratorID)}';
+	            var notesAttachmentPage = '{!$Page.SSNoteAttachmentPage}';
+	            var iFrameSrc = notesAttachmentPage+'&incidentId='+incID+'&AttRefGeneratorID='+AttRefGeneratorID;
+	            frameHeaderId = '{!$Component.ssIncidentPage.ssForm.pBlock.noteAttachmentHeader}';
+	            noteHeader=document.getElementById(frameHeaderId);
+	            noteFrame=document.getElementById('noteFrame');
+	            if(noteFrame!=null && noteFrame!=undefined ){ 
+	                noteFrame.style.display='block';
+	                noteHeader.style.display='block';
+	                noteFrame.src= iFrameSrc;
+	            }
+	        </script>
+        </apex:outputpanel>
+        
+        <apex:outputpanel id="btnEnablePanel">
+		      <script>
+		        displaySetting={!displaySettingsJSON};
+		        enabledisableSetting ={!enabledisableSettingsJSON} ;
+		        incName = '{!JSENCODE(incident.name)}';
+		        incID = '{!incident.id}';
+				incidentState = {!incident.State__c};
+		        if(incID=='' || incID==null){   
+		            incidentState=true;
+		        }
+		        if({!isSaved}){
+		        	incDescriptionId = fieldIdMap[orgNamespace+'incidentDescription__c'];
+		            if(incDescriptionId != ''){
+		             document.getElementById(incDescriptionId).readOnly= true;
+		            }
+		            incResolutionId = fieldIdMap[orgNamespace+'incidentResolution__c'];
+		            if(incResolutionId != '' &&(!displaySetting.allowCloseButton || {!isClosed})){
+		                document.getElementById(incResolutionId).readOnly =true;
+		            }
+					incCategory = fieldIdMap[orgNamespace+'FKCategory__c'];
+                    if(incCategory != ''){
+                        document.getElementById(incCategory).readOnly= true; 
+						document.getElementById(incCategory).className  ="disableCategory";
+                        document.getElementById(incCatLookup).style.pointerEvents = 'none';
+                        
+                    }
+		         }else{  
+		            if(incResolutionId != '')
+		                document.getElementById(incResolutionId).readOnly =true;
+		         }
+		        //To remove href link on Fkopenby field
+		        var t=document.getElementById('FKOpenBy');
+		        if(t != null) {
+		            var atag=t.nextSibling.childNodes[0];
+		            if(atag != null && atag.nodeName.toLowerCase() == 'a')
+		                atag.href ="#";
+		        }
+				if(changeLabels!=null && changeLabels!='undefined')
+		        	changeLabels();
+		    </script>
+		  </apex:outputpanel>
+    </apex:form>
+	<script src="{!$Resource.ExtJS4_1_3}/ext-all.js" />
+   </div>
+        <apex:outputPanel rendered="{!AND(enableSSSuggestions,NOT(isComponent))}">   
+            <div id="ssSuggDiv" class="ssSuggDivcls" style="visibility:hidden;">
+                <c:SSSmartSuggestions />
+            </div>
+        </apex:outputPanel>
+    </div>
+</body>
+   
+    <script type="text/javascript" src="{!$Resource.SSjs}/ssutils.js"/>
+    <script>
+        function assignApexErrorMessage(){
+            if(msg == null || msg == ''){ // Condition if there is no error message to display from server side.
+                msg = RemedyForceHTMLProcessor.getText(document.getElementById('apexMessageErrorPanelDiv'));
+            }
+        }
+
+        var SSCategorySearchPage = '{!$Page.StdLayoutCategoryTree}',
+        	SearchPage = '{!$Page.SearchPage}',
+            SearchAndLink = '{!$Page.SearchAndLink}',               
+            submitMsg = '{!JSENCODE($Label.SSTicketSubmitted)}',
+            requiredHeader = '{!JSENCODE($Label.Error)}',
+            requiredMsg = '{!JSENCODE($Label.SSRequiredFieldsMissingMessage)}',    
+            ticketLbl = incTitleLabel,
+            errorMsgResolutionReqd = '{!JSENCODE($Label.errorMsgResolutionReqd)}',
+            ssCloseLabel = '{!JSENCODE($Label.SSClose)}',
+            ssCloseMsg = '{!JSENCODE($Label.SSCloseMsg)}',
+            ssReopenLabel = '{!JSENCODE($Label.SSReopen)}',
+            SSCancelMsg  = '{!JSENCODE($Label.CloseTabMessage)}',
+            ticketCloseMsg  = '{!JSENCODE($Label.SS_CloseTicketMessage)}',
+            Close = '{!JSENCODE($Label.Close)}',
+            okButtonLabel = '{!JSENCODE($Label.Ok)}',
+            stayonpage = '{!JSENCODE($Label.StayOnThisPage)}',
+            leavethepage = '{!JSENCODE($Label.LeaveThisPage)}',
+            noBtnLabel = '{!JSENCODE($Label.ExtjsMessageNo)}',
+            yesBtnLabel = '{!JSENCODE($Label.ExtjsMessageYes)}',
+            cancelButtonLabel = '{!JSENCODE($Label.Cancel)}',
+            Error = '{!JSENCODE($Label.Error)}',
+            saveLabel = '{!JSENCODE($Label.SavedSuccessfully)}',
+            messageLabel = '{!JSENCODE($Label.SSContactUsMessageText)}',
+            updateBtnLable = '{!JSENCODE($Label.Save)}';
+        
+        var showResolution = {!showResolution};
+        var enabledisableSetting ={!enabledisableSettingsJSON};
+        var isMSP = {!isMSPAdmin};
+		var isPortalUser = {!isPortalUser};
+        var isRTFAvailable = {!isRTFAvailable};
+        var accountFieldId = '{!incident.FKAccount__c}';
+        var accountFilter = '{!accountFilter}';
+        var NONPRINT = '¬';
+        var TemplateValidationError = '{!JSENCODE($Label.TemplateValidationError)}';
+        var IncidentIsClosed = '{!JSENCODE($Label.Incident_is_Closed)}';
+        var searchErrorMsg = '{!JSENCODE($Label.GsErrorMsg)}';
+        var buisnessServiceId = '{!incident.FKBusinessService__c}';
+        var applytemplateToExistingRecord = '{!JSENCODE(applytemplateToExistingRecord)}';
+        var filterStr = {!filterAPIStr};
+        var offeringId='';
+        var PE = 'П';
+        var filterFieldsMap= {};
+        var isAccountByClient = true;
+        var isFlattenedCmdb = {!isFlattenedCmdb};
+        
+        _ComponentIds = {};
+        _ComponentIds.hiddenClientId = '{!$Component.ssIncidentPage.ssForm.pBlock.HiddenClientId}';
+        
+        var i = 0;
+        var keyMap ={!keyPrefixMap};
+       
+        var isRFHotkeysDisabled={!isRFHotkeysDisabled};
+    </script>   
+    <script src="{!$Resource.SSjs}/SSTicketLayout.js"/>     
+    <script>
+		var disableLookup = "{!isDisableLookup}";
+		if(disableLookup == "true"){  
+			document.getElementById("onBehalfHeaderBtn").disabled= true;
+			document.getElementById("onBehalfFooterBtn").disabled= true;
+		}
+        if(Sarissa._SARISSA_IS_IE && (navigator.userAgent.indexOf("Trident/6")>-1)){  
+            window.XMLSerializer = function(){};      
+            window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+        }
+        createFilterFieldMap();
+    </script>   
+    <script type="text/javascript">         
+        var colorCodeList = '{!JSENCODE(themeColorCodeString)}';             
+        var content = '{!JSENCODE(dynamicStyle)}';
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+    </script>
+    <script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js"/>   
+	<script>
+		changeLabels= function(){
+			if(isRFHotkeysDisabled){
+				setTitle(document.getElementById('submitbtn'),'{!JSENCODE($Label.SS_Submit)}');              
+				setTitle(document.getElementById('closebtn'),'{!JSENCODE($Label.SS_ServiceRequestClose)}');
+				setTitle(document.getElementById('copybtn'),'{!JSENCODE($Label.SS_Copy)}');
+				setTitle(document.getElementById('reopenbtn'),'{!JSENCODE($Label.SS_Reopen)}');         
+			}
+		}
+		changeLabels();
+		function isCJKChar(str) {
+            var CJKpattern = /[\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/;
+            var m = CJKpattern.test(str)
+            return(m);
+        }
+	</script>
+</apex:page>

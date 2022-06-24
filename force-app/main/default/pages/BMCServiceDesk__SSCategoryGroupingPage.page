@@ -1,0 +1,99 @@
+<apex:page id="SSCategoryGroupingPage" controller="BMCServiceDesk.SSBrowseCategoryController" sidebar="false" showHeader="false" standardStylesheets="false" extensions="BMCServiceDesk.JSRemoteActions">
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+<script src="{!$Resource.SSjs}/CategoryGroupingPage.js"></script>
+
+ 
+<apex:form id="serviceForm">
+<apex:actionRegion >
+	<apex:actionFunction name="changeType" action="{!setTypeForSearch}" oncomplete="showSelectedNode();">
+        <apex:param name="type" value="" />
+</apex:actionFunction>
+ <apex:actionFunction name="nodeClicked" action="{!setGroupingParamaters}" reRender="serviceDefinitionPanel">
+        <apex:param name="categoryId" value="" />
+        <apex:param name="searchText" value="" />
+        <apex:param name="categoryType" value="" />
+    </apex:actionFunction>    
+ <apex:actionFunction name="clearParameters" action="{!setClearParamaters}" reRender="serviceDefinitionPanel" >
+ 	<apex:param name="type" value="" />
+ </apex:actionFunction>
+ 
+ </apex:actionRegion>
+  <script>
+  	var currentNameSpace = '{!currentNameSpace}';
+    var categoriesLbl =  '{!JSENCODE($Label.Categories)}';
+    function getshowCategoryList(){
+        return {!showCategoryList};
+    }
+    
+	var isRFKnowledgeEnabledinSS = {!isRFKnowledgeEnabled};
+	
+	var KnowledgeArticleLabel ='{!JSENCODE($Label.SSKnowledgeArticles)}';
+	var ServiceRequestLabel='{!JSENCODE($Label.SSMyHelpRequests)}';
+	
+	
+	
+	var reportIssueSubTabLabel = '{!JSENCODE($Label.SSReportIssue)}';
+	var requestServiceSubTabLabel = '{!JSENCODE($Label.SSRequestService)}';
+		
+    Ext.onReady(function(){
+        knowledgeArticlePriority = {!knowledgeArticleHasPriority};
+    	showIncidentAndServiceCombined = {!incidentAndServiceCombined};
+
+		//For hiding report an issue tab when there are no incident templates
+	    var hideTopRequests = {!isTopRequestsEmpty};
+		if(hideTopRequests && !showIncidentAndServiceCombined){
+			showIncidentAndServiceCombined = true;
+		}
+		LoadCatGroupingJs();        
+	});
+Ext.EventManager.onDocumentReady(resizeTree.init, resizeTree, true);
+</script>   
+<apex:outputPanel >
+    <table style="width:100%;height:340px;" cellspacing="10">
+    <tr>
+        <td class="popularTdCls" colspan="1">
+             <div id="tabPanel1" class="tabPanelBrowseView" style="width:100%;">
+             	<div id="serviceRequestToolBar" style="width:100%;padding-top:5px;background-color:#FFFFFF;border-top:none;"/>
+             	<div id="knowledgeArticleToolBar" style="width:100%;padding-top:5px;background-color:#FFFFFF;border-top:none;"/>                   
+             </div>              
+             <div id="KnowledgeArticle1" style="display:none">
+             <div id="KnowledgeArticle" class="browseContent" >
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                            <td id="serviceRequestTd" class="serviceRequestDivClass" valign="top" height="100%">
+                                <div>
+                                    <table width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td valign="top" width="300px">
+                                                <div id="basic">
+	                                                <div id="categoryListPage" style="height:100%;"></div>
+                                                    <div id="categoryPageTree" class="categoryPageTree">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td id="serviceDefinitionPanelTd" style="border-left:0px solid #99BBE8;overflow-y:auto;" valign="top">
+                                                <apex:outputPanel id="serviceDefinitionPanel" layout="block" style="height:100%;overflow-y:auto;">                                                    
+                                                    <c:SSSearchCategoryGrouping categoryId="{!categoryId}" searchText="{!searchText}" type="{!type}" isFromGrouping="true" />                                                    
+                                                </apex:outputPanel>
+                                            </td>
+                                      </tr>   
+                                   </table> 
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+              </div>
+              </div>
+              <div id="listView" style="display:none"><apex:include pageName="BMCServiceDesk__SSBrowseTopRequests"/></div>
+           </td>
+    </tr>
+    </table>       
+</apex:outputPanel>
+    
+            
+    <apex:outputPanel id="dummyPanel"></apex:outputPanel>
+
+   
+    
+</apex:form>
+</apex:page>

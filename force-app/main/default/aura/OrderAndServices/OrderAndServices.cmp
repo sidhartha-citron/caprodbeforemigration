@@ -1,0 +1,32 @@
+<aura:component extends="c:US2_BaseForm"
+                implements="lightning:actionOverride,forceCommunity:availableForAllPageTypes,flexipage:availableForRecordHome,force:lightningQuickActionWithoutHeader,lightning:isUrlAddressable,force:hasRecordId,lightning:hasPageReference,force:hasSObjectName"
+                description="OrderandServices"
+                controller="OrderandServicesController">
+
+    <aura:attribute name="viewData" type="Object" />
+    <aura:attribute name="isLoaded" type="Boolean" default="false" />
+    <aura:attribute name="viewState" type="String" default="Summary" />
+
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+    <aura:method name="changeState" action="{!c.changeState}" 
+                description="Used for changing the view state"> 
+        <aura:attribute name="state" type="String" default="Summary"/> 
+    </aura:method>
+
+    <!-- <aura:if isTrue="{!v.isLoaded}">
+        <c:OrderAndServicesSummary viewData="{!v.viewData}" />
+    </aura:if> -->
+
+    <aura:if isTrue="{!v.isLoaded}">
+        <aura:if isTrue="{!v.viewState == 'Summary'}">
+            <c:OrderAndServicesSummary viewData="{!v.viewData}" parent="{!this}" />
+        </aura:if>
+        <aura:if isTrue="{!v.viewState == 'Edit'}">
+            <c:OrderAndServicesEdit viewData="{!v.viewData}" parent="{!this}"  />
+        </aura:if>
+        <aura:if isTrue="{!v.viewState == 'CaseView'}">
+            <c:OrderAndServicesTicketView viewData="{!v.viewData}" parent="{!this}" accountId="{!v.recordId}"  />
+        </aura:if>        
+    </aura:if>
+
+</aura:component>

@@ -1,0 +1,297 @@
+<apex:page cache="true" showHeader="false" controller="BMCServiceDesk.CategorySearchController" standardStylesheets="false">
+<script>
+var clookupdata='';
+var servertime = '';
+var cstarttime = '{!csearchstarttime}';
+var showCategoryList = false;
+</script>
+<c:CommonIncludes />
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CategorySearchPage.js"/>
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CategorySearchStyle.css"/>
+
+ <script>
+		var isRequestCatalog = '{!JSENCODE($CurrentPage.parameters.isRequestCatalog)}';
+		var popupId = '{!JSENCODE($CurrentPage.parameters.popupId)}';
+        var categoryId='';
+        var categoryName='';
+        var desGrid;
+        var resGrid;
+        var cols;
+        var descriptionString='';
+        var resolutionString='';
+        var descDt = '';
+        var resDt='';
+        var catId = '';
+        var isSingleClicked = false;
+   		var catUrgency = '';
+		var availableForSR = true;
+   		function isShowFooterDisabled(){
+   			var showFooterPanelParam = '{!JSENCODE($currentPage.parameters.showFooterPanel)}';
+   			if(showFooterPanelParam == '' || showFooterPanelParam == true  || showFooterPanelParam == 'true') 
+   				return false;
+   			else 
+   				return true;
+   		
+   		}
+   	var labelStandardDescriptionAndResolution = '{!JSENCODE($Label.LabelStandardDescriptionAndResolution)}';
+   	var labelStandardDescription = '{!JSENCODE($Label.StandardDescription)}';
+   	var labelStandardResolution = '{!JSENCODE($Label.StandardResolution)}';
+    var isNewButtonDisable = {!isNewButtonDisable};
+    var labelNew = '{!JSENCODE($Label.new)}';
+    var labelRefresh = '{!JSENCODE($Label.refresh)}';
+    var cancelBtnId = "{!$Component.CategorySearchForm.cancelButton}";
+    var labelCatByDesc = '{!JSENCODE($Label.CategoriesByDesc)}';
+    var labelSearch = '{!JSENCODE($Label.Search)}';
+    var categoriesObj = {!categories};
+    var labelPMServerTime = '{!JSENCODE($Label.PM_servertime)}';
+    var labelSelCategory =  '{!JSENCODE($Label.selectCategoryCategorySearchPage)}';
+    var labelNwLatency = '{!JSENCODE($Label.PM_netwokLatency)}';
+    var pageLoad = '{!JSENCODE($Label.PM_PageLoad)}';
+	var labelSRDCategorySelectionErrorMsg =  '{!JSENCODE($Label.SRDCategorySelectionErrorMsg)}';
+
+    showFooterPanel = '{!JSENCODE($currentPage.parameters.showFooterPanel)}';
+    function getIsStandardDescription(){
+        return "{!JSENCODE(isStandardDescription)}";
+    }
+    function getServerendtime(){
+        return '{!serverendtime}';
+    }
+   function getshowCategoryList(){
+            return {!showCategoryList};
+        }
+     function isCJKChar(str) {
+		var CJKpattern = /[\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/;
+		var m = CJKpattern.test(str)
+		return(m);
+    }  
+    function txtSearch(){   
+          var searchString= document.getElementById('txtSrch').value;
+          if((2>searchString.trim().length && !isCJKChar(searchString))|| searchString.value=="{!JSENCODE($Label.Search)}"){
+                Ext.MessageBox.show({ msg: '{!JSENCODE($Label.GsErrorMsg)}', title: '{!JSENCODE($Label.Warning)}', buttons: Ext.MessageBox.OK,width:300,icon: Ext.MessageBox.WARNING});
+                enableCancelButton();
+
+              return;
+         }
+        document.getElementById("{!$Component.CategorySearchForm.txtSrchField}").value=Ext.getCmp("txtSrch").getValue(); 
+           pgRefresh();
+    }    
+     
+       function enableCancelButton(){
+       	 var cancelBtn = document.getElementById("{!$Component.CategorySearchForm.cancelButton}");
+       	 if(cancelBtn != null && cancelBtn != 'undefined' && typeof(cancelBtn) != 'undefined'){
+       	 	cancelBtn.disabled=false;
+       	 }
+     }
+        
+    function refreshGrids(){
+        if(Ext.getCmp('decsriptionGrid')!=null)
+            Ext.getCmp('decsriptionGrid').getStore().loadData(descDt);
+        if(Ext.getCmp('resolutionGrid')!=null)
+    		Ext.getCmp('resolutionGrid').getStore().loadData(resDt);
+    	if(Ext.getCmp('resCheckBox') != null)
+    		Ext.getCmp('resCheckBox').setValue(false);
+    	if(Ext.getCmp('desCheckBox') != null)
+    		Ext.getCmp('desCheckBox').setValue(false);
+    }    
+     window.parent.changePopUpTitle('{!JSENCODE($Label.selectFrom)}'+' '+'{!objPluralType}');
+      
+var listData=[{!listData}];
+var descriptionData=[];
+var resolutionData=[];
+       if(isRequestCatalog != 'true'){
+            descriptionData=[{!descriptionData}];
+            resolutionData=[];
+             
+       }      
+               
+    var cmbbx=new Ext.form.ComboBox( {
+        store :[{!listData}],   
+        typeAhead: true,
+        mode: 'local',
+        triggerAction: 'all',
+        value:'{!JSENCODE($Label.AllCategories)}',
+        width:200,
+		selectOnFocus:true,
+         listeners :{select: changeGrouping, change: changeGrouping}, 
+        id: 'groupoptions'
+    });
+	
+	var isIncidentCategorySelected = true;
+    
+    if ('{!JSENCODE(categoryview)}' == 'SR')  
+		isIncidentCategorySelected = false;
+	
+	var filterMenuPanel = new Ext.Panel({
+        title: '',
+        tbar: [ {
+                scale: 'medium',
+                iconCls: 'bmcView1',
+                tooltipType : 'title',
+                tooltip: 'Filter options',
+                id:'filterMenuId',
+                menu: [ 
+                { xtype:'radio', name:'IncSRCategory', boxLabel:'{!JSENCODE($Label.Incident_Categories)}',checked: isIncidentCategorySelected,  iconCls: 'emptyIcon',  
+                             inputValue: 'IncidentCat',handler: FilterCategory
+                            
+                             },
+                { xtype:'radio', name:'IncSRCategory', boxLabel:'{!JSENCODE($Label.Service_Request_Categories)}',checked: !isIncidentCategorySelected, iconCls: 'emptyIcon',  
+                            inputValue: 'SRCat', handler: FilterCategory
+                            
+                             },
+                 {text: '{!JSENCODE($Label.Apply)}', iconCls: 'mnuList',handler:doApply}
+                        ]
+            }
+            ]
+        });
+	var selectedFilterOption=null;
+  function FilterCategory(item, checked) {
+     
+        if(checked){
+            selectedFilterOption = item.inputValue;
+        }
+        
+    };
+    function doApply(){
+     var defaultView='';
+     if(selectedFilterOption == 'IncidentCat')
+       defaultView='';
+     else
+     defaultView='SR';
+     showCategoeyView(defaultView);
+    
+     
+    }
+	
+   var srchTxtFld = new Ext.form.TextField({
+    id: 'txtSrch',
+    name: 'txtSrch',
+    fieldLabel: '{!JSENCODE($Label.search)}',
+    allowBlank: true,
+    emptyText: '{!JSENCODE($Label.search)}'});
+
+        </script>
+     <apex:outputPanel id="xyz">
+    <script>
+    function toggleSingleClick(){
+        isSingleClicked = true;
+    }
+     var objcategorytree = Ext.getCmp('categoryTree');
+      if (objcategorytree != null) {        
+        //objcategorytree.view.refresh();
+        var root = new Ext.tree.AsyncTreeNode({
+                            text :'{!JSENCODE($Label.CategoriesByDesc)}', 
+                            expanded: true,
+                            children: <apex:outputText escape="false" value="{!categories}"/>
+        });
+        objcategorytree.setRootNode(root);
+        objcategorytree.getRootNode().reload();
+         objcategorytree.render();
+    }
+    </script>
+    </apex:outputPanel>   
+    <apex:outputPanel >
+    <apex:form id="CategorySearchForm">
+    <c:ValidationComponent errorMsgList="" id="vComponent"></c:ValidationComponent>
+    <input type="hidden" id="selectedCategory" name="selectedCategory" value="{!selectedCategory}"  /> 
+    <apex:actionFunction name="pgRefresh" action="{!research}" reRender="xyz" oncomplete="enableCancelButton();">
+     </apex:actionFunction>
+    
+    <apex:actionFunction name="showCategoeyView" action="{!showCategoeyView}" reRender="xyz" oncomplete="">
+        <apex:param assignTo="{!categoryview}" id="defaultView"  name="defaultView" value=""/>
+    </apex:actionFunction>
+    
+     <apex:outputPanel >
+      
+    <apex:actionFunction name="renderTree" action="{!renderTree}" reRender="xyz" >
+                 <apex:param assignTo="{!selectedCategory}" id="selectedCategory"  name="idSetString" value=""/>
+     </apex:actionFunction> 
+      <table class="clsMainTableC" cellpadding="5" cellspacing="0">
+           
+            <tr>
+          <td>
+           <div id="btntoolbar"/>
+           </td>
+          </tr>
+            <tr>
+                <td  >
+                      <div id="categoryListPage" style="height:425px;"></div>
+                     <div id="categoryPageTree" class="clsLeftPadding10"></div>
+                      <apex:actionFunction name="nodeClicked" action="{!fetchDescriptionList}" id="value" reRender="refreshData" onComplete="refreshGrids();">
+
+                      <apex:param name="paramId" value="" /> 
+
+                    </apex:actionFunction>
+               </td>
+          </tr>   
+          
+       </table>  
+       </apex:outputPanel>
+        <br/>
+  <apex:outputPanel >
+  <div width="100%" id="div1"/>
+  </apex:outputPanel>
+  
+<apex:outputPanel id="dummy"/>
+
+       <apex:outputPanel >
+ <div align="bottom" class="clsBottomDiv">
+ <div style="background-color:#dee0e0" align="right">
+ <table>
+  <tr style="background-color:#dee0e0;height:35px; width:100%;" >
+                              <td align="right">
+                                <table >
+                                    <tr>
+   <td colspan="5"></td>
+                                        <td align="right">
+                                         <input type="button" style="background-color:#dee0e0" onclick="saveCategory()" value="{!okButton}"  class="clsButtonStyle clsPrvBtn bgBtnGrey" />                                          
+                                            
+                                        </td>
+                                        <td align="right">
+                                         <input type="button" id="cancelButton" style="background-color:#dee0e0" onclick="javascript: parent.window.closePopupRF();" value="{!cancelButton}" class="clsButtonStyle clsPrvBtn bgBtnGrey"/>
+                                            
+                                        </td>
+                                        <td width="5px"></td>
+                                    </tr>
+                                </table>
+                               </td>
+                            </tr>
+                            </table>
+                         </div>
+                         </div>
+    </apex:outputPanel>
+<apex:actionFunction name="handleRowClick" action="{!fetchResolutionList}" reRender="ResolutionData">
+                   <apex:param name="DescriptionId"  value=""/>
+               </apex:actionFunction> 
+<apex:outputPanel id="refreshData" rendered="true">
+<script>
+	if(isRequestCatalog != 'true'){
+	    descDt=[{!descriptionData}];
+	    resDt=[];
+	    catId = '{!JSENCODE(catId)}';
+	}
+</script>
+</apex:outputPanel>
+
+
+
+<apex:outputPanel id="ResolutionData" rendered="true">
+<script>    
+if(isRequestCatalog != 'true'){
+  resDt=[{!resolutionData}];
+  if(Ext.getCmp('resolutionGrid')!=null)
+    Ext.getCmp('resolutionGrid').getStore().loadData(resDt);
+ }
+</script>
+
+</apex:outputPanel>
+           <apex:inputhidden id="txtSrchField" value="{!txtSrchField}" />    
+     <input type="hidden" id="lookupdataval" name="lookupdataval" value=""/>                       
+     <input type="hidden" id="refreshCatId" name="catId" value="{!catId}"/>               
+    </apex:form>                           
+                             
+ </apex:outputPanel>
+<script>
+var cendtime = '{!csearchendtime}'; 
+servertime = vservertime + (cendtime - cstarttime);
+</script>  
+</apex:page>

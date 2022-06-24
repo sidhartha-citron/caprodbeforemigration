@@ -1,0 +1,105 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="SearchAndSelectController">
+    <aura:attribute name="searchTerm" type="String" access="private"/>
+    <aura:attribute name="isSearching" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="hasManyResults" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="searchResults" type="SearchAndSelectController.SearchResult[]" access="private"/>
+    
+    <aura:registerEvent name="addRecordsEvt" type="c:AddRecordsEvt"/>
+
+    <div class="slds-m-bottom_small slds-align_absolute-center">
+        <ui:inputText value="{!v.searchTerm}" class="slds-lookup__search-input slds-input searchBox" placeholder="Search for Accounts" />&nbsp;<lightning:button value="Search" label="Search" class="slds-button slds-button_neutral" onclick="{!c.doSearch}"/>
+    </div>
+
+    <div class="slds-is-relative">
+        <div class="{!if(v.isSearching,'slds-show overlay','slds-hide')}">
+        	<div class="slds-is-relative" style="height: 20%;">
+            	<div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+                    <span class="slds-assistive-text">Loading</span>
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+              	</div>
+            </div>
+        </div>
+            
+        <div class="{!v.hasManyResults ? 'tableScroll border slds-m-bottom_large' : 'border slds-m-bottom_large'}">
+            <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_fixed-layout">
+                <thead>
+                    <tr class="slds-text-title_caps">
+                        <th scope="col" class="slds-cell-wrap">
+                            <div class="slds-align_absolute-center selectLink">
+                                <a onclick="{!c.onSelectAll}">all</a>&nbsp;|&nbsp;<a onclick="{!c.onSelectNone}">none</a>&nbsp;|&nbsp;<a onclick="{!c.onInvert}">invert</a>
+                            </div>
+                        </th>
+                        <th scope="col" class="slds-cell-wrap"><div>Account Name</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div>Parent Account</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">Accpac Account #</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">Recurring SO</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">On Hold</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">Shipping Address</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">Type</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">Owner</div></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <aura:iteration items="{!v.searchResults}" var="sr">
+                        <tr>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:inputCheckBox value="{!sr.isSelected}"/>
+                                </div>
+                            </td>
+                            <td class=" slds-cell-wrap slds-truncate">
+                                <div>
+                                    <ui:outputText value="{!sr.acct.Name}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div >
+                                    <ui:outputText value="{!sr.acct.Parent.Name}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:outputText value="{!sr.acct.AccPac_Account__c}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:outputCheckBox value="{!sr.acct.Recurring_SO__c}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:outputCheckBox value="{!sr.acct.On_Hold__c}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center slds-truncate">
+                                    <ui:outputText value="{!sr.acct.ShippingAddress}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:outputText value="{!sr.acct.Type}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:outputText value="{!sr.acct.Owner.Name}"/>
+                                </div>
+                            </td>
+                        </tr>
+                    </aura:iteration>
+                </tbody>
+                
+            </table>
+        
+        </div>
+        
+        <div class="slds-m-bottom_small" style="margin-left:75px;">
+        	<lightning:button value="Add" label="Add" class="slds-button slds-button_brand" onclick="{!c.doAdd}"/>
+    	</div>
+            
+    </div>
+    
+</aura:component>

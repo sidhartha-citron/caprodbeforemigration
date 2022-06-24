@@ -1,0 +1,69 @@
+<apex:page Controller="BMCServiceDesk.ManageCustomSettingController" showHeader="false" >
+<script>
+	var message = '{!message}';
+	function showMessage(){
+		
+		if(message != null && message != '' && message !='null'){
+			alert(message);
+		}
+	
+	}
+
+</script>
+<apex:outputpanel id="messagePanel">
+<script>
+message = '{!message}';
+
+</script>
+</apex:outputpanel>
+
+
+<apex:form id="formID">
+<!--apex:actionfunction name="Confirm" action="{!verify}" rerender="setPasnelId1,authCodeId,setPasnelId," onComplete="alert({!renderAuthPanel});" />  -->
+	<apex:outputpanel id="formpanelId" rendered="{!renderPage}">
+	
+		<table>
+			<tr>
+				<td>
+					<apex:inputText id="authCodeId" value="{!authCode}" rendered="{!renderAuthPanel}"/>
+					
+				</td>
+				<td>
+				</td>
+				<td>
+					<!-- input type="button" value="confirm" onclick="Confirm();" /> -->
+					<apex:commandButton id="verifyBtnId" value="Verify Code" action="{!verify}" rendered="{!renderAuthPanel}" rerender="messagePanel,formpanelId" oncomplete="showMessage();" />
+					
+				</td>
+				
+			</tr>
+			
+			<tr>
+				<td colspan="4">
+				<apex:outputpanel id="setPasnelId" >
+				<table>
+					<tr>
+						<td> <apex:outputLabel value="Current Value Of Custom Setting is :" rendered="{!renderButtonPanel}"/>
+						</td>
+						<td><apex:outputtext value="{!csValue}" rendered="{!renderButtonPanel}"/>
+						</td>
+						<td>
+						<apex:commandButton value="{!btnlabel}" rendered="{!renderButtonPanel}" action="{!upsertCustomSetting}" rerender="messagePanel,formpanelId" onComplete="showMessage();" />
+						</td>
+						</tr>
+				</table>
+				</apex:outputpanel>
+				
+				</td>
+				</tr>
+			<tr>
+				<td style="width: 140px;padding-left: 3px;"> <apex:outputLabel value="Current Org Expiry Date:"  rendered="{!renderButtonPanel}"/>
+				</td>
+				<td style="font-size: large;"><apex:outputtext value="{!orgExpiryDate}"  rendered="{!renderButtonPanel}"/>
+				</td>
+			</tr>
+		</table>
+	
+</apex:outputpanel>
+</apex:form>
+</apex:page>

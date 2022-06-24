@@ -1,0 +1,827 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.OrganizationController" contentType="{!contetnTypeForIE}" standardStylesheets="false">
+<apex:messages />
+<c:CommonIncludes />
+
+<script>
+     var organizationName;               
+     var organizationId;
+     var errormsg;
+     var chkBoxValue;
+     var accountHeader = '{!JSENCODE($ObjectType.Account.label)}'; 
+     var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+     var isLookup = '{!JSENCODE($CurrentPage.parameters.islookup)}';  
+     var isInactive = "{!JSENCODE($CurrentPage.parameters.isinactive)}"; 
+	 document.onclick = activateWindow; 
+	 var isCustomerPortalEnabled = '{!isCustomerPortalEnabled}';
+     var customerPortalNotEnabledMsg = '{!JSENCODE($Label.CustomerPortalNotEnabledMsg)}';
+     var isCreateable = {!isCreateable};
+     function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+     }
+     function afterSaveAction(){ 
+	     if(!isLookup)
+          window.parent.refreshList();
+
+    }
+    function afterResetSI(){
+     		var modName = "{!JSENCODE($CurrentPage.parameters.moduleName)}";  
+     		var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";  
+	        if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined' && errormsg=='{!JSENCODE($Label.savedSuccessfully)}'){
+				window.parent.registerSave(wid);
+	            window.parent.parent.refreshSupportingInformation(parentWid,modName);
+	        }
+     }
+    
+     if(isLookup){
+          window.parent.changePopUpTitle('{!objLabel}');
+      }
+        /*
+            Code for handling Data change on Page
+            - START
+        */
+        var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+        var clickedOnce = false;  
+        function handleChange(){
+            if(!clickedOnce){
+                clickedOnce = true;
+                window.parent.registerChange(wid2);
+            }
+        }
+            
+        function handleResetChange(){
+            if(clickedOnce){
+               clickedOnce = false;
+               window.parent.registerSave(wid2);
+           }
+           }
+       
+         
+         /*
+            END
+        */
+        
+        var resizeGrid= function resizeGrid(){
+        if(Ext.getCmp('southPanelSI')!=undefined)
+         Ext.getCmp('southPanelSI').setWidth(Ext.getCmp('southPanelSI').getWidth());
+        };
+        if(window.parent.refreshGridSI!=undefined)
+          window.parent.refreshGridSI(wid,resizeGrid);
+        
+     function saveRecords(){
+      chkBoxValue=Ext.getCmp('idInactive').getValue();
+       save(chkBoxValue); 
+        
+        if(isLookup){       
+          window.parent.refreshDocs();
+          window.parent.closePopup();
+          
+       }
+     } 
+        function getORGid(orgId,isSave){
+            if(isLookup){
+              window.parent.refreshDocs();  
+              window.parent.closePopup();
+           }else{
+           
+               setId(orgId,isSave); 
+           }
+        }
+    
+     function callCopyPage(){
+        window.parent.addTab("OrganizationPage?copyId="+organizationId+"",accountHeader,accountHeader);
+    }
+    
+        function closeWindow(){
+            if(errormsg != null && errormsg !=''&& errormsg !='{!JSENCODE($Label.savedSuccessfully)}'){ 
+                showError();
+            }else{ 
+                if(isLookup){
+                  window.parent.refreshDocs();                
+                  window.parent.closePopup();
+               }else{
+                    window.parent.refreshList();
+                    window.parent.closeTab(wid);
+                }
+            }
+        }   
+		function resetSupportingInformation(isSave){
+		       getORGid(organizationId,isSave);
+       }
+function buttonValidator() {
+       if((organizationName != null && organizationName != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){           
+        if(isCreateable)
+         	Ext.getCmp('copyId').setDisabled(false);
+
+         Ext.getCmp('resetId').setDisabled(false);
+       }  
+     }
+     
+      function setParentAccId()
+      {                
+                disableSaveButton();
+           		var accID=null;
+           		accID = document.getElementById('{!$Component.organizationForm.pbarId.pbarItem.Account_id_id}');            		     	
+                setParentOrganization(accID.value);
+      }
+	  
+	  function setBusinessId()
+      {                
+                disableSaveButton();
+                var businessID=null;
+                businessID= document.getElementById('{!$Component.organizationForm.pbarId.pbarItem.BusinessHours_id_id}');                          
+                setBusinessHour(businessID.value);
+      }
+	  
+	  function setAccountOwnerId()
+      {                
+                disableSaveButton();
+                var AccountOwnerID=null;
+                AccountOwnerID= document.getElementById('{!$Component.organizationForm.pbarId.pbarItemDetails.User_id_id}');                          
+                setMainContact(AccountOwnerID.value);
+      }
+</script>
+
+   <script>
+         var disableTrue = true;
+         Ext.onReady(function(){
+         
+         Ext.QuickTips.init();
+         if(isLookup){
+            disableTrue = true;
+          }else{ 
+          disableTrue = false; }
+
+        // This function renders a block of buttons
+        var NewBtnhandler = function(button,event) { activeAllWindowFlag=false;  openPage("OrganizationPage",accountHeader,accountHeader); };
+        var SaveBtnHandler = function(button,event) {  waitbox(0);disableSaveButton(); saveRecords(); };
+        
+        var CopyBtnHandler = function(button,event) { activeAllWindowFlag=false; callCopyPage(); };
+        var ResetBtnHandler = function(button,event) {  resetOrganization(); };
+        var NextBtnHandler = function (button,event) { if(document.getElementById('nextId').disabled!=true) nextOrganizationBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { if(document.getElementById('prevId').disabled!=true) previousOrganizationBtnHandler1();};
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+new SamplePanel({
+            title: '',
+             cls:'toolSpCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+                scale: 'medium',
+                iconCls: 'bmcNew',
+                id: 'newId',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.new)}',
+                hidden:disableTrue,
+                tabIndex: 1,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },
+                handler:NewBtnhandler
+            } ,' ', {
+                scale: 'medium',
+                id: 'actionsave_id',
+                iconCls: 'bmcSave',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.save)}',
+                tabIndex: 2,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.copy)}',
+                id:'copyId',
+                hidden:disableTrue,
+                tabIndex: 3,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },
+                handler:CopyBtnHandler
+            },' ','-',' ',' ',{
+                scale: 'medium',
+                iconCls: 'bmcRefreshDasboard',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.Refresh)}',
+                id:'resetId',
+                hidden:disableTrue,
+                tabIndex: 4,
+                
+                handler:ResetBtnHandler
+                       
+                            
+            },
+            new Ext.Toolbar.Fill(), 
+            {
+               id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               align:'top',
+               checked: false,
+               boxLabel:'{!JSENCODE($Label.inactive)}',
+               cls:'chkStyle',
+               autoCreate:{tag:"input", type:"checkbox", autocomplete:"off", qtip:"{!JSENCODE($Label.TooltipOrganizationInactive)}"},
+               tabIndex: 5,
+               boxLabel:'<span class="checkboxLabelCls">{!JSENCODE($Label.inactive)}</span>'
+           
+            
+              
+            }, {
+               
+               
+                 xtype : 'box',
+                 id    : 'prevId',
+                autoEl:  {tag: 'img', 
+                          src:('{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_previous.gif'),   
+                         title:'{!JSENCODE($Label.previousRecord)}'
+                         },
+               tabIndex: 6,           
+               cls:'cursorCls',
+               listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                             
+            },{
+               
+                xtype : 'box',
+                id    : 'nextId',
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_next.gif',
+                          title:'{!JSENCODE($Label.nextRecord)}' },
+                cls:'cursorSpaceCls',
+                tabIndex: 7,
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+               
+                
+            }
+            ] 
+        });
+        
+        if(isInactive){                 
+        Ext.getCmp('idInactive').setDisabled(true);
+        } 
+        Ext.getCmp('idInactive').setValue('{!IF(organization.inactive__c, "true", "false")}');
+        
+        organizationId = '{!JSENCODE(organization.Id)}';    
+        if(organizationId == null ||organizationId == ''){                
+            
+            Ext.getCmp('copyId').setDisabled(true);
+            Ext.getCmp('resetId').setDisabled(true); 
+            Ext.getCmp('prevId').setDisabled(true);
+            Ext.getCmp('nextId').setDisabled(true);        
+        }
+        else{
+        	if(!isCreateable){
+        		Ext.getCmp('copyId').setDisabled(true);	 
+        		Ext.getCmp('newId').setDisabled(true);
+        	}
+        }
+        ///////////// // IE7-8 Related Changes
+       var canvasPanel = new Ext.Panel({
+             layout:'border',
+            // width:'auto',    
+             height:Ext.isIE7 ? 670: Ext.isIE ? 674:Ext.isSafari ? 695:680,
+             border:false, 
+             id:'canvasPanelId',
+               cls:'canvasPanelCls',
+             items:[{  
+                    xtype: 'panel', // TabPanel itself has no title    
+                      layout: 'fit',                                                   
+                    overflow:'auto',
+                    autoScroll:true,
+                    split:false,
+                    width:'auto',    
+                    height:485, 
+                    cls:'northPanelCls',
+                                                                 
+                    region: 'center',                   
+                               
+                    contentEl : Ext.isIE ? 'capsule' : '{!$Component.organizationForm}'
+                    
+            },{                                                         
+                    xtype: 'panel', // TabPanel itself has no title
+                    layout: 'fit',  
+                    overflow:'auto',
+                    border:false, 
+                    id:'southPanelSI',
+                    autoScroll:true,
+                    split:true,
+                    collapsible: true,
+                    collapseMode: 'mini',
+                    width:'auto',    
+                    height:Ext.isIE ?182:180,
+                    minHeight:Ext.isIE ?120:150,
+                                                                      
+                    region: 'south',
+                    listeners : {
+                        resize:function( obj,adjWidth,adjHeight,rawWidth,rawHeight ) { 
+                        
+                            if(Ext.getCmp('south-panel')!=undefined){
+                                   Ext.getCmp('south-panel').setHeight(adjHeight);
+
+                            }
+                       }
+                   },
+                  
+                   contentEl :'detailsDiv' 
+            }],
+            listeners: {
+                        afterlayout: function(c) {
+                            c.layout.south.miniSplitEl.dom.qtip = '{!JSENCODE($Label.DragResizeClickCollapse)}';
+                            c.layout.south.getCollapsedEl();
+                            c.layout.south.miniCollapsedEl.dom.qtip = '{!JSENCODE($Label.ClickToExpand)}';
+                        },
+                        single: true
+          }
+            
+           
+             
+           
+    });
+
+         var viewport = new Ext.Viewport({
+         layout:'anchor',
+        // renderTo:'viewPortDiv',
+         width:'auto',
+         id:'viewportId',
+         border:false, 
+        cls:'viewportCanvasCls',
+         //items:canvasPanel
+         items:[{anchor: '100%', layout:'fit', items:canvasPanel} ]
+        });
+        
+        handleElemEvent();
+        converdisabletoreadonly();
+	if(organizationId == null ||organizationId == ''){   
+       document.getElementById('{!$Component.organizationForm.organization_Id}').focus();      
+    }
+    });
+     var organizationIdSet='';
+    if(!isLookup){
+    
+        //organizationIdSet=window.parent.returnListOfId();
+        
+        if(organizationIdSet == null || organizationIdSet == ''){
+			if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+			if(typeof(window.parent.returnListOfId)=='function')
+				organizationIdSet=window.parent.returnListOfId();
+		}else{
+			if(typeof(window.parent.parent.getIdArray)=='function')
+				organizationIdSet=window.parent.parent.getIdArray();
+				window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+			}
+		}
+    }
+
+        function previousOrganizationBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(organizationIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=organizationIdSet[i];
+                }else{
+                    idSetString=idSetString+','+organizationIdSet[i];
+                }
+                i++;
+            }
+            previousOrganizationBtnHandler(idSetString);
+        
+        }
+      if(!isLookup)
+       organizationIdSet=window.parent.returnListOfId(); 
+       function nextOrganizationBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(organizationIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=organizationIdSet[i];
+                }else{
+                    idSetString=idSetString+','+organizationIdSet[i];
+                }
+                i++;
+            }
+            nextOrganizationBtnHandler(idSetString);
+        
+        } 
+
+    </script>
+   
+    
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           organizationName = '{!JSENCODE(organization.Name)}';               
+           organizationId = '{!JSENCODE(organization.Id)}';      
+           
+        </script>
+        </apex:outputPanel>
+        
+         <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';               
+         
+        </script>
+        </apex:outputPanel>
+        <apex:outputPanel id="afterSavePanel">
+            <script>
+               function handleSave(){
+                   var id = "{!JSENCODE(organization.Id)}";
+                window.parent.handleSave(wid, id);
+            }
+            
+            function enableSaveButton() {
+        		Ext.getCmp('actionsave_id').setDisabled(false);
+      		}
+      		function disableSaveButton(){
+      	        Ext.getCmp('actionsave_id').setDisabled(true);
+      		}
+            function updateTitle(){
+                var newTitle= "{!JSENCODE(organization.name)}";
+                if(newTitle != ""){				
+                	window.parent.changeTitle(wid,newTitle,accountHeader);
+                }            	
+            }
+            function AssignNewAccountId(){
+           		return '{!JSENCODE(organizationId)}';              
+       		}
+        
+            </script>
+        </apex:outputPanel>
+         <apex:outputPanel id="titlePanel">
+            <script>
+                function updateList(){
+                    //var newOrganizationId = '{!organization.Id}';
+                    //getORGid(newOrganizationId);
+                    //window.parent.refreshList();
+                }
+        
+        </script>
+    </apex:outputPanel>    
+     <apex:outputPanel id="inactivePanel">
+        <script>
+           function updateInactive(){
+            Ext.getCmp('idInactive').setValue('{!IF(organization.inactive__c, "true", "false")}');
+        }
+          
+    
+        </script>
+    </apex:outputPanel>
+
+            
+                     
+ <apex:form id="organizationForm">           
+  
+ <div id="capsule" class="CapsuleDiv1">       
+   <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+         
+             <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,panelId,afterSavePanel,errorId" oncomplete="waitMsg.hide();afterSaveAction();showError();handleSave();resetSupportingInformation(true);buttonValidator();updateList();handleElemEvent();converdisabletoreadonly();updateTitle();enableSaveButton();">
+                    <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+             </apex:actionFunction>
+                <apex:actionFunction action="{!urgencyQuery}" name="setUrgency" reRender="Urgency__c_id_name">
+                    <apex:param assignTo="{!urgencyName}" value="" name="saveUrgency "/>
+                </apex:actionFunction>
+                <apex:actionFunction action="{!parentOrganizationQuery}" name="setParentOrganization " reRender="Account_id_name" oncomplete="enableSaveButton();">
+                    <apex:param assignTo="{!parentOrganization}" value="" name="saveParentOrganization"/>
+                </apex:actionFunction>
+                    <apex:actionFunction action="{!businessHourQuery}" name="setBusinessHour" reRender="BusinessHours_id_name" oncomplete="enableSaveButton();">
+                    <apex:param assignTo="{!businessHourId}" value="" name="saveBusinessHour"/>
+                </apex:actionFunction>
+                <apex:actionFunction action="{!mainContactQuery}" name="setMainContact" reRender="showRoleWarning, User_id_username,User_id_phone" oncomplete="showRoleWarningMsg();converdisabletoreadonly();enableSaveButton();">
+                    <apex:param assignTo="{!mainContactId}" value="" name="saveMainContactId"/>
+                </apex:actionFunction>
+                 <apex:actionFunction action="{!fetchNumberOfUsers}" name="setNumberOfUsers" reRender="numberOfUsers_Id" oncomplete="converdisabletoreadonly();"/> 
+                <apex:actionFunction action="{!reset}" name="resetOrganization" rerender="tablePanel, pbarId,inactivePanel,afterSavePanel" oncomplete="updateInactive();handleResetChange();handleElemEvent();converdisabletoreadonly();"/>               
+                <apex:actionFunction action="{!newOrganization}" name="newOrganization" reRender="dataPanel,headerPanel"/>                             
+                <apex:actionFunction action="{!nextBtnHandler}" name="nextOrganizationBtnHandler" 
+                                    rerender="tablePanel, pbarId,panelId,inactivePanel,afterSavePanel" onComplete="updateInactive();handleResetChange();resetSupportingInformation(false);handleElemEvent();converdisabletoreadonly();reloadSupportInfo();updateTitle();"> 
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+                </apex:actionFunction>
+                <apex:actionFunction action="{!previousBtnHandler}" name="previousOrganizationBtnHandler" 
+                                        rerender="tablePanel, pbarId,panelId,inactivePanel,afterSavePanel" onComplete="updateInactive();handleResetChange();handleElemEvent();converdisabletoreadonly();resetSupportingInformation(false);reloadSupportInfo();updateTitle();"> 
+                                        <apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+                </apex:actionFunction>
+                
+                <table cellpadding="0" cellspacing="0" class="clsMainTableSI">
+                      
+                                                
+                        <tr class="clsRowGreyBg">
+                            <td>
+                                <div id="btnToolbar"></div>
+                          
+                            </td>
+                        </tr>
+                        <tr>
+                         <td>
+                         <apex:outputPanel id="dataPanel">
+                            <table cellpadding="0" cellspacing="0" class="clsTable">
+                            <tr>
+                                <td class="clsTopAlignment75">
+                                  <apex:outputPanel id="tablePanel"> 
+                               <table cellpadding="0" cellspacing="0" class="clsTable" >
+                                    
+                                     <tr>
+                                          <td colspan="3"><div class="div15pxVspacing"/></td>
+                                      </tr>
+                                      <tr>
+                                            <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.bmcservicedesk__organizationname}"/><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                            <td class="clsInputTextBoxTD">
+                                                <apex:inputText value="{!organizationName}" id="organization_Id" title="{!$Label.bmcservicedesk__tooltiporganizationname}" styleClass="clsInputTextBox" tabindex="8"/> 
+                                            </td>
+                                      </tr>
+                                      <tr>
+                                            <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.bmcservicedesk__organizationsite}"/></td>
+                                            <td class="clsInputTextBoxTD">
+                                                <apex:inputText value="{!organization.Site}"  title="{!$Label.bmcservicedesk__tooltiporganizationsite}" styleClass="clsInputTextBox" tabindex="9"/> 
+                                            </td>
+                                      </tr>
+                                     
+                                      <tr>
+                                            <td class="clsInputLabelTD" ><apex:outputLabel value="{!$ObjectType.Account.fields.BMCServiceDesk__Vendor__c.label}"/></td>
+                                            <td class="clsInputTextBoxTD">
+                                                <apex:inputCheckbox value="{!organization.BMCServiceDesk__Vendor__c}"  title="" tabindex="10"/> 
+                                            </td>
+                                      </tr>
+                                      <tr>
+                                            <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.bmcservicedesk__serviceprovider}"/></td>
+                                            <td class="clsInputTextBoxTD">
+                                                <apex:inputCheckbox value="{!organization.BMCServiceDesk__ServiceProvider__c}"  title="" tabindex="10"/> 
+                                            </td>
+                                      </tr>
+                                      <tr>
+                                            <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.bmcservicedesk__remedyforceaccount}"/></td>
+                                            <td class="clsInputTextBoxTD">
+                                                <apex:inputCheckbox value="{!organization.BMCServiceDesk__Remedyforce_Account__c}"  title="" tabindex="11"/> 
+                                            </td>
+                                      </tr>
+                                 </table>
+                                     <table cellpadding="0" cellspacing="0" class="clsTable">
+                                     <tr>
+                                        <td class="clsInputBoldLabelTableFirstRowTD"><apex:outputLabel value="{!$Label.bmcservicedesk__note}"/></td>
+                                     </tr>
+                                     <tr>
+                                        <td  class="clsInputTextAreaTD" > 
+                                           <div class="clsRelativePosition">
+                                             <apex:inputtextarea value="{!organization.description}"  title="{!$Label.bmcservicedesk__tooltiporganizationnote}" styleClass="clsInputTextArea"  tabindex="12"/>
+                                           </div> 
+                                        </td>                                        
+                                      </tr>
+                                       <tr>
+                                           <td>
+                                               <div class="div13pxVspacing"></div>
+                                            </td>
+                                       </tr>
+                                        
+                                     </table>
+                                    </apex:outputPanel> 
+                                   </td>
+                                                                   
+                                 <td><div class="div17pxHspacing"/></td>
+                                
+                                <td class="clsTopAlignment25">
+                                    <div class="panelCapsuleOrganization">
+                                        <apex:outputPanel id="PanelbarOutputPanel">
+                                            <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" height="100%" id="pbarId" >
+                                                <apex:panelBarItem label="{!$Label.bmcservicedesk__details}" expanded="true" headerClass="panelHeaderOrganization" contentClass="panelContentOrganization" id="pbarItem">
+                                                    
+                                                <table cellpadding="0" cellspacing="0" class="clsTable">
+                                                            <tr>
+                                                                <td colspan="3"><div class="div15pxVspacing"/></td>
+                                                            </tr> 
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__urgency}"/></td>
+                                                                  <apex:actionRegion >
+                                                                        <td class="clsPanelInputTextboxTD1">
+                                                                            <apex:inputText id="Urgency__c_id_name" title="{!$Label.bmcservicedesk__tooltiporganizationurgencyid}" value="{!urgencyId}" onblur="showalldata(event,'',escape('inactive__c = false'));" styleClass="clsPanelInputTextbox" tabindex="12"/>
+                                                                        </td>
+                                                                        <td class="lookupIconPanelTD">
+                                                                            <div class="lookUpIconDiv"><apex:commandButton onclick="if(!inProgress){ openPopupRF('SearchPage?popupId=Urgency&isLookup=true',setUrgency);}" rerender="dummy" styleClass="lookupIconOn" tabindex="13" id="urgencyLookup"/></div>
+                                                                        </td>
+                                                                  </apex:actionRegion>
+                                                                 </tr>
+                                                            <tr>
+                                                             <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__parentorganization}"/></td>
+                                                             
+                                                                 <td class="clsPanelInputTextTD">
+                                                                 
+                                                                    <apex:inputText id="Account_id_name" onblur="showalldata(event,setParentAccId,escape('inactive__c = false'))"  title="{!$Label.bmcservicedesk__tooltiporganizationparentorganization}" value="{!parentOrganizationId}" styleClass="clsPanelInputTextbox" tabindex="14"/>
+                                                                    <apex:inputhidden id="Account_id_id"/>                                                                    
+                                                                 </td>
+                                                                 <td class="lookupIconPanelTD">
+                                                                     <div class="lookUpIconDiv"><apex:commandButton onclick="if(!inProgress){ openPopupRF('SearchPage?popupId=Organization&isLookup=true',setParentOrganization);}" rerender="dummy" styleClass="lookupIconOn" id="accountLookup" tabindex="15"/></div>
+                                                                 </td>  
+                                                                 
+                                                            </tr>
+                                                            <tr>
+                                                              <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__estimatednoofusers}"/></td>
+                                                              <td class="clsPanelInputTextboxTD1">
+                                                                   <apex:inputText id="numberOfUsers_Id" value="{!numberOfuser}" title="{!$Label.bmcservicedesk__tooltiporganizationestimatednoofusers}" disabled="true"  styleClass="clsPanelInputTextboxReadOnly" onfocus="this.blur();"/>
+                                                              </td>
+                                                              </tr>
+															   <tr>
+                                                             <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$ObjectType.Account.fields.BMCServiceDesk__Business_Hour__c.label}"/></td>
+                                                             
+                                                                 <td class="clsPanelInputTextTD">
+                                                                 
+                                                                     <apex:inputText id="BusinessHours_id_name" onblur="showalldata(event,setBusinessId,'')"   value="{!businessHourName}" styleClass="clsPanelInputTextbox" tabindex="16"/>
+                                                                     <apex:inputhidden id="BusinessHours_id_id"/>
+                                                                    </td>
+                                                                 <td class="lookupIconPanelTD">
+                                                                     <div class="lookUpIconDiv"><apex:commandButton onclick="if(!inProgress){ openPopupRF('SearchPage?popupId=BusinessHours&isLookup=true',setBusinessHour);}" rerender="dummy" styleClass="lookupIconOn" id="businessHourLookup" tabindex="17"/></div>
+                                                                 </td>  
+                                                                 
+                                                            </tr>
+                                                        </table>
+                                                    </apex:panelBarItem>
+                                                    
+                                                    <apex:panelBarItem label="{!$Label.bmcservicedesk__contactdetails}" id="pbarItemDetails" headerClassActive="" expanded="true" headerClass="panelHeaderOrganization" contentClass="panelContentOrganization">
+                                                    <table  cellpadding="0" cellspacing="0" class="clsTable">
+                                                           <tr >
+                                                                <td colspan="3"><div class="div15pxVspacing"/></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD" ><apex:outputLabel value="{!$Label.bmcservicedesk__address}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                   <apex:inputtextarea value="{!organization.BillingStreet}" title="{!$Label.bmcservicedesk__tooltiporganizationaddress}"  styleClass="clsPanelInputTextArea" tabindex="18"/>
+                                                                 </td>
+                                                                <td class="lookupIconPanelTD">&nbsp;</td>
+                                                            </tr>
+                                                                  <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__country}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                   <apex:inputText title="{!$Label.bmcservicedesk__tooltiporganizationcountry}"  value="{!organization.BillingCountry}" styleClass="clsPanelInputTextbox" tabindex="19"/>
+                                                                 </td>
+                                                                <td class="lookupIconPanelTD">&nbsp;</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__state}"/></td>
+                                                                 <td class="clsPanelInputTextboxTD1">
+                                                                     <apex:inputText title="{!$Label.bmcservicedesk__tooltiporganizationstate}"  id="impact" value="{!organization.BillingState}" styleClass="clsPanelInputTextbox" tabindex="20"/>
+                                                                 </td>
+                                                                  <td class="lookupIconPanelTD">&nbsp;</td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__city}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                     <apex:inputText title="{!$Label.bmcservicedesk__tooltiporganizationcity}" value="{!organization.BillingCity}" styleClass="clsPanelInputTextbox" tabindex="21"/>
+                                                                </td>
+                                                               <td class="lookupIconPanelTD">&nbsp;</td>
+                                                            </tr>
+                                                             <tr>
+                                                                 <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__zip}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                     <apex:inputText title="{!$Label.bmcservicedesk__tooltiporganizationzipcode}"  value="{!organization.BillingPostalCode}" styleClass="clsPanelInputTextbox" tabindex="22"/>
+                                                                  </td>
+                                                                <td class="lookupIconPanelTD">&nbsp;</td>
+                                                            </tr>
+                                                             
+                                                             <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__phone}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputText title="{!$Label.bmcservicedesk__tooltiporganizationphone}"  value="{!organization.Phone}" styleClass="clsPanelInputTextbox" tabindex="23"/>
+                                                                 </td>
+                                                                  <td class="lookupIconPanelTD">&nbsp;</td>
+                                                            </tr>
+                                                             <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__fax}"/></td>
+                                                                 <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputText title="{!$Label.bmcservicedesk__tooltiporganizationfax}"  value="{!organization.Fax}" styleClass="clsPanelInputTextbox" tabindex="24"/>
+                                                                 </td>
+                                                                 <td class="lookupIconPanelTD">&nbsp;</td>
+                                                            </tr>     
+                                                           <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__accountowner}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputText id="User_id_username" value="{!mainContact}" title="{!$Label.bmcservicedesk__tooltiporganizationmaincontact}" onblur="showalldata(event,setAccountOwnerId,escape('IsActive = true'));" styleClass="clsPanelInputTextbox" tabindex="25"/>
+																	<apex:inputhidden id="User_id_id"/>
+                                                                  </td>
+                                                                  <td class="lookupIconPanelTD">
+                                                                     <div class="lookUpIconDiv"><apex:commandButton id="accountOwnerLookup" onclick="if(!inProgress){ openPopupRF('SearchPage?popupId=Client&isLookup=true&filterClause='+escape('isActive = true and contactId = null and Profile.UserType = \'Standard\''),setMainContact);}" rerender="dummy" styleClass="lookupIconOn" tabindex="26"/></div>
+                                                                 </td>  
+                                                                 <!-- <td class="lookupIconPanelTD">&nbsp;</td> -->
+                                                            </tr>
+                                                             <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__accountownerphone}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputText id="User_id_phone" disabled="true" value="{!mainContactPhone}" title="{!$Label.bmcservicedesk__tooltiporganizationmaincontactphone}" styleClass="clsPanelInputTextboxReadOnly" onfocus="this.blur();"/>
+                                                                  </td>
+                                                                   <td class="lookupIconPanelTD">&nbsp;</td>
+                                                            </tr>
+                                                             
+                                                                                                                                                               
+                                                        </table>
+                                                     </apex:panelBarItem>
+                                                     
+                                                    </apex:panelBar>
+                                                     </apex:outputPanel>
+                                            </div>
+                                </td>
+                            </tr>
+                            </table>
+                            </apex:outputPanel>
+                            </td>
+                        </tr>
+                                       
+                    </table>
+                        
+                        
+            
+                   
+                 </apex:outputPanel> 
+           </div>
+           <div class="detailSectinDivCls">
+              <table>
+                <tr>
+                     <td>
+                         <c:SupportInformationComponent setinactive="{!organization.BMCServiceDesk__inactive__c}" objectName="Account" fKeyValue="{!organizationId}" urlForStaticResource="{!$Resource.BMCServiceDesk__SDEFStyles}"/> 
+                            
+                     </td>
+                   </tr>
+               </table>          
+           </div>
+           <apex:outputPanel ID="dummy"></apex:outputPanel>
+		   <apex:outputPanel ID="showRoleWarning">
+               <script> 
+                   function showRoleWarningMsg(){
+                       var contactRole = '{!mainContactRole}';
+                       if(contactRole == ''){
+                            Ext.MessageBox.show({
+                                width: 400,
+                                title: '{!JSENCODE($Label.Warning)}',
+                                msg: '{!JSENCODE($Label.AccountOwner_NoRole_Warning)}',
+                                buttons: Ext.MessageBox.OK,
+                                icon: Ext.MessageBox.WARNING
+                            });
+                       }
+                   } 
+               </script>
+           </apex:outputPanel>	
+           <c:TabOutComponent ></c:TabOutComponent>
+     </apex:form>
+   
+       <style>
+           .clsInputTextBox {
+             *height: 19px;
+          }
+          
+          .clsPanelInputTextboxTD1{
+            *padding-bottom: 5px;
+          }
+          
+           .clsPanelInputTextboxReadOnly {
+               *height: 19px;
+            }
+          
+          .clsPanelInputTextbox {
+              *height: 19px;
+            }
+          
+          .clsPanelInputTextAreaReadOnly {
+           *width: 195px;
+            }
+            .clsIdInputTextBox {
+               *height: 19px;
+            }
+            .clsInputTextBoxReadOnly {
+                *height: 19px;
+            }
+        .dr-pnlbar {
+                border: solid 0px #adb9c0;
+                border-left: solid 1px #adb9c0;
+            border-bottom: 1px solid #aebac1;
+            padding: 0px;
+            background: url({!$Resource.BMCServiceDesk__SDEFStyles}/SDEFimages/blue_bg.gif) repeat;
+                    }
+        .panelCapsuleOrganization {
+            border-bottom: 1px solid #aebac1;
+            width: 100%;    
+            background-color: #FFFFFF;
+		}
+		.x-form-cb-label{
+			display: inline-flex !important;
+		}
+    </style>
+   
+</apex:page>

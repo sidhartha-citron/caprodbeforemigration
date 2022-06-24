@@ -1,0 +1,92 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="CustomSchedulerController">
+	<aura:attribute name="batchJobs" type="String[]" access="private"/>
+    <aura:attribute name="selBatchJob" type="String" access="private"/>
+    <aura:attribute name="settingsNames" type="String[]" access="private"/>
+    <aura:attribute name="selSetting" type="String" access="private"/>
+    <aura:attribute name="hrs" type="String[]" access="private"/>
+    <aura:attribute name="selHr" type="String" access="private"/>
+    <aura:attribute name="errMsg" type="String" access="private"/>
+    <aura:attribute name="runningJobs" type="CustomSchedulerController.BatchJobState[]" access="private"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/> 
+    
+    <article class="slds-card">
+        <div class="slds-card__header slds-grid">
+            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                <div class="slds-media__figure">
+                    <span class="slds-icon_container slds-icon-standard-orders" title="Custom Scheduler">
+                        <lightning:icon iconName="standard:orders" size="small" alternativeText="Custom Scheduler"/>
+                    </span>
+                </div>
+                <div class="slds-media__body">
+                    <h2 class="slds-card__header-title">
+                        <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="Custom Scheduler">
+                            <span class="slds-text-heading_small">Custom Scheduler</span>
+                        </a>
+                    </h2>
+                </div>
+            </header>
+        </div>
+    	
+        
+        <div class="slds-card__body slds-m-top_medium slds-m-left_medium" >
+            <div class="slds-m-top_medium slds-m-left_medium">
+                Schedule&nbsp;&nbsp;<lightning:select value="{!v.selBatchJob}" onchange="{!c.batchSelectChange}" class="select-auto-width" variant="label-hidden" label="">
+                            <aura:iteration items="{!v.batchJobs}" var="opt">
+                                <option value="{!opt}">{!opt}</option>
+                            </aura:iteration>
+    					</lightning:select>
+               &nbsp;&nbsp;job using&nbsp;&nbsp;<lightning:select value="{!v.selSetting}" variant="label-hidden" class="select-auto-width" label="">
+                			<aura:iteration items="{!v.settingsNames}" var="opt">
+                                <option value="{!opt}">{!opt}</option>
+                            </aura:iteration>
+    					</lightning:select>
+               &nbsp;&nbsp;settings for&nbsp;&nbsp;<lightning:select value="{!v.selHr}" variant="label-hidden" class="select-auto-width" label="">
+                			<aura:iteration items="{!v.hrs}" var="opt">
+                                <option value="{!opt}">{!opt}</option>
+                            </aura:iteration>
+    					</lightning:select>
+               &nbsp;o'clock daily
+            </div>
+            <div class="slds-m-top_small slds-m-left_medium">
+            	<lightning:button value="Submit" label="Submit" class="slds-button slds-button_brand" onclick="{!c.submit}"/>
+                &nbsp;&nbsp;<span style="color:red;">{!v.errMsg}</span>
+            </div>
+        
+            <div class="slds-m-top_x-large slds-m-left_medium">
+				<b>Jobs currently scheduled:</b>
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer tableWidth">
+                    <thead>
+                        <tr class="slds-text-title_caps">
+                            <th scope="col" class="slds-cell-wrap">
+                                <div class="slds-truncate_container_50" title="Job Name">Job Name</div>
+                            </th>
+                            <th scope="col" class="slds-cell-wrap">
+                                <div class="slds-truncate_container_50" title="Next Fire">Next Fire</div>
+                            </th>
+                            
+                            <th scope="col" class="slds-cell-wrap"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <aura:iteration items="{!v.runningJobs}" var="job">
+                            <tr> 
+                                <td class="slds-cell-wrap">
+                                    <div>{!job.jobName}</div>
+                                </td>
+                                <td class="slds-cell-wrap">
+                                    <div><ui:outputDateTime value="{!job.nextFire}"/></div>
+                                </td>
+                                <td class="slds-cell-wrap">
+                                    <lightning:button name="{!job.id}" value="Delete" label="Delete" class="slds-button slds-button_brand" onclick="{!c.delete}"/>
+                                </td>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </article>
+ 
+    
+</aura:component>

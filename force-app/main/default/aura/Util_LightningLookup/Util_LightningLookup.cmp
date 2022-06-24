@@ -1,0 +1,74 @@
+<!--
+- @FileName: LightningLookup
+- @Description: Custom lighting lookup field to search existing records
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       11/14/2019         Created
+*************************************************************  
+-->
+
+<aura:component description="Custom lightning lookup field"
+                controller="LightningLookupCtrl" >
+
+    <ltng:require scripts="{!$Resource.LightningUtils}" />
+
+    <!--Parent Component-->
+    <aura:attribute name="parent" type="Aura.Component" description="If parent is passed, the parent must declare a
+                                                                    method name=onChange to be called when the input
+                                                                    value changes" />
+
+    <!--Input Attributes-->
+    <aura:attribute name="label" type="string" default=""/>
+    <aura:attribute name="placeholder" type="String" default="Search..."/>
+    <aura:attribute name="isLoading" type="Boolean" default="false" />
+    <aura:attribute name="required" type="Boolean" default="false" />
+    <aura:attribute name="disabled" type="Boolean" default="false" />
+    <aura:attribute name="message" type="String" default="" />
+
+    <!--Search Attributes-->
+    <aura:attribute name="searchString" type="string"/>
+    <aura:attribute name="filtersByObject" type="Map" description="fields mapped by object api name" required="true"/>
+    <aura:attribute name="queryFilters" type="String" default="" description="filter criteria for soql searches" />
+    <aura:attribute name="comparisonField" type="String" default="Name" description="field to compare against search string" />
+    <aura:attribute name="displayFields" type="List" default="['Name']" description="fields to display in list (separated by space)" />
+    <aura:attribute name="resultLimit" type="Integer" default="5" />
+    <aura:attribute name="searchSOQL" type="Boolean" default="false" description="search using SOQL, otherwise will use SOSL" />
+    <aura:attribute name="noSharing" type="Boolean" default="false" description="execute search without sharing" />
+
+    <!--Result Attributes-->
+    <aura:attribute name="showResults" type="Boolean" default="false" />
+    <aura:attribute name="searchResults" type="List" default="[]" />
+    <aura:attribute name="selectedResultId" type="String" default="" />
+
+    <!--Selected Result Handler-->
+    <aura:handler name="selectResultEvt" event="c:Util_LightningLookupSelectEvt" action="{!c.handleSelectEvt}"/>
+
+    <div class="slds-is-relative">
+        <lightning:input aura:id="inputField"
+                         type="search"
+                         name="{!v.label}"
+                         label="{!v.label}"
+                         autocomplete="none"
+                         placeholder="{!v.placeholder}"
+                         isLoading="{!v.isLoading}"
+                         value="{!v.searchString}"
+                         required="{!v.required}"
+                         disabled="{!v.disabled}"
+                         onchange="{!c.search}"
+                         onfocus="{!c.focus}" />
+
+        <aura:if isTrue="{!and(v.showResults, not(empty(v.searchResults)), empty(v.message))}">
+            <div class="slds-is-absolute slds-m-top_xx-small citron-search-results">
+                <aura:iteration items="{!v.searchResults}" var="result">
+                    <c:Util_LightningLookupResult result="{!result}" />
+                </aura:iteration>
+            </div>
+        </aura:if>
+
+        <aura:if isTrue="{!not(empty(v.message))}">
+            <p class="{!v.isError ? 'slds-text_color_error' : ''}">{!v.message}</p>
+        </aura:if>
+    </div>
+</aura:component>

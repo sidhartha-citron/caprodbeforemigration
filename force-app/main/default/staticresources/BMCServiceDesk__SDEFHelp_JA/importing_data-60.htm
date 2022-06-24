@@ -1,0 +1,571 @@
+﻿
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta name="GENERATOR" content="Quadralay WebWorks Publisher 2003 for FrameMaker 8.6.6587.0" />
+    <meta name="TEMPLATEBASE" content="BMC_WebWorksHelp_52407" />
+    <meta name="LASTUPDATED" content="06/11/14 13:56:47" />
+    <title>データローダを使用したクライアントデータのインポート</title>
+    <link rel="StyleSheet" href="Remedy.css" type="text/css" />
+    <link rel="StyleSheet" href="catalog.css" type="text/css" />
+<script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/context.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/towwhdir.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="wwhdata/common/wwhpagef.js"></script>
+
+  <script type="text/javascript" language="JavaScript1.2">
+   <!--
+    // Set reference to top level help frame
+    //
+    var  WWHFrame = WWHGetWWHFrame("");
+   // -->
+  </script>
+
+    <script type="text/javascript" language="JavaScript1.2" src="scripts/expand.js"></script>
+  </head>
+
+  <body onLoad="WWHUpdate();" onUnload="WWHUnload();" onKeyDown="WWHHandleKeyDown((document.all||document.getElementById||document.layers)?event:null);" onKeyPress="WWHHandleKeyPress((document.all||document.getElementById||document.layers)?event:null);" onKeyUp="WWHHandleKeyUp((document.all||document.getElementById||document.layers)?event:null);">
+
+    
+    
+
+    <blockquote>
+<script type="text/javascript" language="JavaScript1.2">
+   WWHFrame.WWHHelp.mRemedyTitle = "データローダを使用したクライアントデータのインポート";
+   WWHFrame.WWHHelp.fRemedyShowTitle();
+</script><a name="wp842594"> </a><p class="pBody">多数のクライアントレコードを挿入または更新する場合は、データローダを使用して、CSVファイルからクライアントデータを一括してインポートすることができます。クライアントレコードを挿入または更新すると、そのクライアントレコードは、一時的に［クライアントユーザーインポート］オブジェクトに格納されます。クライアントレコードが［クライアントユーザーインポート］オブジェクトに挿入されると、トリガーが実行されます。このトリガーにより、［連絡先］および［ユーザー］の各オブジェクトの内容が、［クライアントユーザーインポート］オブジェクトのクライアントレコードで更新されます。新しいクライアントレコードは、セルフサービスにログオンし、セルフサービスを使用するポータルユーザーです。</p>
+<a name="wp842595"> </a><p class="pBody">新しいクライアントレコードを挿入すると、そのクライアントレコードが［連絡先］および［ユーザー］の各オブジェクトに作成されます。既存のクライアントレコードを新しい値で更新すると、その値は［ユーザー］オブジェクトでのみ更新され、［連絡先］オブジェクトでは更新されません。BMC Remedyforceには、［ユーザー］オブジェクトに<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">ソースの固有ユーザーID</b><span style="font-weight: normal">］</span>フィールドが追加されており、既存のクライアントレコードを追跡する目的で使用されます。BMC Remedyforceでは、このフィールドの値が［ユーザー］オブジェクトに存在するかどうかが確認され、このフィールドの値が［ユーザー］オブジェクトに存在しない場合は、新しいクライアントレコードが作成されます。</p>
+<a name="wp842602"> </a><p class="pBody">インポートされたクライアントレコードにアカウントやプロファイル情報がない場合は、［ユーザー設定］ページ（<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Remedyforce管理</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">ユーザーの管理</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">ユーザー設定</b><span style="font-weight: normal">］</span>）で設定されたデフォルトのアカウントとプロファイルがレコードに追加されます。インポートされたクライアントレコードにあるアカウントまたはプロファイル情報が、Salesforce組織の既存のアカウント／プロファイルと一致しない場合は、レコードがインポートされずにエラーが発生します。インポートされたクライアントレコードにあるアカウントまたはプロファイル情報が、既存のアカウント／プロファイルと一致する場合は、クライアントレコードが正常にインポートされます。</p>
+<hr size="2" class="NoteRule"/><a name="wp842603"> </a><p class="pNote"><span style="color: #003366"> 注意: </span> クライアントデータをインポートする前に、［ユーザー設定］ページ（<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Remedyforce管理</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">ユーザーの管理</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">ユーザー設定</b><span style="font-weight: normal">］</span>）の［クライアントのインポート設定］を設定する必要があります。</p><hr size="2" class="NoteRule"/><a name="wp842605"> </a><p class="pBody">詳細は、 <a href="https://na11.salesforce.com/help/doc/user_ed.jsp?section=help&amp;target=inserting_updating_or_deleting_data.htm&amp;loc=help&amp;hash=topic-title" target="_window">https://na11.salesforce.com/help/doc/user_ed.jsp?section=help&amp;target=inserting_updating_or_deleting_data.htm&amp;loc=help&amp;hash=topic-title</a>を参照してください。</p>
+<a name="wp842609"> </a><p class="pBody"><a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'importing_data-60.htm#wp842611');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'importing_data-60.htm#wp842611', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">図20-1</a>に、データローダを使用したデータのインポートのプロセスを示します。</p>
+<a name="wp842611"> </a><p class="pBodyRelative">図20-1：&#160;&#160;データローダを使用したデータのインポートのプロセスフロー</p>
+
+<a name="wp842615"> </a><p class="pBodyRelative"><img src="images/Data_loader_process_flow.gif" id="wp842613" border="0" hspace="0" vspace="0"/></p>
+
+<a name="wp842616"> </a><p class="pBody">データローダは、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">設定</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">データ管理</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">データローダ</b><span style="font-weight: normal">］</span>の順に移動してダウンロードできます。データローダをインストールしたら、ソースのCSVファイルに、次の必須フィールドが含まれていることを確認する必要があります。</p>
+<div class="pSmartList1"><ul class="pSmartList1">
+<div class="pSmartList2"><ul class="pSmartList2">
+<a name="wp842617"> </a><div class="pSmartList2"><li><b class="cBold">名字</b></li></div>
+<a name="wp842618"> </a><div class="pSmartList2"><li><b class="cBold">電子メールID </b></li></div>
+<a name="wp842619"> </a><div class="pSmartList2"><li><b class="cBold">クライアントユーザ名</b></li></div>
+<hr size="2" class="NoteRule"/><a name="wp842620"> </a><p class="pNote"><span style="color: #003366"> 注意: </span> ［名前］は必須フィールドではありませんが、ソースのCSVファイルに［名前］フィールドを追加することをお勧めします。</p><hr size="2" class="NoteRule"/></ul></div>
+</ul></div>
+<a name="wp842621"> </a><p class="pBody">［ユーザー設定］ページ（<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Remedyforce管理</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">ユーザーの管理</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">ユーザー設定</b><span style="font-weight: normal">］</span>）で設定されたドメイン名がクライアントユーザー名に付加され、クライアントがセルフサービスにログオンするために使用するユーザー名が生成されます。クライアントレコードをアクティブなクライアントとしてインポートすると、そのクライアントの電子メールアドレスに電子メールが送信されます。この電子メールには、クライアントの一時パスワードが記載されています。クライアントがこの一時パスワードを使用してログオンすると、パスワードの変更が可能なページに切り替えられます。電子メールアドレスをクライアントユーザー名として使用する場合は、BMC Remedyforceによって電子メールアドレスのユーザー名が取得され、ドメイン名が追加されます。</p>
+<a name="wp842628"> </a><p class="pBody">また、オプションのフィールド（<a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'importing_data-59.htm#wp799473');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'importing_data-59.htm#wp799473', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">表20-1</a>を参照）をCSVファイルに追加することができます。</p>
+<a name="wp842632"> </a><p class="pBody"><a href="javascript:WWHClickedPopup('BMC_Remedyforce_help', 'importing_data-59.htm#wp799473');" onMouseOver="WWHShowPopup('BMC_Remedyforce_help', 'importing_data-59.htm#wp799473', (document.all||document.getElementById||document.layers)?event:null);" onMouseOut="WWHHidePopup();">表20-1</a>に、［クライアントユーザーインポート］オブジェクトの必須およびオプションフィールドのフィールド名、データタイプ、長さを示します。</p>
+<hr size="2" class="NoteRule"/><a name="wp842633"> </a><p class="pNote"><span style="color: #003366"> 注意: </span> ［クライアントユーザーインポート］オブジェクトのフィールドだけでなく、［ユーザー］オブジェクトで使用できるその他のフィールドを更新するには、システム管理者に問い合わせてください。</p><hr size="2" class="NoteRule"/><a name="wp842780"> </a><p class="pBodyRelative"></p>
+<div align="left">
+<table border="1" cellpadding="3" id="wp842637table842634">
+  <caption><a name="wp842637"> </a><p class="pBody">表20-2：&#160;&#160;<span style="font-weight: normal">［</span>クライアントユーザーインポート<span style="font-weight: normal">］</span>オブジェクトのフィールド</p>
+</caption>
+  <tr align="left" valign="top">    <th><a name="wp842643"> </a><div class="pCellHeading">
+フィールド名&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;
+</div>
+</th>
+    <th><a name="wp842645"> </a><div class="pCellHeading">
+データタイプ&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;
+</div>
+</th>
+    <th><a name="wp842647"> </a><div class="pCellHeading">
+長さ・値
+</div>
+</th>
+</tr>
+  <tr align="left" valign="top">    <td colspan="3" rowspan="1"><a name="wp842649"> </a><div class="pCellHeading">
+必須フィールド
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842655"> </a><div class="pCellBody">
+<b class="cBold">名字</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842657"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842659"> </a><div class="pCellBody">
+40
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842661"> </a><div class="pCellBody">
+<b class="cBold">電子メールID</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842663"> </a><div class="pCellBody">
+電子メール 
+</div>
+</td>
+    <td 
+ 
+><a name="wp842665"> </a><div class="pCellBody">
+&#160;
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842667"> </a><div class="pCellBody">
+<b class="cBold">クライアントユーザ名</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842669"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842671"> </a><div class="pCellBody">
+80
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td colspan="3" rowspan="1"><a name="wp842673"> </a><div class="pCellHeading">
+オプションフィールド
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842679"> </a><div class="pCellBody">
+<b class="cBold">有効</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842681"> </a><div class="pCellBody">
+チェックボックス 
+</div>
+</td>
+    <td 
+ 
+><a name="wp842683"> </a><div class="pCellBody">
+TRUE/FALSE
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842685"> </a><div class="pCellBody">
+<b class="cBold">市区町村</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842687"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842689"> </a><div class="pCellBody">
+40
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842691"> </a><div class="pCellBody">
+<b class="cBold">会社名</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842693"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842695"> </a><div class="pCellBody">
+80
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842697"> </a><div class="pCellBody">
+<b class="cBold">国</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842699"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842701"> </a><div class="pCellBody">
+40
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842703"> </a><div class="pCellBody">
+<b class="cBold">部署</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842705"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842707"> </a><div class="pCellBody">
+80
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842709"> </a><div class="pCellBody">
+<b class="cBold">課</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842711"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842713"> </a><div class="pCellBody">
+80
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842715"> </a><div class="pCellBody">
+<b class="cBold">社員番号</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842717"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842719"> </a><div class="pCellBody">
+20
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842721"> </a><div class="pCellBody">
+<b class="cBold">内線番号</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842723"> </a><div class="pCellBody">
+電話番号
+</div>
+</td>
+    <td 
+ 
+><a name="wp842725"> </a><div class="pCellBody">
+&#160;
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842727"> </a><div class="pCellBody">
+<b class="cBold">Fax</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842729"> </a><div class="pCellBody">
+電話番号
+</div>
+</td>
+    <td 
+ 
+><a name="wp842731"> </a><div class="pCellBody">
+&#160;
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842733"> </a><div class="pCellBody">
+<b class="cBold">名前</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842735"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842737"> </a><div class="pCellBody">
+40
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842739"> </a><div class="pCellBody">
+<b class="cBold">携帯電話番号</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842741"> </a><div class="pCellBody">
+電話番号
+</div>
+</td>
+    <td 
+ 
+><a name="wp842743"> </a><div class="pCellBody">
+&#160;
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842745"> </a><div class="pCellBody">
+<b class="cBold">ポケットベル</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842747"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842749"> </a><div class="pCellBody">
+25
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842751"> </a><div class="pCellBody">
+<b class="cBold">電話番号</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842753"> </a><div class="pCellBody">
+電話番号
+</div>
+</td>
+    <td 
+ 
+><a name="wp842755"> </a><div class="pCellBody">
+&#160;
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842757"> </a><div class="pCellBody">
+<b class="cBold">郵便番号</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842759"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842761"> </a><div class="pCellBody">
+20
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842763"> </a><div class="pCellBody">
+<b class="cBold">ステータス</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842765"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842767"> </a><div class="pCellBody">
+20
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842769"> </a><div class="pCellBody">
+<b class="cBold">所番地</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842771"> </a><div class="pCellBody">
+テキスト領域
+</div>
+</td>
+    <td 
+ 
+><a name="wp842773"> </a><div class="pCellBody">
+255
+</div>
+</td>
+</tr>
+  <tr align="left" valign="top">    <td 
+width=25% 
+ 
+><a name="wp842775"> </a><div class="pCellBody">
+<b class="cBold">タイトル</b>
+</div>
+</td>
+    <td 
+ 
+><a name="wp842777"> </a><div class="pCellBody">
+テキスト
+</div>
+</td>
+    <td 
+ 
+><a name="wp842779"> </a><div class="pCellBody">
+80
+</div>
+</td>
+</tr>
+</table>
+</div>
+<p class="pBodyRelative">
+</p>
+
+<a name="wp842781"> </a><p style="color: #00418C; font-family: Arial, Verdana, Helvetica, sans-serif; font-size: 12px; font-style: normal; font-variant: normal; font-weight: bold; text-decoration: none; text-transform: none">
+データローダを使用してクライアントデータをインポートするには
+</p>
+<div class="pSmartList1"><ol type="1" class="pSmartList1">
+<a name="wp842782"> </a><div class="pSmartList1"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">スタート</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">すべてのプログラム</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">salesforce.com</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Apex Data Loader 20.0</b><span style="font-weight: normal">］</span><b style="font-weight: bold" class="cBold">&gt;</b><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Apex Data Loader 20</b><span style="font-weight: normal">］</span>の順にクリックします。</li></div>
+<a name="wp842787"> </a><div class="pSmartList1"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Insert</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp842788"> </a><div class="pSmartList1"><li>［Step 1: Salesforce Settings］で、Salesforce.comのユーザー名とパスワードを入力します。</li></div>
+<a name="wp842789"> </a><div class="pSmartList1"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Log in</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp842790"> </a><div class="pSmartList1"><li>［Login completed successfully］というメッセージが表示されたら、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Next</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp842791"> </a><div class="pSmartList1"><li>［Step 2: Select data objects］で、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Client User Imports</b><span style="font-weight: normal">］</span>オブジェクトを選択します。</li></div>
+<a name="wp842792"> </a><div class="pSmartList1"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Choose CSV file</b><span style="font-weight: normal">］</span>フィールドで<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Browse</b><span style="font-weight: normal">］</span>をクリックし、ソース.CSVファイルの場所まで移動します。</li></div>
+<a name="wp842797"> </a><div class="pSmartList1"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">次へ</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp842798"> </a><p class="pIndented1">
+次の確認メッセージが表示されます。
+</p>
+<a name="wp842799"> </a><p class="pIndented1">
+Initialization succeeded.
+</p>
+<a name="wp842800"> </a><p class="pIndented1">
+<span style="font-style: normal">Your operation will contain </span><span style="font-style: normal">&lt;挿入および更新されるレコード数&gt;</span> records.
+</p>
+<a name="wp842805"> </a><div class="pSmartList1"><li>［<b class="cBold">OK</b>］をクリックします。</li></div>
+<a name="wp858196"> </a><div class="pSmartList1"><li>［Step 3: Mapping］で、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Create or Edit a map</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp858201"> </a><div class="pSmartList1"><li>［Mapping Dialog］ウィンドウで、Salesforceの各フィールドをCSVファイルの適切なフィールドにドラッグして、必要なマッピングを作成します。</li></div>
+<a name="wp842812"> </a><p class="pIndented1">
+たとえば、<b class="cBold">BMCServiceDesk__Last_Name__c</b>というSalesforceのフィールドを、CSVファイルの<b class="cBold">LAST_NAME__C</b>フィールドにドラッグします。
+</p>
+<hr size="2" class="NoteRule"/><a name="wp842813"> </a><p class="pTip"><span style="color: #003366"> ヒント:</span> CSVファイルのカラムタイトルには、［クライアントユーザーインポート］オブジェクトのフィールド名を使用することをお勧めします。フィールド名を使用することで、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Auto-Match Fields to Columns</b><span style="font-weight: normal">］</span>をクリックして、マッピングを作成するのに役立ちます。</p><hr size="2" class="NoteRule"/><a name="wp842818"> </a><div class="pSmartList1"><li>［<b class="cBold">OK</b>］をクリックします。</li></div>
+<a name="wp842819"> </a><p class="pIndented1">
+作成したマッピングが、［Current Field Mapping］セクションに表示されます。
+</p>
+<a name="wp842824"> </a><div class="pSmartList1"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">次へ</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp842825"> </a><div class="pSmartList1"><li>［Step 4: Finish］で<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Browse</b><span style="font-weight: normal">］</span>をクリックして、成功またはエラーのログファイルを保存するディレクトリに移動します。</li></div>
+<a name="wp842826"> </a><p class="pIndented1">
+データローダでは、データローダを使用して実行したすべての操作について、成功およびエラーの2種類の独立したCSV形式のログファイルが生成されます。
+</p>
+<a name="wp842827"> </a><div class="pSmartList1"><li><span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Finish</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp842828"> </a><div class="pSmartList1"><li>確認ダイアログボックスで<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">Yes</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp842829"> </a><div class="pSmartList1"><li><span style="font-style: normal">（オプション）</span>［Operation Finished］ダイアログボックスで<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">View Successes</b><span style="font-weight: normal">］</span>をクリックして、成功した挿入および更新をCSVビューアで表示します。  </li></div>
+<a name="wp842834"> </a><div class="pSmartList1"><li><span style="font-style: normal">（オプション）</span>失敗したアクションをCSVビューアで表示するには、<span style="font-weight: normal">［</span><b style="font-weight: bold" class="cBold">View Errors</b><span style="font-weight: normal">］</span>をクリックします。</li></div>
+<a name="wp842835"> </a><div class="pSmartList1"><li>［<b class="cBold">OK</b>］をクリックします。</li></div>
+</ol></div>
+
+
+
+  <script type="text/javascript" language="JavaScript1.2">
+   <!--
+    // Clear related topics
+    //
+    WWHClearRelatedTopics();
+
+   // -->
+  </script>
+    </blockquote>
+
+    
+<hr class="REM"/>
+
+<table align="center" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="577" align="center"><p class="copyright">
+
+ &#169; Copyright  2010-2014
+ BMC Software, Inc. All rights reserved.<br/>
+
+サポートが必要な場合は、BMC Remedyforce管理者にお問い合わせください。 
+ドキュメントに関するご質問またはコメントについては、<a href="mailto:doc_feedback@bmc.com">doc_feedback@bmc.com</a>までメールをお願いいたします。 
+
+    </p></td>
+  </tr>
+</table>
+
+
+
+<script type="text/javascript" language="JavaScript1.2">
+   <!--
+    document.write(WWHRelatedTopicsDivTag() + WWHPopupDivTag() + WWHALinksDivTag());
+   // -->
+  </script>
+
+  </body>
+</html>

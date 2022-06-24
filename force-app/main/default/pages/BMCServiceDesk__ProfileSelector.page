@@ -1,0 +1,141 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.ProfileSelectController" standardStylesheets="false">
+ <c:CommonIncludes />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/itemselector.js"/>   
+    <apex:stylesheet value="{!$Resource.BMCServiceDesk__SDEFStyles}/itemselector.css" />
+    
+    
+    <script>
+   
+	   var ds;
+	   var ds1;    
+	  Ext.onReady(function(){
+	    Ext.QuickTips.init();
+	    Ext.form.Field.prototype.msgTarget = 'side';
+	    
+	    var dataSourceData = new Array();
+	   
+	     setDataSourceName('');
+	    
+	     var fieldList = new Array();
+	     var profileList = new Array();
+	    
+	    ds = new Ext.data.ArrayStore({
+	            
+	            data: fieldList,
+	            fields: ['value','text'],
+	            sortInfo: {
+	                field: 'value',
+	                direction: 'ASC'
+	            }
+	    });
+	    
+	   
+	    ds1 = new Ext.data.ArrayStore({
+	            
+	            data: profileList,
+	            fields: ['value','text'],
+	            sortInfo: {
+	                field: 'value',
+	                direction: 'ASC'
+	            }
+	    });
+
+    /*
+     * Ext.ux.form.ItemSelector Example Code
+   */
+   var path='{!$Resource.SDEFStyles}/SDEFimages/';
+    var isForm = new Ext.form.FormPanel({
+        id: 'form',
+        title: '',
+        width:600,
+        bodyStyle: 'padding:2px;',
+        border: false,
+        renderTo: 'itemselector',
+        items:[{
+            xtype: 'itemselector',
+            fieldLabel: '',
+            imagePath: path,
+            drawUpIcon:false,
+    		drawDownIcon:false,
+    		drawLeftIcon:true,
+    		drawRightIcon:true,
+    		drawTopIcon:false,
+   			drawBotIcon:false,
+            multiselects: [{
+                width: 250,
+                height: 200,
+                store: ds1,
+                displayField: 'text',
+                valueField: 'value'
+                
+            },{
+                width: 250,
+                height: 200,
+                store: ds,
+                displayField: 'text',
+                valueField: 'value'
+                
+            }]
+        }],
+
+        buttons: [{
+            text: 'Save',
+            handler: function(){
+                if(isForm.getForm().isValid()){
+	                var selectedValues=isForm.getForm().getValues(true).substring(10);
+	                selectedValues=  unescape(selectedValues);  
+                 	assignSelectedProfiles(selectedValues);   
+                 
+                }
+            }
+        }]
+    });
+
+    
+    });
+    function setData(){
+        ds.loadData(fieldList);
+        ds1.loadData(profileList);
+        Ext.getCmp('form').getView().refresh();
+    }
+        
+    </script>
+    <div id="itemselector" style="padding-left: 0px;" ></div>
+    
+   <apex:outputpanel id="ModuleFieldsPanel">
+    <script>
+	    fieldList = new Array();
+	    var i=0; 
+	    <apex:repeat value="{!fieldNameList}" var="fieldName" >    
+	        fieldList[i] = new Array(2);
+	        fieldList[i++][0]='{!fieldName}';
+	    </apex:repeat>
+	        
+	    var i=0; 
+	    <apex:repeat value="{!fieldLabelList}" var="fieldLabel" >
+	        fieldList[i++][1]='{!fieldLabel}';
+	    </apex:repeat>
+        
+        profileList = new Array();
+	    var i=0; 
+	    <apex:repeat value="{!profileNameList}" var="profileNameList" >    
+	        profileList[i] = new Array(2);
+	        profileList[i++][0]='{!profileNameList}';
+	    </apex:repeat>
+	        
+	    var i=0; 
+	    <apex:repeat value="{!profileLabelList}" var="profileLabelList" >
+	        profileList[i++][1]='{!profileLabelList}';
+	    </apex:repeat>
+    </script>
+   </apex:outputpanel>
+
+   <apex:form >
+		
+       <apex:actionFunction Name="setDataSourceName" action="{!getFieldItems}" reRender="ModuleFieldsPanel" onComplete="setData();"/>
+       <apex:actionFunction Name="assignSelectedProfiles" action="{!assignSelectedProfiles}" reRender="ModuleFieldsPanel" 	onComplete="window.parent.refreshProfile();window.parent.closePopup();" >
+       		<apex:param assignTo="{!selectedProfiles}" name="selectedProfiles" value=""/>
+       </apex:actionFunction>
+
+  </apex:form>
+</apex:page>

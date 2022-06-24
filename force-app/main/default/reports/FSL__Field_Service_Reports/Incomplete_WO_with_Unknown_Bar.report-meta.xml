@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <columns>
+        <field>WorkOrder$Account</field>
+    </columns>
+    <columns>
+        <field>WorkOrder.Work_Order_Rooms__r$Name</field>
+    </columns>
+    <columns>
+        <field>WorkOrder.Work_Order_Rooms__r$Scanned_In_Unknown_Barcodes__c</field>
+    </columns>
+    <crossFilters>
+        <criteriaItems>
+            <column>Status</column>
+            <isUnlocked>false</isUnlocked>
+            <operator>notEqual</operator>
+            <value>Completed</value>
+        </criteriaItems>
+        <operation>with</operation>
+        <primaryTableColumn>WorkOrder$Id</primaryTableColumn>
+        <relatedTable>WorkOrderLineItem</relatedTable>
+        <relatedTableJoinColumn>WorkOrder</relatedTableJoinColumn>
+    </crossFilters>
+    <description>Report to capture incomplete work orders where a new barcode may have been introduced for an existing asset</description>
+    <filter>
+        <criteriaItems>
+            <column>WorkOrder.Work_Order_Rooms__r$Scanned_In_Unknown_Barcodes__c</column>
+            <columnToColumn>false</columnToColumn>
+            <isUnlocked>false</isUnlocked>
+            <operator>notEqual</operator>
+            <value></value>
+        </criteriaItems>
+        <language>en_US</language>
+    </filter>
+    <format>Summary</format>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>WorkOrder$Name</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <name>Incomplete WO with Unknown Barcodes</name>
+    <params>
+        <name>co</name>
+        <value>1</value>
+    </params>
+    <reportType>Work_Orders_with_Work_Order_Locations__c</reportType>
+    <scope>organization</scope>
+    <showDetails>true</showDetails>
+    <showGrandTotal>false</showGrandTotal>
+    <showSubTotals>false</showSubTotals>
+    <timeFrameFilter>
+        <dateColumn>WorkOrder$Completed_Date__c</dateColumn>
+        <interval>INTERVAL_CUSTOM</interval>
+    </timeFrameFilter>
+</Report>

@@ -1,0 +1,446 @@
+<!-- Content of this page has been moved to ExplorerLauncher.page -->
+<apex:page Controller="BMCServiceDesk.CIExplorerLauncherController" showHeader="false" sidebar="false" standardStylesheets="false" action="{!redirectToModernExplorer}">
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" />
+    <script type="text/javascript">
+        var resourceURL = '{!URLFOR($Resource.CIForce)}';
+        var cmdbVizResources = '{!URLFOR($Resource.CMDBVisualization)}';
+        var isaccess = {!isAccessible};
+        var isSettingPageVisible = {!isUserSA};
+        var wikiUrl = '{!wikiUrl}';
+        var isAssetManagementEnabled = {!isAssetManagementEnabled} ;
+        var isCIManagementEnabled = {!isCIManagementEnabled};
+        var showClassFilterDropDown = isAssetManagementEnabled && isCIManagementEnabled ? true : false;
+        var launchAttributesCI = Ext.util.Format.htmlDecode('{!JSINHTMLENCODE(attributesCI)}');
+        var closeCMDBExp = {!noRelExist};
+        var CiSettings = '{!JSENCODE($Label.ciexpciexplorersettings)}';
+        var isLightningExperience = {!isLightningExperience};
+        var nameSpace = '{!JSENCODE(nameSpace)}';
+        var relationShipOnPage = [];
+        _RemotingActions={};
+        _RemotingActions.getGraphJSON="{!$RemoteAction.CIExplorerLauncherController.getGraphJSON}";
+        if (tw === undefined) {
+            var tw = {};
+        }
+        if (tw.viz === undefined) {
+            tw.viz = {};
+        }
+    tw.viz.DEFAULT_IMAGES = {
+            force_directed              : cmdbVizResources + "/styles/default/images/sidebar/svg/force-direct.svg",
+            sidebar_layout              : cmdbVizResources + "/styles/default/images/sidebar/svg/layout.svg",
+            sidebar_arrow_logo          : cmdbVizResources + "/styles/default/images/sidebar/svg/utility-icon.svg",
+            settings_logo               : cmdbVizResources + "/styles/default/images/sidebar/svg/settings.svg",
+            viz_logo                    : cmdbVizResources + "/styles/default/images/general/png/normal/CMDB_Explorer_Logo.svg",
+            search_normal               : cmdbVizResources + "/styles/default/images/sidebar/png/normal/search_24.png",
+            layout_normal               : cmdbVizResources + "/styles/default/images/general/png/normal/CMDB_Explorer_Logo.svg",
+            add_normal                  : cmdbVizResources + "/styles/default/images/general/png/disabled/add_green_24_dis.png",
+            hide_normal                 : cmdbVizResources + "/styles/default/images/general/png/disabled/delete_24_dis.png",
+            notes_normal                : cmdbVizResources + "/styles/default/images/appliance/png/disabled/mail_24_dis.png",
+            help_normal                 : cmdbVizResources + "/styles/default/images/general/png/normal/info_24_grey.png",
+            help_hot                    : cmdbVizResources + "/styles/default/images/general/png/normal/info_24_hover.png",
+            manual_groups_normal        : cmdbVizResources + "/styles/default/images/sidebar/png/normal/viz_group_24.png",
+            manual_groups_hot           : cmdbVizResources + "/styles/default/images/sidebar/png/hot/viz_group_24_hot.png",
+            manual_groups_none          : cmdbVizResources + "/styles/default/images/general/png/normal/cancel_24.png",
+            manual_groups_indicator     : cmdbVizResources + "/styles/default/images/general/png/normal/info_24_grey.png",
+            manual_groups_label         : cmdbVizResources + "/styles/default/images/general/png/normal/labels_24.png",
+            surrounds_none              : cmdbVizResources + "/styles/default/images/general/png/normal/cancel_24.png",
+            surrounds_location          : cmdbVizResources + "/styles/default/images/general/png/normal/location_24.png",
+            surrounds_node              : cmdbVizResources + "/styles/default/images/general/png/normal/node_24.png",
+            surrounds_model_updates     : cmdbVizResources + "/styles/default/images/general/png/normal/model_updates_24.png",
+            x_normal                    : cmdbVizResources + "/styles/default/images/sidebar/svg/win-close.svg",
+            x_hot                       : cmdbVizResources + "/styles/default/images/sidebar/svg/win-close.svg",
+            less_normal                 : cmdbVizResources + "/styles/default/images/general/png/normal/neutral_less_16.png",
+            less_hot                    : cmdbVizResources + "/styles/default/images/general/png/hot/neutral_less_16_hot.png",
+            more_normal                 : cmdbVizResources + "/styles/default/images/general/png/normal/neutral_more_16.png",
+            more_hot                    : cmdbVizResources + "/styles/default/images/general/png/hot/neutral_more_16_hot.png",
+            select_normal               : cmdbVizResources + "/styles/default/images/sidebar/svg/drag_mode.svg",
+            drag_normal                 : cmdbVizResources + "/styles/default/images/sidebar/svg/group-2.svg",
+            error_icon                  : cmdbVizResources + "/styles/default/images/flashboard/png/normal/failure_16.png",
+            info_icon                   : cmdbVizResources + "/styles/default/images/general/png/normal/info_16.png",
+            full_screen_normal          : cmdbVizResources + "/styles/default/images/general/png/normal/fullscreen_16.png",
+            full_screen_hot             : cmdbVizResources + "/styles/default/images/general/png/hot/fullscreen_16.png",
+            viz_force                   : cmdbVizResources + "/styles/default/images/general/png/normal/viz_forceDirected_32.png",
+            viz_impact                  : cmdbVizResources + "/styles/default/images/general/png/normal/viz_impact_32.png",
+            viz_rootattop               : cmdbVizResources + "/styles/default/images/general/png/normal/viz_root_at_top_32.png",
+            viz_direct_rels             : cmdbVizResources + "/styles/default/images/general/png/normal/viz_routing_direct_32.png",
+            viz_ortho_rels              : cmdbVizResources + "/styles/default/images/general/png/normal/viz_routing_ortho_32.png",
+            viz_avoiding_rels           : cmdbVizResources + "/styles/default/images/general/png/normal/viz_routing_avoid_32.png",
+            rotate_axes                 : cmdbVizResources + "/styles/default/images/general/png/normal/rotateAxes_24.png",
+            arrow_up                    : cmdbVizResources + "/styles/default/images/sidebar/svg/arrowup.svg",
+            arrow_down                  : cmdbVizResources + "/styles/default/images/sidebar/svg/arrowdown.svg",
+            arrow_left                  : cmdbVizResources + "/styles/default/images/sidebar/svg/arrowleft.svg",
+            arrow_right                 : cmdbVizResources + "/styles/default/images/sidebar/svg/arrowright.svg",
+            layout_labels               : cmdbVizResources + "/styles/default/images/general/png/normal/labels_24.png",
+            showhide                    : cmdbVizResources + "/styles/default/images/general/png/normal/show_hide_32.png",
+            exportsidebar               : cmdbVizResources + "/styles/default/images/sidebar/svg/export.svg",
+            svgexport                   : cmdbVizResources + "/styles/default/images/general/png/normal/Export_SVG_32.png",
+            pngexport                   : cmdbVizResources + "/styles/default/images/general/png/normal/Export_PNG_32.png",
+            printer                     : cmdbVizResources + "/styles/default/images/kind/png/normal/Printer_32.png",
+            modelexport                 : cmdbVizResources + "/styles/default/images/general/png/normal/Export_Model_Def_32.png",
+            appmodedit                  : cmdbVizResources + "/styles/default/images/appliance/png/normal/info_32.png",
+            appmodmodel                 : cmdbVizResources + "/styles/default/images/kind/png/normal/ModelDefinition_32.png",
+            appmodmodel_dis             : cmdbVizResources + "/styles/default/images/kind/png/disabled/ModelDefinition_32_dis.png",
+            appmodeprop                 : cmdbVizResources + "/styles/default/images/general/png/normal/properties_32.png",
+            saveicon_hover              : cmdbVizResources + "/styles/default/images/general/png/hot/save_32_hot.png",
+            saveicon                    : cmdbVizResources + "/styles/default/images/general/png/normal/save_32.png",
+            saveicon_dis                : cmdbVizResources + "/styles/default/images/general/png/disabled/save_32_dis.png",
+            publishicon                 : cmdbVizResources + "/styles/default/images/general/png/normal/publish_32.png",
+            deleteicon                  : cmdbVizResources + "/styles/default/images/general/png/normal/trash_32.png",
+            removednodes                : cmdbVizResources + "/styles/default/images/sidebar/svg/filter-applied.svg",
+            filterIcon                  : cmdbVizResources + "/styles/default/images/sidebar/svg/filter-list.svg",
+            removednodes_hl             : cmdbVizResources + "/styles/default/images/general/png/normal/removed_nodes_32_teal.png",
+            focus_menu                  : cmdbVizResources + "/styles/default/images/sidebar/png/normal/viz_focus_24.png",
+            focus_menu_dis              : cmdbVizResources + "/styles/default/images/sidebar/png/disabled/viz_focus_24_dis.png",
+            focus_sw                    : cmdbVizResources + "/styles/default/images/kind/png/normal/SoftwareInstance_32.png",
+            focus_infra                 : cmdbVizResources + "/styles/default/images/kind/png/normal/NetworkDevice_32.png",
+            editicon_hover              : cmdbVizResources + "/styles/default/images/general/png/hot/edit_24_hot.png",
+            editicon                    : cmdbVizResources + "/styles/default/images/general/png/normal/edit_24.png",
+            cancelicon_hover            : cmdbVizResources + "/styles/default/images/general/png/hot/cancel_32_hot.png",
+            cancelicon                  : cmdbVizResources + "/styles/default/images/general/png/normal/cancel_32.png",
+            cancelicon_dis              : cmdbVizResources + "/styles/default/images/general/png/disabled/cancel_32_dis.png",
+            discardicon                 : cmdbVizResources + "/styles/default/images/general/png/normal/discard_32.png",
+            favorite                    : cmdbVizResources + "/styles/default/images/general/png/normal/favourite_16.png",
+            favorite_dis                : cmdbVizResources + "/styles/default/images/general/png/disabled/favourite_16_dis.png",
+            warning_normal              : cmdbVizResources + "/styles/default/images/general/png/normal/message_board_warning_24.png",
+            loading_icon                : cmdbVizResources + "/styles/default/images/loader_32.gif",
+            icon_undo_normal            : cmdbVizResources + "/styles/default/images/sidebar/png/normal/icon_undo_24.png",
+            icon_undo_hover             : cmdbVizResources + "/styles/default/images/sidebar/png/hot/icon_undo_24_hot.png",
+            icon_undo_dis               : cmdbVizResources + "/styles/default/images/sidebar/png/disabled/icon_undo_24_dis.png",
+            icon_redo_normal            : cmdbVizResources + "/styles/default/images/sidebar/png/normal/icon_redo_24.png",
+            icon_redo_hover             : cmdbVizResources + "/styles/default/images/sidebar/png/hot/icon_redo_24_hot.png",
+            icon_redo_dis               : cmdbVizResources + "/styles/default/images/sidebar/png/disabled/icon_redo_24_dis.png",
+            extend_new_normal           : cmdbVizResources + "/styles/default/images/general/png/normal/show_more_nodes_16_normal.png",
+            extend_removed_normal       : cmdbVizResources + "/styles/default/images/general/png/normal/removed_nodes_16_normal.png",
+            extend_suppressed_normal    : cmdbVizResources + "/styles/default/images/general/png/normal/excluded_by_rules_16.png",
+            extend_new_hot              : cmdbVizResources + "/styles/default/images/general/png/hot/show_more_nodes_16_hot.png",
+            extend_removed_hot          : cmdbVizResources + "/styles/default/images/general/png/hot/removed_nodes_16_hot.png",
+            extend_suppressed_hot       : cmdbVizResources + "/styles/default/images/general/png/hot/excluded_by_rules_16_hot.png",
+            legend_img                  : cmdbVizResources + "/styles/default/images/sidebar/png/normal/viz_16.png"
+        };
+        
+        tw.viz.DEFAULT_LAYOUT_ITERATIONS = {
+            initial             : [0,  0,  0 ],   // used in _afterSetState method
+            default             : [5,  10, 15],   // fallback value
+        
+            set_state_dynamic   : [20, 30, 40],   //
+            set_state_static    : [20, 30, 60],   // used in _afterSetState method
+            set_state_subsequent: [0,  10, 20],   //
+        
+            show_labels         : [0,  0,  0 ],   // used in showLabels
+            hide_labels         : [0,  0,  0 ],   // used in hideLabels
+        
+            transpose           : [0,  0,  1 ],   // used in transpose
+            change_layout       : [20, 30, 40],   // used in changeLayout
+        
+            hide_node_kind      : [0,  0,  10],   // both...
+            show_node_kind      : [5,  10, 15],   // ...are used in showHide
+        
+            extend_model        : [5,  10, 15],   // used in ExtendModelMixIn::extendModel
+        
+            // these two are used in removeNode, restoreNode and _setVisibilityFlag:
+            hide_node           : [0,  0,  10],   // remove or hide a node
+            restore_node        : [5,  10, 15],   // restore or unhide a node
+        
+            expand_collection   : [5,  10, 15],   // used in CollectionsMixIn::expandCollection
+            collapse_collection : [5,  10, 15]    // used in CollectionsMixIn::collapseCollection
+        };
+        
+        tw.viz.DEFAULT_RELATIONSHIPS = [];
+        var edgesDetail = JSON.parse(launchAttributesCI);
+        populatedRelationShips(edgesDetail.edges, true);
+    tw.viz.DEFAULT_OPTIONS = {
+
+            show_big          : false,     // Flag to indicate if the visualization
+                                           // should be shown maximized
+        
+            small_x           : -1,        // X Position of draggable
+        
+            small_y           : -1,        // Y Position of draggable
+        
+            show_labels       : false,     // Flag if labels should be shown on nodes
+        
+            highlight_root    : true,      // If true, "root" nodes are highlighted
+        
+            highlight_shared  : true,      // If true, shared nodes are highlighted
+        
+            dynamic           : true,      // If true, register dynamic behaviour
+        
+            enable_editing    : false,     // If true, enable application modelling editor
+                                           // functions for visualizations that support it
+        
+            app_modelling_enabled : true,  // Controls if the app modelling actions
+                                           // are available (see AppModellingMixin)
+        
+            app_needs_attention    : false, // Flag to indicate if the model needs attention
+            highlight_model        : false, // Flag to highlight model state indicator
+                                            // on visualization
+        
+            si_create_permission   : false, // Permission to create SIs
+            app_edit_permission    : false, // Permission to edit an application model
+            app_publish_permission : false, // Permission to publish an application model,
+                                            // manipulate rules and shared flag overrides
+                                            // (follows backend logic)
+        
+            view_mode         : true,      // Flag to enable a view only mode which prevents
+                                           // the user to change the model permanently
+        
+            can_close         : true,      // The visualization windows can be closed
+        
+            can_change_focus  : true,      // The visualization can change focus
+            can_remove_nodes  : true,      // Nodes can be removed from the display
+        
+            extra_focus       : [],        // List of extra focuses
+        
+            layout            : 0,
+            impact_direction  : "BT",      // Impact direction
+        
+            surround_type     : "location", // Type of node surround
+            
+            // URL used to get the initial data via AJAX requests
+            // this should differ for SoftwareContext and application model editor
+            ajax_url                        : "/ui/AjaxInlineVisualization",
+        
+            // URL used to get group / collection node expand data
+            // this shouldn't differ unless you're doing custom expanding
+            expand_collection_api_url       : "/ui/AjaxInlineVisualization",
+        
+            // URL that holds the ModelDefinitions API (for app modelling)
+            model_definitions_api_url       : "/ui/i/ModelDefinitions",
+        
+            // URL to get all existing ModelDefinition names along with node id
+            model_definitions_names_url     : "/ui/i/ModelDefinitions/Names",
+        
+            // URL to get the ModelDefinitions that have been favorited
+            model_definitions_favorites_url : "/ui/i/ModelDefinitions/Favorites",
+        
+            // Number of nodes in a model before system warns the user about potential
+            // rendering problem in browser. Value 0 means no warning should be made.
+            max_nodes_per_model             : 300,
+        
+            // URL for rule operations
+            rule_operations_api_url         : "/ui/i/ModelRules",
+        
+            // URL for rule evaluation
+            rule_evaluation_api_url         : "/ui/i/ModelRulesEval",
+        
+            // URL for creating pending rules data
+            pending_rule_api_url            : "/ui/i/ModelRulesData",
+        
+            // URL for node view in datastore
+            node_view_url                   : "/ui/InfrastructureView?nodeID=",
+        
+            // URL & nonce for node operations
+            node_operations_api_url         : "/ui/i/NodeOperations",
+            node_operations_nonce_token     : undefined,
+        
+            images            : tw.viz.DEFAULT_IMAGES,
+        
+            shapes            :  undefined, // tw.viz.DEFAULT_SHAPES,
+        
+            icons             :  undefined,//tw.cmdb_graph_viz.cmdb_icons, // Use this option if icons
+                                           // instead of shapes should be displayed
+        
+            relationships     : tw.viz.DEFAULT_RELATIONSHIPS, //used as a data for markers
+        
+            relationships_map : {}, //used to faster translate for link hover popup
+        
+            nonce_token       : "", // Used for verifying valid POST request
+        
+            button_label      : undefined, // Optional button label text
+                                           // (instead of viz name)
+        
+            context_id        : undefined, // Optional context ID. If not set
+                                           // users preference is used (but nothing
+                                           // in the Focus sidebar will be selected)
+        
+            nodes_clickable   : true,      // Whether to make nodes clickable
+        
+            load_rules        : true,      // Flag to indicate if the global rules should be
+                                           // loaded during the init stage.
+        
+            // How many cola layout iterations to do for certain actions.
+            layout_iterations : tw.viz.DEFAULT_LAYOUT_ITERATIONS,
+        
+            // Selector for the top div (must be compatible with d3.select)
+            top_div_selector  : "div[class=InlineVisualization]",
+        
+            // Sidebar menu highlight timeout (in milliseconds)
+            side_bar_highlight_timeout : 10000
+        };
+
+
+        var labels = {
+            AnalyzeImpact : "{!JSENCODE($Label.AnalyzeImpact)}",
+            DragMode : "{!JSENCODE($Label.DragMode)}",
+            SwitchToSelectMode : "{!JSENCODE($Label.SwitchToSelectMode)}",
+            SelectMode : "{!JSENCODE($Label.SelectMode)}",
+            SwitchToDragMode : "{!JSENCODE($Label.SwitchToDragMode)}",
+            Layout : "{!JSENCODE($Label.Layout)}",
+            ChangeTheLayoutOfTheDisplay : "{!JSENCODE($Label.ChangeTheLayoutOfTheDisplay)}",
+            ShowHide : "{!JSENCODE($Label.Filter)}",
+            Export : "{!JSENCODE($Label.Export)}",
+            ExportAndPrint : "{!JSENCODE($Label.ExportAndPrint)}",
+            Key : "{!JSENCODE($Label.Key)}",
+            Settings : "{!JSENCODE($Label.Settings)}",
+            Incident : "{!JSENCODE($Label.Incident)}",
+            Task : "{!JSENCODE($Label.Task)}",
+            Change : "{!JSENCODE($Label.Change)}",
+            Problem : "{!JSENCODE($Label.Problem)}",
+            Release : "{!JSENCODE($Label.Release)}",
+            Impacted : "{!JSENCODE($Label.ImpactedCI)}",
+            NoMoreRelatedNodes : "{!JSENCODE($Label.NoMoreRelatedNodes)}",
+            RotateViews : "{!JSENCODE($Label.RotateViews)}",
+            ForceDirected : "{!JSENCODE($Label.ForceDirected)}",
+            Direct : "{!JSENCODE($Label.Direct)}",
+            AvoidNodes : "{!JSENCODE($Label.AvoidNodes)}",
+            Impact : "{!JSENCODE($Label.Layered)}",
+            Orthogonal : "{!JSENCODE($Label.CIExpOrthogonal)}",
+            RelationshipRouting : "{!JSENCODE($Label.RelationshipRouting)}",
+            userpermissionmsg: "{!JSENCODE($Label.userpermissionmsg)}",
+            configurationitems: "{!JSENCODE($Label.configurationitems)}",
+            RecenterAndZoom: "{!JSENCODE($Label.RecenterAndZoom)}",
+			CMDBImpactDirection: "{!JSENCODE($Label.Direction)}",
+			ImpactUpwards: "{!JSENCODE($Label.ImpactUpwards)}",
+			ImpactRight: "{!JSENCODE($Label.IconRight)}",
+			ImpactDown: "{!JSENCODE($Label.ImpactDown)}",
+			ImpactLeft: "{!JSENCODE($Label.IconLeft)}",
+			SelectAll: "{!JSENCODE($Label.SelectAll)}",
+			ClearSelection: "{!JSENCODE($Label.ClearSelection)}",
+			InvertSelection: "{!JSENCODE($Label.InvertSelection)}",
+			KeepOnlySelected: "{!JSENCODE($Label.KeepOnlySelected)}",
+			RemoveSelected: "{!JSENCODE($Label.RemoveSelected)}",
+			SelectNode: "{!JSENCODE($Label.SelectNode)}",
+			DeselectNode: "{!JSENCODE($Label.DeselectNode)}",
+			AddToSelection: "{!JSENCODE($Label.AddToSelection)}",
+			OpenNewTab: "{!JSENCODE($Label.OpenNewTab)}",
+			DeselectNodeTooltip: "{!JSENCODE($Label.DeselectNodeTooltip)}",
+			SelectNodeTooltip: "{!JSENCODE($Label.SelectNodeTooltip)}",
+			RemoveNode: "{!JSENCODE($Label.RemoveNode)}",
+			SSTileRemoveLink: "{!JSENCODE($Label.SSTileRemoveLink)}",
+            PrintVisualization: "{!JSENCODE($Label.PrintVisualization)}",
+            PrintVisualizationOn: "{!JSENCODE($Label.PrintVisualizationOn)}",
+            ExportSVG: "{!JSENCODE($Label.ExportSVG)}",
+            ExportPNG: "{!JSENCODE($Label.ExportPNG)}",
+            ExportNotInIE: "{!JSENCODE($Label.ExportNotInIE)}",
+            Classes: "{!JSENCODE($Label.ManageClasses)}",
+            Relationships: "{!JSENCODE($Label.CMDBRelationshipsTitle)}",
+            ArrowsShowImpactDirection: "{!JSENCODE($Label.ArrowsShowImpactDirection)}",
+            IconsToNavigate: "{!JSENCODE($Label.IconsToNavigate)}",
+            IconsContextMenu: "{!JSENCODE($Label.IconsContextMenu)}",
+            DragIconToMove: "{!JSENCODE($Label.DragIconToMove)}",
+            DoubleClickToRecenter: "{!JSENCODE($Label.DoubleClickToRecenter)}",
+            HoldShiftToAddSelection: "{!JSENCODE($Label.HoldShiftToAddSelection)}",
+            SelectAndLinkToCR: "{!JSENCODE($Label.SelectAndLinkToCR)}",
+            CreateAndLinkToCR: "{!JSENCODE($Label.CreateAndLinkToCR)}",
+            CisSuccessfullLinkMsg: "{!JSENCODE($Label.CisSuccessfullLinkMsg)}",
+			Actions: "{!JSENCODE($Label.Actions)}",
+            SelectAtLeastOneCI: "{!JSENCODE($Label.SelectAtLeastOneCI)}",
+            Error: "{!JSENCODE($Label.Error)}",
+            title: "{!JSENCODE($Label.ciexpciexplorer)}",
+            NoRelExist: "{!JSENCODE($Label.cmdbexplorernorelexist)}",
+            NoRecordsFound: "{!JSENCODE($Label.NoRecordsFound)}",
+            Information: "{!JSENCODE($Label.Information)}"
+        };
+        
+        function populatedRelationShips(relationShips, isfirstLoad) {
+            relationShips.forEach(function(edge) {
+                if(relationShipOnPage.indexOf(edge.relationType) == -1) {
+                    relationShipOnPage.push(edge.relationType);
+                    tw.viz.DEFAULT_RELATIONSHIPS.push([edge.relationType, edge.relationType, edge.fillColor, edge.type, edge.arrowStyle]);
+                } else if(!isfirstLoad) {
+                    tw.viz.DEFAULT_RELATIONSHIPS.every(function(relationShip) {
+                        if(relationShip.indexOf(edge.relationType) != -1) {
+                            relationShip[2] = edge.fillColor;
+                            relationShip[3] = edge.type;
+                            relationShip[4] = edge.arrowStyle;
+                            return false;
+                        }
+                        return true;
+                    });
+                }
+            });
+        }
+    </script>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/class.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/common.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/prototype.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/d3.v3.min.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/cola.v3.min.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/dagre.min.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/effects.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/dragdrop.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/control_modal.js" />    
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/alertMessage.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/slider.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/autocloser.js" />    
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/vendor/saveSvgAsPng.js" />      
+    <!--apex:includeScript value="{!$Resource.CMDBVisualization}/cmdb_graph_viz.js" /-->
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css-4-1-3"/>
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" /> 
+    <link rel="stylesheet" href="{!$Resource.CMDBVisualization}/styles/ctrl_inline_visualization.css" type="text/css" />
+    <title>{!JSENCODE($Label.CMDBCIExplorerTitle)}</title>
+    <apex:outputPanel rendered="{!IF( userLanguage=='iw', true, false )}" layout="none">
+        <link rel="stylesheet" href="{!$Resource.CMDBVisualization}/styles/ctrl_inline_visualization-RTL.css" type="text/css" />
+    </apex:outputPanel>
+    <body>
+        <div id="tooltip"></div>
+        <div id="DetailsHeader" class="DetailsHeader">
+            <span class="instance-label">Instance: </span><span id="instance-name" class="instance-name"></span>
+            <div id="icon-container" class="icon-container"><span id="show-hide-icon" class="show-icon"></span></div>
+        </div>
+        <div id="DetailSectionContainer" class="DetailSectionContainer">
+            <iframe id="SIIframeID" src="" scrolling="no" style="width:100%;height:340px;display:none;border: none;"></iframe>
+        </div>
+        <span id="showInlineVizSpan"></span>
+        <div class="InlineVisualization" id="InlineVisualization">
+            <div id="ciExplorerPopUpLoader" class="popUpLoader d-loader-container">
+                <ul class="d-loading">
+                    <li class="d-loading__stick d-loading__stick_1"></li>
+                    <li class="d-loading__stick d-loading__stick_2"></li>
+                    <li class="d-loading__stick d-loading__stick_3"></li>
+                    <li class="d-loading__stick d-loading__stick_4"></li>
+                    <li class="d-loading__stick d-loading__stick_5"></li>
+                    <li class="d-loading__stick d-loading__stick_6"></li>
+                    <li class="d-loading__stick d-loading__stick_7"></li>
+                    <li class="d-loading__stick d-loading__stick_8"></li>
+                    <li class="d-loading__stick d-loading__stick_9"></li>
+                    <li class="d-loading__stick d-loading__stick_10"></li>
+                    <li class="d-loading__stick d-loading__stick_11"></li>
+                    <li class="d-loading__stick d-loading__stick_12"></li>
+                </ul>
+                <div>{!JSENCODE($Label.PleaseWait)}..</div>
+            </div>
+            <div id="loaderDiv" class="loader" style="display:none;"></div>
+        </div>
+    </body>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/cmdb_explorer_helper.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__CMDBVisualization}/visualization.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSCommon.js" />
+    <script>
+        tw.viz.nodeViewInlineViz(labels.title, "test", true, true, true, 0, "BT", -1, -1, false, false, false, false);
+        addDetailHeaderEvent();
+    </script>
+    <apex:form id="theForm">
+        <apex:actionFunction action="{!LinkToExistingCR}" name="LinkToExistingCR" reRender="chnageNamePanel" oncomplete="ShowInlineSaveMsg()">                        
+            <apex:param assignTo="{!changeId}" name="changeId" value=""/> 
+            <apex:param assignTo="{!selectedInstIds}" name="selectedInstIds" value=""/> 
+         </apex:actionFunction>
+         <apex:actionFunction action="{!LinkToNewCR}" name="LinkToNewCR" reRender="chnageNamePanel" oncomplete="ShowInlineSaveMsg()">
+            <apex:param assignTo="{!selectedInstIds}" name="selectedInstIds" value=""/> 
+         </apex:actionFunction>          
+    	 <apex:outputPanel id="chnageNamePanel" rendered="true">
+        	<script>         
+            	changeName = '{!JSENCODE(changeName)}';        
+                changeId = '{!JSENCODE(changeId)}';
+                exceptionMsg = '{!JSENCODE(exceptionMsg)}';
+        	</script>  
+    	 </apex:outputPanel>
+    </apex:form>
+    <div id="SaveMessageDiv" class="d-notification d-notification_success d-notification_content rfDPL-show" style="display: none;">
+		<div class="d-notification__icon d-icon-left-check"></div>
+		<div class="d-notification__supporting-text">
+			<h3 id="saveMsgText" class="d-notification__item"><apex:outputText value=""></apex:outputText></h3>
+		</div>
+        <a id='saveMsgClose' href="#" onclick="CloseNotificationPopUp();" class="d-notification__close d-icon-left-cross"  style="display: none;" d-ripple=""></a>
+	</div>
+</apex:page>

@@ -1,0 +1,176 @@
+<div class="config-window-container" >
+	<div id="sideBarloader"  ></div>
+	<div id="sideBarActionMask" class="dialog-whiteMask"  ></div>
+	<div class="action-blade__body clearfix">
+		<div id="BodySection" > 
+		<div id="messageDiv"></div>
+		<div class="toolbar" >
+			<div class="inlineBlock" >
+				<div tabindex = '-1' class="cursor-Pointer filter-div inlineBlock float"  ng-blur="controllerData.isFilterClicked = false;">
+					<div  class=" viewMenu inlineBlock float" ng-click="controllerData.isFilterClicked = !controllerData.isFilterClicked ;" style="vertical-align: middle;">
+					</div>		
+					<div ng-show="controllerData.isFilterClicked" class="filter-options">
+						<div id="" class="filter-options-div float">
+							<div class="filter-options-checkbox-div" title="{{_Labels.ActiveItems}}" ng-click="linkClickHandler('activeCheckbox');  $event.stopPropagation(); $event.preventDefault();">
+								
+								<label class="rf-filter-checkbox">
+									<input id="activeCheckbox" type="checkbox" ng-model="activeInactiveFilter.isActive" style="width:0px;"/></span>
+									<span class="rf-checkmark"></span>
+									<span class="Font13Bold">{{_Labels.ActiveItems}}</span>
+								</label>
+							</div>
+							<div class="filter-options-checkbox-div" style="border-top:none;" title="{{_Labels.InactiveItems}}" ng-click="linkClickHandler('inactiveCheckbox'); $event.stopPropagation(); $event.preventDefault();">
+								<label class="rf-filter-checkbox">
+									<input id="inactiveCheckbox" type="checkbox" ng-model="activeInactiveFilter.isInactive" style="width:0px;"/></span>
+									<span class="rf-checkmark"></span>
+									<span class="Font13Bold" >{{_Labels.InactiveItems}}</span>
+								</label>
+							</div>
+							<div class="filter-options-checkbox-div" style="border-top:none;" title="{{_Labels.All}}" ng-click="linkClickHandler('allCheckbox'); $event.stopPropagation(); $event.preventDefault();">
+								<label class="rf-filter-checkbox">
+									<input id="allCheckbox" type="checkbox" ng-model="activeInactiveFilter.isAll" style="width:0px;"/></span>
+									<span class="rf-checkmark"></span>
+									<span class="Font13Bold" >{{_Labels.All}}</span>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			
+			
+				<div class="search-div float" >
+					<span class="searchtext-input-wrapper">
+						<a title="{{_Labels.Search}}" class="rf-icon-search" ></a> 
+						<input ng-model="controllerData.filterValue" id="searchTxt" ng-change="filter()" class="searchfield-input" size="26" placeholder="{{_Labels.Search}}">
+						<a title="{{_Labels.Clear}}" id="rf-icon-cross" class="rf-icon-cross" ng-click="clearSearch()"></a>
+					</span>
+				</div>
+				<div class="separator float" >
+				</div>
+				<div class="create_record_container float" >
+					<button id="createButton" type="button" class="btn save-btn" ng-click="newButtonHandler()" >{{_Labels.New}}</button>
+				</div>
+			</div>
+		</div>
+		
+		<div ui-grid="gridOptions" ui-grid-selection ui-grid-resize-columns class="grid" ></div>
+		<hr>
+		<div class="marginBottom15" style="" ng-class="{'disabledDiv' : controllerData.isDisableDiv}">
+			<span class="Font14Bold" style="">{{_Labels.DefineAttributefor}}:</span>
+			<div class="inlineBlock margin10" style="" ng-class="{'disabledDiv' : !controllerData.isNew }">
+				<span class="Font13Bold" style="margin-bottom:10px;">{{_Labels.ClassType}}:</span>
+				<select ng-model="controllerData.selectedClassType" ng-options="o.fieldName for o in controllerData.classTypes" ng-change="classTypeChanged()" style="width:200px;margin-bottom:10px;padding-left: 5px;height:28px;"></select>
+			</div>
+			<div class="inlineBlock margin10" style="" ng-class="{'disabledDiv' : !controllerData.isNew}">
+				<span class="Font13Bold" style="margin-bottom:10px;">{{_Labels.CMDBClassName}}:</span>
+				<select ng-model="controllerData.selectedClassName" ng-options="o.fieldLabel for o in controllerData.classNames" ng-change="classNameChanged()" style="width:200px;margin-bottom:10px;padding-left: 5px;height:28px;"></select>
+			</div>
+			<div class="inlineBlock float_inactive_checkbox" ng-class="{'marginLeft20':controllerData.isRTL,'marginRight20':!controllerData.isRTL }" >
+				<label class="rf-filter-checkbox" style="margin-bottom:10px;">
+					<input type="checkbox" id="inactiveRule" ng-model="controllerData.isInactiveRule"/>
+					<span class="rf-checkmark"></span>
+					<span class="Font13Bold" style="">{{_Labels.Inactive}}</span>
+				</label>
+			</div>
+		</div>
+		
+		<div class="create_edit_section" style="display: inline-block;width: 100%;" ng-class="{'disabledDiv' : controllerData.isDisableDiv}">
+		
+			<div class="column-configurator col-sm-6 col-md-6 col-lg-6 float" >
+				<table width="100%">
+					<tr>
+					<td style="width:30%">
+						<div class="column-configurator__outer-container initial-margin" ng-class="{'disabledDiv' : !controllerData.isNew}">
+							<div class="column-configurator__container-name">{{_Labels.AvailableFields}} ({{multiSelectionModel1.availableColumns.length}})</div>
+							<div  ui-sortable="sortableOptionsList" class="column-configurator__container sortable-data-container" ng-model="multiSelectionModel1.availableColumns"
+								role="main" id="availableColumnsmultiSelectionModel1" tabindex="1" ng-keydown="onKeyDownSelectElem($event)">
+								<div ui-sortable-selectable id="{{column.APIName}}" class="column-configurator__column available-column" tabindex="0" ng-repeat="column in multiSelectionModel1.availableColumns" ng-bind-html="column.fieldLabel" 
+								data-item="true" data-index="0" ng-click="selectOnClick($index)">
+								</div>
+							</div>
+						</div>
+					</td>
+					<td style="width:10%">
+						<div class="userselection-button-container" ng-class="{'disabledDiv' : !controllerData.isNew}">
+							<button  type="submit" class="userselection-button" ng-click="moveRight('multiSelectionModel1');">
+								<span class="dpl-button-icon" ng-class="{'d-icon-angle_right': !controllerData.isRTL, 'd-icon-angle_left': controllerData.isRTL }"/>
+							</button>
+							<button  type="submit" class="userselection-button" ng-click="moveLeft('multiSelectionModel1');">
+								<span class="dpl-button-icon" ng-class="{'d-icon-angle_left': !controllerData.isRTL, 'd-icon-angle_right': controllerData.isRTL }"/>
+							</button>
+						</div>
+					</td>
+					<td style="width:30%">
+						<div class="column-configurator__outer-container" ng-class="{'disabledDiv' : !controllerData.isNew}">
+							<div class="column-configurator__container-name">{{_Labels.SelectedFields}} ({{multiSelectionModel1.selectedColumns.length}})</div>				
+							<div  class="column-configurator__container" >	
+								<div style="min-height: 170px;max-height: 170px;" ui-sortable="sortableOptionsList" class="sortable-data-container" ng-model="multiSelectionModel1.selectedColumns"
+									role="main" id="selectedColumnsmultiSelectionModel1">					 
+									<div ui-sortable-selectable id="{{column.APIName}}" class="column-configurator__column selected-column" tabindex="0" ng-repeat="column in multiSelectionModel1.selectedColumns" ng-bind-html="column.fieldLabel" >
+									</div>						
+								</div>	
+							</div>
+							<div style="margin-top: 3px;border: 1px solid #d9d9d9;border-radius: 4px;height: 30px;" ng-class="{'disabledDiv' : !controllerData.isNew}">
+								<label class="rf-filter-checkbox" style="margin-bottom: 0px;margin-top: 7px;margin-left: 7px;">
+									<input type="checkbox" id="inactiveRule" ng-model="allClassesFeature.isEnabled">
+									<span class="rf-checkmark"></span>
+									<span class="Font13Bold" style="">{{_Labels.ApplyAllClasses}}</span>
+								</label>
+							</div>							
+						</div>
+					</td>
+					<td style="width:20%">
+					</td>
+					</tr>
+				</table>
+			</div>
+			
+			<div class="column-configurator col-sm-6 col-md-6 col-lg-6 float" >
+				<table width="100%">
+					<tr>
+					<td style="width:35%">
+						<div class="column-configurator__outer-container" ng-class="{'disabledDiv' : !controllerData.enableSource}">
+							<div class="column-configurator__container-name">{{_Labels.Source}} ({{multiSelectionModel2.selectedColumns.length}})</div>				
+							<div  class="column-configurator__container" >	
+								<div ui-sortable="sortableOptionsList" class="sortable-data-container" ng-model="multiSelectionModel2.selectedColumns"
+									role="main" id="selectedColumnsmultiSelectionModel2">					 
+									<div ui-sortable-selectable id="{{column.APIName}}" class="column-configurator__column selected-column" tabindex="0" ng-repeat="column in multiSelectionModel2.selectedColumns" ng-bind-html="column.fieldLabel" >
+									</div>						
+								</div>	
+							</div>
+												
+						</div>
+					</td>
+					<td style="width:10%">
+						<div class="userselection-button-container" >
+							<button  type="submit" class="userselection-button dpl-button-icon  rotate-icon-up" ng-click="moveTop('multiSelectionModel2')">
+								<span class="d-icon-angles_left"/>
+							</button>
+							<button type="submit" class="userselection-button dpl-button-icon" ng-click="moveUp('multiSelectionModel2')">
+								<span class="d-icon-angle_up"/>
+							</button>
+							<button type="submit" class="userselection-button dpl-button-icon" ng-click="moveDown('multiSelectionModel2')">
+								<span class="d-icon-angle_down"/>
+							</button>
+							<button  type="submit" class="userselection-button dpl-button-icon  rotate-icon-down" ng-click="moveBottom('multiSelectionModel2')">
+								<span class="d-icon-angles_left"/>
+							</button>
+						</div>
+					</td>
+					<td style="width:55%">
+						
+					</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div class="footer_section" ng-class="{'disabledDiv' : controllerData.isDisableDiv}">
+		<div style="margin-top:15px;" >
+			<button id="saveButton" type="button" class="btn save-btn" ng-click="save()">{{_Labels.Save}}</button>
+		</div>
+		<hr>
+		</div>
+		</div>
+	</div>
+		 
+</div>

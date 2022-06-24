@@ -1,0 +1,282 @@
+<apex:page sidebar="false" showHeader="false" standardStylesheets="false"  controller="BMCServiceDesk.FulfillmentInputDetailController">
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+<c:CommonIncludes isExtJS4="true" />
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ServiceRequestCommonJS.js" />
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ControllProcessPage.js" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" />
+<apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'RFAdminExt4Common.css')}" />
+<apex:slds />
+<style>
+
+
+body,.x-grid-row .x-grid-cell,.x-grid-row .x-grid-cell {
+    font-family: "Salesforce Sans",Arial,sans-serif !important;
+}
+.x-grid-header-ct, .x-nlg .x-grid-header-ct{
+  border-color: #E1E1E1 !important;
+}
+input{
+    height: unset !important;
+}
+.headerLabel {
+  width: 313px;
+  height: 18px;
+  font-size: 13px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  color: var(--black);
+}
+.x-grid-with-row-lines .x-grid-cell-inner{
+	padding-left: 15px !important;
+}
+.x-column-header-inner .x-column-header-text{
+	padding-left: 10px;	
+}
+
+.x-btn-default-toolbar-medium-icon .x-btn-icon{
+    margin-top: 3px !important;
+}
+.x-panel, .x-plain{
+		overflow: unset !important;
+}
+.x-panel .x-grid-body {
+    border-bottom: solid 1px !important;
+    border-color: #E1E1E1 !important;
+}
+.x-grid-cell-inner {
+    padding: 8px 6px 3px !important;
+}
+.x-toolbar {
+    background-color:#DEE0E0 !important;
+}
+
+</style>
+<apex:outputPanel id="dataPanel">
+    <script>
+        var listData = [];
+        var valueData = [];
+        var templateData = [];
+    </script>    
+</apex:outputPanel>
+
+<script> 
+    var inputId = '{!JSENCODE($CurrentPage.parameters.inputId)}';
+    var isMultiSelect = '{!JSENCODE($CurrentPage.parameters.isMultiSelect)}';
+    var inputValues;
+    var rType;
+    var EF = 'ф';
+    var PE ='П';    
+    var NONPRINT = '¬';
+    var DZHE = 'џ';
+    var isUseOldSeparator = {!isUseOldSeparator};
+    var andLabel = '{!JSENCODE($Label.SLM_AND)}';
+    
+    var lblDelete = '{!JSENCODE($Label.Delete)}';
+    var lblProcess = '{!JSENCODE($Label.Template)}';
+    var lblInvokeWhenValueIs = '{!JSENCODE($Label.InvokeWhenValueIs)}';
+    var lblProcessMappingError = '{!JSENCODE($Label.ProcessMappingError)}';
+    var lblProcessTemplateSelectionError = '{!JSENCODE($Label.SelectProcess)}';
+    var lblProcessFulfillmentValueSelectionError = '{!JSENCODE($Label.ProcessFulfillmentValueSelectionError)}';
+    var lblSavedSuccessfully = '{!JSENCODE($Label.SavedSuccessfully)}';
+    var lblSelectProcess = '{!JSENCODE($Label.SelectProcess)}';
+    var lblValue;
+    var deleteIconPath = "{!URLFOR($Resource.SDEFStyles,'/SDEFbuttons/Delete_Disabled.png')}";
+    if(isMultiSelect.toLowerCase()=='true')
+    	lblValue = '<img title="{!JSENCODE($Label.ServiceRequestCondToInvokeToolTip)}" src="{!$Resource.Themes}/SSDefaultTheme/images/en_US/SS_Information_16.png" style="position:absolute;"/>' +  '<div style="margin-left:22px;"> {!JSENCODE($Label.Value)} </div>';
+    else
+    	lblValue = '{!JSENCODE($Label.Value)}';
+    var isProcessCreateable = {!inputBean.isProcessCreateable};
+        
+    Ext.ns("ControllProcessPageComp");
+    ControllProcessPageComp.ComponentVars = {
+        processId : '{!$Component.controllProcessForm.process_id}',
+        recordsId : '{!$Component.controllProcessForm.records_id}'
+    }    
+    function getSDFStylesResPath(){
+          return '{!$Resource.SDEFStyles}';
+    }
+    '{!ProcessTemplate}';
+    var pTemplate = '{!inputBean.processTemplateLst.size}';
+    if (pTemplate > 0) {
+        var processtemplatedata = RFSplit(('{!inputBean.processtemplatedata}'),NONPRINT);
+        if (processtemplatedata.length > 0) { 
+            for (i=0;i<pTemplate;i++) {
+                var processtemplatesubdata = RFSplit(processtemplatedata[i],EF);
+                if (processtemplatesubdata.length > 0) {
+                    var templateList = new Array(2);
+                    templateList[0] = processtemplatesubdata[0];
+                    templateList[1] = processtemplatesubdata[1];
+                    templateData.push(templateList); 
+                }
+            }
+        }
+    }
+    <apex:repeat value="{!FulfillmentInput}" var="f">
+        inputValues = Ext.util.Format.htmlEncode('{!JSENCODE(f.InputValues__c)}');
+        rType = '{!JSENCODE(f.ResponseType__c)}';
+        if(rType != null && rType != '') {
+            if (rType.toLowerCase()=='radio button' || rType.toLowerCase()=='picklist') 
+                createRedioStore(inputValues, 'value');
+            else if(rType.toLowerCase().toLowerCase()=='lookup') {
+            if (templateData.length > 0){
+                var lookupdata = RFSplit(('{!inputBean.lookupdata}'),NONPRINT);
+                if (lookupdata.length > 0) { 
+                    for (i=0;i<lookupdata.length-1;i++) {
+                        var lookupsubdata = RFSplit(lookupdata[i],EF);
+                        if (lookupsubdata.length > 0) {
+                            var valueList = new Array(2);
+                            valueList[1] = lookupsubdata[0];
+                            valueList[0] = lookupsubdata[1];
+                            valueData.push(valueList); 
+                        }
+                    }
+                }
+            }
+          }
+            else if(rType.toLowerCase()=='check box')
+            {
+       	     if (templateData.length > 0){
+                var inputvalueArray = new Array(2);
+                inputvalueArray[0] = '{!JSENCODE($Label.True)}';
+                inputvalueArray[1] = 'TRUE';                
+                valueData.push(inputvalueArray);
+                inputvalueArray = new Array(2);
+                inputvalueArray[0] = '{!JSENCODE($Label.False)}';
+                inputvalueArray[1] = 'FALSE';
+                valueData.push(inputvalueArray);  
+            }
+           } 
+            else {
+          	  if (templateData.length > 0){
+                var inputvalueArray = new Array(2);
+                inputvalueArray[0] = '{!JSENCODE($Label.Null)}';
+                inputvalueArray[1] = 'NULL' + getSeparatorByCustomSetting(NONPRINT);                
+                valueData.push(inputvalueArray);
+                inputvalueArray = new Array(2);
+                inputvalueArray[0] = '{!JSENCODE($Label.NotNull)}';
+                inputvalueArray[1] = 'NOT NULL' + getSeparatorByCustomSetting(NONPRINT);
+                valueData.push(inputvalueArray);                
+            }
+        }
+      }  
+    </apex:repeat>
+    
+    Ext.onReady(function(){
+        /*var tempInputValue = '{!ProcessControl}';
+        if(tempInputValue != null && tempInputValue != ''){
+            createRedioStore(tempInputValue, 'control');
+        }*/
+        Ext.QuickTips.init(); 
+        hideLoadingMask();
+        showValueTable();
+        loadInvokeValueData();
+        showTemplateTable();
+        loadTemplateData();
+        showTable();       
+        setData();
+     
+        if(!isProcessCreateable){
+        	document.getElementById('saveBtn').disabled =true;
+        }
+    });    
+</script>
+<apex:outputPanel id="processPanel">
+    <script>
+    listData = [];
+    '{!ProcessControl}';
+    var pControl = '{!inputBean.processControlLst.size}';
+    if (pControl > 0) {
+        var processcontroldata = RFSplit((Ext.util.Format.htmlEncode('{!inputBean.processcontroldata}')),PE);
+        if (processcontroldata.length > 0) { 
+            for (i=0;i<pControl;i++) {
+                var processcontrolsubdata = RFSplit(processcontroldata[i],EF);
+                if (processcontrolsubdata.length > 0) {
+                    var processList = new Array(5);
+                    processList[0] = processcontrolsubdata[0];
+                    processList[1] = processcontrolsubdata[1];
+                    processList[2] = processcontrolsubdata[2];
+                    processList[3] = processcontrolsubdata[3];
+                    processList[4] = processcontrolsubdata[4];
+                    listData.push(processList);
+                }
+            }
+        }
+    }
+    if (document.getElementById('extGridPanel') != null) {
+        document.getElementById('extGridPanel').innerText = '';
+        showTable();       
+        setData();
+    }
+    </script>
+</apex:outputPanel>
+<apex:outputPanel >
+ <apex:form id="controllProcessForm">
+    <c:ValidationComponent errorMsgList="{!inputBean.messageString}" id="vComponent"></c:ValidationComponent>
+    <apex:actionFunction name="saveProcessControll" action="{!saveProcessControll}" reRender="vComponent,processPanel" oncomplete="parent.rfPopUpClose('rfModalVFPage')" />
+     <table class="clsMainTableSI" cellspacing="0" cellpadding="0">
+        <tr>
+          <td>
+              <table  class="clsTable" cellspacing="0" cellpadding="0" border="0">  
+                  <tr>
+                      <td colspan="2">
+                          <div class="div15pxVspacing"></div>
+                      </td>
+                  </tr>
+                  <tr>
+                    <td style="padding-left:22px; padding-bottom:10px">
+                        <span class="headerLabel">{!JSENCODE($Label.SelectProcess)} </span>
+                    </td >
+                    <td style="width:360px;padding-left:22px;padding-bottom:10px">
+                        <span class="headerLabel" >{!JSENCODE($Label.Value)}</span>
+                    </td>
+                </tr>
+                  <tr>
+                      <td style="padding-left:22px; width:370px">
+                          <div id="templateData" style="width:350px"></div>
+                      </td >
+                      <td style="width:360px;padding-left:22px">
+                          <div id="valueData" style="width:350px"></div>
+                      </td>
+                  </tr>
+                  <tr> 
+                      <td colspan="2"><div class="div15pxVspacing"></div>
+                      </td> 
+                   </tr>
+                   <tr>
+                        <td colspan="2" style="text-align:right; padding-left:25px;padding-right: 25px;">
+                            <input type="button"  id="addbtn_id" onclick="addDataJs();" value="{!$Label.Add}" class="slds-button slds-button_neutral" style="height:30px"/>
+                            <apex:inputhidden value="{!inputBean.processRecords}" id="records_id"/>
+                            <apex:inputhidden value="{!inputBean.deleteProcessIds}" id="process_id"/>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td colspan="2"><div class="div15pxVspacing"></div>
+                      </td> 
+                   </tr>
+                   <tr>
+                    <td  style="padding-left:22px; padding-right:22px;" colspan="2">
+                        <div id="extGridPanel"> </div>
+                    </td>
+                </tr>
+              </table>
+          </td>
+        </tr>
+        
+        <tr> 
+            <td>
+                <div style="background-color:#dee0e0;height:52px;padding-top: 10px;" class="clsBottomDiv" >
+                    <input type="button" id="cancelButton" style="margin-left: 10px;;margin-right:20px;float:right;height:30px" onclick="javascript: parent.rfPopUpClose('rfModalVFPage')" value="{!$Label.Cancel}" class="slds-button slds-button_neutral"/>  
+                    <input style="float:right;height:30px" type="button" id="saveBtn" onclick="beforeSave()" value="{!$Label.OK}"  class="slds-button slds-button_brand" />                      
+                </div>
+            </td>
+        </tr>
+     </table>
+ </apex:form>
+</apex:outputPanel>
+<apex:outputpanel id="sldsAlert">
+		<c:RFMessagingComponent />
+</apex:outputpanel>
+</apex:page>

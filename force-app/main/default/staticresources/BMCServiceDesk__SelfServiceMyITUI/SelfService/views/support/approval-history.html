@@ -1,0 +1,60 @@
+<div class="modal-header Branding-Title_bar-background_color Branding-Title_bar-broadcast_text_color support-modal-header" >
+   <h1 class="modal-header__title support-modal-header__title" id="support-modal-header__title">
+      {{$root.selfServiceLabels.ApprovalHistory }}: {{approvalRequest.TargetObjectName}}
+   </h1>
+   <div role="button" aria-label="{{ $root.selfServiceLabels.cancel }}" tabindex="0" class="search-remove-btn search-remove-btn-dpl" ng-click="cancel()">
+      <span class="d-icon-cross"/>
+   </div>
+</div>
+<div class="modal-body support-modal-body">
+   <loading-spinner if="manageApprovalState.isLoading" overlay="true" style="min-height:200px;"></loading-spinner>
+   <div class="approval-panel-table" id="approvalHistoryDiv" set-Height="setApprovalHistoryDivHeight">
+        <table id="fixedtable" class="detail-table fixed-header-table">
+            <thead class="approval-history-sticky-header">
+                <tr>
+                    <th>{{$root.selfServiceLabels.Approver}}</th>
+                    <th>{{$root.selfServiceLabels.status}}</th>
+                    <th>{{$root.selfServiceLabels.submittedDate}}</th>
+                    <th>{{$root.selfServiceLabels.Comments}}</th>
+                </tr>
+            </thead>
+        </table>
+       <table class="detail-table">
+         <thead id="tableheader">
+            <tr>
+               <th width="20%">{{$root.selfServiceLabels.Approver}}</th>
+               <th width="20%">{{$root.selfServiceLabels.status}}</th>
+               <th width="20%">{{$root.selfServiceLabels.submittedDate}}</th>
+               <th width="40%">{{$root.selfServiceLabels.Comments}}</th>
+            </tr>
+         </thead>
+         <tr ng-if="nodeApprovals && nodeApprovals.length == 0">
+         	<td colspan="4" style="text-align:center;">
+               {{$root.selfServiceLabels.MsgNoRecordFound}}
+            </td>
+         </tr>
+         <tr ng-if="nodeApprovals[0].Status=='Pending'" ng-repeat="workItem in nodeApprovals[0].Workitems">
+            <td width="20%">
+               <div class="approvalDetailsList" ng-bind-html="workItem['Actor']['Name']"></div>
+            </td>
+            <td width="20%">{{$root.selfServiceLabels.Pending}}</td>
+            <td width="20%">{{workItem['CreatedDate'] | date:"MM/dd/yyyy ' ' h:mm ' ' a"}}</td>
+            <td width="40%"></td>
+         </tr>
+         <tbody ng-repeat="nodeApp in nodeApprovals">
+            <tr ng-repeat="approval in nodeApp.Steps" ng-if="approval['StepStatus']!='NoResponse'" ng-init="approval[showMore] = true">
+               <td width="20%">
+                  <div class="approvalDetailsList" ng-bind-html="approval['Actor']['Name']"></div>
+               </td>
+               <td width="20%" class="{{approval['StepStatus']}}">{{approval['StepStatus']=='Started' ? $root.selfServiceLabels.Submitted : approval['StepStatus'] == 'Removed' ? $root.selfServiceLabels.Recalled : approval['StepStatus'] == 'Rejected' ? $root.selfServiceLabels.Rejected : approval['StepStatus'] == 'Approved' ? $root.selfServiceLabels.Approved : approval['StepStatus']}}</td>
+               <td width="20%">{{approval['CreatedDate'] | date:"MM/dd/yyyy ' ' h:mm ' ' a"}}</td>
+               <td width="40%">
+                  <div class="approval-history-comment-width" ng-class="{'block-with-text': approval[showMore]}" ng-click="approval[showMore] = !approval[showMore];" ng-bind-html="approval['Comments'] | newlines"></div>
+               </td>
+            </tr>
+         </tbody>
+      </table>
+   </div>
+</div>
+<div class="modal-footer model-footer-approval-history">
+</div>

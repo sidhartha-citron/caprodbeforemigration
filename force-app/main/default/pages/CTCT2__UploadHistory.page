@@ -1,0 +1,56 @@
+<apex:page controller="CTCT2.UploadHistoryController" action="{!initPage}" sidebar="false" tabstyle="Uploads__tab">
+
+	<style>
+		.pbTable {border: 1px solid lightgray;}
+		.message {margin-bottom: 10px;} /* Add some space after the pageMessages component. */
+	</style>
+
+	<apex:sectionHeader title="Constant Contact for Salesforce" subtitle="Upload History" />
+
+	<apex:pageMessages />
+	
+	<apex:outputPanel layout="none" rendered="{!canAccessUploadHistory}">
+		<apex:form >
+			<apex:pageBlock helpTitle="Help for this page" helpUrl="{!helpURL.helpurlSyncHistory}">
+	
+				<apex:outputPanel layout="block" style="text-align: center; padding-bottom: 10px;">
+					<apex:commandButton value="Refresh" action="{!refresh}"/>
+					&nbsp;&nbsp;
+					<apex:outputPanel layout="none" rendered="{!canAccessContact}">
+						<apex:commandButton value="Upload Contacts" action="{!uploadContacts}"/>
+					</apex:outputPanel>
+					<apex:outputPanel layout="none" rendered="{!NOT(canAccessContact)}">
+						<apex:commandButton value="Upload Contacts" action="{!uploadContacts}" onclick="alert('You must have read access to Contacts to upload Contacts.'); return false;"/>
+					</apex:outputPanel>
+					&nbsp;&nbsp;
+					<apex:outputPanel layout="none" rendered="{!canAccessLead}">
+						<apex:commandButton value="Upload Leads" action="{!uploadLeads}"/>
+					</apex:outputPanel>
+					<apex:outputPanel layout="none" rendered="{!NOT(canAccessLead)}">
+						<apex:commandButton value="Upload Leads" action="{!uploadLeads}" onclick="alert('You must have read access to Leads to upload Leads.'); return false;"/>
+					</apex:outputPanel>
+				</apex:outputPanel>
+			
+				<apex:pageBlockTable value="{!histories}" var="history" width="100%"
+				styleClass="pbTable" columnClasses="pbTable" headerClass="pbTable">
+					<apex:column value="{!history.CreatedDate}" headerValue="Upload Time"></apex:column>
+					<apex:column value="{!history.CTCT2__Run_Start_Time__c}" headerValue="Start Time"></apex:column>
+					<apex:column value="{!history.CTCT2__Run_End_Time__c}" headerValue="Finish Time"></apex:column>
+					<apex:column value="{!history.CTCT2__Status__c}" headerValue="Status"></apex:column>
+					<apex:column value="{!history.CTCT2__History_Type__c}" headerValue="List Type"></apex:column>
+					<apex:column value="{!history.CTCT2__Uploaded__c}" headerValue="# Uploaded" style="text-align:center;"></apex:column>
+					<apex:column value="{!history.CTCT2__Selected__c}" headerValue="# Selected" style="text-align:center;"></apex:column>
+					<apex:column value="{!history.CTCT2__Errors__c}" headerValue="# Errors" style="text-align:center;"></apex:column>
+					<apex:column value="{!history.CTCT2__Comment__c}" headerValue="Comment"></apex:column>
+				</apex:pageBlockTable>
+	
+				<apex:outputPanel layout="block" style="text-align: center;">
+					<apex:commandLink action="{!previous}" rendered="{!hasPrevious}">Previous</apex:commandlink>
+					<apex:outputPanel rendered="{!hasPrevious && hasNext}">&nbsp;&nbsp;</apex:outputPanel>
+					<apex:commandLink action="{!next}" rendered="{!hasNext}">Next</apex:commandlink>
+				</apex:outputPanel> 
+			 
+			</apex:pageBlock>
+		</apex:form>
+	</apex:outputPanel>
+</apex:page>

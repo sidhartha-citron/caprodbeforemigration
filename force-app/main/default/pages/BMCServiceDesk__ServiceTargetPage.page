@@ -1,0 +1,881 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.SLTController">
+    <c:CommonIncludes />
+    <c:UserContextComponent />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Spinner.css" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/Spinner.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/SpinnerField.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ServiceLevelTarget.js" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomViews.css" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ServiceLevelTarget.css" />
+	
+<apex:form id="sltMainForm" >
+<apex:actionRegion >
+<apex:actionFunction action="{!nextBtnHandler}" name="nextSLT" rerender="sltMainTablePanel,applies_to_id,target_type__id,BusinessHours_id_name,inactivePanel,BusinessHours_id_id,durationText,statusGridPanelId,qualDataPanel,afterSavePanel" oncomplete="refreshSLTList();disableMilestoneAndActionTab();resetSLTForm();updateInactive();updateTitle();"> 
+        <apex:param assignTo="{!stBean.tempString}" name="idSetString" value=""/>          
+</apex:actionFunction>
+<apex:actionFunction action="{!previousBtnHandler}" name="previousSLT" rerender="sltMainTablePanel,applies_to_id,target_type__id,BusinessHours_id_name,inactivePanel,BusinessHours_id_id,durationText,statusGridPanelId,qualDataPanel,afterSavePanel" oncomplete="refreshSLTList();disableMilestoneAndActionTab();resetSLTForm();updateInactive();updateTitle();"> 
+                        <apex:param assignTo="{!stBean.tempString}" name="idSetString" value=""/>  
+</apex:actionFunction>
+ <apex:actionFunction name="populateTargetTypeFields" action="{!setFieldItems}" reRender="target_type__id,id_selectList,fldTypePanel,statusGridPanelId" oncomplete="populateQualFieldsData();">
+    <apex:param assignTo="{!stBean.sltObj.BMCServiceDesk__Applies_To__c}" name="selectedAppliesTo" value=""/>
+ </apex:actionFunction>
+</apex:actionRegion>
+<apex:actionFunction name="save" action="{!save}" id="saveActionFunction" reRender="afterSavePanel,validationComponent,durationText,BusinessHours_id_name,BusinessHours_id_id,ActionLabel,MilestonePanel,ActionPanel" oncomplete="milestoneInvalidated();refreshSLTList();disableMilestoneAndActionTab(); handleResetChange();EnableAddRemovebtns();hideLoadingMask();">
+<apex:param assignTo="{!stBean.sltObj.Inactive__c}" name="inactiveValue" value=""/>
+    <apex:param assignTo="{!stBean.sltObj.ST_Criteria_Advanced_Expression__c}" name="qualAdvExpr" value=""/>
+    <apex:param assignTo="{!stBean.sltObj.Advanced_Rule__c}" name="IsAdvancedRuleLogic" value=""/>
+     <apex:param assignTo="{!stBean.sltObj.Qualification_ClockStatus__c}" name="qualificationStatus" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="initMilestone" action="{!initMilestone}" id="initMilestoneID" reRender="ActionLabel,MilestonePanel,ActionPanel" oncomplete="loadDatatoMilestonetore();loadDatatoActionstore();" immediate="true"> 
+</apex:actionFunction>
+<apex:actionFunction name="delMilestone" action="{!delMilestone}" id="delMilestoneId"  reRender="dummyPanel"  oncomplete="ChangeActionLabel();"> 
+</apex:actionFunction> 
+<apex:actionFunction name="delAction" action="{!delAction}" id="delActioneId"  reRender="ActionLabel"  oncomplete="disableDeletebtn();"> 
+</apex:actionFunction> 
+
+<apex:actionregion > 
+<apex:actionFunction name="getActions" action="{!getActions}" id="getActionID" reRender="ActionPanel,ActionLabel" oncomplete="loadDatatoActionstore();hideWaitbox();"> 
+	<apex:param assignTo="{!stBean.milestoneBean.currSelectedMilestoneID}" name="milestoneId" value=""/>
+	<apex:param assignTo="{!stBean.milestoneBean.currSelectedMilestoneCondition}"  name="milestoneCond" value=""/>
+</apex:actionFunction>
+</apex:actionregion>
+<apex:actionregion >
+<apex:actionFunction action="{!reset}" name="reset" rerender="sltMainTablePanel,applies_to_id,target_type__id,BusinessHours_id_name,BusinessHours_id_id,durationText,statusGridPanelId,qualDataPanel" oncomplete="resetSLTForm(); handleResetChange(); refreshStatusPicklist();"/>
+</apex:actionregion>
+<!-- Do not remove this Action function for validation of advanced query expression. This is to be used later. 
+<apex:actionFunction action="{!validateAdvExpression}" name="validateAdvExpression" rerender="validationComponent" oncomplete="showError();">
+	<apex:param assignTo="{!stBean.validateCriteriaType}" name="validateCriteriaType" value=""/>
+</apex:actionFunction>
+ -->
+<apex:inputHidden id="targetInDays"  value="{!stBean.targetInDays}"/>
+<apex:inputHidden id="targetInHours"  value="{!stBean.targetInHours}"/>
+<apex:inputHidden id="targetInMinutes"  value="{!stBean.targetInMinutes}"/>
+<apex:inputHidden id="targetInBusinessDays"  value="{!stBean.sltObj.BMCServiceDesk__BusinessDays__c}"/>
+<!-- Condition grid data -->
+<apex:inputHidden id="applySTStr"  value="{!stBean.STCriteriaApplyConditions}"/>
+<apex:inputHidden id="startClockStr"  value="{!stBean.startClockConditions}"/>
+<apex:inputHidden id="stopClockStr"  value="{!stBean.stopClockConditions}"/>
+<apex:inputHidden id="pauseClockStr"  value="{!stBean.pauseClockConditions}"/>
+<!-- End Condition grid data -->
+<apex:inputHidden id="currSelectedMilestoneID" value="{!stBean.milestoneBean.currSelectedMilestoneID}"/>
+<apex:inputHidden id="currSelectedMilestoneCondition" value="{!stBean.milestoneBean.currSelectedMilestoneCondition}"/>
+<apex:inputHidden id="currSelectedActionID" value="{!stBean.milestoneBean.currSelectedActionID}"/> 
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+  <tr>
+      <td><div id="toolBar"></div></td>
+  </tr>
+   
+  <tr>
+  <td>
+  <apex:outputPanel id="sltMainTablePanel">
+       <table cellpadding="0" cellspacing="0" border="0" width="100%">
+         <tr>
+         <td colspan="2"><div class="div15pxVspacing" /></td>
+         </tr>
+         <tr>
+            <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__targettitle}"  /> <span class="clsRequiredBlack">*</span></td>
+            <td style="padding-bottom:5px;"><apex:inputText value="{!stBean.sltObj.BMCServiceDesk__Service_Target_Title__c}" title="{!$ObjectType.BMCServiceDesk__Service_Target__c.fields.BMCServiceDesk__Service_Target_Title__c.inlineHelpText}" id="slt_title_id" styleClass="clsInputTextBox" style="width:85%" /></td> 
+         </tr>
+          <tr>
+            <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Service_Target__c.fields.BMCServiceDesk__Service_Target_Description__c.label}" /></td>
+            <td><apex:inputTextarea value="{!stBean.sltObj.BMCServiceDesk__Service_Target_Description__c}" title="{!$ObjectType.BMCServiceDesk__Service_Target__c.fields.BMCServiceDesk__Service_Target_Description__c.inlineHelpText}" id="slt_description_id" styleClass="clsInputTextBox" style="width:85%" />
+           
+               <input type="button" id="inputTxtAreaButton" class="TextboxPopupIcon" style="display:inline" onclick="showTextEditor('{!$Component.sltMainForm.slt_description_id}', '{!$ObjectType.Incident__c.fields.incidentDescription__c.label}', '32000', '{!$Label.OK}', '{!$Label.Cancel}');"/>
+            </td>
+         </tr>
+       </table>
+	   </apex:outputPanel>
+            </td>
+         </tr>
+         <tr>
+         <td height="10"></td>
+         </tr>
+         <tr>
+           <td colspan="3">
+               <table width="200" cellspacing="0" cellpadding="0" border="0">
+                   <tr>
+                   
+                  <td style="padding-left: 5px;"><input type="button" id="Service_target_Id"  value="{!if(isOLA,$Label.OperationalTarget,$Label.ServiceTarget)}" class="defaultBtn"  onclick="displayTabPanel(this);"  /></td>
+                  <td ><input type="button" id="qualification_id"  value="{!$Label.Qualification}" title="{!$Label.TooltipQualificationStackBtn}" class="defaultBtn" onclick="displayTabPanel(this);"  /></td> 
+                  <td ><input type="button" id="measurement_id" value="{!$Label.Measurement}"  title="{!$Label.TooltipMeasurementsStackBtn}" class="defaultBtn"  onclick="displayTabPanel(this);"  /></td>
+                  <td ><input type="button" id="milestones_actions_id"  value="{!$Label.MilestonesAndActions}" title="{!$Label.TooltipMilestonesStackBtn}" class="defaultBtn"  onclick="displayTabPanel(this);initMilestone();"  /></td>  
+                    </tr>  
+               </table>      
+          </td>
+         </tr>
+         <tr>
+         <td height="5"></td>
+         </tr>
+         <tr>
+   <td class="pad-10px-td" >
+           <table  cellspacing="0" cellpadding="0" border="0"  class="tab-main-table"  id="serviceTargetPanel">
+              <tr>
+                <td colspan="4"><div class="div15pxVspacing" /></td>
+             </tr>
+              <tr>
+                <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Service_Target__c.fields.BMCServiceDesk__Applies_To__c.label}" /><span class="clsRequiredBlack">*</span></td>
+                <td colspan="3" ><apex:selectList value="{!stBean.sltObj.BMCServiceDesk__Applies_To__c}" size="1" title="{!$Label.bmcservicedesk__slappliesto}" id="applies_to_id" styleClass="clsTemplateSelectList" style="margin-left:23px;" onchange="handleModuleChange(this);">
+                    <apex:selectOptions value="{!appliesToItems}"/>
+                    </apex:selectList>
+                    
+                </td> 
+             </tr>
+              <tr>
+                 <td height="5"></td>
+             </tr>
+              <tr>
+                <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Service_Target__c.fields.BMCServiceDesk__Target_Type__c.label}" /> <span class="clsRequiredBlack">*</span></td>
+                <td colspan="3" class="clsInputTextBoxTD"><apex:selectList value="{!stBean.sltObj.BMCServiceDesk__Target_Type__c}" size="1" title="{!$Label.bmcservicedesk__slatargettype}" id="target_type__id" onchange="hideStopClockPanel();" styleClass="clsTemplateSelectList" style="margin-left:23px;">
+                 <apex:selectOptions value="{!targetTypeItems}"/>
+                </apex:selectList>
+                 
+                </td> 
+             </tr>
+            <tr>
+             <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Service_Target__c.fields.BMCServiceDesk__FKSupport_Hours__c.label}" /></td>
+             <td colspan="3">
+             <apex:inputText title="{!$ObjectType.BMCServiceDesk__Service_Target__c.fields.BMCServiceDesk__FKSupport_Hours__c.inlineHelpText}" id="BusinessHours_id_name" value="{!stBean.supportHoursName}" onblur="showalldata(event,'',escape('IsActive = true'));"  styleClass="clsInputTextBox" style="margin-left:23px;"/>
+                 <input type="button" id="supportHoursLookup" class="lookupIconOn" onClick=" openPopupRF('SearchPage?popupId=BusinessHours&isLookup=true&idNameForPopUp=true&referenceObjectName=BusinessHours&useSOQLForSearch=true', setSupportHoursReferenceToVal,450, 600, true,true);" />
+                 <apex:inputhidden id="BusinessHours_id_id" value="{!stBean.sltObj.BMCServiceDesk__FKSupport_Hours__c}"/>
+             </td>
+            </tr>
+            <tr>
+                 <td height="5" colspan="4"></td>
+            </tr>
+             <tr>
+             	<td colspan="4" class="clsInputLabelTD"> 
+					<apex:inputCheckbox value="{!stBean.sltObj.BMCServiceDesk__Use_Account_Business_Hours__c}" id="Use_Account_Business_Hours" title="{!$Label.bmcservicedesk__tooltipservicetargetuseclientsaccounthours}"/>
+					<apex:outputLabel style="vertical-align:top" value="{!$Label.bmcservicedesk__overrideclientbusinesshours}" />
+				</td>
+             </tr>
+            <tr>
+            <td class="clsInputBoldLabelTD" colspan="4" title="{!$label.SLTTargetTime}"><apex:outputLabel value="{!$Label.bmcservicedesk__target}"><span class="clsRequiredBlack">*</span></apex:outputLabel></td>
+            </tr>
+            <tr>
+                 <td height="10" colspan="4"></td>
+             </tr>
+            <tr>
+            	<td colspan="4">
+            	<table width="70%"><tr>
+           		<td class="radiobutton-cls" >
+           		<input type="radio" name="duration-radio" id="dhm-radio" onclick = "enableDisableTargetFields();"/>
+				</td>
+             <td  class="days-label-td" title="{!$label.SLTTargetTime}"> <div id="days-ct" /><apex:outputLabel value="{!$Label.bmcservicedesk__servicetargetdayslabel}" /></td>
+             <td class="hours-label-td" title="{!$label.SLTTargetTime}"> <div id="hours-ct" /><apex:outputLabel value="{!$Label.bmcservicedesk__hourslabel}" /> </td>
+             <td class="minutes-label-td" title="{!$label.SLTTargetTime}"> <div id="minutes-ct" /><apex:outputLabel value="{!$Label.bmcservicedesk__minuteslabel}" /></td>
+            	</tr></table>
+            	</td>
+            </tr>
+            <tr>
+                 <td height="7" colspan="4"></td>
+            </tr>
+            <tr>
+            <td colspan="4">
+            	<table><tr>
+           		<td class="radiobutton-cls" >
+           			<input type="radio" name="duration-radio" id="bd-radio" onclick = "enableDisableTargetFields();"/>
+           		</td>
+            	<td class="businessdays-label-td" colspan="3" title="{!$ObjectType.Service_Target__c.fields.BusinessDays__c.inlineHelpText}"> 
+            		<div id="businessdays-ct"/><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Service_Target__c.fields.BMCServiceDesk__BusinessDays__c.Label}" />
+            	</td>
+            	</tr></table>
+            	</td>
+            </tr>
+            <tr>
+                 <td height="15" colspan="4"></td>
+             </tr>
+             <tr>
+             <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__targetpreview}" /></td>
+             <td colspan="3" ><apex:inputText id="durationText"  onfocus="this.blur()" value="{!stBean.durationText}" title="{!$ObjectType.BMCServiceDesk__Service_Target__c.fields.BMCServiceDesk__Service_Target_Title__c.inlineHelpText}"  styleClass="clsInputTextBoxReadOnly" /></td></tr>
+			 
+			 <tr><td height="15" colspan="4"></td></tr>
+            
+			 
+            <tr><td colspan="4" height="60"></td></tr>
+            </table>
+            
+            
+            <table  cellspacing="0" cellpadding="0" border="0" class="tab-main-table" style="display:none;" id="qualificationPanel">
+            <tr>
+            	<td>
+            		<apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax">
+            			<apex:panelBarItem label="{!$Label.bmcservicedesk__servicetargetqualifiesif}" expanded="true" headerClass="panelHeader">
+            			</apex:panelBarItem>
+             		</apex:panelBar>		
+            	</td>
+            </tr>
+            <tr>
+                <td>
+                	<apex:outputPanel id="qualsPanel">
+                       <table class="output-panel-toolbar-table" bgcolor="#DEE0E0" cellpadding="0" cellspacing="0">
+                       	<tr bgcolor="#DEE0E0" height="40">
+                       		<td width="25%" class="pad-10px-td" title="{!$Label.ToolTipQualificationFieldlist}">
+                       			<div id="extFieldList"></div>
+                               </td>
+                       		<td width="15%" class="pad-10px-td" title="{!$Label.ToolTipOperator}">
+                       			<div id="compareOpDiv"></div>
+                       		</td>
+                       		<td width="30%" class="pad-10px-td" title="{!$Label.ToolTipValueField}">
+                       			<table cellpadding="0" cellspacing="0">
+                       				<tr>
+                       				<td style="padding-right: 5px;">
+                       					<apex:inputText id="inputTxt" style="display:block;"  styleClass="qualInputEle"/ >
+                       					<input type="text" id="referenceID" value=""  style="display:none;" />
+                       					<apex:inputText id="datetimeinput" styleClass="qualInputEle" style="display:none"/>
+                       					<apex:inputText id="inputDate" styleClass="qualInputEle" style="display:none"/>
+                       					<apex:inputTextarea id="inputTxtArea" style="display:none" styleClass="clsQualTextarea" onkeyup="validateLength('{!$Component.sltMainForm.inputTxtArea}',selectedTextAreaLength);"/>
+                       				</td>
+                       				<td>
+                               			<input type="button" id="lookUp" class="lookupIconOn" style="display:none;" onClick="openQualLookup();"/>
+                       					<input type="button" id="inputTxtAreaButtonEle" class="TextboxPopupIcon" style="display:none" onclick="showTextEditor('{!$Component.sltMainForm.inputTxtArea}', selectedLabel, selectedTextAreaLength, '{!$Label.OK}', '{!$Label.Cancel}');" />
+                       					<apex:image id="dateTimePopupImg"  styleClass="CMDB_DatePickerImage" style="display:none" width="19px" height="19px" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDateTimePicker();"/>
+                               			<apex:image id="datePopupImg"  styleClass="CMDB_DatePickerImage" style="display:none" width="19px" height="19px" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDatePicker();"/>
+                       		   		</td>
+                       				<td>
+                       					<div id="picklistCombo"/>	
+                       				</td>
+                       				<td>
+                       					<div id="booleanCombo"/>		
+                       				</td>
+                       				</tr>
+                       			</table>
+                       		   </td>
+                               <td width="22%" id="qualButtonTD" style="padding-left: 10px;" title="{!$Label.ToolTipLogOperator}">
+                                	<div id="qualLogicalOperatorCombo"></div>
+                                </td>
+                                <td width="8%"> 
+                                    <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_add.png" onClick="addSLTQData();"  id="addButtonId" title="{!$Label.Add}" />
+                                    <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_update.png" onClick="upadateSLTQData();" id="updateButtonId" style="display:none;" title="{!$Label.Update}" />   
+                                    <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png" onClick="removeSLTQData();" id="removeButtonId" disabled="true" title="{!$Label.Remove}" />                                                           
+                                     
+                                </td>
+                           </tr>
+                        </table>
+                    </apex:outputPanel>
+                </td>
+             </tr>
+             <tr>
+             	<td>
+             		<table class="output-panel-toolbar-table" id="qual_grid_table_id"  cellpadding="0" cellspacing="0">
+             			<tr>
+             				<td>
+								<div id="qualificationGridDiv"/>             				
+             				</td>
+             			</tr>
+                        <tr id='AdvancedFilterSection'>
+                            <td colspan="1">                                
+                                 <a id="addFilter" href="" class="clsCmdLink addClearFilterText" onclick="toggleAdd(false);return false">{!$Label.AddAdvancedRuleLogic}</a>
+                                 <a id="clearFilter" href="" class="clsCmdLink addClearFilterText" style="display:none" onclick="toggleClear();return false">{!$Label.ClearAdvancedRuleLogic}</a>
+                                &nbsp;
+                                <input id="filterLogic" class="filterLogicInputText" type="text" name="filterLogic"  autocomplete="off" />                                 
+                                &nbsp;
+                                <span id="exampleText">
+                                     {!$Label.Example}: (1 AND 2) OR 3
+                                </span>
+             	</td>
+             </tr>
+			</table>
+				</td>
+             </tr>
+			 <tr>
+				<td>
+					<apex:outputPanel rendered="{!isOLA}">
+						<table class="output-panel-toolbar-table clockModeTable" cellpadding="0" cellspacing="0">
+							<tr >
+								<td>
+									<table>
+										<tr >
+											<td width="100%">
+											     <div class="primaryLabel">
+												<apex:outputLabel styleclass="labelMargin" value="{!$Label.bmcservicedesk__qualification_clockstatus}"  />	
+												</div>
+											</td>
+
+										</tr>
+									</table>
+									<table class="picklistTable">
+										<tr >  
+											<td width="45%">
+											    <div class="targetStatus">
+												    <apex:outputLabel styleclass="labelMargin" value="{!$Label.bmcservicedesk__targetstatus}" />
+												</div>
+												<div id="Clock_mode__id" class="primaryLabel clockModePicklist"></div>
+											</td>
+											<td width="10%"> 
+												<div id="warnMsg"  title="{!$label.missingOwnerInGrid}"> 
+													<img  src = '{!$Resource.SSThemes}/SSDefaultTheme/SDEFicons/status-16-information.png' class="primaryLabel"/>
+												</div>
+											    <div id="linkToOptIn"  class="handPointer" onclick="showOLAMessage(linkToOptin)"> 
+													<img  src = '{!$Resource.SDEFStyles}/SDEFicons/help_icon.png' id="OptInHelp"/>
+												</div>      
+											</td>
+											<td width="45%">									
+												    
+											</td>
+										</tr>
+										
+									</table>
+								</td>
+								
+							</tr>
+						</table>
+					
+					</apex:outputPanel>
+				</td>
+			</tr>
+             <!--  Do not remove below Code for Advance Expression for qualification. This is to be used later.  
+			<tr>
+				<td>
+					<table style="width:97%;margin-left: 10px;margin-bottom: 10px;" cellpadding="0" cellspacing="0">
+						<tr>
+							<td>
+								<div id='divToHideQualAdvExpressionID' style="display:block">	
+									<a href='javascript:void(0)' id="HideQualAdvExpressionID" onclick='toggleAdvanceExpression("divToHideQualAdvExpressionID","divToShowQualAdvExpressionID");' class="clsCmdLink">{!$Label.ShowAdvancedExpression}</a>
+								</div>
+							</td>
+						</tr>
+             			<tr>
+             				<td>
+								<div id='divToShowQualAdvExpressionID' style="display:none">
+									<a href='javascript:void(0)' id="ShowQualAdvExpressionID" onclick='toggleAdvanceExpression("divToShowQualAdvExpressionID","divToHideQualAdvExpressionID");' class="clsCmdLink">{!$Label.HideAdvancedExpression}</a>
+									<br/>
+									<apex:inputTextarea id="qualAdvExpressionTextAreaID"  onkeypress="return validateInputFF(event);" onkeydown="return validateInputIE(event);" styleClass="clsInputTextArea" value="{!stBean.qualAdvExpr}" style="width:515px;-moz-user-select:none;" onmousedown="if (event.button==2){alert('Right Clicking not allowed!');}"/>
+								<input type="button" id="validateQualAdvExpression"  value="Validate" class="defaultBtn" style="width:50px;margin-top:15px" onclick="validateQAdvExpression();"  />
+								<input type="button" id="resetQualAdvExpression"  value="Reset" class="defaultBtn" style="width:50px;margin-top:15px" onclick="resetQAdvExpression();"  />
+								</div>
+             				</td>
+             			</tr>
+             			
+             		</table>
+				</td>
+			</tr>
+			 -->
+            </table>            
+            <table  cellspacing="0" cellpadding="0" border="0" class="tab-main-table" style="display:none;" id="measurementPanel">
+            <tr>
+                <td>
+					<apex:outputPanel id="measurmentPanel">
+						<div>
+							<apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" id="pbarForMesurmentId">
+									
+									<!-- start clock accordian -->
+									<apex:panelBarItem label="{!$Label.bmcservicedesk__startclockpaneltitle}" expanded="true" id="PbarItemStartClockId" headerClass="panelHeader" contentClass="panelContent" onenter="RefreshGrid();">
+										<apex:outputPanel id="StartClockPanelId">   
+											 <table class="output-panel-toolbar-table fixedTablelayout"  cellspacing="0" cellpadding="0" border="0">
+                                                
+                                                <tr bgcolor="#DEE0E0" height="40">
+                                                    
+                                                    <td class="StatuslblTD" style="width:155px"><apex:inputText value="{!stBean.statusLabel}"  id="start_status_lbl_id" style="width:145px" styleClass="clsInputTextBoxReadOnly" onfocus="this.blur()"  /></td> 
+                                                    <td class="ComOperatorTD" title="{!$Label.ToolTipOperator}" ><div id="startOpComboDiv" /></td>
+                                                    <td class="LookupTD" title="{!$Label.ToolTipStatusValueField}">
+                                                    <apex:inputText id="start_status" value="{!stBean.fieldValue}" style="width:155px" styleClass="clsInputTextBox" onfocus="this.blur()" />
+                                                    <input type="button" id="lookUp" class="lookupIconOn"  onclick="openStartStatusLookUp()"/>
+                                                     <input type="text" id="startReferenceID" value=""  style="display:none;" />
+                                                 </td>
+												 <td class="LogOperatorTD" title="{!$Label.ToolTipLogOperator}"><div id="startlogOpComboDiv" /></td>
+                                                   <td class="BtnsGroupTD"><img  id="addStart_id" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_add.png" onClick="addRecordToStartClockGrid();" title="{!$Label.Add}" />
+                                                      <img  id="updateStart_id" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_update.png" onClick="updateRecordOfStartClockGrid();"  style="display:none;"     title="{!$Label.Update}" /> 
+                                                   <img id="removeStart_id" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png"  disabled="true" onClick="reomveRecordFromStartClockGrid();" title="{!$Label.Remove}"/>
+                                                   </td>
+                                              
+                                                </tr>
+                                                <tr>
+                                                <td colspan="5"><div id="startClockGridDiv"/></td>
+                                                </tr>
+											
+                                            </table>
+                                            <!--  Do not remove below Code for Advance Expression for qualification. This is to be used later.
+											<table style="width:97%;margin-left: 10px;margin-bottom: 10px;" cellpadding="0" cellspacing="0">	<tr><td><div class="div10pxVspacing"/></td></tr>
+												<tr>
+													<td>
+														<div id='divToHideStartClockAdvExpressionID' style="display:block">	
+															<a href='javascript:void(0)' id="HideStartClockAdvExpressionID" onclick='toggleAdvanceExpression("divToHideStartClockAdvExpressionID","divToShowStartClockAdvExpressionID");' class="clsCmdLink">{!$Label.ShowAdvancedExpression}</a>
+														</div>
+														<div id='divToShowStartClockAdvExpressionID' style="display:none">
+															<a href='javascript:void(0)' id="ShowStartClockAdvExpressionID" onclick='toggleAdvanceExpression("divToShowStartClockAdvExpressionID","divToHideStartClockAdvExpressionID");' class="clsCmdLink">{!$Label.HideAdvancedExpression}</a>
+															<br/>
+															<apex:inputTextarea id="startAdvExpressionTextAreaID"  onkeypress="return validateInput(event)" styleClass="clsInputTextArea" value="{!stBean.sltObj.ST_Criteria_Advanced_Expression__c}" />
+															<input type="button" id="validateStartAdvExpression"  value="Validate" class="defaultBtn" style="width:50px;margin-top:15px"   />
+														</div>
+													</td>
+												</tr>
+                                            </table>
+                                            -->
+										</apex:outputPanel>
+									</apex:panelBarItem>
+									<!-- End of Start clock accordian -->
+									
+									<!-- Pause clock accordian -->
+									<apex:panelBarItem label="{!$Label.bmcservicedesk__pauseclockpaneltitle}" expanded="true" id="PbarItemPauseClockId" headerClass="panelHeader" contentClass="panelContent" onenter="RefreshGrid();">
+										<apex:outputPanel id="PauseClockPanelId">   
+											<table class="output-panel-toolbar-table fixedTablelayout"  cellspacing="0" cellpadding="0" border="0">
+                                                
+                                                <tr bgcolor="#DEE0E0" height="40">
+                                                    
+                                                    <td class="StatuslblTD"   style="width:155px"><apex:inputText value="{!stBean.statusLabel}"  id="pause_status_lbl_id" style="width:145px" styleClass="clsInputTextBoxReadOnly" onfocus="this.blur()" /></td> 
+                                                    <td class="ComOperatorTD" title="{!$Label.ToolTipOperator}"><div id="pauseOpComboDiv" /></td>
+                                                    <td class="LookupTD" title="{!$Label.ToolTipStatusValueField}">
+                                                    <apex:inputText id="pause_status" value="{!stBean.fieldValue}" style="width:155px" styleClass="clsInputTextBox" onfocus="this.blur()" />
+                                                    <input type="button" id="lookUp" class="lookupIconOn"  onclick="openPauseStatusLookUp()"/>
+                                                     <input type="text" id="pauseReferenceID" value=""  style="display:none;" />
+                                                 </td>
+                                                 <td class="LogOperatorTD" title="{!$Label.ToolTipLogOperator}"><div id="pauselogOpComboDiv" /></td>
+                                                   <td class="BtnsGroupTD"><img id="addPause_id" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_add.png" onClick="addRecordToPauseClockGrid();" title="{!$Label.Add}" />
+                                                    <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_update.png" id="updatePause_id"  style="display:none" onClick="updateRecordOfPauseClockGrid();" title="{!$Label.Update}" /> 
+                                                   <img id="removePause_id" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png"  disabled="true" onClick="reomveRecordFromPauseClockGrid();" title="{!$Label.Remove}"/>
+                                                   </td>
+                                              
+                                                </tr>
+                                                <tr>
+                                                <td colspan="5"><div id="pauseClockGridDiv"/></td>
+                                                </tr>
+                                            </table>
+                                            <!--  Do not remove below Code for Advance Expression for qualification. This is to be used later.
+											<table style="width:97%;margin-left: 10px;margin-bottom: 10px;" cellpadding="0" cellspacing="0">	<tr><td><div class="div10pxVspacing"/></td></tr>
+												<tr>
+													<td>
+														<div id='divToHidePauseClockAdvExpressionID' style="display:block">	
+															<a href='javascript:void(0)' id="HidePauseClockAdvExpressionID" onclick='toggleAdvanceExpression("divToHidePauseClockAdvExpressionID","divToShowPauseClockAdvExpressionID");' class="clsCmdLink">{!$Label.ShowAdvancedExpression}</a>
+														</div>
+														<div id='divToShowPauseClockAdvExpressionID' style="display:none">
+															<a href='javascript:void(0)' id="ShowPauseClockAdvExpressionID" onclick='toggleAdvanceExpression("divToShowPauseClockAdvExpressionID","divToHidePauseClockAdvExpressionID");' class="clsCmdLink">{!$Label.HideAdvancedExpression}</a>
+															<br/>
+															<apex:inputTextarea id="pauseAdvExpressionTextAreaID"  onkeypress="return validateInput(event)" styleClass="clsInputTextArea" value="{!stBean.sltObj.ST_Criteria_Advanced_Expression__c}" />
+															<input type="button" id="validatePauseAdvExpression"  value="Validate" class="defaultBtn" style="width:50px;margin-top:15px"   />
+														</div>
+													</td>
+												</tr>
+											</table>
+											 -->
+										</apex:outputPanel>
+									</apex:panelBarItem>
+									<!-- End of Pause clock accordian -->
+									
+									<!-- Stop clock accordian -->
+									<apex:panelBarItem label="{!$Label.bmcservicedesk__stopclockpaneltitle}" expanded="true" id="PbarItemStopClockId" headerClass="panelHeader" contentClass="panelContent" onenter="RefreshGrid();">
+										<apex:outputPanel id="StopClockPanelId">   
+											 <table class="output-panel-toolbar-table fixedTablelayout" cellspacing="0" cellpadding="0" border="0">
+                                                
+                                                <tr bgcolor="#DEE0E0" height="40">
+                                                    
+                                                    <td class="StatuslblTD" style="width:155px"><apex:inputText value="{!stBean.statusLabel}"  id="stop_status_lbl_id" style="width:145px" styleClass="clsInputTextBoxReadOnly" onfocus="this.blur()" /></td> 
+                                                    <td class="ComOperatorTD" title="{!$Label.ToolTipOperator}"><div id="stopOpComboDiv" /></td>
+                                                    <td class="LookupTD" title="{!$Label.ToolTipStatusValueField}" >
+                                                    <apex:inputText id="stop_status" value="{!stBean.fieldValue}" style="width:155px" styleClass="clsInputTextBox" onfocus="this.blur()" />
+                                                    <input type="button" id="lookUp" class="lookupIconOn"  onclick="openStopStatusLookUp()"/>
+                                                     <input type="text" id="stopReferenceID" value=""  style="display:none;" />
+                                                 </td>
+                                                 <td class="LogOperatorTD" title="{!$Label.ToolTipLogOperator}"><div id="stoplogOpComboDiv" /></td>
+                                                   <td class="BtnsGroupTD"><img id="addStop_id" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_add.png" onClick="addRecordToStopClockGrid();" title="{!$Label.Add}" />
+                                                   <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_update.png" id="updateStop_id" style="display:none" onClick="updateRecordOfStopClockGrid();"  title="{!$Label.Update}" /> 
+                                                   <img id="removeStop_id" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png"  disabled="true" onClick="reomveRecordFromStopClockGrid();" title="{!$Label.Remove}" />
+                                                   </td>
+                                              
+                                                </tr>
+                                                <tr>
+                                                <td colspan="5"><div id="stopClockGridDiv"/></td>
+                                                </tr>
+                                            </table>
+                                            <!-- Do not remove below Code for Advance Expression for qualification. This is to be used later 
+											<table style="width:97%;margin-left: 10px;margin-bottom: 10px;" cellpadding="0" cellspacing="0">	<tr><td><div class="div10pxVspacing"/></td></tr>
+												<tr>
+													<td>
+														<div id='divToHideStopClockAdvExpressionID' style="display:block">	
+															<a href='javascript:void(0)' id="HideStopClockAdvExpressionID" onclick='toggleAdvanceExpression("divToHideStopClockAdvExpressionID","divToShowStopClockAdvExpressionID");' class="clsCmdLink">{!$Label.ShowAdvancedExpression}</a>
+														</div>
+														<div id='divToShowStopClockAdvExpressionID' style="display:none">
+															<a href='javascript:void(0)' id="ShowStopClockAdvExpressionID" onclick='toggleAdvanceExpression("divToShowStopClockAdvExpressionID","divToHideStopClockAdvExpressionID");' class="clsCmdLink">{!$Label.HideAdvancedExpression}</a>
+															<br/>
+															<apex:inputTextarea id="stopAdvExpressionTextAreaID"  onkeypress="return validateInput(event)" styleClass="clsInputTextArea" value="{!stBean.sltObj.ST_Criteria_Advanced_Expression__c}" />
+															<input type="button" id="validateStopAdvExpression"  value="Validate" class="defaultBtn" style="width:50px;margin-top:15px"   />
+														</div>
+													</td>
+												</tr>
+											</table>
+											 -->
+										</apex:outputPanel>
+									</apex:panelBarItem>
+									<!-- End of Stop clock accordian -->
+									
+							 </apex:panelBar>
+						</div>
+					</apex:outputPanel>
+				</td>
+             </tr>
+            </table>
+            <table cellspacing="0" cellpadding="0" border="0" class="clsMilestoneActionPanel" id="milestoneActionPanel">
+              <tr>
+                <td class="clsInputBoldLabelTD milestoneLabel-td"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__milestones)}"/></td>
+                <td class=" clsInputBoldLabelTD actionLabel-td"><apex:outputLabel id="ActionLabel" value="{!stBean.milestoneBean.titleForActionGrid}"/></td>
+              </tr>
+             <tr>
+                 <td  class="milestone-Grid-td">
+                 <table  cellspacing="0" cellpadding="0" border="0" class="milestone-Grid-table" >
+                  	<tr>
+                   		<td>
+                   		   <div id="milestoneToolbardiv">
+                  			</div>
+                   		</td>
+                  	</tr>
+                  	<tr>
+                  	 	<td>
+                  			<div id="avaiMilestonediv">
+                  			</div>
+                  		</td>
+                 	 </tr>
+                      
+                 </table>
+                 </td>
+                 <td class="action-Grid-td"> 
+                 <table cellspacing="0" cellpadding="0" border="0" class="action-Grid-table" >
+                 	<tr>                   		  
+                   		<td>
+                   			<div id="actionToolbardiv">
+                  			</div>
+                   		</td>                	  
+                 	 </tr>
+                 	<tr>
+                 	 <td>
+                  		<div id="corrActionsdiv">
+                  		</div>
+                  	</td>
+                 	 </tr>
+                 </table>                                 
+                 </td>             
+             </tr>
+            </table>
+          </td>
+         </tr>
+       </table>
+<c:ValidationComponent errorMsgList="{!stBean.messageString}" id="validationComponent"></c:ValidationComponent>
+<c:TabOutComponent ></c:TabOutComponent>
+</apex:form>
+    
+    
+    <script>
+    
+	var isQueueBasedTTEnabled ={!isQueueBasedTTEnabled};
+	var qualificationClockStatus = '{!JSENCODE(qualificationClockStatus)}';
+	var isOLA ={!if(isOLA,true,false)};  
+    var OLA = '{!JSENCODE($Label.OLA)}';
+    var linkToOptin = '{!JSENCODE(linkToOptin)}'; 
+    var cancelTheTarget='CANCEL';
+	var strEnableQueueAndUserAssignment ={!isStaffNQueueEnabled}; 
+    var extJsResource ='{!$Resource.SDEFExtJS}';   
+    var SdefStyles='{!$Resource.SDEFStyles}';
+    var appliesTo,SLTTitle;
+    var showSelfHelp = parent.showSelfHelp;
+	var isLightningExperience =  '{!isLightningExperience }';
+    var filterLogic = '{!JSENCODE(stBean.sltObj.ST_Criteria_Advanced_Expression__c)}';
+    var isAdvRulePresent = Boolean('{!JSENCODE(IF(stBean.sltObj.Advanced_Rule__c,"true", ""))}');
+    var FilterLogicAddCriteriaValidation = '{!JSENCODE($Label.filterlogicaddcriteriavalidation)}';
+    var FilterLogicValidation = '{!JSENCODE($Label.filterlogicvalidation)}';
+    var FilterLogicValidationForOwnerId = '{!JSENCODE($Label.missingOwnerFieldCriteria)}';
+	var LoadingTxt ='{!JSENCODE($Label.SSLoading)}';
+	var clockModeOption = {!ClockModeOptions};
+    DZHE     ='џ'; //Cyrillic character
+	EF       ='ф'; //Cyrillic character
+	nonPrint = '¬';
+	PE = 'П';
+	Ext.ns("ServiceTargetPage");
+     ServiceTargetPage.Labels = {
+         Days: '{!JSENCODE($Label.Days)}',
+         HHMM: '{!JSENCODE($Label.HHMM)}',
+         BusinessDays: '{!JSENCODE($Label.BusinessDays)}',
+		 servicetargetOrder : "{!JSENCODE($Label.serviceTargetConditionOrder)}",
+	     operandField : "{!JSENCODE($Label.operandField)}",
+	     serviceTargetOperator : "{!JSENCODE($Label.Operator)}",
+	     operandValue : "{!JSENCODE($Label.Value)}",
+	     groupingOperator : "{!JSENCODE($Label.groupingOperator)}",
+		 FieldName:'{!JSENCODE($Label.FieldName)}',
+         LogicalOperator:'{!JSENCODE($Label.LogicalOperator)}',
+         SelectFieldErrMsg:'{!JSENCODE($Label.ErrorMsgTemplateS)}',
+         SelectCmpOpMsg:'{!JSENCODE($Label.SelectCompOpMessage)}',
+         SelectLogOpMsg:'{!JSENCODE($Label.SelectLogicalOpMsg)}',
+         EnterValMsg:'{!JSENCODE($Label.EnterValueMsg)}',
+		 Inactive: '{!JSENCODE($ObjectType.Service_Target__c.fields.Inactive__c.label)}',
+		 None:'{!JSENCODE($Label.None)}',
+		 serviceTargetTitleEmpty:'{!JSENCODE($Label.serviceTargetTitleEmpty)}',
+		 TargetEmpty:'{!JSENCODE($Label.TargetEmpty)}',
+		 ValidateMandatoryMeasurements:'{!JSENCODE($Label.ValidateMandatoryMeasurements)}',
+		 ValidateLogicalOperatorForQual:'{!JSENCODE($Label.ValidateLogicalOperatorForQual)}',
+		 ValidateLogicalOperatorForMeasurement:'{!JSENCODE($Label.ValidateLogicalOperatorForMeasurement)}',
+		 PreviousRecord: '{!JSENCODE($Label.PreviousRecord)}',
+		 NextRecord: '{!JSENCODE($Label.NextRecord)}',
+		 TooltipIncidentInactive: '{!JSENCODE($ObjectType.Service_Target__c.fields.inactive__c.label)}',
+		 Save: '{!JSENCODE($Label.Save)}',
+		 Reset: '{!JSENCODE($Label.Reset)}',
+         labelSavedSuccessfully : '{!JSENCODE($Label.SavedSuccessfully)}',
+         labelDeleteMilestone:'{!JSENCODE($Label.milestoneDeleteConfirm)}',
+         labelDeleteAction:'{!JSENCODE($Label.milestoneDeleteActionConfirm)}',
+		 labelDeleteActions:'{!JSENCODE($Label.milestoneDeleteMultipleActionConfirm)}',
+         labelRemove : '{!JSENCODE($Label.Remove)}',
+         labelAdd:'{!JSENCODE($Label.SSAdd)}',
+         labelEdit:'{!JSENCODE($Label.CMDBEdit)}',
+         labelDelete:'{!JSENCODE($Label.Delete)}',
+		 DeletedRecord: '{!JSENCODE($Label.DeletedRecord)}',
+		 Information: '{!JSENCODE($Label.Information)}',
+         labelAction:'{!JSENCODE($label.Actions)}',
+         milestoneInvalidated: '{!JSENCODE($Label.milestoneInvalidated)}'
+         
+     }
+	 
+    labelField = "{!JSENCODE(stBean.labelField)}";
+    labelAND='{!JSENCODE($Label.SLM_AND)}';
+    labelOR='{!JSENCODE($Label.OR)}';
+    labelNONE='{!JSENCODE($Label.opnone)}';
+    labelOperator = "{!JSENCODE(stBean.labelOperator)}";
+    if(isOLA){
+	    ServiceTargetHeader = '{!JSENCODE($Label.OperationalTarget)}'+' - ';
+	}else{
+	    ServiceTargetHeader = '{!JSENCODE($ObjectType.Service_Target__c.label)}'+' - ';
+	}
+    labelLogicalOperator = "{!JSENCODE(stBean.labelLogicalOperator)}";
+	var labelMilestoneandActionsTitle = '{!JSENCODE($Label.MilestonesAndActions)}';
+	var inactiveLblStyle = '';
+	if(window.navigator.userAgent.indexOf('Edge/') > 0) {
+		inactiveLblStyle='display:table-cell';
+	}
+    function getSDFStylesResPath(){
+          return '{!$Resource.SDEFStyles}';
+    }
+   function getInputTxtEle(){
+   	return document.getElementById('{!$Component.sltMainForm.inputTxt}');
+   }
+   function getInputTextAreaEle(){
+   	return document.getElementById('{!$Component.sltMainForm.inputTxtArea}');
+   } 
+   function getDateTimeInputEle(){
+   	return document.getElementById('{!$Component.sltMainForm.datetimeinput}');	
+   }
+   function getDateTimePickerImg(){
+   	return document.getElementById('{!$Component.sltMainForm.dateTimePopupImg}');
+   }
+   function getDateInputEle(){
+   	return document.getElementById('{!$Component.sltMainForm.inputDate}');	
+   }
+   function getDatePickerImg(){
+   	return document.getElementById('{!$Component.sltMainForm.datePopupImg}');
+   }
+   function getLookupEle(){
+   	return document.getElementById('lookUp');
+   }
+   function getLookUpPanelEle(){
+   	return document.getElementById('{!$Component.lookUpPanel}');
+   }
+   function getDaysTargetHiddenEle(){
+    return document.getElementById('{!$Component.sltMainForm.targetInDays}');
+   }
+   function getHoursTargetHiddenEle(){
+    return document.getElementById('{!$Component.sltMainForm.targetInHours}');
+   }
+   function getMinutesTargetHiddenEle(){
+    return document.getElementById('{!$Component.sltMainForm.targetInMinutes}');
+   }
+   function getBusinessDaysTargetHiddenEle(){
+    return document.getElementById('{!$Component.sltMainForm.targetInBusinessDays}');
+   }
+   function getDurationFieldEle(){
+    return document.getElementById('{!$Component.sltMainForm.durationText}');
+   }
+   function getStartStatusEle(){
+     return document.getElementById('{!$Component.sltMainForm.pbarForMesurmentId.PbarItemStartClockId.start_status}');
+   }
+   function getPauseStatusEle(){
+     return document.getElementById('{!$Component.sltMainForm.pbarForMesurmentId.PbarItemPauseClockId.pause_status}');
+   }
+   function getStopStatusEle(){
+     return document.getElementById('{!$Component.sltMainForm.pbarForMesurmentId.PbarItemStopClockId.stop_status}');
+   }
+   function getStartStatusLabelEle(){
+    return document.getElementById('{!$Component.sltMainForm.pbarForMesurmentId.PbarItemStartClockId.start_status_lbl_id}');
+   }
+   function  getPauseStatusLabelEle(){
+     return document.getElementById('{!$Component.sltMainForm.pbarForMesurmentId.PbarItemPauseClockId.pause_status_lbl_id}');
+   }
+   function  getStopStatusLabelEle(){
+     return document.getElementById('{!$Component.sltMainForm.pbarForMesurmentId.PbarItemStopClockId.stop_status_lbl_id}');
+   }
+   
+   function getApplySTStrEle() {
+   	 return document.getElementById('{!$Component.sltMainForm.applySTStr}');
+   }
+   function getStartClockStrEle() {
+   	 return document.getElementById('{!$Component.sltMainForm.startClockStr}');
+   }
+   function getPauseClockStrEle() {
+   	 return document.getElementById('{!$Component.sltMainForm.pauseClockStr}');
+   }
+   function getStopClockStrEle() {
+   	 return document.getElementById('{!$Component.sltMainForm.stopClockStr}');
+   }
+   function getSupportHoursEle() {
+     return document.getElementById('{!$Component.sltMainForm.BusinessHours_id_name}');
+   }
+   function getSupportHoursHiddenEle() {
+     return document.getElementById('{!$Component.sltMainForm.BusinessHours_id_id}');
+   }
+   function getTargetTypeEle(){
+    return document.getElementById('{!$Component.sltMainForm.target_type__id}');
+   }
+   function getAppliesToEle(){
+    return document.getElementById('{!$Component.sltMainForm.applies_to_id}');
+   }
+   function getStopClockPanelBarEle() {
+     return document.getElementById('{!$Component.sltMainForm.pbarForMesurmentId.PbarItemStopClockId}');
+   }
+   function getSLTID(){
+        return '{!JSENCODE($CurrentPage.parameters.id)}';
+   }
+   function getSLTInactive(){
+	  var sltInactive = '{!stBean.sltObj.Inactive__c}';
+	  return sltInactive;
+   }    
+   function getcurrSelectedMilestoneID() {
+   	 return document.getElementById('{!$Component.sltMainForm.currSelectedMilestoneID}');
+   }
+   function getcurrSelectedMilestoneCondition() {
+   	 return document.getElementById('{!$Component.sltMainForm.currSelectedMilestoneCondition}');
+   }
+   function getcurrSelectedActionID() {
+   	 return document.getElementById('{!$Component.sltMainForm.currSelectedActionID}');
+   }
+   function getQAdvExprTextArea(){
+   	return document.getElementById('{!$Component.sltMainForm.qualAdvExpressionTextAreaID}');
+   }
+   function getServiceTitleEle(){
+   	return document.getElementById('{!$Component.sltMainForm.slt_title_id}');
+   }   
+   function getServiceTitleValue(){
+    return '{!JSINHTMLENCODE(stBean.sltObj.Service_Target_Title__c)}';
+   }  
+   function getActionLabel(){
+   	return document.getElementById('{!$Component.sltMainForm.ActionLabel}');
+   }   
+   function getUserAccountBusinessHoursId(){
+   	return document.getElementById('{!$Component.sltMainForm.Use_Account_Business_Hours}');
+   }
+ 
+   function  getSLACopyId(){
+    var slaCopyId=''
+    if(typeof(window.parent.frames.SLTframe.getSLACopyId) == 'function')
+      slaCopyId=window.parent.frames.SLTframe.getSLACopyId();      
+    return slaCopyId;
+   } 
+   function reloadMilestones(){
+	initMilestone();
+   }
+   
+   //initClockModePanel();
+   
+    if(getAppliesToEle().value == 'Incident__c'){
+	   getUserAccountBusinessHoursId().disabled=false;
+	}else{
+	   getUserAccountBusinessHoursId().disabled=true;
+	}
+   </script>
+    <apex:outputPanel id="fldTypePanel">
+        <script>
+            fldData = JSON.parse('{!JSENCODE(stBean.fieldData)}'); 
+			moduleName='{!JSENCODE(stBean.sltObj.Applies_To__c)}';
+    </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="statusGridPanelId">
+    <script>
+            var arrayOfSTCBeanForStartClock={!stBean.strDefaultStartClockStatus};
+            var arrayOfSTCBeanForStopClock={!stBean.strDefaultStopClockStatus};
+            var arrayOfSTCBeanForPauseClock={!stBean.strDefaultPauseClockStatus};
+    </script>
+	</apex:outputPanel>
+	<apex:outputPanel id="qualDataPanel">
+		<script>
+            filterLogic = '{!JSENCODE(stBean.sltObj.ST_Criteria_Advanced_Expression__c)}';
+			listData = {!stBean.stCriteriaApplyConditions};
+            var isAdvancedRuleLogicUsed = Boolean('{!JSENCODE(IF(stBean.sltObj.Advanced_Rule__c,"true", ""))}');      
+			if( Ext.getCmp('qualificationCriteriaGrid') && Ext.getCmp('qualificationCriteriaGrid').store.data.length > 0 ) {
+				document.getElementById("AdvancedFilterSection").style.visibility = "visible";
+				if( isAdvancedRuleLogicUsed ) {
+					toggleAdd(isAdvancedRuleLogicUsed);
+				}else{
+                    toggleClear();
+                }
+			}else{
+                document.getElementById("AdvancedFilterSection").style.visibility = "hidden";               
+            }
+		</script>
+	</apex:outputPanel>
+	 <apex:outputPanel id="afterSavePanel">
+      <script>
+      errormsg = '{!JSENCODE(stBean.messageString)}'; 
+      errorFlag = {!stBean.milestoneFlag};
+      disableMilestoneTab={!stBean.milestoneBean.disableMilestoneTab};
+      sltId='{!stBean.sltId}';
+      isInactive= '{!stBean.sltObj.inactive__c}';
+      targetInDays= {!stBean.targetInDays};
+      targetInHours= {!stBean.targetInHours};
+      targetInMinutes= {!stBean.targetInMinutes};
+      targetInBusinessDays= '{!stBean.sltObj.BMCServiceDesk__BusinessDays__c}';
+      appliesTo ='{!JSENCODE(stBean.sltObj.Applies_To__c)}';
+      SLTTitle = '{!JSINHTMLENCODE(stBean.sltObj.Service_Target_Title__c)}';
+	  isRecDeleted ={!stBean.isRecDeleted};
+	  isUpdateble = {!stBean.isUpdateable};
+	  function getServiceTitleValue(){
+			return '{!JSINHTMLENCODE(stBean.sltObj.Service_Target_Title__c)}';
+   	  } 
+   	  function getIsBusinessDays(){
+   	  	return {!stBean.isBusinessDays};
+   	  }
+   	  enableDisableTargetFields();
+   	  function refreshQualClockStatusValue(){
+		 return '{!JSENCODE(stBean.sltObj.Qualification_ClockStatus__c)}';
+	}
+	  </script>
+
+     </apex:outputPanel>
+     <apex:outputPanel id="inactivePanel">
+        <script>
+            function updateInactive(){
+                Ext.getCmp('st_inactive__c').setValue('{!stBean.sltObj.inactive__c}');
+            }
+        </script>
+    </apex:outputPanel>
+     <apex:outputPanel id="copyPanel">
+     	<script>
+     		var copyId = '{!JSENCODE($CurrentPage.parameters.copyId)}';
+     		if(copyId != null && copyId != ''){
+     			document.getElementById('{!$Component.sltMainForm.applies_to_id}').disabled =true;
+     		}  
+     	</script>
+     </apex:outputPanel>
+      <apex:outputPanel id="dummyPanel">
+      
+     </apex:outputPanel>
+     <apex:outputPanel id="MilestonePanel">
+      <script>
+     	JsonMilestone=[{!stBean.milestoneBean.JSONMilestone}];
+     	getcurrSelectedMilestoneID().value = '{!stBean.milestoneBean.currSelectedMilestoneID}';
+     	isMilestoneCreatable = '{!stBean.milestoneBean.isMilestoneCreatable}';
+     	isMilestoneDeletable = '{!stBean.milestoneBean.isMilestoneDeletable}';
+     	isMilestoneActionDeletable = '{!stBean.milestoneBean.isMilestoneActionDeletable}';
+     	isMilestoneUpdateble = {!stBean.milestoneBean.isMilestoneUpdateble};
+        getServiceId();	
+     </script>
+     </apex:outputPanel>
+     <apex:outputPanel id="ActionPanel">
+      <script>
+     	JsonAction=[{!stBean.milestoneBean.JsonAction}];
+     	</script>
+     </apex:outputPanel>
+ <script>
+	function showDateTimePicker(){
+		var dateTimeInputId = document.getElementById('{!$Component.sltMainForm.datetimeinput}');
+		_datePicker.Show(dateTimeInputId);
+	}
+	function showDatePicker(){
+		var dateInputId = document.getElementById('{!$Component.sltMainForm.inputDate}');
+		_datePicker.Show(dateInputId);
+	}
+	
+</script>
+</apex:page>

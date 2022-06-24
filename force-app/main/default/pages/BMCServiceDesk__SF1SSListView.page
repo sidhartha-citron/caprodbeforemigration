@@ -1,0 +1,98 @@
+<apex:page showHeader="false" applyBodyTag="false" applyHtmlTag="false" docType="html-5.0" standardStylesheets="false">
+    <link href="{!$Resource.Salesforce1}/SelfService/css/SF1SSListView.css" rel="stylesheet" />
+    <div class="rf-headercls">
+        <rf-header back-action="handleBack()" label="{{data.newticket && objName == 'INCSRLST' ? '{!JSENCODE($Label.SF1SS_RelatedTickets)}' : {'INCSRLST': '{!JSENCODE($Label.SS_Requestlist)}', 'KA': '{!JSENCODE($Label.SS_Articles)}', 'INCTEMPLATE' : '{!JSENCODE($Label.SS_CommonTicketsHome)}', 'NEWSR' : headerLabel, 'CMDB': '{!JSENCODE($Label.SF1SS_CIsandAssetsList)}', }[objName]}}" labelcss="{{objName == 'NEWSR' ? 'rf-headerTitle kaHeaderContent' : 'rf-headerTitle'}}" hidebackbutton="false" newticket="data.newticket" newticket-Action="submitTicket()" filterobj="data.filters" filter-action="filter()"></rf-header>
+    </div>
+    <div class="scrollable" ng-class="objName == 'INCSRLST' || objName == 'CMDB' ? '' : 'rf-hasButton'">
+        <ul class="list-group" >
+            <li ng-if="showNoRecords" class="noRecords"> {!$Label.MsgNoRecordFoundSearchPage} </li>
+            <li ng-repeat="record in data.Records" class="list-group-item pressstate" ng-click="goToDetail(record)" ng-if="objName == 'INCSRLST'">
+                <div class="rf-cardDiv">
+                    <div class="rf-cardIcon">
+                        <span ng-class="'{{record[changeCase('BMCServiceDesk__type__c')]}}'=='{!JSENCODE($Label.Incident)}' ? '__icon-file_text_o' : ' __icon-file_atom_o'" class="listViewIcon icon rf-incIcon" ></span> 
+                    </div>
+                    <div class="rf-cardContent">
+						<div class="rf-cardHeader">{{record[changeCase('name')]}}<span class="fontNotBold"> | {{record[changeCase('BMCServiceDesk__status_id__c')]}}</span></div>
+						<div ng-repeat="field in data.displayFields | filter:filterFields(record)" class="rf-cardText">
+							 <span ng-if="field != changeCase('BMCServiceDesk__incidentdescription__c')">{{data.ColumnsMap[field].label}}:</span> {{record[field]}}
+						</div>
+                    </div>
+                    <div class="rf-cardNext">
+                        <span class="icon __icon-angle_right middleAlign" ></span> 
+                    </div>
+                </div>
+            </li>
+            <li ng-repeat="record in data.Records" class="list-group-item pressstate" ng-click="goToDetail(record)" ng-if="objName == 'KA'">
+                <div class="rf-cardDiv">
+                    <div class="rf-cardIcon">
+                       <span ng-class="{'How_To': '__icon-file_info_o', 'FAQ' : '__icon-file_question_o', 'Problem_Solution': '__icon-file_check_o', 'Known_Error' : '__icon-file_exclamation_o'}[record.recordTypeDevName]" class="listViewIcon rf-kaIcon icon" ></span>  
+                    </div>
+                    <div class="rf-cardContent">
+                        <div class="rf-cardHeader">{{record.header}}</div>
+                        <div class="rf-cardSecHeader">{{record.name}} | {{record.articleType}}</div>
+                    </div>
+                    <div class="rf-cardNext">
+                        <span class="icon __icon-angle_right middleAlign" ></span> 
+                </div>
+                </div>
+            </li>
+            <li ng-repeat="record in data.Records" class="list-group-item pressstate" ng-click="goToDetail(record)" ng-if="objName  == 'INCTEMPLATE'">
+                <div class="rf-cardDiv">
+                    <div class="rf-cardIcon">
+                        <span class="listViewIcon icon d-icon-ticket rf-crIcon"></span> 
+                    </div>
+                    <div class="rf-cardContent">
+                        <div class="rf-cardHeader">{{record.header}}</div>
+                        <div class="rf-cardSecHeader">{{record.description}}</div>
+                    </div>
+                    <div class="rf-cardNext">
+                        <span class="icon __icon-angle_right middleAlign" ></span> 
+                    </div>
+                </div>
+            </li>
+
+            <li ng-repeat="item in data.categoriesOrSrds " ng-click="showChildCategoriesSrd(item)" ng-class="item.Type && item.Type == 'seperator' ? 'categoryListviewSeperator': 'list-group-item pressstate'" ng-if="objName  == 'NEWSR'">
+                <div class="rf-cardDiv" ng-if="(item.Type && item.Type != 'seperator') || !item.Type">
+                    <div class="rf-cardIcon">
+                        <span class="catListviewIcon icon rf-crIcon" ng-class="item.Type ? '__icon-list' : '__icon-atom'"  ng-if="!item.BMCServiceDesk__Image__c || item.BMCServiceDesk__Image__c == ''"></span> 
+                        <img ng-if="item.BMCServiceDesk__Image__c && item.BMCServiceDesk__Image__c != ''" src="/servlet/servlet.FileDownload?file={{item.BMCServiceDesk__Image__c}}" class="rf-reqDefListIcon img-responsive"/>
+                    </div>
+                    <div class="rf-cardContent">
+                        <div class="rf-cardHeader" ng-if="item.Name">{{item.Name}}</div>
+                        <div class="rf-cardSecHeader" ng-if="item.BMCServiceDesk__Description__c"> {{item.BMCServiceDesk__Description__c | limitTo: 100}} {{item.BMCServiceDesk__Description__c.length > 100 ? '...' : ''}} </div>
+                    </div>
+                    <div class="rf-cardNext">
+                        <span class="icon __icon-angle_right middleAlign" ></span>
+                    </div>
+                </div>
+            </li>
+            <li ng-repeat="record in data.Records" class="list-group-item pressstate" ng-click="goToDetail(record.Id)" ng-if="objName == 'CMDB'">
+                <div class="rf-cardDiv">
+                    <div class="rf-cardIcon">
+                        <span class="listViewIcon icon rf-CMDBIcon" ng-class="record[changeCase('BMCServiceDesk__class__c')] != 'BMC_BusinessService' ? '__icon-file_cube_o' : '__icon-atom'"></span> 
+                    </div>
+                    <div class="rf-cardContent">
+						<div class="rf-cardHeader">{{record[changeCase('BMCServiceDesk__name__c')]}}</div>
+                    	<div ng-repeat="field in data.displayFields" ng-if="(field != changeCase('BMCServiceDesk__name__c') && field != changeCase('BMCServiceDesk__ci_status__c') && field != changeCase('BMCServiceDesk__asset_status__c')) || (field == changeCase('BMCServiceDesk__ci_status__c') && (record[changeCase('BMCServiceDesk__instancetype__c')] == '{!JSENCODE($Label.CMDB_TAB_CIs)}' || record[changeCase('BMCServiceDesk__instancetype__c')] == '{!JSENCODE($Label.InstanceTypeFldLblCIandAsset)}') ) || (field == changeCase('BMCServiceDesk__asset_status__c') && (record[changeCase('BMCServiceDesk__instancetype__c')] == '{!JSENCODE($Label.CMDB_TAB_Assets)}' || record[changeCase('BMCServiceDesk__instancetype__c')] == '{!JSENCODE($Label.InstanceTypeFldLblCIandAsset)}'))" class="rf-cardText">
+							 <span ng-if="field == changeCase('BMCServiceDesk__classname__c') && record[changeCase('BMCServiceDesk__classname__c')] != record[changeCase('BMCServiceDesk__asset_class__c')] && record[changeCase('BMCServiceDesk__instancetype__c')] == '{!JSENCODE($Label.InstanceTypeFldLblCIandAsset)}' && record[changeCase('BMCServiceDesk__asset_class__c')] != '' ">
+							 <span>{{data.ColumnsMap[field].label}}:</span> {{record[changeCase('BMCServiceDesk__asset_class__c')]}} ({{record[field]}})
+							 </span>
+							 <span ng-if="field != changeCase('BMCServiceDesk__classname__c') || record[changeCase('BMCServiceDesk__instancetype__c')] != '{!JSENCODE($Label.InstanceTypeFldLblCIandAsset)}' || record[changeCase('BMCServiceDesk__classname__c')] == record[changeCase('BMCServiceDesk__asset_class__c')]" >
+							 <span> {{data.ColumnsMap[field].label}}:</span> {{record[field] | limitTo: 80}} {{record[field].length > 80 ? '...' : ''}}
+							 </span>
+						</div>
+                    </div>
+                    <div class="rf-cardNext">
+                        <span class="icon __icon-angle_right middleAlign" ></span> 
+                    </div>
+                </div>
+            </li>
+            <li ng-if="isLoadButtonVisible" ng-click="loadMore()" class="list-group-item rf-loadMore">
+                <label>{!$Label.ShowMore}</label>
+            </li>
+        </ul>
+    </div>
+    <div ng-if="objName != 'INCSRLST' && objName != 'NEWSR' && objName != 'CMDB' && allowSubmitTicket" class="rf-submitButton submitTicketDiv">
+        <button class="submitTicketBtn" ng-click="navigateToSubmitTicket('')" >{!$Label.SS_IncidentHome}</button>
+    </div>
+</apex:page>

@@ -1,0 +1,230 @@
+<apex:page controller="BMCServiceDesk.ApprovalQueueClass" showHeader="false" contentType="{!contetnTypeForIE}"> 
+<c:CommonIncludes />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SearchPage.css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/MyApprovals.css" />
+
+<script>
+var nextFlag = 0;
+function getSDFStylesResPath(){
+  var resPath = '{!$Resource.SDEFStyles}';
+  return resPath;
+}
+ Ext.ns("QueueListViewPage");
+		QueueListViewPage.Labels = {
+        	refresh: '{!JSENCODE($Label.refresh)}',
+        	views: '{!JSENCODE($Label.views)}',
+        	previouspage: '{!JSENCODE($Label.previousPage)}',
+        	nextpage: '{!JSENCODE($Label.nextPage)}',
+        	InformationTitleSearchPage: '{!JSENCODE($Label.Information)}',
+        	NoRecordsFound: '{!JSENCODE($Label.NoRecordsFound)}',
+        	Change_Requests: '{!JSENCODE($ObjectType.Change_Request__c.LabelPlural)}',
+        	IncidenPluralLabel:'{!JSENCODE($ObjectType.Incident__c.LabelPlural)}',
+        	ChangeHash: '{!JSENCODE($Label.ChangeHash)}',
+			Change_Approval_Action: '{!JSENCODE($Label.Action)}',
+			Change_Approval_Status: '{!JSENCODE($Label.Status)}',
+			Change_Approval_Approver: '{!JSENCODE($Label.Change_Approval_Approver)}',
+			Change_Approval_Submitted_Date: '{!JSENCODE($Label.Change_Approval_Submitted_Date)}',
+			Change_Approval_Approved_Date: '{!JSENCODE($Label.Change_Approval_Approved_Date)}',
+			Change_Approval_Rejected_Date: '{!JSENCODE($Label.Change_Approval_Rejected_Date)}',
+			Pending:'{!JSENCODE($Label.Pending)}',
+			Rejected:'{!JSENCODE($Label.Rejected)}',
+			Approved:'{!JSENCODE($Label.Approved)}',
+			AssignedToMe:'{!JSENCODE($Label.LblAssignedToMe)}',
+			Apply:'{!JSENCODE($Label.Apply)}',
+			incidentLabel:'{!JSENCODE(incidentLabel)}',
+			changeLabel:'{!JSENCODE(changeLabel)}',
+			Approval_record:'{!JSENCODE($Label.Approval_record)}',
+			Type:'{!JSENCODE($Label.Type)}',
+			InsufficentOperationPrivilege:'{!JSENCODE($Label.StdInsufficentOperationPrivilege)}'
+        }
+
+function returnPending(){
+	return '{!Pending}' 
+}  
+
+function returnData(){
+	return {!data}
+}     
+
+function hasNextRecord(){
+	hasNext = {!hasNext}
+	
+}  	
+</script>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/MyApprovals.js" />
+
+<apex:outputPanel id="data">
+    <script>
+    	function showError(){
+			var errormsg = '{!JSENCODE(messageString)}';  
+			if(errormsg != ''){
+			  	Ext.MessageBox.show({
+				    title: QueueListViewPage.Labels.InformationTitleSearchPage,
+				    msg: errormsg,
+				    width:300,
+				    buttons: Ext.MessageBox.OK
+			 	}); 
+  			}   
+  			errormsg = '';    
+    	}
+    	function returnIDset(){
+		
+			return '{!idSetData}';
+		}    
+    	function updateData(){
+    		
+    		mydata = '';
+        	myData = {!data}
+        	hasNext =''+{!hasNext}
+        	
+        	currentPageCount = {!currentPageCount}
+        	
+        	currentPageCount = parseInt(currentPageCount);
+			if(hasNext == 'false'){
+				nextFlag = 1;
+				Ext.getCmp('nextId').setDisabled(true);
+			}else{
+				nextFlag = 0;
+				Ext.getCmp('nextId').setDisabled(false);
+			}
+        	if(currentPageCount == 0 || applyfilterflag == 1){
+        		hasPrev = 0;
+        		Ext.getCmp('prevId').setDisabled(true);
+        	}else{
+        		
+        		hasPrev = 1;
+        		Ext.getCmp('prevId').setDisabled(false);
+        	}
+        	
+        	idSet = '{!idSetData}';
+			window.parent.listOfId(idSet);       
+        	ds.loadData(myData);
+        	applyfilterflag = 0;     
+        }
+       
+        </script>
+    </apex:outputPanel>  
+<apex:outputPanel id="queuepage" rendered="true">
+<apex:form id="frmQueue">
+
+	<div id="grid">
+	</div>
+	<div id="queue-grid">
+	</div>
+	
+	<apex:actionFunction name="getpendingRecords" action="{!getPending}" oncomplete="updateData();returnIDset();showError();" rerender="data">
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!sortflag}" name="sort"/>
+		<apex:param value="" assignTo="{!setPageCount}" name="setPageCount"/>
+	</apex:actionFunction>	 
+	
+	<apex:actionFunction name="sortPendingByColumnName" action="{!getPending}" oncomplete="updateData();returnIDset();showError();" rerender="data">
+		<apex:param value="" assignTo="{!columnnameDate}" name="columnname"/>
+		<apex:param value="" assignTo="{!dateorder}" name="order"/>
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!sortflag}" name="sort"/>
+		<apex:param value="" assignTo="{!setPageCount}" name="setPageCount"/>
+		
+	</apex:actionFunction>
+	
+	<apex:actionFunction name="sortPendingByApprover" action="{!getPending}" oncomplete="updateData();returnIDset();showError();" rerender="data">
+		
+		<apex:param value="" assignTo="{!approverOrder}" name="approverOrder"/>
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!sortflag}" name="sort"/>
+		<apex:param value="" assignTo="{!setPageCount}" name="setPageCount"/>
+		
+	</apex:actionFunction>
+	
+	<!--  For  Approved-->
+	<apex:actionFunction name="getApproveRecords" action="{!getApprovedOrRejected}" oncomplete="updateData();returnIDset();showError();" rerender="data">
+		<apex:param value="" assignTo="{!changeStatus}" name="changeStatus"/>
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!approvedsortflag}" name="approvedsortflag"/>
+		<apex:param value="" assignTo="{!setPageCount}" name="setPageCount"/>
+	</apex:actionFunction>	
+	
+	<apex:actionFunction name="sortApprovedByColumnName" action="{!getApprovedOrRejected}" oncomplete="updateData();returnIDset();showError();" rerender="data">
+		<apex:param value="" assignTo="{!appcolumnnameDate}" name="columnname"/>
+		<apex:param value="" assignTo="{!approveddateorder}" name="approveddateorder"/>
+		<apex:param value="" assignTo="{!changeStatus}" name="changeStatus"/>
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!approvedsortflag}" name="approvedsortflag"/>
+		<apex:param value="" assignTo="{!setPageCount}" name="setPageCount"/>
+	</apex:actionFunction>
+	
+	<apex:actionFunction name="sortApprovedByApprover" action="{!getApprovedOrRejected}" oncomplete="updateData();returnIDset();showError();" rerender="data">		
+		<apex:param value="" assignTo="{!approvedapproverOrder}" name="approvedapproverOrder"/>
+		<apex:param value="" assignTo="{!changeStatus}" name="changeStatus"/>
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!approvedsortflag}" name="approvedsortflag"/>
+		<apex:param value="" assignTo="{!setPageCount}" name="setPageCount"/>
+	</apex:actionFunction>
+	
+	<apex:actionFunction name="nextApprovedRecords" action="{!getcallnextPrev}" oncomplete="updateData();returnIDset();showError();" rerender="data">
+		<apex:param value="" assignTo="{!direction}" name="direction"/>
+		<apex:param value="" assignTo="{!recordStatus}" name="recordStatus"/>				
+		<apex:param value="" assignTo="{!appcolumnnameDate}" name="columnname"/>
+		<apex:param value="" assignTo="{!approveddateorder}" name="approveddateorder"/>		
+		<apex:param value="" assignTo="{!approvedapproverOrder}" name="approvedapproverOrder"/>
+		<apex:param value="" assignTo="{!approvedsortflag}" name="approvedsortflag"/>	
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!approvedassignedtoflag}" name="approvedassignedtoflag"/>		
+	</apex:actionFunction>
+	<!-- Rejected -->
+	
+	<apex:actionFunction name="getRejectedRecords" action="{!getApprovedOrRejected}" oncomplete="updateData();returnIDset();showError();"  rerender="data">
+		<apex:param value="" assignTo="{!changeStatus}" name="changeStatus"/>
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!rejectedsortflag}" name="rejectedsortflag"/>
+		<apex:param value="" assignTo="{!setPageCount}" name="setPageCount"/>
+	</apex:actionFunction>	
+	
+	<apex:actionFunction name="sortRejectedByColumnName" action="{!getApprovedOrRejected}" oncomplete="updateData();returnIDset();showError();" rerender="data">
+		<apex:param value="" assignTo="{!rejcolumnnameDate}" name="rejcolumnnameDate"/>
+		<apex:param value="" assignTo="{!rejecteddateorder}" name="rejecteddateorder"/>
+		<apex:param value="" assignTo="{!changeStatus}" name="changeStatus"/>
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!rejectedsortflag}" name="rejectedsortflag"/>
+		<apex:param value="" assignTo="{!setPageCount}" name="setPageCount"/>
+	</apex:actionFunction>
+	
+	<apex:actionFunction name="sortRejectedByApprover" action="{!getApprovedOrRejected}" oncomplete="updateData();returnIDset();showError();" rerender="data">	
+		
+		<apex:param value="" assignTo="{!rejectedapproverOrder}" name="approverOrder"/>
+		<apex:param value="" assignTo="{!changeStatus}" name="changeStatus"/>
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!rejectedsortflag}" name="rejectedsortflag"/>
+		<apex:param value="" assignTo="{!setPageCount}" name="setPageCount"/>
+	</apex:actionFunction>
+	
+	<apex:actionFunction name="nextRejectedRecords" action="{!getcallnextPrev}" oncomplete="updateData();returnIDset();showError();" rerender="data">
+		<apex:param value="" assignTo="{!direction}" name="direction"/>
+		<apex:param value="" assignTo="{!recordStatus}" name="recordStatus"/>				
+		<apex:param value="" assignTo="{!rejcolumnnameDate}" name="rejcolumnnameDate"/>
+		<apex:param value="" assignTo="{!rejecteddateorder}" name="rejecteddateorder"/>		
+		<apex:param value="" assignTo="{!rejectedapproverOrder}" name="approvedapproverOrder"/>
+		<apex:param value="" assignTo="{!rejectedsortflag}" name="rejectedsortflag"/>	
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!rejectedassignedtoflag}" name="rejectedassignedtoflag"/>		
+	</apex:actionFunction> 
+	<!--  -->
+	<apex:actionFunction name="nextRecords" action="{!getcallnextPrev}" oncomplete="updateData();returnIDset();showError();" rerender="data">
+		<apex:param value="" assignTo="{!direction}" name="direction"/>
+		<apex:param value="" assignTo="{!recordStatus}" name="recordStatus"/>		
+		<apex:param value="" assignTo="{!approverOrder}" name="approverOrder"/>
+		<apex:param value="" assignTo="{!columnnameDate}" name="columnname"/>
+		<apex:param value="" assignTo="{!dateorder}" name="order"/>	
+		<apex:param value="" assignTo="{!assignedToMe}" name="assignedToMe"/>
+		<apex:param value="" assignTo="{!assignedtoflag}" name="assignedtoflag"/>
+	</apex:actionFunction>
+	
+
+	<apex:actionFunction name="setGridHeight" action="{!calculateRowcount}" oncomplete="" rerender="data">
+		<apex:param value="" assignTo="{!setGridHeight}" name="setGridHeight" />
+	</apex:actionFunction>	
+	
+			
+</apex:form>
+</apex:outputPanel>
+</apex:page>

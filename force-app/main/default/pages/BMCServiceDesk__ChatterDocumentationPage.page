@@ -1,0 +1,77 @@
+<apex:page id="ChatterDocumentationPage" controller="BMCServiceDesk.GroupFeedController" sidebar="false" showHeader="false">
+<c:SelfServiceCommonIncludes />
+<style>
+
+.btnShare{
+    -moz-border-radius:3px 3px 3px 3px;
+    //background:url("/img/alohaSkin/btn_sprite.png") repeat-x scroll right top #E8E8E9;
+    border-color:#B5B5B5 #B5B5B5 #7F7F7F;
+    border-style:solid;
+    border-width:1px;
+    color:#333333;
+    font-size:0.9em;
+    font-weight:bold;
+    padding:2px 3px;
+    margin:0 -10px 6px 0;
+    width:52px;
+    height:22px;
+}
+</style>
+<apex:form id="attachmentsForm">
+        <table style="padding-left:43px">
+            <tr align="right">
+                <td style="padding-top: 8px;">
+                    <apex:outputText value="{!$Label.bmcservicedesk__file}"/>
+                </td>
+                <td style="padding-top: 8px;padding-left:7px">
+                    <apex:inputFile fileName="{!feedPost.ContentFileName}" Title="{!feedPost.Title}" id="filePath" fileSize="225000" value="{!feedPost.ContentData}" size="51" style="height:25px" />
+                </td>
+
+            </tr>
+            <tr>
+
+                <td style="padding-top: 7px;" >
+                </td>
+                <td align="right"  style="padding-top: 7px;">
+                    <apex:outputPanel rendered="{!ClosePanel}">
+                        <script>
+                            if(window.parent!=null) {
+                                window.parent.handlePanelVisibility('chatterFileStageOne');
+                                window.parent.refreshChatterFeed();
+                            }
+                        </script>
+                    </apex:outputPanel>
+					<apex:outputText value="CRUDFLSCheck# False Positive: Since this is part of Remedyforce functional process which is expected to work outside of FLS and CRUD permission." rendered="false" />
+                    <apex:commandButton action="{!attachFile}" id="okBtn" value="{!$Label.bmcservicedesk__ok}" styleClass="btnShare"/>
+                </td>
+            </tr>
+        </table>
+
+        <!-- /apex:panelGrid -->
+        <script type="text/javascript">
+            Ext.ns('SDF.attachments');
+
+            SDF.attachments.closePopup = function() {
+                window.parent.chatterAttach.close();
+            };
+
+            SDF.attachments.validateFile = function() {
+                var file = document.getElementsByName('ChatterDocumentationPage:attachmentsForm:inputFile:inputFile:file')[0].value;
+
+                if(url || file) {
+                    document.getElementById('ChatterDocumentationPage:attachmentsForm:okBtn').disabled = false;
+                }
+            };
+
+            Ext.onReady(function() {
+                //SDF.attachments.checkValidation();
+
+                var closeButton = Ext.get('ChatterDocumentationPage:attachmentsForm:closeBtn');
+                if(closeButton) {
+                    closeButton.on('click', SDF.attachments.closePopup);
+                }
+            });
+        </script>
+</apex:form>
+
+</apex:page>

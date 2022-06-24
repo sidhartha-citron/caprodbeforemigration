@@ -1,0 +1,94 @@
+<div class="create_edit_section rf-container">
+	<div id="sideBarloader"  ></div>
+	<div id="sideBarActionMask" class="dialog-whiteMask"></div>
+	<div id="messageDiv"></div>
+	<span class="switch">
+	  <input type="checkbox" id="enableClassPermissionId" ng-model="isCMDBClassPermissionEnable" >
+	  <span class="slider round" ng-click="confirmClassPermissionActivation(isCMDBClassPermissionEnable)"></span>
+	</span>
+	<span id="enableSpan" class="rf-header-text rf-padding-left5px" >{{_Labels.EnableCMDBClassPermissions}}</span>
+	<span class="rf-margin-left10px d-icon-info_circle" title="{{_Labels.ApplyCMDBClsTooltip}}"></span>
+	<hr class="rf-hr-cls"></hr>
+		
+	<div class="column-configurator rf-full-height-width">
+		<table width="100%" height="100%" border="0" >
+			<tr>
+				<td colspan="3" ><span class="rf-header-text">{{_Labels.ListOfPermissionSets}}</span></td>
+			</tr>
+			<tr><td colspan="3" height="10"></tr>
+			<tr>
+				<td class ="rf-cmdb-grid-td1">
+					<span class="searchtext-input-wrapper searchtext-input-wrapper-fullwidth">
+						<a title="{{_Labels.Search}}" class="rf-icon-search" ></a> 
+							<input  id="searchPS" ng-model="filterPs.searchText" ng-change="searchPs()" class="searchfield-input" size="26" placeholder="{{_Labels.SearchPs}}"  autocomplete="off">
+						<a title="{{_Labels.Clear}}" id="rf-icon-cross" class="rf-icon-cross" ng-if="filterPs.searchText.length > 0" ng-click="clearPSSearch()"></a>
+					</span>
+				</td>
+				<td style="width:5px;"/>
+				<td class ="rf-cmdb-grid-td3"> 
+					<b class="rf-header-text" ng-if="permissionSetName" > {{_Labels.PermissionFor}}:</b>
+					<span class="rf-text-font" ng-if="permissionSetName && permissionSetName.length < 100">{{permissionSetName}}</span>
+					<span class="rf-text-font" ng-if="permissionSetName && permissionSetName.length > 99">{{permissionSetName | limitTo:100}}...</span>
+					<span class="rf-seperator" style="margin-right:15px;"></span>
+					<span style="margin-right:5px;">
+						<button id="cloneButton" type="button" title="{{_Labels.CloneTooltip}}" class="btn bmc-btn-small" ng-click="openCloneFromModel(this)">{{_Labels.CloneFrom}}</button>
+					</span>
+					<span style="margin-right:5px;" title="{{_Labels.ResetTooltip}}" ng-if="enableResetBtn">
+						<button id="resetButton" type="button" class="btn bmc-btn-small" ng-click="resetPermissions(this)">{{_Labels.Reset}}</button>
+					</span>
+					<span style="margin-right:5px;" title="{{_Labels.ImportTooltip}}" ng-if="showImportBtn">
+						<button id="importButton" type="button" class="btn bmc-btn-small" ng-click="importPermissions()">{{_Labels.Import}}</button>
+					</span>
+				</td>
+			</tr>
+			<tr>
+				<td style="width:25%; vertical-align:top;">
+					<div id="permissionSetsGrid" ui-grid="permissionSetsOptions" ui-grid-selection ui-grid-resize-columns ng-style="getTableHeight('psGrid')"></div>
+				</td>
+				<td style="width:5px"/>				
+				<td>
+					<div>
+						<span class="rf-label-font" style="margin-bottom:10px;">{{_Labels.ClassType}} </span>
+						<select ng-model="filterCls.selectedFilter" ng-init="filterCls.selectedFilter = filterData[0]" ng-change="searchCls(filterCls.selectedFilter)" ng-options="filterType.label for filterType in filterData" class="rf-filter-dropdown"></select>
+						<span class="rf-seperator"></span>
+						<span class="searchtext-input-wrapper rf-margin-left12px rf-cls-searchBox">
+							<a title="{{_Labels.Search}}" class="rf-icon-search" ></a> 
+								<input  id="searchClass" ng-model="filterCls.searchText" ng-change="searchCls({{filterCls.selectedFilter}})"  class="searchfield-input" size="26" placeholder="{{_Labels.SearchClass}}"  autocomplete="off">
+							<a title="{{_Labels.Clear}}" id="rf-icon-cross" class="rf-icon-cross" ng-if="filterCls.searchText.length > 0" ng-click="clearClassSearch()"></a>
+						</span>
+						<span class="rf-float-right" >
+							<button id="saveButton" type="button" class="btn bmc-btn-primary" ng-click="save()">{{_Labels.Save}}</button>
+						</span>
+					</div>
+					<div style="height:10px;"></div>
+					<div>
+						<hr class="rf-hr-cls" style="margin-top: 0px !important;"></hr>
+						 <table width="100%" border="0">
+							<tr>
+								<td>
+									<div class="rf-view-div">
+										<label class="rf-filter-checkbox rf-filter-checkbox-custom" style="">{{_Labels.HideCILabel}}
+											 <input id="ciChbx"  type="checkbox" ng-model="controllerData.hideCiManagement" ng-click="setDirtyFlag()"/>
+											<span class="rf-checkmark"></span>
+										</label>
+										<span class="rf-float-left"></span>
+										<label class="rf-filter-checkbox rf-filter-checkbox-custom" style="">{{_Labels.HideAssetLabel}}
+											 <input id="assetChbx"  type="checkbox" ng-model="controllerData.hideAssetManagement" ng-click="setDirtyFlag()"/>
+											<span class="rf-checkmark"></span>
+										</label>
+									</div>
+									<div class="rf-info-custom d-icon-info_circle" title="{{_Labels.HideCiAssetInfo}}"></div>
+								</td>
+							</tr>
+							<tr>
+								<td>					
+									<div ui-grid="classPermissionOptions" ui-grid-selection ui-grid-resize-columns ng-style="getTableHeight('clsGrid')"></div>
+								</td>
+							</tr>
+						</table>
+					</div>					
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>

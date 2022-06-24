@@ -1,0 +1,155 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global" controller="ProductCatalog">
+    
+    <aura:attribute name="prevProdIds" type="Map"/>
+    <aura:attribute name="numberPreviousProds" type="Integer" default="0"/>
+    <aura:attribute name="filterPrevProds" type="Boolean" default="false"/>
+    <aura:attribute name="records" type="ProductCatalog.CartItem[]" access="global"/>
+    <aura:attribute name="searchString" type="String"/>
+    <aura:attribute name="productFamilyList" type="String[]"/>
+    <aura:attribute name="theFilter" type="String[]"/>
+    <aura:attribute name="shoppingCart" type="Order" default="{'sobjectType' : 'Order'}"/>
+    <aura:attribute name="selectedProducts" type="ProductCatalog.CartItem[]" access="global"/>
+    <aura:attribute name="subTotal" type="Decimal" default="0"/>
+    <aura:attribute name="isEmpty" type="Boolean" default="false"/>
+    <aura:attribute name="pageNum" type="Integer" default="1"/>
+    <aura:attribute name="pages" type="Integer"/>
+    <aura:attribute name="queryEnd" type="Boolean" default="true"/>
+    <aura:attribute name="frequencyOptions" type="ProductCatalog.FrequencySelectOption[]"/> 
+    <aura:attribute name="filterHidden" type="Boolean" default="true"/>
+    <aura:attribute name="cartHidden" type="Boolean" default="true"/>
+    <aura:attribute name="bannerValue" type="String" default=""/>
+    <aura:attribute name="scrollCheckIntervalId"
+                    type="String"
+                    description="In the renderer.js, the interval id for periodically checking scroll position. Used when unrendering component to cancel interval check."
+                    access="private"/>
+    <aura:attribute name="orderActiveStatus" type="String"/>
+    
+    <aura:registerEvent name="clearFilters" type="c:clearFiltersEvent"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    
+    <c:CustomToast aura:id="customToast" />
+    
+    <div class="slds-page-header slds-hide" role="banner" aura:id="banner">
+  		<div class="slds-notify slds-notify--alert slds-theme--success" role="alert">
+    		<span class="slds-assistive-text">Info</span>
+    		<h2><ui:outputRichText value="{!v.bannerValue}"/></h2>
+  		</div>
+	</div>
+<!-- slds-hide-ddash-large -->
+    <div class="slds-x-small-show slds-hide--large">
+        <lightning:button variant="neutral" label="" iconName="utility:filter" onclick="{!c.toggleFilters}"/>
+        
+        <lightning:button variant="neutral" label="" iconName="utility:moneybag" onclick="{!c.toggleCart}" class="slds-float--right"/>
+    </div>
+    
+    <div class="slds-hide" aura:id="mobileFilters">
+        <h3 class="slds-section-title--divider" title="{!$Label.c.ProductFamily}">{!$Label.c.ProductFamily}<lightning:button class="slds-float--right" variant="base" onclick="{!c.clearFilters}">Clear</lightning:button></h3> 
+        <aura:iteration items="{!v.productFamilyList}" var="f">
+            <c:FilterButton filterItem="{!f}" theFilter="{!v.theFilter}" applyFilter="{!c.applyFilter}"/> 
+        </aura:iteration>
+        <lightning:input type="toggle" label="{!$Label.c.Previously_purchased_only + '(' + v.numberPreviousProds + ')'}" name="previousPurchased" checked="{!v.filterPrevProds}" messageToggleActive="" messageToggleInactive="" onchange="{!c.filterProds}"/>
+        <br/>
+    </div>
+    
+    <div class="slds-hide" aura:id="mobileCart">
+        <h3 class="slds-section-title--divider" title="{!$Label.c.SelectedItems}">{!$Label.c.SelectedItems}</h3>
+        <div class="citronProductScroll">
+            <aura:iteration items="{!v.selectedProducts}" var="s" indexVar="i">                    
+                <c:CartItem selectedProd="{!s}" clearProd="{!c.clearItem}"/>
+            </aura:iteration>
+        </div>
+        
+        <div class="slds-text-align--center">
+            <div class="slds-text-title" style="color:#72bd42;">Subtotal</div>
+            <div>
+                <ui:outputCurrency value="{!v.subTotal}"/>
+            </div>
+            <div>
+                <lightning:button variant="brand" label="Check out" onclick="{!c.checkout}"/>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="slds-grid slds-wrap slds-grid--pull-padded slds-hide" aura:id="theList">
+        <div class="slds-p-horizontal--small slds-size--1-of-1 slds-large-size--3-of-12">
+            <h3 class="slds-section-title--divider" title="{!$Label.c.Search}">{!$Label.c.Search}</h3>
+            <div class="slds-form-element">
+                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                    <lightning:buttonIcon iconName="utility:close" variant="bare" onclick="{!c.clear}" alternativeText="{!$Label.c.Clear_Search}" size="small" class="slds-input__icon slds-icon-text-default slds-hide" aura:id="crossIcon"/>
+                    <ui:inputText aura:id="searchValue" class="slds-input" value="{!v.searchString}" placeholder="{!$Label.c.Search_Products}" updateOn="keyup" keyup="{!c.searchName}" click="{!c.clicked}"/>
+                </div>
+            </div>
+            <br/>
+            <div class="slds-show_x-large">
+                <h3 class="slds-section-title--divider" title="{!$Label.c.ProductFamily}">{!$Label.c.ProductFamily}<lightning:button class="slds-float--right" variant="base" onclick="{!c.clearFilters}">{!$Label.c.Clear}</lightning:button></h3> 
+                <aura:iteration items="{!v.productFamilyList}" var="f">
+                    <c:FilterButton filterItem="{!f}" theFilter="{!v.theFilter}" applyFilter="{!c.applyFilter}"/> 
+                </aura:iteration>
+                <lightning:input type="toggle" label="{!'Previously purchased only(' + v.numberPreviousProds + ')'}" name="previousPurchased" checked="{!v.filterPrevProds}" messageToggleActive="" messageToggleInactive="" onchange="{!c.filterProds}"/>
+                <br/>
+            </div>
+        </div>        
+        <div class="slds-p-horizontal--small slds-size--1-of-1 slds-large-size--7-of-12">
+            <div class="slds-text-align--center slds-has-flexi-truncate">
+                <h3 class="slds-section-title--divider" title="{!$Label.c.ProductsServices}">
+                    {!$Label.c.ProductsServices}
+                </h3>
+                <div class="slds-grid slds-wrap slds-grid--pull-padded citronProducts citronProductScroll" aura:id="initRecords">
+                    <aura:iteration items="{!v.records}" var="r"  aura:id="initIterator">
+                        <div class="slds-size--1-of-4 slds-max-medium-size--1-of-2">
+                            <c:CatalogItem record="{!r}" addProd="{!c.addProd}" frequencyOptions="{!v.frequencyOptions}" 
+                                           prevProds="{!v.prevProdIds}" orderStatus="{!v.shoppingCart.Status}"/>
+                        </div>
+                    </aura:iteration>
+                </div>
+            </div>
+        </div>
+        <aura:if isTrue="{! not(v.shoppingCart.Status == v.orderActiveStatus)}">
+            <div class="slds-text-align--center slds-size--1-of-1 slds-large-size--2-of-12 slds-large-show">
+                <h3 class="slds-section-title--divider" title="{!$Label.c.SelectedItems}">{!$Label.c.SelectedItems}</h3>
+                <div class="citronProductScroll">
+                    <aura:iteration items="{!v.selectedProducts}" var="s" indexVar="i">                    
+                        <c:CartItem selectedProd="{!s}" frequencyOptions="{!v.frequencyOptions}" clearProd="{!c.clearItem}" changeQty="{!c.addProd}"/>
+                    </aura:iteration>
+                </div>
+                <!--<aura:if isTrue="{!v.selectedProducts.length > 0}">-->
+                    <div class="slds-text-align--center">
+                        <div class="slds-text-title" style="color:#72bd42;">{!$Label.c.Subtotal}</div>
+                        <div>
+                            <ui:outputCurrency value="{!v.subTotal}"/>
+                        </div>
+                        <div>
+                            
+                            <lightning:button variant="brand" label="{!$Label.c.Check_Out}" onclick="{!c.checkout}" disabled="{!v.selectedProducts.length == 0}"/>
+                            
+                        </div>
+                    </div>
+                <!--</aura:if>-->
+            </div>
+        </aura:if>
+    </div>
+
+    <div class="slds-hide" aura:id="theModal">
+        <div role="dialog" tabindex="-1"  class="slds-modal slds-fade-in-open slds-backdrop slds-modal--prompt">
+            <div class="slds-modal__container">
+                <div class="slds-modal__content slds-p-around--medium">
+					{!$Label.c.Thank_you_for_your_order}
+                </div>
+                <div class="slds-modal__footer slds-theme--default" aura:id="divButtons">
+                    <lightning:button label="{!$Label.c.Close}" onclick="{!c.closeModal}"/>
+                </div>
+            </div>
+        </div>
+    </div>  
+    
+    <div class="demo-only slds-m-top_xx-large slds-align_absolute-center customMargin" style="height:6rem;" aura:id="spinner">
+        <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+            <span class="slds-assistive-text">Loading</span>
+            <div class="slds-spinner__dot-a"></div>
+            <div class="slds-spinner__dot-b"></div>
+        </div>
+    </div>
+
+</aura:component>

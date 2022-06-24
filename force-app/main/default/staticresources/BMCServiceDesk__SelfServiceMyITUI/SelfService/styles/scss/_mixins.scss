@@ -1,0 +1,74 @@
+// See designated purpose of this file on Confluence: http://confluence.bmc.com:8080/x/VANsD
+
+@mixin font-face($name, $file-name, $style: normal) {
+	@font-face {
+		font-family: $name;
+		@if $style != normal {
+			font-style: $style;
+		}
+		src: url('../fonts/' + $file-name + '.otf') + ' format("opentype")';
+	}
+}
+
+@mixin sans-serif-family($custom-name: '') {
+	$default-fonts: Helvetica, Arial, sans-serif;
+	@if $custom-name != '' {
+		font-family: $custom-name, $default-fonts;
+	} @else {
+		font-family: Helvetica, Arial, sans-serif;
+	}
+}
+
+
+@mixin loading-spinner ($spinner-class-name: 'loading-spinner', $size: 40px, $bar-count: 12, $bar-width: 2px, $bar-height: 10px, $animation-duration: 0.67s) {
+	$bar-translate: translate(0, -($size - $bar-height) / 2);
+	.#{$spinner-class-name} {
+		position: relative;
+		min-width: $size;
+		min-height: $size;
+		display: inline-block;
+
+		.ls-bar {
+			background: #000;
+			position: absolute;
+			opacity: 0;
+
+			width: $bar-width;
+			height: $bar-height;
+			left: 50%;
+			top: 50%;
+			margin-left: -$bar-width / 2;
+			margin-top: -$bar-height / 2;
+
+			-webkit-animation: ls-bar-fade $animation-duration linear infinite;
+			animation: ls-bar-fade $animation-duration linear infinite;
+		}
+
+		.ls-bar_1 {
+			-webkit-transform: rotate(0deg) $bar-translate;
+			-ms-transform: rotate(0deg) $bar-translate;
+			transform: rotate(0deg) $bar-translate;
+			-webkit-animation-delay: 0s;
+			animation-delay: 0s;
+
+		}
+
+		@for $i from 2 through $bar-count {
+			.ls-bar_#{$i} {
+				-webkit-transform: rotate(($i - 1) * 360deg / $bar-count) $bar-translate;
+				-ms-transform: rotate(($i - 1) * 360deg / $bar-count) $bar-translate;
+				transform: rotate(($i - 1) * 360deg / $bar-count) $bar-translate;
+				-webkit-animation-delay: -$animation-duration * (1 + $bar-count - $i) / $bar-count;
+				animation-delay: -$animation-duration * (1 + $bar-count - $i) / $bar-count;
+			}
+		}
+	}
+
+	.ie .#{$spinner-class-name} {
+		@for $i from 1 through $bar-count {
+			.ls-bar_#{$i} {
+				opacity: 1 - ($i - 1) / $bar-count;
+			}
+		}
+	}
+}

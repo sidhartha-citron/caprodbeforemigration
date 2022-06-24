@@ -1,0 +1,80 @@
+<apex:page doctype="html-5.0" controller="BMCServiceDesk.SF1SelfServiceHome" showHeader="false" tabStyle="Self_Service_Mobile_Preview__tab" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+            <link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/bmc-all.css" rel="stylesheet" /> 
+			<link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/dpl-iconfont.css" rel="stylesheet" /> 
+            <link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/bootstrap-3.3.5.css" rel="stylesheet" />
+			<link href='{!$Resource.Salesforce1}/SelfService/css/SelfServiceApp.min.css' rel="stylesheet" ></link>
+    </head>
+    <title>{!JSENCODE($Label.SelfServiceMobilePreview)}</title>
+    <body ng-app="SF1SelfService" >
+        <div style="height:100%;width:100%">
+        	<loading-spinner show-if="showloader" overlay="true" centered="true"></loading-spinner> 
+            <div style="height:100%;width:100%" ng-view="ng-view" class="rf-container"></div>
+        </div>
+    </body>
+	 <script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular.js')}"/>
+    <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-route.js')}"/>
+    <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-touch.js')}"/>
+    <script type="text/javascript" src="{!URLFOR($Resource.SelfServiceMyITUI, 'SelfService/scripts/vendor/angular/angular-sanitize.js')}"/>
+   
+  
+	<script src="{!$Resource.Salesforce1}/SelfService/DPLLibraries/js/popper.js"></script>
+    <script src="{!$Resource.Salesforce1}/SelfService/DPLLibraries/js/bootstrap.min.js"></script>
+	<script src="{!$Resource.Salesforce1}/SelfService/js/rfmodal.js" />
+    <script src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+	<script type="text/javascript" src="{!$Resource.DeepView}/js/forcetk.js"></script>
+
+	<script src='{!$Resource.Salesforce1}/SelfService/js/SelfServiceApp.min.js'></script>
+    
+    <script type="text/javascript">
+    	var __sfdcSessionId = '{!GETSESSIONID()}'; 
+        var _RemotingActions = {} 
+        _RemotingActions.getSSMetadata = '{!$RemoteAction.SF1SelfServiceHome.getSSMetadata}';
+        _RemotingActions.searchAndCreateHistoryRec = '{!$RemoteAction.SF1SelfServiceHome.searchAndCreateHistoryRec}';
+        _RemotingActions.getSearchResults = '{!$RemoteAction.SF1SelfServiceHome.getSearchResults}';        
+		_RemotingActions.getIncidentData =  '{!$RemoteAction.SF1SelfServiceHome.getIncidentDetails}'; 
+        _RemotingActions.getIncidentRecords = "{!$RemoteAction.SF1SelfServiceHome.getIncidentRecords}";
+		_RemotingActions.saveIncidentData = '{!$RemoteAction.SF1SelfServiceHome.saveIncidentData}';
+		_RemotingActions.getSF1SSKADetail = '{!$RemoteAction.SF1SelfServiceHome.getSSKnowledgeArticle}';
+		_RemotingActions.getLookUpData = '{!$RemoteAction.SF1SelfServiceHome.getLookupData}';
+        _RemotingActions.getPopularSSRecords = "{!$RemoteAction.SF1SelfServiceHome.getPopularSSRecords}";
+        _RemotingActions.getSSBroadcastInfo = '{!$RemoteAction.SF1SelfServiceHome.getSSBroadcastInfo}';
+        _RemotingActions.getActivityTimeline = '{!$RemoteAction.SF1SelfServiceHome.getActivityTimeline}';
+        _RemotingActions.addComment = '{!$RemoteAction.SF1SelfServiceHome.addComment}';
+		_RemotingActions.saveServiceRequestData = '{!$RemoteAction.SF1SelfServiceHome.saveServiceRequestData}';
+       	
+        _RemotingActions.fetchCategories = '{!$RemoteAction.SF1SelfServiceHome.fetchCategories}';
+		_RemotingActions.deleteAttachment = '{!$RemoteAction.SF1SelfServiceHome.deleteAttachment}';
+        _RemotingActions.createAttRefGenerator = '{!$RemoteAction.SF1SelfServiceHome.createAttRefGenerator}';
+        _RemotingActions.processAttachmentData = '{!$RemoteAction.SF1SelfServiceHome.processAttachmentData}';
+        _RemotingActions.fetchServiceRequestData = '{!$RemoteAction.SF1SelfServiceHome.fetchServiceRequestData}';
+        _RemotingActions.getCMDBInstances = '{!$RemoteAction.SF1SelfServiceHome.getCMDBInstances}';
+        _RemotingActions.getCMDBInstanceDetails = '{!$RemoteAction.SF1SelfServiceHome.getCMDBInstanceDetails}';
+        _RemotingActions.chatActions = '{!$RemoteAction.SF1SelfServiceHome.chatActions}';
+        _RemotingActions.getDateTimeInUserLocale = '{!$RemoteAction.SF1SelfServiceHome.getDateTimeInUserLocale}';
+        _RemotingActions.getSRInputDefaultValues='{!$RemoteAction.SF1SelfServiceHome.getSRInputDefaultValues}';
+        var namespace = 'BMCServiceDesk__';
+        var timezoneOffset = '{!timezoneOffset}';
+        var _Labels = {} ;
+        var _ResourceUrl = '{!$Resource.Salesforce1}';
+        var userLanguage = '{!userLanguage}';
+        var userId = '{!$User.Id}'
+        
+        var _ObjectPermissions = {}
+			_ObjectPermissions.isIncidentCreateable = {!$ObjectType.BMCServiceDesk__Incident__c.createable};
+			_ObjectPermissions.isIncidentUpdateable = {!$ObjectType.BMCServiceDesk__Incident__c.updateable};
+    
+		var isFileEnabled = {!IF(isFileEnabled, true, false)};
+    	var attachmentLimit = '{!attachmentLimit}';
+        var fileLimit = '{!fileLimit}';
+
+		var client = new forcetk.Client();
+      	client.setSessionToken('{!$Api.Session_ID}');
+        var enableSSSearchHistoryTracking = {!enableSSSearchHistoryTracking};
+        var SSSearchGroupDuration = {!SSSearchGroupDuration};
+    </script>
+    <script src="/soap/ajax/40.0/connection.js" type="text/javascript"></script>     
+</apex:page>

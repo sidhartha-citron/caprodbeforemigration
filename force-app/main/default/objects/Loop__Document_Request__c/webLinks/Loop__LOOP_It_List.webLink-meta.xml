@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebLink xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Loop__LOOP_It_List</fullName>
+    <availability>online</availability>
+    <displayType>massActionButton</displayType>
+    <linkType>javascript</linkType>
+    <masterLabel>LOOP It</masterLabel>
+    <openType>onClickJavaScript</openType>
+    <protected>false</protected>
+    <requireRowSelection>true</requireRowSelection>
+    <url>{!REQUIRESCRIPT(&quot;/soap/ajax/16.0/connection.js&quot;)}
+loopstuff();
+
+function loopstuff() {
+    var ids = {!GETRECORDIDS($ObjectType.Loop__Document_Request__c)};
+    if(ids.length &lt; 1)
+        alert(&quot;No items are currently selected.&quot;);
+    else {
+        var docIds = new Array();
+        var updatedIds = new Array();
+        try { qr = sforce.connection.query(&quot;SELECT Id, Loop__Document_Id__c FROM Loop__Document_Request__c WHERE Id IN (&apos;&quot;+ ids.join(&quot;&apos;,&apos;&quot;) +&quot;&apos;)&quot;);
+        } catch(e) { alert(&apos;An error has occurred. Please try again.&apos;); return; }
+        if (qr.size &gt; 0) {
+            for (var j=0; j &lt; ids.length; j++) {
+                for (var i=0; i &lt; qr.size; i++) {
+                    q = (qr.records[i] ? qr.records[i] : qr.records);
+                    if(q &amp;&amp; q.Id &amp;&amp; q.Id.substring(0,15)==ids[j].substring(0,15)
+                            &amp;&amp; q.Loop__Document_Id__c &amp;&amp; q.Loop__Document_Id__c.substring(0,3) == &apos;015&apos;) {
+                        docIds.push(q.Loop__Document_Id__c);
+                        var request = new sforce.SObject(&quot;Loop__Document_Request__c&quot;);
+                        request.Id = ids[i];
+                        request.Loop__Status__c = &quot;Looped&quot;;
+                        updatedIds.push(request);
+                    }
+                }
+            }
+        }
+        try { sforce.connection.update(updatedIds);
+        } catch(e) { alert(&quot;Unable to update all requests&apos; statuses.&quot;); }
+        window.parent.location = &quot;/apex/loop__loopit?eid=&quot; + ids[0]
+            + &quot;&amp;docIds=&quot; + docIds.join(&apos;-&apos;)
+            + &quot;&amp;retURL=&quot; + encodeURIComponent(window.location.pathname+window.location.search)
+            + &quot;&amp;type=loop&quot;;
+    }
+}</url>
+</WebLink>

@@ -1,0 +1,275 @@
+<apex:page standardStylesheets="false" showHeader="false" controller="BMCServiceDesk.AdminGeneralSettings">
+   
+    <c:CommonIncludes />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminGeneralSettings.css"/>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Spinner.css" />
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminGeneralSettings.js"></script>
+     <script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/Spinner.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/SpinnerField.js"></script>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />    
+<body id="bodyContents" style="overflow-y:scroll;"> 
+	<apex:outputPanel id="opSaveStatus"> 
+        <script>
+            var saveStatus = '{!saveStatus}';
+        </script>
+    </apex:outputPanel>
+<script>
+	var wikiUrl='{!wikiUrl}';
+	var templateSectionHeaderLbl = '{!JSENCODE($Label.TemplateSettings)}', ovewriteTemplateCheckboxLabel = '{!JSENCODE($Label.Replace_Incident_Field)}', checkTemplateLabel = '{!JSENCODE($Label.EnableApplyTemplateIcon)}';
+	var propOverwriteRecord = false;
+	var ApplyTemplate = false;
+	var showRFAccountChk = false;
+	var showCollisionsPopupAutomaticallyChk = false;
+    var currencyLengthValidationMsg = '{!JSENCODE($Label.defaultCurrencyLengthValidation)}';
+    var lblEnableCustomFieldMapping = '{!JSENCODE($Label.EnableCustomFieldMapping)}';
+	var NoAccountEntitlementSettingLabel = '{!JSENCODE($Label.NoAccountEntitlementSettingLabel)}';
+	var EnableNoAccountEntitlementSettingHelp = '{!JSENCODE($Label.EnableNoAccountEntitlementSettingHelp)}';
+	
+	var column = '{!JSENCODE($Label.Column)}';
+    
+    var agentColumnValue;
+    var SDEFStyles = '{!$Resource.SDEFStyles}';
+    var startbuttontext='{!JSENCODE($Label.StartMilestoneButton)}';
+    var stopbuttontext='{!JSENCODE($Label.StopMilestoneButton)}';
+	
+	var utilitystartbuttontext='{!JSENCODE($Label.ACStartservice)}';
+    var utilitystopbuttontext='{!JSENCODE($Label.ACStopservice)}';
+	
+    var showRFAccountLbl = '{!JSENCODE($Label.ShowRemeforceAccounts)}';
+    var showRFAccountTooltip = '{!JSENCODE($Label.ShowRFAccountTooltip)}';
+        
+    var showCollisionsPopupAutomaticallyLbl = '{!JSENCODE($Label.autoshowCollisionPopup)}';
+    var showCollisionsPopupAutomaticallyCheckboxTooltip = '{!JSENCODE($Label.autoshowCollisionPopup)}';    
+    var silverlightCIExplorerLabel = '{!JSENCODE($Label.silverlightCIExplorer)}';
+    
+    var milestonedefaulthourvalue = '{!milestonehours}';  
+    var milestonedefaultminutevalue = '{!milestoneminutes}';
+    var milestonedefaultdayvalue = '{!JSENCODE(milestonedays)}';
+    var store;
+    var SLAJobIntervalMinutes = {!slaFieldCalculationInterval};
+    var SLAJobDayInterval = Math.floor(SLAJobIntervalMinutes / (60 * 24)); //conversion of minutes to day
+    var SLAJobHourInterval = SLAJobIntervalMinutes/60%24; //getting hours from remaining minute
+    var MilestonehourField;
+    var milestoneminuteField;
+    var milestonedayField;
+    var SLAFieldHourSettingField;
+    var SLAFieldMinuteSettingField;
+    var milestoneButton,SLAJobButton;
+    var buttontext='{!jobrunnningflag}';
+	var utilityJobFlag='{!utilityProcessorJobRunnningFlag}';
+	var jobProcessorException = '{!JSENCODE($Label.Scheduled_Job_Exception)}';
+     var AppAdm =  '{!JSENCODE(store)}';
+	var isSLAfldCalcJobRunning = {!isSLAfldCalcJobRunning};
+	var nextSLAJobExecTime = '{!nextSLAJobExecTime}';
+    var nextScheduleRunLabel = '{!JSENCODE($Label.nextScheduledRun)}';
+    var scheduledDate = nextSLAJobExecTime ? (new Date(nextSLAJobExecTime)) : '';
+    var isApexSharingEnabled = false; 
+     
+    var SalesforcePlatformEncryptionLbl = '{!JSENCODE($Label.SalesforcePlatformEncryption)}';
+    var EnablePlatformEncryptionForBMCRemedyforceLbl = '{!JSENCODE($Label.SupportPlatformEncryptionInRemedyforce)}';
+    var IsPlatformEncryptionEnable = false;
+    var isSalesforcePEEnabledAtOrg =  {!isSalesforcePEEnabledAtOrg};
+	var classForCheckbox = 'checkboxClass';
+	var timeToClose = '{!JSENCODE($Label.timeToClose)}';
+	var clientHrs = '{!JSENCODE($Label.ClientWindowHeaderSearchPage)}';
+	var accountHrs = '{!JSENCODE($Label.accountServiceRequest)}';
+	var orgBusinessHrs = '{!JSENCODE($Label.orgBusinessHours)}';
+	var genSettings = '{!JSENCODE($Label.generalSettings)}';
+	var warningMsgWhileEnablingOLT = '{!JSENCODE($Label.WarningMsgWhileEnablingOLT)}';
+	var clickHereOLTLink = '{!JSENCODE($Label.TooltipHelp)}';
+	var OLA = '{!JSENCODE($Label.OLA)}';
+	var selectedSLAOWE = '{!JSENCODE(selectedSLAOWE)}';
+	eval('{!OrgWideEmailList}');
+	var closureTimeSetting = '{!JSENCODE(selectedClosureTimeBusinessHrs)}';
+	var resourcePath = '{!$Resource.SSThemes}';
+	var closureTimeToolTip = '{!JSENCODE($Label.timeToCloseInfo)}';
+	var appSettingsTitle = '{!JSENCODE($Label.GeneralApplicationSetting)}';
+	var lblEncryptionImpactReport = '{!JSENCODE($Label.EncryptionImpactReport)}';
+	var EnablePlatformEncryptionTooltip = '{!JSENCODE($Label.EnablePlatformEncryptionTooltip)}';
+	
+	var UploadAttachmentsAsFilesLabel = '{!JSENCODE($Label.UploadAttachmentsAsFiles)}';
+	var hideQueueBasedOLTSetting = {!HideQueueBasedOLTSetting};
+	var hideNoAccountEntitlementSetting = {!HideNoAccountEntitlementSetting} ; 
+	var TooltipForSummarization = '{!JSENCODE($Label.TooltipForSummarization)}';
+	
+   function getInternetExplorerVersion() {
+        var rv = -1; // Return value assumes failure.
+        if (navigator.appName == 'Microsoft Internet Explorer') {
+            var ua = navigator.userAgent;
+            var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+    
+            if (re.exec(ua) != null)
+                rv = parseFloat(RegExp.$1);
+        }
+        return rv;
+    }
+    
+    var ver = getInternetExplorerVersion();
+
+    if (ver > -1) {
+        if (ver >= 8.0){
+            classForCheckbox = 'checkboxClass1';
+        }        
+    }
+    var ObjectCustomFields = "";
+
+    function showMessage(msg){
+           Ext.MessageBox.show({
+               id:'commonmsgbox',
+               width: 300,
+               title: appSettingsTitle,
+               msg: msg,
+               buttons: Ext.MessageBox.OK
+           }); 
+     }  
+    
+     function isSaveSuccessful() {
+       	if((saveStatus == 'success' || saveStatus == '')){
+	                	showMessage('{!JSENCODE($Label.SavedSuccessfully)}');
+	                	Ext.getCmp('EncryptionReportbutton').setDisabled(!IsPlatformEncryptionEnable);
+	                }else{
+	                	showMessage('{!JSENCODE($Label.MsgSaveError)}'+saveStatus);
+	                }
+       }
+       
+    
+</script>
+<apex:outputPanel id="statusPanel">
+   <script>
+   
+  	jobstatusflag='{!jobstatus}';
+	utilityProcessorjobstatusflag='{!utilityProcessorJobStatus}';
+	isSLAfldCalcJobRunning = {!isSLAfldCalcJobRunning};
+  	
+  	function onCompleteStart(){
+	  	  if(jobstatusflag=='false'){
+			Ext.MessageBox.show({ msg:'{!JSENCODE($Label.Scheduled_Job_Exception)}' , buttons: Ext.MessageBox.OK});
+  		  }
+	  Ext.getCmp('milestonebutton').setDisabled(false);
+	}
+	
+	function onCompleteStop(){
+		Ext.getCmp('milestonebutton').setDisabled(false);
+	}
+  	
+  </script>		 
+  </apex:outputPanel>
+<apex:form id="myForm">
+<div id="savetoolbar"></div>
+   <div id = "slmPanelDiv" style ="width:auto;">
+      <table class = "clsTable"> 
+   		   <tr>
+               <td class="clsHeading">{!$Label.SLM_Service_Target_Milestones}</td>
+           </tr>
+           
+           <tr>
+           	<td colspan="2" style="padding-top: 1px;">
+           		<div id="msFromAddrLbl" class="clsProcessMilesone">{!$Label.EmailFromAddress}</div>
+				<div id="msFromAddr"></div>
+           	</td>
+           </tr>
+           
+           <tr>
+               <td colspan="6" style="padding-top: 1px;">
+                   <div id="processMilestone" class="clsProcessMilesone clsMaxWidth" >{!$Label.Process_Milestone_Every}</div>
+                   <div id="milestonehourFieldTD" class="hourFieldCls" ></div>
+                   <div id="milestonehourLabelTD" class="settingslabelcls" >{!$Label.HoursLabel}</div>
+               
+                   <div class="hourFieldCls" id="milestoneminuteFieldTD" ></div>
+                   <div id="milestoneminLabelTD" class="settingslabelcls"  >{!$Label.MinutesLabel}</div>
+              
+                   <div id="milestoneButtonTD" class="clsmilestonebtnLabelTD" ></div>    
+                
+               </td>
+           </tr>           
+           <tr>
+               <td colspan="3" style="padding-top: 1px;">
+                   <div id="deleteprocessor" class="clsProcessMilesone" >{!$Label.Delete_Processor_History_Every}</div>
+                   <div class="hourFieldCls" id="milestonedayFieldTD" ></div>
+                   <div id="milestonedayLabelTD" class="settingslabelcls" >{!$Label.IncidentHistoryDays}</div>
+               </td>
+           </tr>
+           <tr>
+           <tr>
+               <td class="clsHeading" style="padding-top: 22px;">{!$Label.ServiceTargetSettingsLabel}</td>
+           </tr>
+          <tr>
+               <td colspan="7" style="padding-top: 1px;">
+	                   <div id="SLAFieldSetting" class="clsProcessMilesone" >{!$Label.SLAfieldJobIntervalLabel}</div>
+                   <div id="SLAFieldDaySettingId" class = "hourFieldCls"></div>
+                   <div id="SLAFieldDaySettingLabel" class="settingslabelcls" >{!$Label.IncidentHistoryDays}</div>
+               
+                   <div id="SLAFieldHourSettingId" class="hourFieldCls"></div>
+                   <div id="SLAFieldHrSettingLabel" class="settingslabelcls"  >{!$Label.HoursLabel}</div>
+                   <div id="SLAFieldStartJobButtonTD"  class = "startButtonCls"></div>
+                   <div id="nextScheduledInfoDiv" class="clsProcessMilesone" style="font-style: italic;"></div>
+              
+               </td>
+           </tr>   
+                <tr>
+           <td class="clsHeading cellspace" style="padding-top: 15px;" colspan="2">
+                        <table id="approvalRecords" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td>{!JSENCODE($Label.RecordsApproval)}</td>
+                    <td><div id="shareApproalRecords" class="clsmilestonebtnLabelTD"></div></td>
+                </tr>
+            </table>
+                </td>
+            </tr>
+                <td class="clsHeading cellspace" style="padding-top: 15px;" colspan="2">
+                
+                    <table border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td>{!$Label.RemedyforceUtilityService}</td>
+                            <td>
+                                <div id="utilityProcessorButtonTD" class="clsmilestonebtnLabelTD"></div>
+                            </td>
+                        </tr>
+                    </table>
+           </td>
+           </tr>
+       </table>
+  </div>      
+<apex:actionFunction name="savemodifiedData" action="{!SaveNewSettings}" onComplete="isSaveSuccessful();" reRender="opSaveStatus">
+	<apex:param assignTo="{!FormDataString}" name="FormDataString" value=""/>
+	<apex:param assignTo="{!dueDateByBusinessHoursValue}" name="dueDateByBusinessHours" value=""/>
+    <apex:param assignTo="{!milestoneInterval}" name="milestoneInetervalData" value=""/>
+    <apex:param assignTo="{!milestoneDeleteInterval}" name="milestoneDeleteData" value=""/>
+    <apex:param assignTo="{!selectedSLAOWE}" name="selectedSLAOWE" value="" />
+    <apex:param assignTo="{!selectedClosureTimeBusinessHrs}" name="selectedClosureTimeBusinessHrs" value="" />
+    <apex:param assignTo="{!slaFieldCalculationInterval}" name="slaFieldCalculationInterval" value="" />
+</apex:actionFunction>
+<apex:actionfunction name="ScheduleJob" action="{!scheduleJobhelpermethod}" reRender="statusPanel" oncomplete="onCompleteStart()"/>
+<apex:actionfunction name="StopJob" action="{!stopJobhelpermethod}" reRender="statusPanel" oncomplete="onCompleteStop()"/> 
+<apex:actionfunction name="ScheduleUtilityProcessorJob" action="{!startScheduleUtilityJobProcessor}" reRender="statusPanel" oncomplete="onCompleteStartUtilProcessor()"/>
+<apex:actionfunction name="StopUtilityProcessorJob" action="{!stopScheduleUtilityJobProcessor}" reRender="statusPanel" oncomplete="onCompleteStopUtilProcessor()"/> 
+<apex:actionfunction name="SLAFieldJobAction" action="{!scheduleSLAFieldJob}" reRender="statusPanel" oncomplete="onCompleteSLAJobProcessor()"> 
+	<apex:param assignTo="{!SLAjobAction}" name="SLAjobAction" value=""/>
+</apex:actionFunction>
+<apex:actionfunction name="executeApexShareAccessBatch" action="{!executeApexShareAccessBatch}" reRender="statusPanel" oncomplete="onCompleteStartApexShareJOB()"/>
+<apex:actionfunction name="stopApexShareAccessBatch" action="{!stopApexShareAccessBatch}" reRender="statusPanel" oncomplete="onCompleteStopApexShareJOB()"/>
+
+</apex:form>
+<script>
+var insertLoggedInUserIdLabel = '{!JSENCODE($Label.InsertLoggedInUserId)}';
+var scrollBroadcastMessageLable ='{!JSENCODE($Label.ScrollBroadcastMessage)}';
+var  automaticallyCalculateDueDateLabel = '{!JSENCODE($Label.AutoCalculateDueDate)}';
+var  UseOpenDateForRecalculateDueDateLabel = '{!JSENCODE($Label.UseOpenDateForRecalculateDueDate)}';
+var  UsePausedDurationToCalculateElapsedTimeLabel = '{!JSENCODE($Label.UsePausedDurationToCalculateElapsedTime)}';
+var  ApplySLAonClose = '{!JSENCODE($Label.ApplySLAonClose)}';
+var labelEnableQueueBasedTimeTrackingOLT = '{!JSENCODE($Label.EnableQueueBasedTimeTrackingOLT)}';
+var ApplySLAonCloseTooltip = '{!JSENCODE($Label.ApplySLAonCloseTooltip)}';  
+var dueDateByBusinessHoursLabel = '{!JSENCODE($Label.DueDateByBusinessHours)}',  defaultCurrLabel = '{!JSENCODE($Label.DefaultCurrency)}',defaultCurrValue = '{!JSENCODE(defaultCurrency)}';
+var releaseLabel = '{!JSENCODE($ObjectType.Release__c.LabelPlural)}', problemLabel = '{!JSENCODE($ObjectType.Problem__c.LabelPlural)}',changeLabel = '{!JSENCODE($ObjectType.Change_Request__c.LabelPlural)}', incidentLabel = '{!JSENCODE($ObjectType.Incident__c.LabelPlural)}';
+var ConsoleLayOut = '{!JSENCODE($Label.ConsoleLayOut)}',  enableAndUseCon = '{!JSENCODE($Label.enableAndUseConsole)}' , agentUiLabel =  '{!JSENCODE($Label.AgentUserInterface)}' , linkedOpenTasks = '{!JSENCODE($Label.LinkedOpenTasks)}', closeRecords = '{!JSENCODE($Label.CloseRecords)}';
+ var labelUp = '{!JSENCODE($Label.Up)}', sdefStyles = '{!$Resource.SDEFStyles}' , saveLabel = '{!JSENCODE($Label.save)}';
+ var EnableCustomerExperienceLabel = '{!JSENCODE($Label.EnableCustomerExperience)}';
+ var EnableAZERTYkeyboardLabel = '{!JSENCODE($Label.EnableAZERTYKeyboard)}';
+ var EnableAZERTYkeyboardLabelHelp = '{!JSENCODE($Label.SSHelp)}';
+ var EnableAZERTYkeyboardLabelTooltip = '{!JSENCODE($Label.EnableAZERTYKeyboardInfo)}';
+ var LabeltooltipHelp = '{!JSENCODE($Label.TooltipHelp)}';
+ var LabelModulesAffectedByOLTS = '{!JSENCODE($Label.AppliesTo)}'+': '+'{!JSENCODE($Label.Incident)}'+', '+'{!JSENCODE($Label.Task)}'+', '+'{!JSENCODE($Label.Change_Request)}'+', '+'{!JSENCODE($Label.Problem)}';
+    </script>
+
+</body>
+</apex:page>

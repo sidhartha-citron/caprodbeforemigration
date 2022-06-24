@@ -1,0 +1,150 @@
+<apex:page id="SSIncidentActions" controller="BMCServiceDesk.SSIncidentActionDataController" sidebar="false" action="{!getActionData}" showHeader="false" standardStylesheets="false">
+<style>
+    .divAD7pxSpacing  {
+        height:7px;
+        *height:5px;
+    }
+    
+    .tdADLabel{
+        color:#004376;
+        font-family:Tahoma,Ms Sans Serif;
+        font-size:0.75em;
+        font-weight:bold;
+        height:16px;
+        width:75px;
+        *width:85px;
+        padding-left:10px;
+    }
+   
+    .clsADInputTextArea,.clsADInputTextAreaNote  {
+        overflow: auto;
+        color: #000000;
+        border: 1px solid;
+        border-top-color: #6a7378;
+        border-left-color: #6a7378;
+        border-right-color: #bac3c8;
+        border-bottom-color: #bac3c8;
+        font-family: Tahoma, Ms Sans Serif;
+        font-size: 11px;
+        background-color: #D4D0C8;
+        width:610px;
+        height:40px;
+		resize:none;
+    }
+    .clsADInputTextAreaNote{
+     height:100px;
+    }
+    
+    .tdADSpacing{
+        width:10px;
+    }
+
+    .tdAD12Spacing{
+        
+        width:14px;
+    }
+    
+   
+    .inputBox{
+        border: 1px solid;
+        color: #000000;
+        border-top-color: #6a7378;
+        border-left-color: #6a7378;
+        border-right-color: #bac3c8;
+        border-bottom-color: #bac3c8;
+        background-color: #D4D0C8;
+        width:268px;
+        height:19px;
+        font-size: 11px;
+        padding-left:5px;
+        padding-top: 2px;
+        font-family: Tahoma, Ms Sans Serif;
+    }
+	
+	.fontStyle{
+        font-family: Tahoma,Ms Sans Serif;
+        font-size: 0.75em;
+        padding-bottom: 10px;
+        padding-top: 5px;
+        white-space: pre-wrap;
+    }
+</style>
+<apex:form >
+<apex:outputPanel styleClass="fontStyle" rendered="{!isForEmail}">
+    <apex:outputPanel rendered="{!isForRichNote}">
+         <apex:outputField value="{!incidentAction.BMCServiceDesk__RichTextNote__c}" ></apex:outputField>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!(!isForRichNote)}">
+        <apex:outputField value="{!incidentAction.BMCServiceDesk__note__c}"/>
+    </apex:outputPanel>
+</apex:outputPanel>
+
+<apex:outputPanel rendered="{!(!isForEmail)}">
+<div style="background-color:#FFFFFF" >
+    <table  cellspacing="0" cellpadding="0">
+        <tr><td><div class="divAD7pxSpacing"/></td></tr>
+        <tr><td><div class="divAD7pxSpacing"/></td></tr>
+        <tr>
+            <td class="tdADLabel" style="padding-left:12px;"><apex:outputLabel value="{!$Label.bmcservicedesk__actionid}" /></td>
+            <td class="tdAD12Spacing"></td>
+            <td><apex:inputText id="actionId" styleClass="inputBox" value="{!incidentAction.BMCServiceDesk__actionId__c}" /></td>
+            <script>
+            	document.getElementById('{!$Component.actionId}').readOnly = true;
+            </script>
+        </tr>
+    </table>
+    <table>
+        <tr><td><div class="divAD7pxSpacing"/></td></tr>
+        <tr>
+            <td class="tdADLabel"><apex:outputLabel value="{!$Label.bmcservicedesk__description}" /></td>
+        </tr>
+        <tr>
+            <td style="padding-left:10px;"><apex:inputTextarea id="desc" styleClass="clsADInputTextArea"  value="{!incidentAction.BMCServiceDesk__description__c}" /></td>
+            <script>
+            	document.getElementById('{!$Component.desc}').readOnly = true;
+            </script>
+        </tr>
+        <tr><td><div class="divAD7pxSpacing"/></td></tr>
+        <tr>
+            <td class="tdADLabel"><apex:outputLabel value="{!$Label.bmcservicedesk__note}" /></td>
+        </tr>
+        <tr>
+            <td style="padding-left:10px;"><apex:inputTextarea id="note" styleClass="clsADInputTextAreaNote" value="{!incidentAction.BMCServiceDesk__note__c}"/></td>
+             <script>
+            	document.getElementById('{!$Component.note}').readOnly = true;
+            </script>
+        </tr>
+    </table>
+    <div class="div6pxVspacing"></div>
+    <table>
+        <tr><td class="tdADLabel"><apex:outputLabel value="{!$Label.bmcservicedesk__duration}" /></td>
+            <td class="tdADSpacing"></td>
+            <td ><apex:inputText styleClass="inputBox" value="{!incidentAction.BMCServiceDesk__duration__c}" id="duration"/></td>
+            <script>
+            	document.getElementById('{!$Component.duration}').readOnly = true;
+            </script>
+        </tr>
+        <tr><td><div class="divAD7pxSpacing"/></td></tr>
+        <tr><td class="tdADLabel"><apex:outputLabel value="{!$Label.bmcservicedesk__date}" /></td>
+            <td class="tdADSpacing"></td>
+            <td >
+				<div class="inputBox"><apex:outputField value="{!incidentAction.BMCServiceDesk__date__c}" id="date" /></div>
+            </td>
+            <script>
+            	document.getElementById('{!$Component.date}').readOnly = true;
+            </script>
+        </tr>
+        <tr><td><div class="divAD7pxSpacing"/></td></tr>
+        <tr><td class="tdADLabel"><apex:outputLabel value="{!$ObjectType.User.Label}" /></td>
+            <td class="tdADSpacing"></td>
+            <td ><apex:inputText styleClass="inputBox" value="{!incidentAction.BMCServiceDesk__userId__c}" id="userId"/></td>
+            <script>
+            	document.getElementById('{!$Component.userId}').readOnly = true;
+            </script>
+        </tr>
+    </table>
+<div class="divAD7pxSpacing"></div>
+</div>
+</apex:outputPanel>
+</apex:form>
+</apex:page>

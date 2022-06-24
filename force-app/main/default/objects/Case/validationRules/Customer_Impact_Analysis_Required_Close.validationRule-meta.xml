@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Customer_Impact_Analysis_Required_Close</fullName>
+    <active>false</active>
+    <description>This validation rule ensures that a Customer Impact Analysis of &quot;Completed&quot; or &quot;Not Required&quot; is selected in order to close a Case (Ticket).</description>
+    <errorConditionFormula>AND(
+RecordType.DeveloperName = &quot;Internal_Application_Support&quot;,
+ISPICKVAL(Status, &quot;Closed&quot;),
+!ISPICKVAL(Customer_Impact_Analysis__c, &quot;Complete&quot;),
+!ISPICKVAL(Customer_Impact_Analysis__c, &quot;Not Required&quot;))</errorConditionFormula>
+    <errorDisplayField>Customer_Impact_Analysis__c</errorDisplayField>
+    <errorMessage>Customer Impact Analysis must be Completed or Not Required to close this ticket.</errorMessage>
+</ValidationRule>

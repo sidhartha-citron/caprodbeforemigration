@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Complete_Site_Survey</fullName>
+    <active>true</active>
+    <description>To change the stage of an Opportunity to Closed Won, it should have an associated Site Survey and Site Survey Status must be &apos;Reviewed&apos; (Complete)</description>
+    <errorConditionFormula>AND( ISPICKVAL(StageName,&quot;Signed&quot;), 
+OR( ISBLANK(Site_Survey__c), NOT( TEXT(Site_Survey__r.Status__c) = $Setup.Field_Service_Settings__c.Site_Survey_Reviewed_Status__c )), 
+NOT(Text(PRIORVALUE(StageName)) = &apos;Signed Awaiting Survey Approval&apos;), 
+CASESAFEID( RecordTypeId ) &lt;&gt; $Setup.Field_Service_Settings__c.Opportunity_RecordType_Frequency_Change__c 
+)</errorConditionFormula>
+    <errorMessage>Please associate a Site Survey and Submit it for approval before choosing a status of &quot;Signed&quot; for this Opportunity</errorMessage>
+</ValidationRule>

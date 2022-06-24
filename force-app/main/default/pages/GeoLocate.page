@@ -1,0 +1,127 @@
+<apex:page standardController="Account"
+           showChat="false" 
+           sidebar="false" 
+           showHeader="false" 
+           standardStylesheets="false">
+           
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"/>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.10&sensor=false"/>
+    <script src="/soap/ajax/27.0/connection.js" type="text/javascript"/>
+    <script src="/soap/ajax/27.0/apex.js" type="text/javascript"/>
+    
+    <script type="text/javascript">
+        var Account = {};
+        function authorize()
+        { sforce.connection.sessionId = '{!GETSESSIONID()}'; }      
+    
+        function getAccountID() 
+        {
+         Account.ID = '{!Account.Id}';
+        }
+ 
+        function fetchAccountRecord()
+        {
+         result = sforce.connection.query('SELECT ID,ShippingStreet,ShippingCity,ShippingState,ShippingPostalCode,ShippingCountry,STKR__location__Latitude__s,STKR__location__Longitude__s,STKR__Mapping_Status__c FROM Account WHERE ID=\'' + Account.ID + '\' AND STKR__Mapping_Status__c!=\'Located\'');
+         records = result.getArray('records');
+         if(records.length>0)
+         {
+          Account.IsRecordAvailable = true;
+          Account.ShippingStreet = records[0].ShippingStreet;
+          Account.ShippingCity = records[0].ShippingCity;
+          Account.ShippingState = records[0].ShippingState;
+          Account.ShippingPostalCode = records[0].ShippingPostalCode;
+          Account.ShippingCountry = records[0].ShippingCountry;
+          Account.MappingStatus = records[0].STKR__Mapping_Status__c;
+         }
+         else
+          Account.IsRecordAvailable = false;
+        }
+ 
+        Account.isAddressAvailable = function(){
+         if (this.ShippingCountry!='' && this.ShippingPostalCode!='')
+           return true;
+         else
+           return false; 
+        }
+ 
+        Account.isMapped = function(){
+         if (this.MappingStatus=='Located' || this.MappingStatus=='Problem with Address')
+          return true;
+         else
+          return false; 
+        }
+ 
+        Account.getCSVAddress = function(){
+         if(this.isAddressAvailable())
+         {
+          return (
+                  this.ShippingPostalCode
+
+                 );
+         }
+ 
+         return 'error'; 
+        }   
+ 
+        function getLatLng() 
+        { 
+         geocoder = new google.maps.Geocoder();  
+         geocoder.geocode( 
+         { 'address': Account.getCSVAddress() }, 
+         function(results, status) 
+         { 
+          if (status == google.maps.GeocoderStatus.OK) 
+          { 
+            Account.Latitude  = (results[0].geometry.location.lat()).toString();  
+            Account.Longitude = (results[0].geometry.location.lng()).toString();  
+            Account.MappingStatus = 'Located'; 
+          } 
+          else if (status == google.maps.GeocoderStatus.ZERO_RESULTS || status == google.maps.GeocoderStatus.INVALID_REQUEST) 
+          { 
+           Account.MappingStatus = 'Problem with Address'; 
+          } 
+          else if (status == google.maps.GeocoderStatus.OVER_QUERY_LIMIT) 
+          { 
+           Account.MappingStatus = 'Google Exhausted'; 
+          }  
+          updateAccount(); 
+         }); 
+        }
+ 
+        function updateAccount() 
+        { 
+         var mappedAccount = new sforce.SObject('Account');  
+ 
+         mappedAccount.STKR__location__Latitude__s  = null; 
+         mappedAccount.STKR__location__Longitude__s = null;  
+ 
+         if(Account.MappingStatus == 'Located') 
+         { 
+          mappedAccount.STKR__location__Latitude__s  = Account.Latitude; 
+          mappedAccount.STKR__location__Longitude__s = Account.Longitude; 
+         }  
+         mappedAccount.id = Account.ID; 
+         mappedAccount.STKR__Mapping_Status__c = Account.MappingStatus;
+ 
+         result = sforce.connection.update([mappedAccount]);  
+ 
+         //if(result[0].getBoolean('success')) 
+        //{ 
+         // alert('The Account\'s Mapping Status has changed. Please Refresh the Page.');   
+        // } 
+        }   
+        
+        $(document).ready(
+         function()
+         {
+          authorize();
+          getAccountID();
+          fetchAccountRecord();
+          if(Account.IsRecordAvailable && !Account.isMapped() && Account.isAddressAvailable())
+          {
+           getLatLng();
+          }
+         });
+    </script>
+            
+ </apex:page>

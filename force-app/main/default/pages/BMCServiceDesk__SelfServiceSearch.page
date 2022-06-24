@@ -1,0 +1,167 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.SelfServiceSearchController" standardStylesheets="false">
+<div id="themeDiv"></div> 
+<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+<script src="https://www.google.com/jsapi" type="text/javascript"></script>
+<style>
+ .x-border-box,.x-border-box * { -moz-box-sizing: border-box;}
+ .gsc-control {
+    font-family: tahoma,arial,verdana,sans-serif;
+    font-size: 11px;
+    padding: 5px;
+    width: 75% !important;
+}
+.gsc-search-box, .gsc-resultsHeader {
+    display: none;
+}
+.tbarLinkCls{
+  cursor: pointer !important;
+  font-size: 12px !important;
+  }
+.linkcls{
+    color:#0000ff !important;
+    text-decoration: underline;
+    cursor:pointer;
+    font: 12px Arial;
+}
+</style>
+  <apex:form id="ssSearchForm">
+    <apex:actionFunction action="{!getSearch}" name="srch" reRender="outpnl">
+    <apex:param name="Keywords" value="" assignTo="{!searchText}"/>
+    <apex:param name="searchtype" value="" assignTo="{!type}"/>
+    </apex:actionFunction>
+    
+    <apex:inputhidden id="txtSrchCrit" value="{!searchText}" />
+    <apex:inputhidden id="selectedService" value="{!requests}" />        
+ </apex:form>
+  <table  width="100%"  border="0">
+      <tr>
+        <td> 
+         <div id="searchtoolbar"/> 
+        </td>
+      </tr>
+      <tr> 
+        <td  width="100%">
+          <div id="searchtoolbar2"/>
+        </td>
+      </tr>
+      <tr>
+        <td style="height:540px;" valign="top">
+          <div id="result"></div>
+            <div id="ArticleList">
+            </div>
+        </td>     
+      </tr>  
+     </table>
+ <script>
+     var dataToShowInitially  = eval('{!JSENCODE(searchResultJson)}');
+     var rightSideDataStore;
+     function loadDataInTemplate(searchedData)
+    {
+        
+        if(rightSideDataStore)
+        {
+            rightSideDataStore.loadData(searchedData,false);
+        }else
+        {
+            dataToShowInitially = searchedData;
+        }
+    }
+ </script>
+ <apex:outputPanel id="outpnl">
+ <script>
+ var searchedData = eval('{!JSENCODE(searchResultJson)}');
+ if(searchedData)
+ {
+  loadDataInTemplate(searchedData);
+ }  
+ </script>                        
+ </apex:outputPanel>
+ <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"/>
+
+ <script>
+ var searchType = '{!JSENCODE(searchType)}';  
+var showArticleList;
+var urlResource ="{!URLFOR($Resource.Themes, 'SSDefaultTheme/images/en_US/service-32.png')}";
+var pageUrl = "{!$Page.SSIncidentCustom}";
+ 
+  
+  function notGooogle_search(){
+    document.getElementById('ArticleList').innerText = '';
+    document.getElementById('ArticleList').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
+  }
+    
+    
+  
+          
+    var selfservicesearchfield= "{!JSENCODE($Label.SelfServiceSearchField)}";
+    var searchTextElementId = "{!$Component.ssSearchForm.txtSrchCrit}";
+    var validationmsg="{!JSENCODE($Label.GsErrorMsg)}";
+    var searchLabel='{!JSENCODE($Label.Search)}';
+    var includeSDEFExtJS='{!$Resource.ExtJS4_1_3}';
+    var searchText='{!JSENCODE(searchText)}';
+    var KMLabel='{!JSENCODE($Label.Knowledge_Articles)}';
+    var requestDefLabel='{!JSENCODE($Label.Service_Requests)}';
+    var sfSearchLabel = '{!JSENCODE($Label.SFSearch)}';
+    var selectedServiceId="{!$Component.ssSearchForm.selectedService}";
+    var SSKnowledgeArticles = '{!JSENCODE($Label.SSKnowledgeArticles)}';
+    var SSReportIssue = '{!JSENCODE($Label.SS_CommonTicketsHome)}';
+    var SSRequestService = '{!JSENCODE($Label.SSMyHelpRequests)}';
+    var IncSRCombined = '{!JSENCODE($Label.SSMyHelpRequests)}';
+    var WebSearch = '{!JSENCODE($Label.WebSearch)}';
+    var isKAFirst = {!isKAfirst};
+    var isIncSRTogether = {!isIncSRTogether};
+    var isWebSerach = {!isWebSerach};
+    var allowRFSearch = {!isRFKnowledgeEnabled};
+    var allowSFSearch = {!allowSFKnowledgeSearch};
+  var submitIncident = {!submitIncident};
+    var isComponent = {!isComponent};
+    var ssIncidentForm;
+    var RFknowledge = {!RFknowledge};
+    var ssKMArticlePage = '{!$Page.SSKM_ArticleView}';
+    var serviceRequestForm = '{!$Page.SelfServiceIncidentCustom}';
+    var incidentCustomform = '{!customform}';
+    if(incidentCustomform == 'STD'){
+      ssIncidentForm = '{!$Page.SelfServiceIncident}';
+    }else if(incidentCustomform == 'CUSTOM'){
+      ssIncidentForm = '{!$Page.SelfServiceIncidentCustom}';
+    }else{
+      ssIncidentForm = '{!$Page.SSTicketLayout}';
+    }
+    var ShowKnowledgeArticles = '{!ShowKnowledgeArticles}';
+    var ShowServiceRequests = '{!ShowServiceRequests}';
+    var ShowTickets = '{!ShowTickets}';
+    var requestHelpLabel = '{!JSENCODE($Label.RequestHelpMessage)}',
+        searchLabel = '{!JSENCODE($Label.SSSearch)}',
+        searchEmptyText = '{!JSENCODE($Label.SS_SearchText)}',
+        noResultsLabel = '{!JSENCODE($Label.SSSearchNoRecordsFound)}',
+        submitTicketLabel = '{!JSENCODE($Label.SS_IncidentHome)}',
+        KMFAQ = '{!JSENCODE($Label.KMFAQ)}',
+        KMHowTo = '{!JSENCODE($Label.KMHowTo)}',
+        KMKnownError = '{!JSENCODE($Label.KMKnownError)}',
+        KMProblemSolution = '{!JSENCODE($Label.KMProblemSolution)}',
+        WebSearchTooltip='{!JSENCODE($Label.WebSearchTooltip)}',
+        articlesLabel= '{!JSENCODE($Label.SS_Articles)}';
+  
+  var isDescPresent=false;     
+    
+    function getSSThemePath(){
+        var resPath = '{!$Resource.SSThemes}';
+        return resPath;
+    }   
+    </script>
+ <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>    
+ <script src="{!$Resource.SSjs}/src/selfServiceSearch.js"></script>  
+<script>
+  if(Sarissa!=undefined && Sarissa._SARISSA_IS_IE && (navigator.userAgent.indexOf("Trident/6")>-1)){  
+    window.XMLSerializer = function(){};      
+    window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+</script> 
+<script type="text/javascript">         
+        var colorCodeList = '{!JSENCODE(themeColorCodeString)}'; 
+        var content = '{!JSENCODE(dynamicStyle)}';
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+</script>
+<script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" /> 
+</apex:page>

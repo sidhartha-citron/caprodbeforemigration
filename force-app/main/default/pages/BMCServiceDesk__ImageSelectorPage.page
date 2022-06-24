@@ -1,0 +1,88 @@
+<apex:page controller="BMCServiceDesk.ImageSelectorPageController" showHeader="false" sidebar="false" cache="false" lightningStylesheets="true">
+<apex:slds ></apex:slds>
+<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" />
+<apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__RemedyforceAdministration, 'styles/remedyforce-administration.css')}" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ImageSelector.css" />
+<link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />
+
+<apex:form id="theForm">
+<table style="width:100%;height: 50px;">  
+        <tr>
+            <td colspan="4" class="top10pxPadding"></td>                 
+        </tr>
+        <tr>   
+            <td id="tdSearch" class="leftright10pxPadding" style="width:45%;padding-left: 15px !important;">   
+                <span class="searchtext-input-wrapper">
+                    <a title="{!$Label.sssearch}" class="rf-icon-search" onclick="searchImage();" ></a>
+                    <input id="searchField" type="text" name="searchField" class="searchfield-input" onkeyup="return searchOnKeyPress(event)" size="26" title="{!$Label.sssearch}" placeholder="{!$Label.sssearch}" />
+                    <a id="clearLink" style="width: 1px;" onclick="clearText();return false;" title="{!$Label.Clear}"  class="rf-icon-cross" ></a>
+                </span>
+                <span class="separator"></span>
+                <input type="button" id="goBtn" value="{!$Label.GO}" Class="slds-button slds-button_neutral" onclick="searchImage();" />
+            </td>            
+            <td>
+                <div id="errorMessage" style="display: none; margin-left: 15px;">
+                    <span><apex:outputLabel styleClass="slds-text-color_error" value="{!$Label.bmcservicedesk__gserrormsg}"/></span>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4" class="bottom10pxPadding"></td>                
+        </tr>
+    </table>
+    <div class="separatorCls"></div>
+    <div id="grid" class="gridPadding"></div>
+    <apex:actionFunction action="{!searchImages}" name="searchDoc"  rerender="searchPanel" oncomplete="loadSearchData();">
+        <apex:param assignTo="{!searchString}" name="searchString" value=""/>
+    </apex:actionFunction>
+    <apex:outputPanel id="searchPanel">
+        <script>
+            var searchResult = [];
+            searchResult = '{!JSENCODE(searchResult)}';
+            if(searchResult)
+                searchResult = JSON.parse(searchResult);
+        </script>
+    </apex:outputPanel>
+    </apex:form>
+    <div id="noRecordFound" style="display: none; padding-top: 30px;">
+        <span>
+            <strong style="padding-left:350px; font-family: Salesforce Sans,Arial,sans-serif !important;">{!JSENCODE($Label.msgnorecordfoundsearchpage)}</strong>
+        </span>
+    </div> 
+<script type="text/javascript" >
+    var result= [];    
+    result = '{!JSENCODE(result)}';
+    
+    if(result)
+        result = JSON.parse(result);
+
+    var searchField = '{!$Component.theForm.searchField}';
+    var labelId = '{!JSENCODE($Label.ItemId)}';
+    var labelType = '{!JSENCODE($Label.Type)}';
+    var labelImage = '{!JSENCODE($Label.BrandingSettingsLabelImage)}';
+    var labelDescription = '{!JSENCODE($Label.Description)}';
+    var labelDocName = '{!JSENCODE(labelDocName)}';
+    var labelBodyLength = '{!JSENCODE(labelBodyLength)}';
+    var labelCreatedDate = '{!JSENCODE(labelCreatedDate)}';
+    var labelRecords = "{!JSENCODE($Label.Records)}";
+    var labelOf = "{!JSENCODE($Label.Of)}";
+    var labelNoRecordFoundMsg = "{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}";
+
+    var docID = '015000000000000000';
+    var baseURLSF;
+
+    function getSFDocumentURL(imageID){
+        if(!baseURLSF){
+            baseURLSF = '{!URLFOR($Action.Document.Download,'015000000000000000',[retURL=""])}';
+        }
+        baseURLSF = baseURLSF.replace(docID,imageID);
+        docID = imageID;
+        return baseURLSF;
+    }
+</script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ImageSelectorPage.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ConvertBytesToReadableFormat.js"></script>
+
+
+</apex:page>

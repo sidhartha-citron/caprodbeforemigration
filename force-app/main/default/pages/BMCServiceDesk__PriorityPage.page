@@ -1,0 +1,754 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.PriorityController" standardStylesheets="false">
+  <c:CommonIncludes /> 
+ 
+  
+  <script>
+  
+     var priorityName;               
+     var priorityId;
+     var errormsg;
+     var chkBoxValue;
+     var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+     var priorityHeader = '{!JSENCODE($ObjectType.Priority__c.label)}';
+	 var enableSaveBtn={!hasPermissions};
+     var enableCopyButton = {!canCopy};
+     var enableDeleteButton = {!canDelete};
+	 
+     document.onclick = activateWindow; 
+     function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+     }
+        /*
+            Code for handling Data change on Page
+            - START
+        */
+        var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+        var clickedOnce = false;  
+        function handleChange(){
+            if(!clickedOnce){
+                clickedOnce = true;
+                window.parent.registerChange(wid2);
+            }
+        }
+            
+        function handleResetChange(){
+            if(clickedOnce){
+               clickedOnce = false;
+               window.parent.registerSave(wid2);
+           }
+           }
+      
+         
+         /*
+            END
+        */
+  
+    
+    var isLookup = "{!JSENCODE($CurrentPage.parameters.islookup)}";  
+    
+    function getPRTid(prtId){
+            if(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}'){   
+                if(isLookup){
+                  window.parent.refreshDocs();  
+                  window.parent.closePopup();
+               }else{
+                   // setId(prtId); 
+               }
+            }
+        }
+        function completeDelete(){
+                    if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}'){
+                        showError();
+                    }else{
+                        closeWindow();
+                    }
+         }
+        
+        function closeWindow(){
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+        }
+
+  /*function openUrgencyLookup(){ 
+
+                   var urgencyId = window.showModalDialog("/apex/SearchPage?popupId=Urgency","searchpage","dialogWidth=600px; dialogHeight=600px; resizable=yes");
+
+} */    
+
+ 
+
+ 
+
+ 
+
+    function openUrgencyLookup(){ 
+
+           var urgency = window.showModalDialog("/apex/SearchPage?popupId=Urgency","searchpage","dialogWidth=600px; dialogHeight=600px; resizable=yes");
+
+           if(urgency != null && urgency != ''){           
+
+                setUrgency(urgency);
+
+            }
+
+}  
+    function buttonValidator() {
+       if((priorityName != null && priorityName != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){   
+		if(enableDeleteButton)
+		{
+			Ext.getCmp('deleteId').setDisabled(false);
+			Ext.getCmp('deleteId').setIconClass('bmcDelete');
+		}
+        Ext.getCmp('resetId').setDisabled(false);
+        
+       
+       }  
+     }
+ 
+
+  </script>
+
+  
+
+    <script>
+
+    Ext.onReady(function(){
+
+    
+
+        Ext.QuickTips.init();
+        if({!isRecDeleted}){
+            Ext.Msg.alert('{!JSENCODE($Label.Information)}', '{!JSENCODE($Label.DeletedRecord)}', function(){
+                if ((typeof(window.parent) != 'undefined') && (typeof(window.parent.popUpWindow) != 'undefined'))
+                    window.parent.popUpWindow.close();
+                    closeWindow();
+            });
+        }
+        
+
+        // This function renders a block of buttons
+
+        var NewBtnhandler = function(button,event) {  activeAllWindowFlag=false; openPage("PriorityPage",priorityHeader,priorityHeader); };
+
+        var SaveBtnHandler = function(button,event) {  
+         Ext.getCmp('prioritySave').setDisabled(true);
+         waitbox(0); 
+         chkBoxValue=Ext.getCmp('idInactive').getValue();
+          save(chkBoxValue); };
+
+        
+
+        var ResetBtnHandler = function(button,event) { resetPriority(); 
+       
+        };
+
+       var DeleteBtnHandler = function(button,event) { 
+                                                          Ext.MessageBox.confirm('{!JSENCODE($Label.Delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}', function(btn){
+                                                           if(btn === 'yes'){
+                                                                   deletePriority();
+                                                           }});
+                                                         };
+
+        var SendNotificationBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+
+        var OpenBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+        
+        var NextBtnHandler = function (button,event) { if(document.getElementById('nextId').disabled!=true) nextPriorityBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { if(document.getElementById('prevId').disabled!=true) previousPriorityBtnHandler1();};
+        
+
+          var SamplePanel = Ext.extend(Ext.Panel, {
+
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+       });
+
+        new SamplePanel({
+
+            title: '',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+
+                scale: 'medium',
+				id: 'priorityNew',
+                iconCls: 'bmcNew',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.new)}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                     
+                } ,
+                tabIndex : 1,
+                handler:NewBtnhandler
+
+
+            } ,' ', {
+
+                scale: 'medium',
+				id: 'prioritySave',
+                iconCls: 'bmcSave',
+                tooltipType : 'title',
+                 tooltip: '{!JSENCODE($Label.save)}',
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                   
+                },
+                tabIndex : 2,
+                handler:SaveBtnHandler
+              
+
+            },' ','-',' ',{
+
+                scale: 'medium',
+
+                iconCls: 'bmcDelete',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.delete)}',
+
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                    
+                     
+                } ,
+                tabIndex : 3,
+                handler:DeleteBtnHandler                
+
+
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcRefreshDasboard',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.Refresh)}',
+                id:'resetId',
+                tabIndex : 4,
+                handler:ResetBtnHandler                 
+                          
+            },
+             new Ext.Toolbar.Fill(), 
+            {
+                  id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               align:'top',
+               checked: false,             
+               cls:'chkStyle',
+               boxLabel:'<span class="checkboxLabelCls">{!JSENCODE($ObjectType.Priority__c.fields.inactive__c.Label)}</span>',
+               tabIndex : 5,
+               /*Modified to fix the tooltip bug*/
+               listeners:{
+                    render:function(){
+                        Ext.QuickTips.register({
+                            target:this,                            
+                            text:'{!JSENCODE($ObjectType.Priority__c.fields.inactive__c.label)}',
+                            dismissDelay: 20000
+                        });
+                    }               
+               }/*Modification done*/
+            }, {
+               
+               
+                  xtype : 'box',
+                  id    : 'prevId',
+                autoEl:  {tag: 'img', 
+                          src:('{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif'),   
+                         title:'{!JSENCODE($Label.previousRecord)}'
+                         },
+                          
+                cls:'cursorCls',
+                tabIndex : 6,
+               listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                             
+            },{
+               
+                xtype : 'box',
+                id    : 'nextId',
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif',
+                          title:'{!JSENCODE($Label.nextRecord)}' },
+                cls:'cursorSpaceCls',
+                tabIndex : 7,
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+               
+                
+            }
+            ] 
+        });
+
+        Ext.getCmp('idInactive').setValue('{!priority.inactive__c}');
+        
+        priorityId = '{!JSENCODE(priority.Id)}';    
+        if(priorityId == null ||priorityId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+        Ext.getCmp('resetId').setDisabled(true);        
+        Ext.getCmp('prevId').setDisabled(true);
+        Ext.getCmp('nextId').setDisabled(true);  
+        document.getElementById('{!$Component.priorityForm.priorityNameId}').focus();
+        }
+        
+        
+        ///////////// // IE7-8 Related Changes
+               var canvasPanel = new Ext.Panel({
+                     layout:'border',
+                    // width:'auto',    
+                    height:Ext.isIE7? 677: Ext.isIE ?650:660,
+                     border:false, 
+                     id:'canvasPanelId',
+                     cls:'canvasPanelCls',
+                     items:[{  
+                            xtype: 'panel', // TabPanel itself has no title    
+                              layout: 'fit',                                                   
+                            overflow:'auto',
+                            autoScroll:true,
+                            split:false,
+                            width:'auto',    
+                            height:500, 
+                            cls:'northPanelCls',                                            
+                            region: 'center',                   
+                                                 
+                            contentEl : Ext.isIE ? 'capsule' : '{!$Component.priorityForm}'
+                            
+                    }],
+                    listeners: {
+                        afterlayout: function(c) {
+                            c.layout.south.miniSplitEl.dom.qtip = '{!JSENCODE($Label.DragResizeClickCollapse)}';
+                            c.layout.south.getCollapsedEl();
+                            c.layout.south.miniCollapsedEl.dom.qtip = '{!JSENCODE($Label.ClickToExpand)}';
+                        },
+                        single: true
+                    }
+                    
+                   
+                     
+                   
+            });
+        
+               
+/////////////// // End IE7-8 Related Changes
+        
+        handleElemEvent();
+        resetbuttonstatus();
+        
+    });
+	
+	function resetbuttonstatus()
+    {
+        if(!enableSaveBtn)
+        {
+           Ext.getCmp('prioritySave').setDisabled(true);
+             
+        }
+        if(!enableCopyButton)
+        {
+            Ext.getCmp('priorityNew').setDisabled(true);
+        }
+        if(!enableDeleteButton)
+        {
+             Ext.getCmp('deleteId').setDisabled(true);
+             Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+        }   
+    }
+    
+    var priorityIdSet;
+    if(priorityIdSet == null || priorityIdSet == ''){
+        if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+        if(typeof(window.parent.returnListOfId)=='function')
+            priorityIdSet=window.parent.returnListOfId();
+    }else{
+        if(typeof(window.parent.parent.getIdArray)=='function')
+            priorityIdSet=window.parent.parent.getIdArray();
+            window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+        }
+    }
+
+        function previousPriorityBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(priorityIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=priorityIdSet[i];
+                }else{
+                    idSetString=idSetString+','+priorityIdSet[i];
+                }
+                i++;
+            }
+            previousPriorityBtnHandler(idSetString);
+        
+        }
+
+       function nextPriorityBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(priorityIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=priorityIdSet[i];
+                }else{
+                    idSetString=idSetString+','+priorityIdSet[i];
+                }
+                i++;
+            }
+            nextPriorityBtnHandler(idSetString);
+        
+        } 
+        
+        
+    
+   </script>
+
+    
+     <apex:outputPanel id="titlePanel">
+        <script>
+            function updateList(){
+               getPRTid(priorityId);
+                window.parent.refreshList();
+            }
+           
+        </script>
+    </apex:outputPanel>
+     <apex:outputPanel id="afterSavePanel">
+        <script>
+           function handleSave(){
+               var id = "{!JSENCODE(priority.Id)}";
+            window.parent.handleSave(wid, id);
+        }
+        function updateTitle(){
+            var newTitle=   "{!JSENCODE(priority.name)}";
+            if(newTitle != ""){                 
+                window.parent.changeTitle(wid,newTitle,priorityHeader);
+            }   
+         }
+    	function enableSaveButton() {
+				 if(enableSaveBtn)
+            Ext.getCmp('prioritySave').setDisabled(false);
+				
+      		} 
+     enableSaveBtn={!hasPermissions};
+     enableCopyButton = {!canCopy};
+     enableDeleteButton = {!canDelete};
+        </script>
+     </apex:outputPanel>  
+    <!-- <apex:outputPanel ID="dummy"></apex:outputPanel> -->
+     
+     <apex:outputPanel id="panelId">
+        <script>
+        
+           priorityName = '{!JSENCODE(priority.name)}';               
+           priorityId = '{!JSENCODE(priority.Id)}';      
+        
+        </script>
+        </apex:outputPanel>   
+        
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+ 
+    <apex:outputPanel >
+    
+     <apex:outputPanel id="inactivePanel">
+        <script>
+           function updateInactive(){
+            Ext.getCmp('idInactive').setValue('{!priority.inactive__c}');
+        }
+ 
+        </script>
+    </apex:outputPanel>
+
+
+    <apex:form id="priorityForm">
+    <div class="CapsuleDiv1" id="capsule">
+
+    <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+     <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,panelId,afterSavePanel,errorId,priorityNameId" oncomplete="waitMsg.hide();showError();resetbuttonstatus();buttonValidator();updateList();handleElemEvent();handleSave();updateTitle(),enableSaveButton();">
+      <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+                 </apex:actionFunction>
+    <apex:actionFunction action="{!nextBtnHandler}" name="nextPriorityBtnHandler" 
+                                    rerender="dataPanel,inactivePanel,afterSavePanel" onComplete="updateInactive();handleResetChange();handleElemEvent();updateTitle();"> 
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+     </apex:actionFunction>
+     <apex:actionFunction action="{!previousBtnHandler}" name="previousPriorityBtnHandler" 
+                                        rerender="dataPanel,inactivePanel,afterSavePanel" onComplete="updateInactive();handleResetChange();handleElemEvent();updateTitle();"> 
+                                        <apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+     </apex:actionFunction>
+
+      <apex:actionFunction action="{!deletePriority}" name="deletePriority"  onComplete="completeDelete();" rerender="errorId,validationComponent"/>
+       <apex:actionFunction action="{!newPriority}" name="newPriority" />
+       <apex:actionFunction action="{!reset}"  name="resetPriority"  rerender="dataPanel,inactivePanel,afterSavePanel" onComplete="updateInactive();handleResetChange();handleElemEvent();"/>
+
+        <apex:actionFunction action="{!urgencyQuery}" name="setUrgency" reRender="Urgency__c_id_name">
+
+                    <apex:param assignTo="{!urgencyId}" value="" name="saveUrgency "/>
+
+                    </apex:actionFunction>
+
+         <apex:actionFunction action="{!impactQuery}" name="setImpact" reRender="Impact__c_id_name">
+
+                    <apex:param assignTo="{!impactId}" value="" name="saveImpact "/>
+
+                    </apex:actionFunction>
+ 
+                 <table class="clsMainTable"  cellspacing="0" cellpadding="0">
+                        <tr class="clsRowGreyBg">
+                               <td>
+                               <div id="btnToolbar"></div>
+                              
+                            </td>
+                        </tr>    
+                                             
+                         
+                            <tr>                           
+                                 <td>
+                                   <apex:outputPanel id="dataPanel">
+                                       <table class="clsTable" cellspacing="0" cellpadding="0">
+                                         <tr>
+                                                <td>
+                                                    <div class="div15pxVspacing"></div>
+                                                </td>
+                                            </tr>                   
+                                       <tr>
+                                          <td class="clsInputLabelTD">
+                                          <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Priority__c.fields.Name.Label}"></apex:outputLabel><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                          <td class="clsInputTextBoxTD">
+                                            <apex:inputText title="{!$Label.bmcservicedesk__tooltipprioritypriorityid}" value="{!priority.name}" id="priorityNameId" styleClass="clsIdInputTextBox" tabIndex="8"/>
+                                        </td>
+                                    </tr>                         
+
+                                
+                                    <tr>
+                                        <td class="clsInputBoldLabelTableFirstRowTD" colspan="2">
+                                          <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Priority__c.fields.BMCServiceDesk__description__c.Label}"></apex:outputLabel><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                    </tr>                                
+                                    </table>
+                                     <table> 
+                                     <tr>
+                                        <td class="clsInputTextAreaTD" colspan="2">
+                                       <apex:inputtextarea title="{!$ObjectType.BMCServiceDesk__Priority__c.fields.BMCServiceDesk__description__c.inlineHelpText}" value="{!priority.BMCServiceDesk__description__c}" styleClass="clsInputTextAreaPgWoSidePanel" tabIndex="9"/>
+                                        </td>
+                                    </tr>
+
+                              
+
+                                     <tr>
+                                                <td>
+                                                    <div class="div12pxVspacing"></div>
+                                                </td>
+                                            </tr>    
+                                   
+                                     </table>
+                                     <table>                      
+
+                                        <tr>
+                                            <td class="clsInputLabelTDP5">  
+                                            <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Priority__c.fields.BMCServiceDesk__priorityDuration__c.Label}"></apex:outputLabel>
+                                            </td>
+                                            <td class="clsInputTextBoxTDP5">
+                                                <!--apex:inputField value="{!priority.priorityDuration__c}" styleClass="clsInputTextBox"/-->
+                                                <apex:inputText title="{!$ObjectType.BMCServiceDesk__Priority__c.fields.BMCServiceDesk__priorityDuration__c.inlineHelpText}" value="{!durationTime}"  id="durationID" styleClass="clsInputTextBox5" tabIndex="10"/>
+                                            </td>
+                                        </tr>                               
+                                  
+                                  </table>
+                                  <table>
+                                    <tr><td><div class="div2pxVspacing"/></td></tr>
+                                         
+                                                                          
+                                       
+                                 
+                                   </table>
+                                     <table>
+                                        
+
+                                        <tr style="display:none">
+                                            <td class="clsInputLabelTDP2">
+                                              <apex:outputLabel value="{!$Label.bmcservicedesk__timezone}"></apex:outputLabel>
+                                              </td>
+                                            <td class="clsInputTextBoxTDP2">
+                                            <apex:inputText disabled="true" value="{!tbd}" id="tname" styleClass="clsInputTextBoxReadOnly" tabIndex="12"/>                                          
+                                            </td><td class="lookupIconTDP">
+                                            <div class="lookUpIconDiv"><apex:commandButton onclick="" id="nameLookup" styleClass="lookupIconOn" tabIndex="13"/>
+                                            </div></td>
+                                            </tr>
+
+                                        
+                                                                   
+                                       </table>
+                                       
+                                       
+                                   
+                                    <table>
+                                        <tr>
+                                            <td class="clsInputLabelTDP4" >
+                                              <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Priority__c.fields.BMCServiceDesk__impact_Id__c.Label}"></apex:outputLabel><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                            <td class="clsInputTextBoxTDP4">
+                                                <apex:inputText title="{!$ObjectType.BMCServiceDesk__Priority__c.fields.BMCServiceDesk__impact_Id__c.inlineHelpText}" id="Impact__c_id_name" value="{!fimpactId}" onblur="showalldata(event,'',escape('inactive__c = false'));" styleClass="clsInputTextBox4" tabIndex="14"/>                                         
+                                                  </td>
+                                                  <td class="lookupIconTDP">
+                                                 <div class="lookUpIconDiv"><apex:commandButton id="impactLookup" onclick="if(!inProgress){openPopupWithTitle('SearchPage?popupId=Impact&isLookup=true',setImpact,'',550,560);}" rerender="dummy" styleClass="lookupIconOn" tabIndex="15"/>
+                                            </div></td>
+                                        </tr>
+                                        <tr><td><div class="div5pxVspacing"/></td></tr>
+                                    <tr>
+                                        <td class="clsInputLabelTDP4">
+                                          <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Priority__c.fields.BMCServiceDesk__urgency_Id__c.Label}"></apex:outputLabel><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                        <td class="clsInputTextBoxTDP4">
+                                       <apex:inputText title="{!$ObjectType.BMCServiceDesk__Priority__c.fields.BMCServiceDesk__urgency_Id__c.inlineHelpText}" id="Urgency__c_id_name" value="{!furgencyId}" styleClass="clsInputTextBox4" onblur="showalldata(event,'',escape('inactive__c = false'));" tabIndex="16"/>                                      
+                                        </td>
+                                        <td class="lookupIconTDPP">
+                                        <div class="lookUpIconDiv"><apex:commandButton id="urgencyLookup" onclick="if(!inProgress){openPopupWithTitle('SearchPage?popupId=Urgency&isLookup=true',setUrgency,'',550,560);}" rerender="dummy" styleClass="lookupIconOn" tabIndex="17"/>                                        
+                                       </div></td>
+                                    </tr>
+                               
+                                    </table>
+                                   
+                                  
+                                   
+                                  
+                                   </apex:outputPanel> 
+                                   </td>
+                                  
+                                    </tr>
+                                  <tr class="clsRowGreyBg" valign="middle" width="5%">
+                                   <td valign="middle" style="width: 100%">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <td>
+                                                    &nbsp;
+                                                </td>
+                            </tr>
+               </table>                            
+             </td>
+             </tr>
+                    </table>                            
+             
+              </div>
+             
+             <div class="detailSectinDivCls">
+               <table>
+               <tr >
+                             <td >
+                                   <!-- <c:SupportInformationComponent objectName="Priority__c" fKeyValue="{!priorityId}"/> -->
+                             </td>
+                         </tr>
+                </table>          
+            </div>
+          <apex:outputPanel id="dummy"></apex:outputPanel>
+          <c:TabOutComponent ></c:TabOutComponent>
+             
+          </apex:form>
+          </apex:outputPanel>      
+          
+         
+                     
+  <style>
+
+ /* Classes added by Maithili for alignment of textboxes and labels */
+ 
+ .clsInputLabelTDP3 {
+    color:#000000;
+    font-family:Tahoma,MS Sans Serif;
+    font-size:11px;
+    white-space:nowrap;
+    padding-right:10px;
+    padding-left:8px;
+}
+
+.clsInputTextBox3 {
+    border-color:#6A7378 #BAC3C8 #BAC3C8 #6A7378;
+    border-style:solid;
+    border-width:1px;
+    color:#000000;
+    font-family:Tahoma,MS Sans Serif;
+    font-size:11px;
+    height:13px;
+    margin:0;
+    padding:2px 2px 2px 2px;
+    vertical-align:top;
+    width:198px;
+    margin-left:16px;
+}
+
+.clsInputTextBox4 {
+    border-color:#6A7378 #BAC3C8 #BAC3C8 #6A7378;
+    border-style:solid;
+    border-width:1px;
+    color:#000000;
+    font-family:Tahoma,MS Sans Serif;
+    font-size:11px;
+    height:13px;
+    margin:0;
+    padding:2px 2px 2px 2px;
+    vertical-align:top;
+    width:198px;
+    margin-left:2px;
+}
+
+.clsInputLabelTDP5 {
+    color:#000000;
+    font-family:Tahoma,MS Sans Serif;
+    font-size:11px;
+    white-space:nowrap;
+    padding-left:9px;
+    padding-top:3px;
+
+}
+
+.clsInputTextBox5 {
+    border-color:#6A7378 #BAC3C8 #BAC3C8 #6A7378;
+    border-style:solid;
+    border-width:1px;
+    color:#000000;
+    font-family:Tahoma,MS Sans Serif;
+    font-size:11px;
+    height:13px;
+    margin:0;
+    padding:2px 2px 2px 2px;
+    vertical-align:top;
+    width:198px;
+    margin-left:1px;
+
+}
+
+.clsInputTextBoxTDP5 {
+    vertical-align:top;
+    padding: 0px 0px 0px 5px;
+}
+
+
+
+.clsInputLabelTDP4 {
+    padding-left:8px;
+}
+
+/* End Of classes */
+
+.clsIdInputTextBox{
+    *height:13px !important;
+}
+.clsInputCheckBox{
+ padding-left: 9px;
+  padding-left /*\**/: 9px\9;
+ *padding-left :5px;
+}
+ </style> 
+ 
+ </apex:page>

@@ -1,0 +1,132 @@
+<apex:page controller="BMCServiceDesk.ACSearchConfigItemController" showHeader="false" sidebar="false" standardStylesheets="false" contentType="{!contetnTypeForIE}">
+
+    <c:CommonIncludes />
+           
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ACSearchConfigItem.js"/>
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" /> 
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SearchPage.css" /> 
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ACSearchConfigItem.css" />
+ 
+ <script>
+    var lblNone = '{!JSENCODE($Label.None)}',
+        lblSearch = '{!JSENCODE($Label.search)}',
+        lblReset = '{!JSENCODE($Label.Refresh)}',
+        lblPrevious = '{!JSENCODE($Label.previousPage)}',
+        lblPreviousPagination = '{!JSENCODE($Label.Previous)}',
+        lblNext = '{!JSENCODE($Label.nextPage)}',
+        lblNextPagination = '{!JSENCODE($Label.Next)}',
+        sPrevPath = '{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif',
+        sNextPath = '{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif',
+        sInfoPath = '{!$Resource.SDEFStyles}/SDEFbuttons/status-11-information.gif',
+        groupByEllipsis="{!JSENCODE($Label.GroupBy)}",
+        noRecordmsg = "{!JSENCODE($Label.msgNoRecordFoundSearchPage)}",
+        pleaseWaitMsg = '{!JSENCODE($Label.PleaseWait)}',
+        lblValidationMsg = "{!JSENCODE($Label.GsErrorMsg)}",
+        lblSearchTip = '{!JSENCODE($Label.ACSearchTooltip)}{!JSENCODE($Label.ACSearchTooltip1)}<br/>{!JSENCODE($Label.ACSearchTooltip2)}{!JSENCODE($Label.ACSearchTooltip3)} {!JSENCODE($Label.ACSearchTooltip4)}',
+        searchKeyword = '{!JSENCODE(SearchKeyWord)}',
+        isFPUserValidated = {!isFPUserValidated},
+        ACFPLaunchWindowHeader = '{!JSENCODE($Label.ACFPlaunchWindowHeader)}',
+        RFDisclaunchWindowHeader = '{!JSENCODE($Label.RFDisclaunchWindowHeader)}',
+        lblwarningSearch = '{!JSENCODE($Label.Warning)}',
+        lblErrorSearch = '{!JSENCODE($Label.Error)}';
+        CiName='{!CIname}';
+        CiID='{!CiID}';
+    var store;
+    var grid;   
+    var objSearch=[];
+    var cPgNo;
+    var hasNext;
+    var hasPrevious;    
+    var grdHeaders = {!gridHeader};
+    var grdFields = {!grdFields};
+    var msgString='';
+    var recorDataInputHiddenId = '{!$Component.ACDeviceSearchForm.recordasString}';
+    var iSearchLoad ;
+    var isDiscoveryEnabled = {!isDiscoveryEnabled};
+    var isCalledFromConsole ='{!JSENCODE($CurrentPage.parameters.isCalledFromConsole)}';
+    var frmCiSlideIn ='{!JSENCODE($CurrentPage.parameters.frmCiSlideIn)}';
+    var lblGoBtn = '{!JSENCODE($Label.GO)}';
+    
+  	function showACError(){
+  		if(msgString !=''){
+			 Ext.MessageBox.show({                       
+	                msg:msgString,width:300,height:'auto',buttons: Ext.MessageBox.OK
+	             });
+		}
+	}
+    function CloseRefresh()
+    {
+        if(msgString ==''){
+            if(isCalledFromConsole=='true'){
+                if(frmCiSlideIn== 'true'){
+                    try{
+                        if((typeof window.parent.parent.parent.parent.opener.setPrimaryCI === "function")){
+                            window.parent.parent.parent.parent.opener.setPrimaryCI(CiID,CiName);
+                        }
+                    }catch(err){
+                        // Do nothing if exception occurs
+                    }
+                }else{
+                    window.parent.setPrimaryCI(CiID,CiName);
+                }        
+            }            
+            window.parent.reloadIncidentform();
+            window.parent.close();
+        }
+    }
+
+ </script>
+  
+  <span id="txtInput" class="searchtext-input-wrapper"><a title="{!$Label.search}" class="rf-icon-search" onclick="DoSearch();" /><input type="text" id="txtSrch" name="txtSrch" title="" class="searchText" autocomplete="off" size="26" placeholder="{!$Label.ExampleLabelForBCMPage}"/><a id="crossIcon" title="{!$Label.Refresh}"  class="rf-icon-cross"/></span>
+  <span style="float: right;"><img id="infoIcon" height="18" width="18" src="{!$Resource.BMCRFSDEFStyles}/Images/shape@2x.png" /></span>
+
+<div id="toolBar" class="bcmHeader">
+    
+   
+
+</div>
+
+ <apex:form id="ACDeviceSearchForm">
+<div id="gridPanel" ></div>
+<c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+<apex:outputPanel id="refreshSearchDataPanel">
+    <script>
+        objSearch = {!SearchResults};
+        cPgNo = {!PgNo};
+        hasNext = {!hasNext};
+        hasPrevious = {!hasPrevious};
+        grdHeaders = {!gridHeader};
+        iSearchLoad = '{!iLoad}';
+    </script>
+</apex:outputPanel>
+<apex:outputPanel id="CiAssignmentPanel">
+    <script>
+        CiName='{!CIname}';
+        CiID='{!CiID}';
+    </script>
+</apex:outputPanel>
+<apex:outputPanel id="errorPanel">
+    <script>
+        msgString = '{!JSENCODE(messageString)}';
+    </script>
+</apex:outputPanel>
+<apex:outputText value="CRUDFLSCheck# False Positive: Value here is always hidden." rendered="false" />
+<apex:inputHidden id="recordasString" value="{!acRecData}"/>
+<apex:actionfunction name="importLinkCI" action="{!importLinkCI}" reRender="CiAssignmentPanel,errorPanel" onComplete="waitMsg.hide();showACError();CloseRefresh();"/>
+<apex:actionFunction action="{!DoSearch}" name="CDoSearch" rerender="errorPanel,refreshSearchDataPanel, gridPanel" onComplete="showACError();BindGrid();hideWaitMsgBar();">
+    <apex:param assignTo="{!SearchKeyWord}" name="SearchKeyWord" value="" />
+    <apex:param assignTo="{!PgNo}" name="PgNo" value="" />
+</apex:actionFunction>
+<apex:actionFunction action="{!handleNextClick}" name="NextClick" rerender="errorPanel,refreshSearchDataPanel, gridPanel" onComplete="showACError();BindGrid();hideWaitMsgBar();">
+    <apex:param assignTo="{!PgNo}" name="PgNo" value="" />
+</apex:actionFunction>
+<apex:actionFunction action="{!handlePreviousClick}" name="PrevClick" rerender="errorPanel,refreshSearchDataPanel, gridPanel" onComplete="showACError();BindGrid();hideWaitMsgBar();">
+    <apex:param assignTo="{!PgNo}" name="PgNo" value="" />
+</apex:actionFunction>
+<apex:actionFunction action="{!handleresize}" name="Resize" rerender="gridPanel" onComplete="BindGrid();hideWaitMsgBar();">
+</apex:actionFunction>
+</apex:form>
+</apex:page>

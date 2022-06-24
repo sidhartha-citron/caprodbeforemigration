@@ -1,0 +1,37 @@
+<aura:component implements="force:hasRecordId" access="global" controller="EDW_AppointmentVisitDateTimeController">
+    <aura:attribute name="initData" type="EDW_ViewModels.AppointmentVisitViewModel" />
+    <aura:attribute name="isSaveAndFinishDisabled" type="Boolean" default="true" />
+    <!--Begin:Shashi:9-11-2019:Allows CS to exit without assigning SA-->
+    <aura:attribute name="isSaveAndExitDisabled" type="Boolean" default="false" />
+    <!--End-->
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}" />
+    
+    <lightning:spinner alternativeText="Loading" size="medium" aura:id="theSpinner" class="slds-hide" />
+    
+    <aura:registerEvent name="EDW_ClearAllActiveResourceAssignedListenersEvent" type="c:EDW_ClearAllActiveResourceAssignedListenersEvent" />
+    
+    <div class="slds-grid slds-gutters">
+        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+            <div class="ch-margin-for-resource-preference-table"></div>
+            <c:EDW_ResourcePreferenceTableComponent recordId="{!v.initData.account.Id}" />
+        </div>
+        <div class="slds-col slds-size_1-of-1 slds-large-size_2-of-3">
+            <!--Begin:Shashi:9-11-2019:Allows CS to exit without assigning SA-->
+            <c:EDW_ServiceAppointmentAccordion aura:id="accordion" recordId="{!v.recordId == null ? v.initData.workOrderId : v.recordId}" isSaveAndFinishDisabled="{!v.isSaveAndFinishDisabled}" isSaveAndExitDisabled="{!v.isSaveAndExitDisabled}" />
+            <!--End-->
+        </div>
+    </div>
+    
+    <div class="slds-container--fluid slds-m-top_medium">
+        <lightning:button variant="brand" label="{!$Label.c.Back_to_Configure_Appointment}" onclick="{!c.navigateBack}" />
+        <!--Begin:Shashi:9-11-2019:Allows CS to exit without assigning SA-->
+        <lightning:button aura:id="svExit" variant="brand" label="{!$Label.c.Exit}" onclick="{!c.saveAndExit}" disabled="{!v.isSaveAndExitDisabled}" class="slds-float_right" />
+        <lightning:button variant="brand" label="{!$Label.c.Save_Finish}" onclick="{!c.saveAndFinish}" disabled="{!v.isSaveAndFinishDisabled}" class="slds-float_right" />
+        <!--End-->
+        <div class="verification-overlay">
+            <lightning:spinner alternativeText="Loading" size="small" aura:id="verificationSpinner" variant="brand" class="slds-hide" />
+        </div>
+    </div>
+    
+    <div aura:id="warningModal"></div>
+</aura:component>

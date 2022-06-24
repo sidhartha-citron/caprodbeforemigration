@@ -1,0 +1,44 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="AddOrderProduct">
+	 
+    <aura:attribute name="recordId" type="Id"/>
+    <aura:attribute name="status" type="String[]"/>
+    <aura:attribute name="theRecord" type="OrderItem" default="{'sobjectType':'OrderItem', 'Frequency__c':'One-Time'}" access="global"/>
+    
+    <aura:attribute name="columnAPINames" type="String[]" 
+                    default="['OrderItem.Product2Id','OrderItem.Related_Product__c','OrderItem.Service_Price_Per_Unit__c', 'OrderItem.Frequency__c', 'OrderItem.Installation_Price__c', 'OrderItem.Purchase_Price__c']"/>
+    <aura:attribute name="columns" type="AddOrderProduct.ColumnRecord[]"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    
+    <c:CustomToast aura:id="customToast" />
+    
+    <c:InputLookup label="{!v.columns[0].label}" value="{!v.theRecord.Product2Id}" sObjectType="Product2" icon="standard:product"/> 
+    <div class="slds-text-color--error slds-hide" aura:id="Product">{!$Label.c.Site_Survey_Fill_In_Field}</div>
+    <br/>
+    <c:InputLookup label="{!v.columns[1].label}" value="{!v.theRecord.Related_Product__c}" sObjectType="Product2" icon="standard:product"/> 
+    <br/>
+    
+    {!v.columns[2].label}
+    <div class="slds-form-element">
+        <ui:inputNumber aura:id="Service" label="{!v.columns[2].label}" value="{!v.theRecord.Service_Price_Per_Unit__c}" class="slds-input" labelClass="slds-float--left"/>
+    </div><br/>
+    
+    {!v.columns[3].label}
+    <force:inputField aura:id="Frequency" value="{!v.theRecord.Frequency__c}" class="slds-select" /><br/>
+    
+    {!v.columns[4].label}
+    <div class="slds-form-element">
+        <ui:inputNumber aura:id="Installation" label="{!v.columns[4].label}" value="{!v.theRecord.Installation_Price__c}" class="slds-input" labelClass="slds-float--left"/>
+    </div><br/>
+    
+    {!v.columns[5].label}
+    <div class="slds-form-element">
+        <ui:inputNumber aura:id="Purchase" label="{!v.columns[5].label}" value="{!v.theRecord.Purchase_Price__c}" class="slds-input" labelClass="slds-float--left"/>
+    </div><br/>
+    
+    <br/>
+    <div class="slds-text-align--center">
+        <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Submit}" onclick="{!c.save}" />          
+    </div>
+    
+</aura:component>

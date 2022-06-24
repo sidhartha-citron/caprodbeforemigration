@@ -1,0 +1,436 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.ImpactController">
+   <c:CommonIncludes />
+
+<!--<script type="text/javascript" src="{!$Resource.ExtJs}/ext-all-debug.js"></script> -->
+<style>
+	.clsIdInputTextBox{
+		*height:13px;
+	}
+</style> 
+     <script>
+     
+     var impactName;               
+     var impactId;
+     var errormsg;
+     var chkBoxValue;
+     var enablesavebtn={!disableforStaff};
+  	 var enablecopybtn = {!copybtnflag};
+     var enabledeletebtn = {!deletebtnflag};
+    
+     var impactHeader = '{!JSENCODE($ObjectType.Impact__c.Label)}'; 
+     var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+	 document.onclick = activateWindow; 
+     function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+     }
+   
+        /*
+            Code for handling Data change on Page
+            - START
+        */
+        var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+        var clickedOnce = false;  
+        function handleChange(){
+            if(!clickedOnce){
+                clickedOnce = true;
+                window.parent.registerChange(wid2);
+            }
+        }
+	        
+	    function handleResetChange(){
+	    	if(clickedOnce){
+               clickedOnce = false;
+               window.parent.registerSave(wid2);
+           }
+	       }
+	       
+     
+		 
+		 /*
+     		END
+     	*/
+    function callCopyPage(){
+        window.parent.addTab("ImpactPage?copyId=" + impactId,impactHeader,impactHeader);
+    }
+    
+    function completeDelete(){
+                if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}'){
+                    showError();
+                }else{
+                     closeWindow();
+                }
+     }
+     
+
+        function closeWindow(){
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+        }
+        
+        Ext.onReady(function(){
+        Ext.QuickTips.init();
+        if({!isRecDeleted}){
+			Ext.Msg.alert('{!JSENCODE($Label.Information)}', '{!JSENCODE($Label.DeletedRecord)}', function(){
+				if ((typeof(window.parent) != 'undefined') && (typeof(window.parent.popUpWindow) != 'undefined'))
+					window.parent.popUpWindow.close();
+					closeWindow();
+			});
+		}
+           
+        // This function renders a block of buttons
+        var NewBtnhandler = function(button,event) { activeAllWindowFlag=false; openPage("ImpactPage",impactHeader,impactHeader); };
+        var SaveBtnHandler = function(button,event) {  
+         Ext.getCmp('saveId').setDisabled(true);
+         waitbox(0); 
+         chkBoxValue=Ext.getCmp('idInactive').getValue();
+         save(chkBoxValue);
+         };
+        var CopyBtnHandler = function(button,event) { activeAllWindowFlag=false; callCopyPage(); };
+        var ResetBtnHandler = function(button,event) {  resetImpact(); };
+        var DeleteBtnHandler = function(button,event) { 
+                                                        Ext.MessageBox.confirm('{!JSENCODE($Label.Delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}', function(btn){
+                                                           if(btn === 'yes'){
+                                                                  deleteImpact();
+                                                           }});
+         };
+        var SendNotificationBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+        var OpenBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+        var NextBtnHandler = function (button,event) {if(document.getElementById('nextId').disabled!=true) nextImpactBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) {if(document.getElementById('prevId').disabled!=true) previousImpactBtnHandler1();};  
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+                scale: 'medium',
+                iconCls: 'bmcNew',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.new)}',
+                id:'newId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },                
+                handler:NewBtnhandler
+            } ,' ', {
+                scale: 'medium',
+                iconCls: 'bmcSave',
+                tooltipType : 'title',
+                id:'saveId',
+                 tooltip:'{!JSENCODE($Label.save)}',
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },                 
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                tooltipType : 'title',
+                 tooltip: '{!JSENCODE($Label.copy)}',
+                iconCls: 'bmcCopy',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },                
+                id:'copyId',
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType : 'title',
+                 tooltip: '{!JSENCODE($Label.delete)}',
+                 id:'deleteId',
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },                 
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcRefreshDasboard',
+                tooltipType : 'title',
+                 tooltip: '{!JSENCODE($Label.Refresh)}',
+                  id:'resetId',
+                             
+                handler:ResetBtnHandler
+            },
+             new Ext.Toolbar.Fill(), 
+            {
+                  id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               align:'top',
+               checked: false,
+               boxLabel:'{!JSENCODE($ObjectType.Impact__c.fields.inactive__c.label)}',
+               cls:'chkStyle',
+               boxLabel:'<span class="checkboxLabelCls">{!JSENCODE($ObjectType.Impact__c.fields.inactive__c.label)}</span>',
+               /*modified to fix the tooltip bug*/
+               listeners:{
+                    render:function(){
+                        Ext.QuickTips.register({
+                            target:this,
+                            dismissDelay: 20000,
+                            text:'{!JSENCODE($ObjectType.Impact__c.fields.inactive__c.label)}'
+                        });
+                    }   /* modification done*/            
+                    }               
+              
+            }, {
+               
+               
+                  xtype : 'box',
+		          id    : 'prevId',
+                autoEl:  {tag: 'img', 
+                          src:('{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif'),   
+                         title:'{!JSENCODE($Label.previousRecord)}'
+                         },
+                          
+                cls:'cursorCls',
+               listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                             
+            },{
+               
+                xtype : 'box',
+	         	id    : 'nextId',
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif',
+                          title:'{!JSENCODE($Label.nextRecord)}' },
+                cls:'cursorSpaceCls',
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+               
+                
+            }
+            ] 
+        });
+        Ext.getCmp('idInactive').setValue('{!impact.inactive__c}');
+        
+        impactId = '{!JSENCODE(impact.Id)}';    
+        if(impactId == null ||impactId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+		Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+        Ext.getCmp('copyId').setDisabled(true);
+        Ext.getCmp('resetId').setDisabled(true);
+    	Ext.getCmp('prevId').setDisabled(true);
+        Ext.getCmp('nextId').setDisabled(true);
+	    document.getElementById('{!$Component.impactForm.impact_Id}').focus();
+        }
+        
+        resetbuttonstatus();
+        
+        handleElemEvent(); 
+    });
+    function resetbuttonstatus()
+    {
+    	if(!enablesavebtn)
+        {
+           Ext.getCmp('saveId').setDisabled(true);
+             
+        }
+        if(!enablecopybtn)
+        {
+        	Ext.getCmp('newId').setDisabled(true);
+        	Ext.getCmp('copyId').setDisabled(true);
+        }
+        if(!enabledeletebtn)
+        {
+        	 Ext.getCmp('deleteId').setDisabled(true);
+             Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+        }   
+    }
+    function buttonValidator() {
+       
+       if((impactName != null && impactName != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){   
+  		if(enabledeletebtn)
+        {
+	        Ext.getCmp('deleteId').setDisabled(false);
+			Ext.getCmp('deleteId').setIconClass('bmcDelete');
+		}
+		if(enablecopybtn)
+        {
+        	Ext.getCmp('copyId').setDisabled(false);
+        }	
+	       
+        Ext.getCmp('resetId').setDisabled(false);
+       }  
+     }
+var impactIdSet;
+	if(impactIdSet == null || impactIdSet == ''){
+		if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+		if(typeof(window.parent.returnListOfId)=='function')
+			impactIdSet=window.parent.returnListOfId();
+	}else{
+		if(typeof(window.parent.parent.getIdArray)=='function')
+			impactIdSet=window.parent.parent.getIdArray();
+			window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+		}
+	}
+
+        function previousImpactBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(impactIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=impactIdSet[i];
+                }else{
+                    idSetString=idSetString+','+impactIdSet[i];
+                }
+                i++;
+            }
+            previousImpactBtnHandler(idSetString);
+        
+        }
+
+       function nextImpactBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(impactIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=impactIdSet[i];
+                }else{
+                    idSetString=idSetString+','+impactIdSet[i];
+                }
+                i++;
+            }
+            nextImpactBtnHandler(idSetString);
+        
+        }
+     
+    </script>  
+    
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           impactName = '{!JSENCODE(impact.name)}';               
+           impactId = '{!JSENCODE(impact.Id)}';      
+        
+        </script>
+        </apex:outputPanel>
+        
+         <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+        <apex:outputPanel id="afterSavePanel">
+            <script>
+               function handleSave(){
+                   var id = "{!JSENCODE(impact.Id)}";
+                window.parent.handleSave(wid, id);
+            }
+              
+              enablesavebtn={!disableforStaff};
+     		  enablecopybtn = {!copybtnflag};
+              enabledeletebtn = {!deletebtnflag};
+            </script>
+        </apex:outputPanel>
+       <apex:outputPanel id="titlePanel">
+        <script>
+            function updateList(){
+               window.parent.refreshList();
+            }
+           function updateTitle(){
+                var newTitle= "{!JSENCODE(impact.name)}";
+                if(newTitle != ""){		
+	                window.parent.changeTitle(wid,newTitle,impactHeader);           		
+           		}               
+            }
+            function enableSaveButton() {
+            	if(enablesavebtn)
+        			Ext.getCmp('saveId').setDisabled(false);
+      		} 
+        </script>
+    </apex:outputPanel>  
+          
+         <apex:outputPanel id="inactivePanel">
+        <script>
+           function updateInactive(){
+            Ext.getCmp('idInactive').setValue('{!impact.inactive__c}');
+        }
+          
+    
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form id="impactForm">
+            <apex:actionFunction action="{!newImpact}" name="newImpact"/>
+            <apex:actionFunction action="{!reset}" name="resetImpact" rerender="dummyoutputpanel,inactivePanel,afterSavePanel" oncomplete="updateInactive();handleResetChange();handleElemEvent();"/>
+            <apex:actionFunction action="{!deleteImpact}" name="deleteImpact" onComplete="completeDelete();" rerender="errorId,validationComponent"/>
+            <apex:actionFunction action="{!nextBtnHandler}" name="nextImpactBtnHandler" 
+                                    rerender="titlePanel,dummyoutputpanel,inactivePanel,afterSavePanel" onComplete="updateInactive();handleResetChange();handleElemEvent();updateTitle();">
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>  
+            </apex:actionFunction>
+            <apex:actionFunction action="{!previousBtnHandler}" name="previousImpactBtnHandler" 
+                                        rerender="titlePanel,dummyoutputpanel,inactivePanel,afterSavePanel" onComplete="updateInactive();handleResetChange();handleElemEvent();updateTitle();">
+                                        <apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+            </apex:actionFunction>
+            <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            <apex:actionFunction action="{!save}" name="save" reRender="titlePanel,validationComponent,panelId,afterSavePanel,errorId" oncomplete="waitMsg.hide();showError();resetbuttonstatus();buttonValidator();updateList();handleElemEvent();handleSave();updateTitle(),enableSaveButton();">
+            <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+                 </apex:actionFunction>
+                 <div id="capsule" class="CapsuleDiv1">
+                        <table class="clsMainTable" cellspacing="0" cellpadding="0">
+                            <tr class="clsRowGreyBg">
+                                <td>
+                                    <div id="btnToolbar"></div>                                
+                                </td>
+                            </tr>  
+                            <tr>
+                                 <td class="clsTopAlignment75">
+                                    <apex:outputPanel id="dummyoutputpanel">
+                                        <table class="clsTable" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td colspan="2"><div class="div15pxVspacing"/></td>
+                                            </tr>
+                                            <tr>
+                                                 <td class="clsInputLabelTD"> 
+                                                        <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Impact__c.fields.Name.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                                 </td>
+                                                 <td >
+                                                       <apex:inputText title="{!$Label.bmcservicedesk__tooltipimpactimpactid}" value="{!impact.name}" id="impact_Id" styleClass="clsIdInputTextBox" /> 
+                                                  </td>
+                                             </tr>
+                                          </table>
+                                     </apex:outputPanel> 
+                                </td>
+                            </tr>
+                            <tr class="clsRowGreyBg" valign="middle" width="5%">
+                                <td valign="middle" style="width: 100%">
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tr>
+                                            <td>
+                                                &nbsp;
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>                        
+                        </table>
+                 </div>    
+            </apex:form>
+    </apex:outputPanel>  
+</apex:page>

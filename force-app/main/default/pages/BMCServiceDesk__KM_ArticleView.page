@@ -1,0 +1,613 @@
+<apex:page controller="BMCServiceDesk.KM_ArticleViewController" standardStylesheets="false" showHeader="false" contentType="text/html" >
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js" />
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+		<link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/bmc-all.css" rel="stylesheet" /> 
+		<link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/dpl-iconfont.css" rel="stylesheet" />
+		<link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" rel="stylesheet" />
+		<link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/dpl-components.css" rel="stylesheet" />
+		
+		<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ArticleView.css"/>
+
+		<c:CommonIncludes />
+		<apex:outputPanel layout="none" rendered="{!isAccessibilityMode}">
+			<link rel="stylesheet" href="{!$Resource.SelfServiceMyITUI}/SelfService/styles/scss/AccessibilityMode.css" type="text/css"
+			/>
+			<span id="loadingSpinner" aria-live="polite" class="screen_reader-only"></span>
+		</apex:outputPanel>
+		<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ArticleView.js" />
+		
+		<apex:outputPanel rendered="{!isfromSS}">     
+			<apex:stylesheet value="{!$Resource.BMCServiceDesk__Themes}/{!activenow}/SkywalkerStyleSheet.css" />
+			<apex:stylesheet value="{!$Resource.BMCServiceDesk__Themes}/{!activenow}/SSCore.css" />
+			<style>
+				td.x-grid3-hd-over .x-grid3-hd-inner {
+					background-image: url("{!$Resource.Themes}/{!activenow}/SDEFimages/bkheadergradient.png") !important;
+					background-color:transparent !important;
+				}
+	
+			</style>
+		</apex:outputPanel>
+		<style>
+			.clsRequestHelpBtn2 {
+				background-image: url("{!$Resource.Themes}/SSDarkYellowTheme/images/en_US/SS_Service_Request_16.png") !important;
+				background-position: 3px 50% !important;
+				background-repeat: no-repeat !important;
+				height: 22px !important;
+				padding-left:20px !important;
+				margin-top: 3px;
+				overflow:visible;
+				border-color: #CCCCCC #666666 #666666 #CCCCCC;
+				border-style: solid;
+				border-width: 1px;
+				cursor: pointer;
+				font-size: 11px;
+				font-weight: normal;
+				margin-left: 5px;
+				margin-bottom: 5px\9;
+				text-align: right !important;
+				margin-right: 15px;
+			}
+			
+             .Branding-Title_bar-broadcast_text_color {
+                color: {!JSENCODE(brandingTokens['token13'])};
+                }
+             .Branding-Left_Panel-background {
+                background: {!JSENCODE(brandingTokens['token21'])};
+                }
+             
+             .Branding-Right_Panel-hyperlink {
+                color: {!JSENCODE(brandingTokens['token31'])};
+                }
+            .Branding-Right_Panel-hyperlink:hover {
+                color: {!JSENCODE(brandingTokens['token31'])};
+                }
+             .Branding-Right_Panel-button_outline, .Branding-Right_Panel-button_outline:hover {
+                border: 1px solid {!JSENCODE(brandingTokens['token32'])};
+                }
+             .Branding-Right_Panel-separator {
+                border-bottom: 0.5px solid {!JSENCODE(brandingTokens['token32'])};
+                }
+             .Branding-Right_Panel-activity {
+                background-color: {!JSENCODE(brandingTokens['token33'])} !important;
+                }
+             .Branding-Right_Panel-default_button {
+                background-color: {!JSENCODE(brandingTokens['token34'])};
+                }
+             .Branding-Right_Panel-default_button:hover {
+                background-color: {!JSENCODE(brandingTokens['token35'])};
+              }
+			              
+		</style>
+	</head>
+	<body id='docBody' onload="initiateSelfClosing()">
+		<script>
+			var recordId = '{!JSENCODE(articleId)}';
+			var incidentPage = "{!$Page.SSIncident}";
+			var ratingComboValue = '{!JSENCODE(picklistValue)}';
+			var articleId = '{!JSENCODE($CurrentPage.parameters.id)}';
+			var incidentId = '{!JSENCODE($CurrentPage.parameters.incidentID)}';
+			var problemId = '{!JSENCODE($CurrentPage.parameters.problemID)}';
+			var isFromSmartSuggestions = '{!JSENCODE($CurrentPage.parameters.isSmart)}';
+			var attachmentarray = new Array();
+			var feedbackComp = '{!$Component.kmform.feedbackId}';
+			var commentsFeedbackLabel = '{!$Label.CommentsFeedback}';
+			var isVisibleInSS = '{!isVisibleInSS}';
+			var Filename = '{!JSENCODE($Label.SSFileName)}';
+			var isRFHotkeysDisabled = {!isRFHotkeysDisabled};
+			var cmpId = '{!JSENCODE(cmpId)}'; //This is the instance id of the Lightning component passed to this page when it opens it in a popup.
+			var lexOpenerUrl = '{!JSENCODE(lexOpenerUrl)}';			
+			var vfPageURL = '{!JSENCODE(vfPageURL)}';
+			
+			var i=0;
+			<apex:repeat value="{!lstAttachmentInfo}" var="attachment">
+				attachmentarray[i] = new Array(3);
+				attachmentarray[i][0]='{!attachment.Id}';
+				attachmentarray[i][1]='{!attachment.CreatedDate}';
+				attachmentarray[i][2]='{!JSENCODE(attachment.Name)}';
+				i++;
+			</apex:repeat>
+			eval('{!RatingList}');
+			
+			var RatingEmptyTextToolTip = '{!JSENCODE($Label.SelectArticleRatingToolTip)}';
+			var RatingEmptyText = '{!JSENCODE($Label.SelectArticleRating)}';
+			var checkedRadioValue = '{!JSENCODE(selectedCopyOption)}';
+			var articleMeetYourNeed = '{!JSENCODE(selectedYesOption)}';
+			function getCalledFromFormValue(){
+				return {!calledFromform};
+			}
+			
+			function getShowFeedbackValue(){
+				return {!showFeedback};
+			}
+			
+			function getIsFromSS(){
+				return {!isfromSS};
+			}
+			
+			function getIsGS(){
+				return {!isGS};
+			}
+
+			function getFlags(){
+			        var FlagArray = new Array(3);
+			        FlagArray[0] = {!calledFromform};
+			        FlagArray[1] = {!isfromSS};
+			        FlagArray[2] = {!isGS};
+			        return FlagArray;
+			}
+			
+			function openAttachment(attachmentId,contDocId){
+				if(contDocId) {					
+					if (cmpId) // i.e. KA is opened from Lightning component
+						window.open(vfPageURL + '/'+contDocId);					
+					else
+						window.open('/sfc/servlet.shepherd/version/download/'+attachmentId);
+						
+				} else {
+					window.open('{!$Page.FileDownloadPage}?attachmentId='+attachmentId);
+				}
+			}
+			
+			function closePopupWindow(){
+				if (cmpId && cmpId != '') return;
+			
+				var fromSearch = '{!JSENCODE($CurrentPage.parameters.isFromSearch)}';
+				var stdLayout = getStandardLayout();
+				if('{!isfromSS}' == 'true'){
+					var pm = parent.Ext.getCmp('ssHomePortalManager');
+					if(fromSearch == 'false'){
+						window.parent.setSearchBreadCrumb();
+						pm.onSwitchPanel('ssSearchPortal');		
+					} else {
+						window.parent.ss();
+						pm.onSwitchPanel('ssCenterPortal');		
+					}
+				}
+				else if ('{!fromSupportInfo}' == 'true' || stdLayout == 'true') {
+                    window.close();
+                    return;
+                }
+                else if('{!isfromSS3}' == 'true'){                       
+                     window.parent.closeModelFromIframe();
+                    //parentScope.$cancel();
+                }
+				else {
+				    parent.hideBox2();	
+				}
+			}
+			
+			function postMessageToLightning(postType){
+				if (cmpId && cmpId != ''){
+					var response;
+					if (postType == 'Submit'){
+						response = {
+								message: "Close_After_Save",
+								component: cmpId
+						};
+					} else {
+						response = {
+								message: "Close_After_Cancel",
+								component: cmpId
+						};
+					}
+					parent.postMessage(response, lexOpenerUrl);
+				}
+			}
+			
+			function settingKASize(){
+				if('{!isfromSS}' == 'true')
+					return settingKASizeJS();
+			}
+			
+			function createNewRequest(){
+				var url = parent.getFormAssignment(incidentPage);
+				
+				var incident = {
+				    xtype: 'ssDetailPortlet',
+			        id: 'newIncidentPanel3',
+			        cls: 'ssSearchResultsPortlet',
+			        tools: [{
+			    	    id: 'close',
+			        	handler: function (event, toolEl, panel) {
+			            incDesc = null;
+			            window.parent.ss();
+			            var pm = parent.Ext.getCmp('ssHomePortalManager');
+			            pm.onSwitchPanel('ssCenterPortal');
+					}}],
+			        title: '<div class="portletHeaderIcon searchPortletHeaderIcon"></div><center>{!JSENCODE($Label.SSNewHelpRequest)}</center>',
+			        html: '<div class="sky-iframe"><iframe src= "'+url+'?newIncDesc=\" class=\"tab-iframe\" style=\"width:100%;height:100%;border:none;background:white\" /></div>'                
+				}
+				var pm = parent.Ext.getCmp('ssHomePortalManager');
+				pm.onSwitchPanel('ssIncidentDetailPortal', [incident]);
+			    window.parent.setKMRequestHelpBreadCrumb('{!JSENCODE(articleObj.Name)}');
+			}
+		</script>
+		
+		<apex:outputPanel id="renderArticleMeetRadioButtonValue">
+			<script>
+				articleMeetYourNeed = '{!JSENCODE(selectedYesOption)}';
+				function closePopupWindowSSSmartSuggestions(){
+				var yesOption = '{!($Label.ExtjsMessageYes)}';
+				if('{!isfromSS3}' == 'true' && articleMeetYourNeed && articleMeetYourNeed == yesOption){
+					window.parent.closePopupWindowSSSmartSuggestions();
+				}
+			}
+			</script>
+		</apex:outputPanel>
+		<apex:outputPanel id="errorPanel">
+			<script>
+			var errorMessage = '{!JSENCODE(errorMessage)}';
+			</script>
+		</apex:outputPanel>
+		<apex:outputPanel id="renderRadioButtonValue">
+			<script>
+				checkedRadioValue = '{!JSENCODE(selectedCopyOption)}'
+				function setResolution(){
+					if((incidentId != null)&&(incidentId != '')){
+						articleId='';
+					}
+					if((problemId != null)&&(problemId != '')){
+						articleId='';
+					}
+					if('{!isGS}' == 'true'){
+						if(document.getElementById('solutionBtn') != null){
+							document.getElementById('solutionBtn').disabled=true;
+							document.getElementById('solutionBtn').className = 'AddButtonOff';
+						}
+					}else if(isFromSmartSuggestions!=undefined && isFromSmartSuggestions == 'true'){
+						opener.window.pasteResolution(checkedRadioValue);
+					} else {
+						if('{!isfromSS}' != 'true'){
+							var stdLayout = getStandardLayout(); 
+							if(checkedRadioValue == 'link'){
+								var currentPageUrl = ('{!JSENCODE(ssUrl)}' == '')? '{!JSENCODE(rfUrl)}' : '{!JSENCODE(ssUrl)}'+ '\r\n' + '{!JSENCODE(rfUrl)}';
+								if(stdLayout ){
+									opener.window.pasteResolution(currentPageUrl,articleId , 'link', isVisibleInSS);
+								} else{
+									opener.window.pasteResolution(currentPageUrl,articleId,'link');
+								}
+							} else if(checkedRadioValue == 'text'){
+								if(stdLayout ){
+									opener.window.pasteResolution('{!JSENCODE(resolutionValue)}',articleId,'text');
+								}else{
+									opener.window.pasteResolution('{!JSENCODE(resolutionValue)}',articleId,'text');
+								}
+							} else {
+								closePopupWindow();
+							}
+						}
+					}
+					return true;
+				}
+			</script>
+		</apex:outputPanel>
+		
+		<apex:form id="kmform">
+			<div class="container">
+				<div class="ka-profile-header ka-profile-header-print">
+					<div class="ka-profile__title"><h3 title="{!articleObj.Title__c}" id="ka-title" tabindex="0">{!articleObj.Title__c}</h3></div>
+					<div class="ka__article-id">
+							<h4>
+								<i class="d-icon-lightbulb_o"></i>  {!$ObjectType.KM_KnowledgeArticle__c.label}# {!articleObj.Name}
+								<span  role="button" aria-label="{!JSENCODE($Label.Print)}" tabindex="0" class="ka-print-icon" onclick="printKA();" onkeypress="printKAonKeyPress(this,event,'{!isAccessibilityMode}');"><i class="d-icon-printer"></i></span>
+								<apex:outputPanel rendered="{!$User.UIThemeDisplayed == 'Theme4d'}" styleClass="ka-back-button-icon" onclick="backToKA();"><i class="d-icon-arrow_left"></i></apex:outputPanel>
+							</h4>
+					</div>
+				</div>
+				<div id="errorMsg" aria-live="polite" style="display:none" class="error-panel">
+						<div class="error-panel__item">
+							<span id='errorDescId'></span>
+						</div>
+					</div> 
+				<div class="ka-body" >
+					<apex:outputPanel id="outerPanel" rendered="{!showArticle}" layout="block">
+						<div class="ka-rtfData">
+							<apex:repeat value="{!KaDetailsList}" var="ArticleData" id="FieldData">
+								<apex:variable var="fieldaccess" value="{!IF($ObjectType.BMCServiceDesk__KM_KnowledgeArticle__c.fields[ArticleData.name]!=null,$ObjectType.BMCServiceDesk__KM_KnowledgeArticle__c.fields[ArticleData.name].Accessible,false)}" />
+								<apex:outputText value="CRUDFLSCHECK# Below Panel will not render as FLS has been checked in the above statement." rendered="false"/>
+								<apex:outputPanel rendered="{!IF(fieldaccess && articleObj[ArticleData.name] != null,true,false)}" layout="block">
+									<div class="ka-text" >
+										<div tabindex="0" class="ka-text-section-title">
+											<h3>{!$ObjectType.KM_KnowledgeArticle__c.fields[ArticleData.name].label}</h3>
+										</div>
+										<div class="ka-text-section-text" >
+											<div class="RTFData"> <apex:outputField value="{!articleObj[ArticleData.name]}" rendered="{!NOT(ArticleData.isImageBase64)}" ></apex:outputField> </div>
+											<apex:outputText value="CRUDFLSCHECK# Both CRUD & FLS check are not required. Reason: isAcccessible check for name field is at the outputpanel level" rendered="false"/> 
+											<div class="RTFData"> <apex:outputText value="{!articleObj[ArticleData.name]}" escape="false" rendered="{!ArticleData.isImageBase64}"/> </div>
+										</div>
+									</div>
+								</apex:outputPanel>
+							</apex:repeat>
+							
+							<apex:outputPanel rendered="{!IF(!ISBLANK(articleObj.BMCServiceDesk__VideoURL__c), true, false)}" layout="block">
+								<div class="ka-text" id="videoSection">
+									<div class="ka-text-section-title">  </div>
+									<div class="ka-text-section-text" >
+										<div id="videoDiv" class="ka-video-div"></div>
+									</div>
+								</div>
+							</apex:outputPanel>
+						 
+							 <apex:outputPanel rendered="{!IF(AND(lstAttachmentInfo!=null,lstAttachmentInfo.size > 0), true,false)}" layout="block">
+								<div class="ka-text" >
+									<div class="ka-text-section-title" tabindex="0"> <h3>{!$Label.Attachments}</h3> </div>
+									<div class="ka-text-section-text" >
+										<ul class="ka-attachmentList">
+											<apex:repeat value="{!lstAttachmentInfo}" var="att">
+												
+												<li>
+													<a onclick="openAttachment('{!att.Id}','{!att.ContentDocumentId}');" class="ka-attachment"> 
+														<i class="{!att.fileType} ka-attachment-icon"></i>{!att.Name}
+													</a>
+												</li>
+											</apex:repeat>
+										</ul>
+									</div>
+								</div>
+							</apex:outputPanel>
+
+						</div>
+
+						<apex:outputPanel rendered="{!calledFromform}" layout="block" styleclass="footerDiv">
+							<div id="feedbackDetails">
+								<apex:outputPanel rendered="{!showFeedback}" layout="block" styleclass="ratingDiv">
+									<div id="ratingComboDiv">
+										<div class="dropdown">
+										    <select class="dropdown-content" id="dropdownContent" title="{!$Label.SelectArticleRatingToolTip}" onchange="selectValue()"></select>
+										</div>
+									</div>
+									
+									<apex:inputTextarea value="{!kmFeedbackObj.BMCServiceDesk__Feedback__c}" id="feedbackId" styleclass="ka-feedback" > </apex:inputTextarea>
+									<script>
+										var feedbackText = document.getElementById('{!$Component.kmform.feedbackId}');
+										if(feedbackText){
+											feedbackText.placeholder = '{!$Label.CommentsFeedback}';
+										}
+									</script>
+								</apex:outputPanel>
+								
+								<apex:outputPanel layout="block" styleClass="ka-action-div">
+									<apex:outputpanel id="radioButtonPanel"	rendered="{!AND(NOT(isPortalUser),NOT(isGS),NOT(isfromSS),NOT(isfromSS3))}" layout="block">
+										<apex:selectRadio value="{!selectedCopyOption}"	styleClass="copyRadio" id="CopyTextLink" >
+											<apex:selectOptions value="{!kmCopyTextOptions}" />
+										</apex:selectRadio>
+									</apex:outputpanel>
+									<apex:outputPanel rendered="{!OR(isfromSS,isfromSS3)}">
+										<div id="DidItMeetDiv" style="margin-right: 10px; margin-top: 4px;*margin-top: 0px;">
+											<label aria-label="{!$ObjectType.KM_Feedback__c.fields.Issue__c.label}" id="labelKMFeedback" class="fileName" style="{!IF(isfromSS,'margin-left: 10px;','')}">{!$ObjectType.KM_Feedback__c.fields.Issue__c.label}</label>
+										</div>
+										<apex:selectRadio value="{!selectedYesOption}" styleClass="copyRadio" style="margin-bottom:4px;" id="YesNoOptions">
+											<apex:selectOptions value="{!kmYesNoOptions}" />
+										</apex:selectRadio>
+									</apex:outputPanel>
+									
+									<div class="ka-action-button-div"> 
+										<input type="button" title="{!$Label.SSSubmit}" value="{!$Label.SSSubmit}" class="d-button d-button_primary d-button_small Branding-Right_Panel-default_button Branding-Right_Panel-button_outline" id="solutionBtn" onclick="disableButton();pasteAsSolutionAndSave(ratingComboValue);" /> 
+										<apex:outputpanel id="cancelPanel" rendered="{!NOT(isGS)}" layout="none">
+											<input type="button" title="{!$Label.SSCancel}" value="{!$Label.SSCancel}" class="d-button d-button_secondary d-button_small Branding-Right_Panel-button_outline" id="SRBtn" onclick="closePopupWindow();postMessageToLightning('Cancel');" />
+										</apex:outputpanel>
+										<apex:outputPanel rendered="{!isfromSS}">
+											<input type="button" title="{!$Label.SSSubmitNewServiceRequest}" value="{!$Label.SSSubmitNewServiceRequest}" class=" clsRequestHelpBtn2" id="RequestHelp" style="width: auto; padding: 4px; padding-top: 2px; " onclick="createNewRequest();" />
+										</apex:outputPanel>
+									</div>
+								</apex:outputPanel>
+							</div>
+						</apex:outputPanel>
+					</apex:outputPanel>
+					
+					<apex:outputPanel id="atricleError" style="{!IF(showArticle,'display: none;','')}"  rendered="{!NOT(showArticle)}">
+						<apex:outputText value="{!$Label.bmcservicedesk__ssrequestarticlenotdisplayed}" />
+					</apex:outputPanel>
+				</div>
+				
+				<script>
+                
+                   function submitBtnValidationImpl(){
+                                                
+                        if( (ratingComboValue  == "") && (document.getElementById('{!$Component.kmform.feedbackId}').value.trim().length == 0) && {!Not(isfromSS3)}){
+                                document.getElementById('solutionBtn').disabled=true;
+                        }else{
+                                document.getElementById('solutionBtn').disabled=false;
+                        }
+                    }
+                    
+                           
+                    
+					function disableButton(){
+						var btn = document.getElementById('solutionBtn');
+						if(btn != null){ 
+							btn.disabled=true;
+						}
+					}
+					
+					function enableSolutionBtn(){
+						var btn = document.getElementById('solutionBtn');
+						if(btn != null){ 
+							btn.disabled=false;
+						}
+					}
+					
+					function onCompleteAction(){
+						var stdLayout = getStandardLayout();
+						var errorDiv = document.getElementById('errorMsg');
+						if(errorMessage) {
+							var errorDescId = document.getElementById('errorDescId');
+							errorDescId.innerText = errorMessage;
+							errorDiv.style.display='block';
+							enableSolutionBtn();
+							setTimeout(function () {
+								document.getElementById('errorMsg').style.display='none';
+							}, 5000);
+							return;
+						} else {
+							errorDiv.style.display='none';
+						}
+						if(stdLayout == 'true'){
+							if(checkedRadioValue == 'Return to search results'){
+								window.close();
+							} else{
+								var temp1 = setResolution();
+								window.returnValue = 'close'; 
+								window.close();
+							}
+						} else {
+							if('{!isfromSS3}' != 'true')
+								setResolution();
+							closePopupWindow();
+						}
+					}
+				</script>
+
+				<apex:actionFunction name="pasteAsSolutionAndSave" action="{!pasteAsSolution}" oncomplete="postMessageToLightning('Submit');closePopupWindowSSSmartSuggestions();onCompleteAction();" rerender="errorPanel, renderRadioButtonValue,renderArticleMeetRadioButtonValue">
+					<apex:param assignTo="{!picklistValue}" name="ratingComboValue" value=""/>
+				</apex:actionFunction>
+           		<apex:actionFunction name="updateCount" action="{!updateCount}" oncomplete="return false" />
+			</div>
+		</apex:form>
+		
+		<script>
+			if('{!showSubmit}' == 'true'){
+				if(document.getElementById('solutionBtn') != null){	
+					document.getElementById('solutionBtn').disabled = true;
+				}
+			}
+			
+			function enableButtons(){
+				if(document.getElementById('SRBtn') != null){
+					document.getElementById('SRBtn').disabled=false;
+					document.getElementById('SRBtn').className = 'AddButton';
+				}
+				if(document.getElementById('solutionBtn') != null){
+					document.getElementById('solutionBtn').disabled=false;
+				}
+				if(document.getElementById('submitBtn') != null){
+					document.getElementById('submitBtn').disabled=true;
+					document.getElementById('submitBtn').className = 'AddButtonOff';
+				}
+			}
+			
+			var showPopupHeader = getUrlParameter('popupHeader');
+			var showStdLayout = getStandardLayout();
+			if(showStdLayout){
+				showPopupHeader = showPopupHeader.replace(/%20/g," ");
+				document.title=showPopupHeader;
+			}
+			var url = document.URL;
+			function getStandardLayout(){
+				var showStdLayout = getUrlParameter('standardLayout');
+				return showStdLayout;
+			}
+			function getUrlParameter( param ){
+				param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");;
+				var r1 = "[\\?&]"+param+"=([^&#]*)";
+				var r2 = new RegExp( r1 );
+				var r3 = r2.exec( window.location.href );
+				if( r3 == null ){return ""}
+				else {return r3[1]};
+			}
+			
+			var active_element;
+			var bIsMSIE;
+			
+			function initiateSelfClosing() {
+				if(showStdLayout){
+					if (Ext.isIE) {
+						active_element = document.activeElement;
+						document.onfocusout = closeWnd;
+						bIsMSIE = true;
+					} else { window.onblur = closeWnd; }
+				}
+			}
+			
+			function closeWnd() {
+				if(showStdLayout){
+					if (window.dialogArguments != null) {
+						if (bIsMSIE && (active_element != document.activeElement)) {
+							active_element = document.activeElement;
+						}
+					}
+				}
+			}
+			
+			var dataList = '';
+			if(getShowFeedbackValue() && getCalledFromFormValue()) {
+				dataList = document.getElementById('dropdownContent');
+				createRatingDropdown();
+			}
+			
+			function createRatingDropdown() {
+				var option = document.createElement('option');
+				option.title = '{!JSENCODE($Label.SelectArticleRatingToolTip)}';
+				option.text = '{!JSENCODE($Label.SelectArticleRating)}';
+				option.disabled = true;
+				option.selected = true;
+				dataList.appendChild(option);
+
+				for(var i = 0; i < RatingData.length ; i++) {	
+					var option = document.createElement('option');
+					option.text = Ext.util.Format.htmlDecode(RatingData[i][1]);
+					option.title = Ext.util.Format.htmlDecode(RatingData[i][1]);
+					option.value = Ext.util.Format.htmlDecode(RatingData[i][0]);
+					dataList.appendChild(option);    
+				}
+			}
+						
+						
+			function selectValue() {	
+				var val = dataList.value;		 	
+				ratingComboValue = val;
+                submitBtnValidationImpl();
+			}
+
+			var VideoUrl = '{!JSENCODE(articleObj.VideoUrl__c)}';
+			var VideoHeight = '{!JSENCODE(TEXT(articleObj.VideoHeight__c))}';
+			var VideoWidth = '{!JSENCODE(TEXT(articleObj.VideoWidth__c))}';
+			var isfromSS3 = {!IF(isfromSS3,true,false)};
+			if(isfromSS3)
+				addVideo(VideoUrl, '336', '448');
+			else
+				addVideo(VideoUrl,VideoHeight,VideoWidth);
+				
+			var rtfTags = document.getElementsByClassName('RTFData');
+						
+			for(var i=0;i < rtfTags.length; i++) {
+				var images = rtfTags[i].getElementsByTagName('img');
+				for(var j=0; j< images.length; j++) {
+					images[j].className += ' img-responsive ';
+				}
+				if(isfromSS3){
+                    var anchorElem = rtfTags[i].getElementsByTagName('a');
+                    for(var k=0; k < anchorElem.length; k++) {
+                        anchorElem[k].setAttribute('target',"_blank");
+                    }
+                }
+			}
+			adjustHeights();
+			window.addEventListener('resize', windowResizeHandler);
+
+			if('{!isAccessibilityMode}') {
+				var element = document.getElementById('labelKMFeedback');
+				if(element){
+					element.tabIndex  = 0;
+				}
+			}
+		</script>
+	</body>
+    <script>
+    window.onload = function() {
+    	updateCount();
+    }
+    </script>
+	<apex:outputPanel layout="none" rendered="{!If(userLanguage=='iw','true','false')}">
+		<style>
+		.container{
+			direction: rtl !important;
+		}
+		.ka-print-icon{
+			float:left;
+		}
+	   </style>
+ 	</apex:outputPanel>
+</apex:page>

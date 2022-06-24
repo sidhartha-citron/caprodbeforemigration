@@ -1,0 +1,65 @@
+<apex:page controller="BMCServiceDesk.AcDeviceServicesController" showHeader="false" standardStylesheets="false">
+<c:AcRestCommon isGridRequired="true"/>
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/ACCMDBActions.css" type="text/css" /> 
+    <style>
+    	.x-toolbar .x-toolbar-text, .x-toolbar .x-toolbar-item {
+            font-size: 12px;
+            vertical-align: middle;
+        }
+    </style>
+<script>
+proxyData = '{!JSENCODE(proxyData)}';
+proxyData = JSON.parse(proxyData);
+strFields = {!strFields};
+strColumns = {!strColumns};
+var statusField = '{!statusField}';
+var selectedStr;
+var status = '';
+    var msgStr,toolbar,TotalRecords = '{!JSENCODE(TotalRecords)}';
+    var gridHeight = 370;
+    var Stopservice = "{!JSENCODE($Label.ACStopservice)}",Restartservice = "{!JSENCODE($Label.ACRestartservice)}",Startservice="{!JSENCODE($Label.ACStartservice)}",pleasewait = "{!JSENCODE($Label.pleasewait)}...";
+</script>
+    <body>
+        <apex:outputPanel id="msgPanel">
+            <apex:pageMessages />
+            <script>
+            msgStr = '{!JSENCODE(msgStr)}';
+			isAuthRequired={!isAuthRequired}; 
+            </script>
+        </apex:outputPanel>
+        <apex:form id="AssetCoreForm">
+            <div id="btnToolbar" width="100%" height="30%"></div>
+            <apex:actionFunction name="updateACSetting" action="{!updateSessionSetting}" reRender=""/>
+            <apex:actionFunction action="{!serviceOperation}" name="ServiceOperationFunction" reRender="msgPanel,gridPanel,updateSession" onComplete="stopWaitMask();ShowMessageBox();checkUserAuth();refreshGrid();selectrow();">
+                <apex:param name="serviceName" value="" />
+                <apex:param name="operation" value="" />
+            </apex:actionFunction>
+            <apex:actionFunction action="{!paginatedServices}" name="getPageRecords" reRender="msgPanel,gridPanel,updateSession" onComplete="stopWaitMask();ShowMessageBox();checkUserAuth();fillGrid();">
+               <apex:param name="offset" value="" />
+                <apex:param name="count" value="" />
+            </apex:actionFunction>
+        </apex:form>
+        <apex:outputPanel id="gridPanel">
+        <script>
+            TotalRecords = '{!JSENCODE(TotalRecords)}';
+            
+            proxyData = '{!JSENCODE(proxyData)}';
+			proxyData = JSON.parse(proxyData);
+        </script>
+         
+        </apex:outputPanel>
+        <apex:outputPanel id="updateSession">
+            <script>
+                updateSessionInCS={!updateSessionInCS};
+                if(updateSessionInCS)
+                {
+                    updateACSetting();
+                }
+            </script>
+        </apex:outputPanel>      
+    </body>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AcDeviceServices.js" />
+    <script>
+        window.parent.stopWaitMsgBar();
+    </script>
+</apex:page>

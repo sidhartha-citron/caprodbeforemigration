@@ -1,0 +1,136 @@
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" controller="MyServices">
+    
+    <aura:attribute name="queryParams" type="String[]" default="['OrderItemNumber, Order.OrderNumber, Product2.Name, Product2.Display_Frequency_In_Portal__c, Quantity, Product2.Product_Image_URL__c, Product2.Item_Type__c, Product_Name__c, Frequency__c, Order_Number__c, Order.Status, Order.AccountId, PricebookEntryId, PricebookEntry.UnitPrice, Related_Product__r.Name']"/>
+    <aura:attribute name="orderProductsMap" type="MyServices.LineItem[]"/>
+    
+    <aura:attribute name="productsSize" type="Integer"/>
+    <aura:attribute name="ServicesSize" type="Integer"/>
+    
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="isPortal" type="Boolean" default="false"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/> 
+    
+    <div class="demo-only slds-m-top_xx-large slds-align_absolute-center customMargin" style="height:6rem;" aura:id="theSpinner">
+        <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+            <span class="slds-assistive-text">Loading</span>
+            <div class="slds-spinner__dot-a"></div>
+            <div class="slds-spinner__dot-b"></div>
+        </div>
+    </div>
+    
+    <div class="slds-page-header">
+        <div class="slds-media">
+            <div class="slds-media__figure">
+                <span class="slds-icon_container slds-icon-standard-shipment" title="My Scheduled Orders and Services">
+                    <lightning:icon iconName="standard:shipment" size="large" alternativeText="Scheduled Orders and Services"/>
+                </span>
+            </div>
+            <div class="slds-media__body">
+                <h1 class="slds-page-header__title slds-truncate slds-align-middle" title="Scheduled Orders and Services">Scheduled Orders and Services</h1> 
+            </div>
+        </div>
+    </div>
+    
+    <div class="desktop">
+        <aura:iteration items="{!v.orderProductsMap}" var="itemMap" indexVar="index">
+            <div class="slds-section slds-is-open" id="{!itemMap.key+index}">
+                <h3 class="slds-section__title">
+                    <lightning:button variant="neutral" label="{!itemMap.key+index}" iconName="utility:chevrondown" iconPosition="left" class="slds-button slds-section__title-action" onclick="{!c.openSection}" value="true">
+                        <span class="slds-cell-wrap" title="Section Title">{!itemMap.key} ({!itemMap.value.length})</span>
+                    </lightning:button>
+                </h3>
+                <div aria-hidden="false" class="slds-section__content" >
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                        <thead>
+                            <tr class="slds-text-title_caps">
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_30" title="Order Number">Order Number</div>
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_75" title="Product Name">Product Name</div>
+                                </th>
+                                <!--<th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_75" title="Related Product">Related Product</div>
+                                </th>-->
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_75" title="Service Frequency">Service Frequency</div>
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-truncate_container_30" title="Quantity">Quantity</div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <aura:iteration items="{!itemMap.value}" var="item">
+                                <tr class="" id="{!itemMap.key}">
+                                    <th scope="row" data-label="Opportunity Name" class="slds-cell-wrap">
+                                        <div class="slds-truncate_container_30" title="{!item.OrderNumber}">{!item.OrderNumber}</div>
+                                    </th>
+                                    <td data-label="Close Date" class="slds-cell-wrap">
+                                        <div class="slds-truncate_container_75" title="{!item.ProductName}">{!item.ProductName}</div>
+                                        <aura:if isTrue="{! !empty(item.RelatedProduct) }">
+                                        	Related Product: <div class="slds-truncate_container_75" title="{!item.RelatedProduct}">{!item.RelatedProduct}</div>
+                                        </aura:if>
+                                        
+                                    </td>
+                                    <!--<td data-label="Prospecting" class="slds-cell-wrap">
+                                        <div class="slds-truncate_container_75" title="{!item.RelatedProduct}">{!item.RelatedProduct}</div>
+                                    </td>-->
+                                    <td data-label="Confidence" class="slds-cell-wrap">
+                                        <aura:if isTrue="{!item.displayFreq}">
+                                        	<div class="slds-truncate_container_75" title="{!item.Frequency}">{!item.Frequency}</div>
+                                        </aura:if>
+                                    </td>
+                                    <td data-label="Amount" class="slds-cell-wrap">
+                                        <div class="slds-truncate_container_30" title="{!item.Quantity}">{!item.Quantity}</div>
+                                    </td>
+                                </tr>
+                            </aura:iteration>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </aura:iteration>
+    </div>
+
+    <ul class="slds-has-dividers--around-space mobileDisplay" aura:id="orderProductTiles">
+        <aura:iteration items="{!v.orderProductsMap}" var="typeProduct">
+            <div class="slds-section slds-is-open" id="{!typeProduct.key + 'Mobile'}">
+                <h3 class="slds-section__title">
+                    <lightning:button variant="neutral" name="{!typeProduct.key + 'Mobile'}" label="{! typeProduct.key +'Mobile'}" iconName="utility:chevrondown" iconPosition="left" class="slds-button slds-section__title-action" onclick="{!c.openSection}" value="false">
+                        <span class="slds-truncate" title="Section Title">{!typeProduct.key}</span>
+                    </lightning:button>
+                </h3>
+                <div aria-hidden="false" class="slds-section__content">	
+                    <aura:iteration items="{!typeProduct.value}" var="item" indexVar="i">            
+                        <li class="slds-box slds-theme_default">
+                            <div class="slds-tile slds-tile--board">              
+                                <p class="slds-section__title" title="{!item.OrderNumber}">                            
+                                    OrderNumber : {!item.OrderNumber}
+                                </p>
+                                <p class="slds-section__title" title="{!item.ProductName}">                            
+                                    Product Name : {!item.ProductName}
+                                </p>
+                                <p class="slds-section__title" title="{!item.RelatedProduct}">                            
+                                    Related Product : {!item.RelatedProduct}
+                                </p>
+                                <p class="slds-section__title" title="{!item.Frequency}">                            
+                                    <aura:if isTrue="{!item.displayFreq}">Service Frequency : {!item.Frequency}</aura:if>
+                                </p>
+                                <p class="slds-section__title" title="{!item.Quantity}">                            
+                                    Quantity : {!item.Quantity}
+                                </p>
+                                <p class="slds-section__title slds-hide" title="{!item.Quantity}">                            
+                                    <lightning:button variant="brand" value="{!item.PricebookEntryId}" label="{!$Label.c.Add_to_Cart}" class="slds-button slds-section__title-action" onclick=""/>
+                                </p>
+                            </div>
+                        </li>
+                        <br/>                 
+                    </aura:iteration>
+                </div>
+            </div>
+        </aura:iteration>
+    </ul>    
+    
+</aura:component>

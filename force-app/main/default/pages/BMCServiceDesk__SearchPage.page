@@ -1,0 +1,2360 @@
+<apex:page controller="BMCServiceDesk.SearchController" showHeader="false" sidebar="false" cache="false" contentType="{!contetnTypeForIE}" standardStylesheets="false">
+<!-- Manasi -->
+<body id='docBody' onload="initiateSelfClosing();getWaitbox();">
+<!-- End Manasi -->
+<c:CommonIncludes />
+<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js" />
+<apex:outputText rendered="{!IF( popupId == 'Action' && isNewUI == true, true, false )}">
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+</apex:outputText>
+
+<script>
+    var isSearchHasDone = false;
+    var docID = '015000000000000000';
+    var baseURLSF;
+    function getSFDocumentURL(imageID){
+        if(!baseURLSF){
+            baseURLSF = '{!URLFOR($Action.Document.Download,'015000000000000000',[retURL=""])}';
+        }
+        baseURLSF = baseURLSF.replace(docID,imageID);
+        docID = imageID;
+        return baseURLSF;
+    }
+	var operationalTarget = '{!JSENCODE($Label.OperationalTarget)}';
+		var sprClsLookup = '{!SprClsLookup}';
+         var showPopupHeader;
+        if(typeof(window.parent) != undefined && window.parent != null && typeof(window.parent.wikiUrlForList) != undefined)
+			window.parent.wikiUrlForList = '{!wikiUrlList}';
+		if(typeof(window.parent) != undefined && window.parent != null && typeof(window.parent.wikiUrlForm) != undefined)
+			window.parent.wikiUrlForForm = '{!wikiUrlForm}';
+         if(typeof(window.parent) != undefined && window.parent != null && typeof(window.parent.popIDs) != undefined)
+            window.parent.popIDs = '{!popId}';
+
+	var reconFailenableVal, reconSuccessenableVal, reconClearLogVal; 
+    var win;
+    if(window.opener != null && window.opener.parent != null){
+        win = window.opener.parent;
+    }
+    var broadcastLink = getUrlParameter('broadcastLink');
+    var popupFor=getPopupFor().toUpperCase();
+    var PopupId = "{!popupId}";
+	var windowTitle = "{!windowTitle}";
+  var isGroupByDisabled = {!IF(isGroupByDiasabled, true, false)};
+	var showSelfHelp = parent.parent.showSelfHelp;
+	var enableWalkthroughFlow = parent.parent.enableWalkthroughFlow;
+    var userLanguage = parent.parent.userLanguage;	
+	var isLightningExperience = "{!isLightningExperience}";
+	var isCalledFromSHD = getUrlParameter('isCalledFromSHD');
+	var isFromFulfillment = getUrlParameter('isFromFulfillment');
+	var lblPreviousPagination = '{!JSENCODE($Label.Previous)}';
+    var lblNextPagination = '{!JSENCODE($Label.Next)}';
+        
+	if(PopupId == 'Suggested_Owner' && typeof(window.parent.parent) != undefined && typeof(window.parent.parent.wikiUrl) != undefined)
+        window.parent.parent.wikiUrl = '{!wikiUrlList}';
+    if(popupFor=='incidentsforclient'.toUpperCase()||popupFor=='incidentsforcategory'.toUpperCase()){
+        showPopupHeader='{!JSENCODE($Label.SelectFrom)}'+' '+'{!JSENCODE(objPluralType)}';
+    }else if(popupFor=='AssignTo'.toUpperCase() && PopupId.toUpperCase()!='Queue'.toUpperCase()){
+        showPopupHeader='{!JSENCODE($Label.SelectFrom)}'+' '+'{!JSENCODE($Label.IncidentsStaff)}';
+    }else if(popupFor=='AssignTo'.toUpperCase() &&  PopupId.toUpperCase()=='Queue'.toUpperCase()){
+        showPopupHeader='{!JSENCODE($Label.SelectFrom)}'+' '+'{!JSENCODE($Label.Queue)}';
+    }else if(popupFor=='ServiceTargets'.toUpperCase()){
+        showPopupHeader = '#'+getUrlParameter('popupHeader')+' '+'{!JSENCODE($Label.SLM_ServiceTargets)}';
+    }else if(isCalledFromSHD == 'true' && PopupId == 'Organization') {
+		showPopupHeader = '{!JSENCODE($Label.Accounts)}';
+    }else{
+        showPopupHeader = getUrlParameter('popupHeader');
+    }
+	if(getStandardLayout()){
+        document.title=showPopupHeader;	//set window header for standard layouts
+    }
+    
+    if ((document.title =='') && (windowTitle!='')) document.title = windowTitle;
+   var closeRequestHandlerForCIs = function(button, event) {
+   window.opener.location.href='/'+getUrlParameter('releaseid');window.close();
+            return;
+    };
+    
+   var closeRequestHandlerForChange = function(button, event) {
+   			window.opener.location.href='/'+getUrlParameter('changeid1');window.close();
+            return;
+    };
+    function dispalyErrorMessageStaffCI(){
+   
+      var msg= "{!JSENCODE(errorMessage)}";
+    	if(msg != null && msg != ''){
+	    	alertMsg = Ext.Msg.show({
+					msg: msg,
+					buttons: Ext.Msg.OK,
+					fn:closeRequestHandlerForCIs,
+	    			width: 300,       
+					frame:false
+				});	    	
+	   	}
+	   	else{
+	   		window.opener.location.href='/'+getUrlParameter('releaseid');window.close();
+	   	}
+   	}
+   	function dispalyErrorMessageStaffChange(){
+   
+      var msg= "{!JSENCODE(errorMessage)}";
+    	if(msg != null && msg != ''){
+	    	alertMsg = Ext.Msg.show({
+					msg: msg,
+					buttons: Ext.Msg.OK,
+					fn:closeRequestHandlerForChange,
+	    			width: 300,       
+					frame:false
+				});	    	
+	   	}
+	   	else{
+	   		win.location.href='/'+getUrlParameter('changeid1');window.close();
+	   	}
+   	}
+    
+// End Nakul ----------------------
+var lookupdata = '';
+ //change by vishal for Service Target
+var SID;
+var recname;
+var setOfIds;
+var qmGridHeight;
+var ServiceTargetheading;
+var idList;
+var sortColumn = null;
+var showBRLst = false;
+var lengthofstring = 0;
+var grid, viewport;
+var checkforsearch=false;
+var enterpressed=false;
+var New_Action= '{!JSENCODE($Label.New_Action)}';
+var labelItem = '{!JSENCODE($Label.CMDBItem)}';
+var labelAll = '{!JSENCODE($Label.All)}';
+var labelItems = '{!JSENCODE($Label.Items)}';
+var serverendtime = '{!serverendtime}';
+var starttime = '{!searchstarttime}';
+var blackout = '{!JSENCODE(blackout)}';
+var labelTrue = '{!JSENCODE($Label.True)}';
+var labelFalse = '{!JSENCODE($Label.False)}';
+var labelOpened = '{!JSENCODE($Label.Opened)}';
+var labelClosed = '{!JSENCODE($Label.Closed)}';
+var labelYes = '{!JSENCODE($Label.ExtjsMessageYes)}';
+var labelNo = '{!JSENCODE($Label.ExtjsMessageNo)}';
+var labelcloseWindow = '{!JSENCODE($Label.closeWindow)}',
+	labelcloseWindowLabel = '{!JSENCODE($Label.closeWindowLabel)}';
+var cookieName =  '{!JSENCODE($CurrentPage.parameters.popupId)}'+'{!JSENCODE($User.Id)}';
+var targetType = '{!JSENCODE($CurrentPage.parameters.TargetType)}';
+var parseLimit = Ext.util.Cookies.get(cookieName);
+var DEFAULT_INTERVAL=10;
+var intervalTime;
+var maxIntervalLabel = '{!JSENCODE($Label.maxInterval)}'; 
+var refresheveryLabel='{!JSENCODE($Label.refreshEvery)}';
+var minuteslabel='{!JSENCODE($Label.minutes)}';
+var refreshedlabel='{!JSENCODE($Label.refreshed)}';
+var groupByLabelTooltip = '{!JSENCODE($Label.GroupBy)}';
+var showAllCITooltip = '{!JSENCODE($Label.ShowAllCIs)}';
+var NoRecordFoundMsg = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+var labelServerTime = '{!JSENCODE($Label.PM_servertime)}';
+var labelPageLoad = '{!JSENCODE($Label.PM_PageLoad)}';
+var labelType = '{!JSENCODE($Label.Type)}';
+var labelTitle = '{!JSENCODE($Label.ServiceTargetTitle)}';
+var labelLatency = '{!JSENCODE($Label.PM_netwokLatency)}';
+var onReconToolTip = '{!JSENCODE($Label.ReconOnToolTip)}';
+var offReconToolTip = '{!JSENCODE($Label.ReconOffToolTip)}';
+var labelLastModifiedBy = '{!JSENCODE($Label.LastModifiedBy)}';
+  var moduleId="{!JSENCODE($CurrentPage.parameters.moduleId)}";
+  var moduleName="{!JSENCODE($CurrentPage.parameters.moduleName)}";
+  idNameForPopUp = "{!JSENCODE($CurrentPage.parameters.idNameForPopUp)}";
+  EF ='ф'; //Cyrillic character  
+  var disableFirstColLink = '{!JSENCODE($CurrentPage.parameters.disableFirstColLink)}';
+var requestType =  '{!JSENCODE($CurrentPage.parameters.requestType)}';
+var tempParentName = '{!JSENCODE($CurrentPage.parameters.parentName)}'; 
+var accountId='{!JSENCODE($CurrentPage.parameters.accountId)}';
+var incidentId = '{!JSENCODE($CurrentPage.parameters.incidentId)}';
+var incCiId = '{!JSENCODE($CurrentPage.parameters.incCiId)}';
+var incServiceId = '{!JSENCODE($CurrentPage.parameters.incServiceId)}';
+selectedCIFilter= '{!JSENCODE(selectedCIFilter)}';// '{!JSENCODE($CurrentPage.parameters.selectedCIFilter)}';
+qmGridHeight= '{!JSENCODE($CurrentPage.parameters.gridHeight)}' ;
+var isAssignTo = {!isAssignTo};
+var outOfOfficeConfirmationMsg = '{!JSENCODE($Label.OutOfOfficeConfirmationMsg)}';
+var queueLabel = '{!JSENCODE($Label.Queue)}'; 
+var isPrimaryCI = '{!JSENCODE($CurrentPage.parameters.PrimaryLinkCI)}';
+var isCalledFromConsole ='{!JSENCODE($CurrentPage.parameters.isCalledFromConsole)}';
+var recurringeTemplateWarning = '{!JSENCODE($Label.RecurringeTemplateWarning)}';
+var lblIntegratedUIInfo = '{!JSENCODE($Label.lblIntegratedUIInfo)}';
+var Actions = '{!JSENCODE($Label.Actions)}';
+var ProfileSelect='{!JSENCODE($Label.selectFrom)}'+' '+'{!JSENCODE($Label.Profile)}';
+var queueWaitMsg = '{!JSENCODE($Label.PleaseWait)}';
+var lblRuleBasedAsset = '{!JSENCODE($Label.RulebasedAsset)}';
+var lblBasedonCIClass = '{!JSENCODE($Label.BasedonCIClass)}';
+var lblCMDBAMRule = '{!JSENCODE($Label.CMDBAssetRule)}';
+var lblCMDBCIClass = '{!JSENCODE($Label.CMDBCIClass)}';
+var lblCMDBClassType = '{!JSENCODE($Label.CMDBClassType)}';
+var lblCMDBAssetClass = '{!JSENCODE($Label.CMDBAsset)}';
+var lblRuleField ='{!JSENCODE($Label.CIExpField)}';
+var lblNewRule ='{!JSENCODE($Label.NewRule)}';
+var lblApproved ='{!JSENCODE($Label.Approved)}';
+var lblPending ='{!JSENCODE($Label.Pending)}';
+var ExceptionHeader = '{!JSENCODE($Label.Normalization_Exceptions)}';
+var isAssetManagementEnabled = {!isAssetMgtEnabled};
+var isCIManagementEnabled = {!isCIMgtEnabled};
+var isApplyCMDBClassFilter = false;
+var selectedCMDBClassFilter;
+var isCMDBFliterShown = (isAssetManagementEnabled && isCIManagementEnabled) ;
+var lblNoClassRulesDefined = '{!JSENCODE($Label.NoCriteriaDefined)}';
+var lblSearch = '{!JSENCODE($Label.search)}';
+var nonPrint = '¬';
+var PE = 'П';
+var pleaseWaitMsg = '{!JSENCODE($Label.PleaseWait)}';
+var filterBy = '{!filterBy}';
+var isNewUI = {!isNewUI};
+    
+if(qmGridHeight==''){
+     	qmGridHeight=300;
+}else
+{
+     qmGridHeight=parseInt(qmGridHeight);
+}
+function getSDFStylesResPath()
+{
+  var resPath = '{!$Resource.SDEFStyles}';
+  return resPath;
+}
+
+function getSSThemesPath()
+{
+  var resPath = '{!$Resource.SSThemes}';
+  return resPath;
+}
+
+function getSDEFExtJSResPath()
+{
+  var resPath = '{!$Resource.SDEFExtJS}';
+  return resPath;
+}
+function getCopyDisabled()
+{
+    var IsCopyDisabled = {!copyDisabled};
+    return IsCopyDisabled;
+}
+
+function getNextPrevState(bPrevious)
+{
+    if(bPrevious) { 
+        if(hasPrevious == 'true' || hasPrevious) { 
+            return false; 
+        } 
+        else 
+            return true; 
+    }else { 
+        if (hasNext == 'true' || hasNext) { 
+            return false; 
+        } 
+        else 
+            return true;     
+    }
+}
+
+function setObjId(objId, nameVal,add_info,columnClicked)
+{    
+    var oPopupId = "{!JSENCODE(popupId)}";
+    var oView = "{!JSENCODE(view)}";
+    setObjIdJS(objId, nameVal, oPopupId, oView,add_info,columnClicked);
+}
+
+function renderGrid()
+{
+   if (sortColumn == null)
+     sortColumn = {!sortField};
+    
+    showBRLst = {!showBRList};
+    var msg = "{!JSENCODE($Label.msgNoRecordFoundSearchPage)}";
+    renderGridJS(showBRLst);
+}
+ function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+     }
+// function added  to get SlaId in Search page js
+  function getSlaID(){
+           return'{!JSENCODE($CurrentPage.parameters.SLAId)}';
+  }
+  function getSLACopyId(){          
+           return'{!JSENCODE($CurrentPage.parameters.SLAcopy)}';
+    }       
+     
+	function setStaffAndQueueValues(staffId, queueId){
+	  	if(queueId != undefined || queueId != null || queueId != '' ){
+        if(window.opener != null && window.opener != undefined)
+        {
+	  		window.opener.queueId = queueId;
+	  		if(staffId != undefined || staffId != null || staffId != '' ){
+	  			window.opener.staffId = staffId;
+	  			window.opener.setQueueAndStaff(queueId,staffId);
+                window.close();
+            }
+        }
+        else if(window.parent != null && window.parent != undefined)
+        {
+			window.parent.setQueueAndStaff(queueId,staffId);
+			window.parent.closePopup();	
+        }
+	}
+	
+	}
+var textFld = '{!JSENCODE($CurrentPage.parameters.text)}';
+var frmFld = '{!JSENCODE($CurrentPage.parameters.frm)}';
+var isStdPage = '{!JSENCODE($CurrentPage.parameters.isFromSS)}';
+var isOnBehalfOf = '{!JSENCODE($CurrentPage.parameters.forOnBehalfOf)}';
+var endtime = '{!searchendtime}';
+</script>
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SearchPage.css" />
+    <apex:outputText rendered="{!IF( popupId == 'Action' && isNewUI == true, true, false )}">
+    	<link rel="stylesheet" href="{!$Resource.SDEFStyles}/SearchPage_Actions.css" type="text/css" />
+    </apex:outputText>
+    
+    
+    
+<script src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js" type="text/javascript"></script>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/SearchPage.js"/>
+<body id="docBody">
+<script>
+var selectedfield;
+var order;
+var direction='ASC';
+if({!changeOrderBy}){
+    order = 'DESC';
+}else{
+    order = 'ASC';
+}
+direction=order;
+function test(){return lookupdata;}
+var firstTime = true;
+var popUpId;
+var selectedRecord;
+var selectedId;
+var customToolwidth=150;
+var orderSequence = 'DESC';
+var durationflag =0;
+var columnField='Name';
+var isCIRadioChecked=false;
+var notSortableFields ='';
+isOnlyQueueList = "{!JSENCODE($CurrentPage.parameters.isOnlyQueueList)}";
+isStaffViewChangeDisabled = "{!JSENCODE($CurrentPage.parameters.isStaffViewChangeDisabled)}";
+
+if(isOnlyQueueList  == "true" || "{!JSENCODE($CurrentPage.parameters.popupId)}" == 'Queue'){
+	hideQueueMembersGird = false;
+}	
+function isUserPermitted(operation){
+	
+		var isCreateable = {!isCreateable}; 
+		var isDeletable = {!isDeletable};
+		var isUpdateable = {!isUpdateable};
+		if(operation == 'new' || operation == 'copy'){
+			if(isCreateable){
+				return true;
+			}else{
+				return false;
+			}
+		}else if(operation == 'delete'){
+			if(isDeletable){
+				return true;
+			}else{
+				return false;
+			}
+		} 
+		else if(operation == 'update'){
+			if(isUpdateable){
+				return true;
+			}else{
+				return false;
+			}
+		} 
+		return true;
+	
+}
+</script>
+<script>
+//Sridhar: Added for Stage Progression
+    var pageName="";var objectId="";var windowTitle="";var initialProgressBar;
+</script>
+<apex:outputPanel id="getInitPrgBar">
+    <script>
+        function getInitProgressBar(){
+            initialProgressBar = "";
+        }
+    </script>
+</apex:outputPanel>
+<apex:outputPanel id="sortOrder">
+    <script>
+        orderSequence = '{!orderSequence}';
+    </script>
+</apex:outputPanel>
+<apex:outputPanel id="variablesPanel">
+ <script>  
+    function addtabWithProgress()
+    {
+        var progressBar = '';
+        var objAutoId = "{!JSENCODE(objAutoId)}";
+        addtabWithProgressJS(progressBar, objAutoId)
+    }
+</script> 
+</apex:outputPanel>
+
+<script>
+
+function msgbox(msg, title, icon, clickHandler){
+    var msgIcon = Ext.MessageBox.INFO;//Default
+    if(title==null) title="";
+    if(icon==3){
+        msgIcon = Ext.MessageBox.QUESTION;
+        if(title=="") title="{!JSENCODE($Label.Question)}";
+    }else if(icon==2){
+        msgIcon = Ext.MessageBox.WARNING;
+        if(title=="") title="{!JSENCODE($Label.Warning)}";
+    }else if(icon==1){
+        msgIcon = Ext.MessageBox.ERROR;
+        if(title=="") title="{!JSENCODE($Label.Error)}";
+    }
+    if(title=="") title="{!JSENCODE($Label.Information)}";
+    Ext.MessageBox.show({
+       title: title,
+       msg: msg,
+       width:300,
+       buttons: Ext.MessageBox.OK,
+       fn: clkHandler,
+       icon: msgIcon
+   });
+}function clkHandler(btn){};
+var RefreshToolbar=function RefreshToolbar(){
+ 
+  var topToolbarPanel=Ext.getCmp('mnuBarId');
+  if(topToolbarPanel!=null){
+      var topToolbar=topToolbarPanel.getTopToolbar();
+      topToolbar.doLayout();
+  }
+  
+}
+if(window.parent.RefreshToolbar!=undefined)
+            window.parent.RefreshToolbar(RefreshToolbar);
+
+var formAssignment = '{!JSENCODE(formAssignment)}';
+function getFormAssignment(pageName)
+{
+	var pattern = new RegExp(pageName, 'i')
+	if (formAssignment.match(pattern))
+		pageName += 'Custom';
+	return pageName;
+}
+
+function getPopupDetails(popUpId, returnId){
+//Sridhar: Moved the pageName to a global variable
+    var tabHeader = '', windowHeader = '';
+    if(popUpId == 'Incident'){
+        	pageName = 'IncidentPage';
+        tabHeader = '{!JSENCODE($ObjectType.Incident__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Incident__c.label)}';
+    } else if(popUpId == 'Client'){
+        pageName = 'ClientPage';
+        tabHeader = '{!JSENCODE($Label.ClientWindowHeaderSearchPage)}';
+        windowHeader = '{!JSENCODE($Label.ClientWindowHeaderSearchPage)}';
+    } else if(popUpId == 'Category'){
+        pageName = 'CategoryPage';
+        tabHeader = '{!JSENCODE($ObjectType.Category__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Category__c.label)}';
+    } else if(popUpId == 'CategoryType'){
+        pageName = 'CategoryTypesPage';
+        tabHeader = '{!JSENCODE($ObjectType.CategoryTypes__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.CategoryTypes__c.label)}';
+    } else if(popUpId == 'Organization'){
+        pageName = 'OrganizationPage';
+        tabHeader = '{!JSENCODE($ObjectType.Account.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Account.label)}';
+    } else if(popUpId == 'Impact'){
+        pageName = 'ImpactPage';
+        tabHeader = '{!JSENCODE($ObjectType.Impact__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Impact__c.label)}';
+    } else if(popUpId == 'Urgency'){
+        pageName = 'UrgencyPage';
+        tabHeader = '{!JSENCODE($ObjectType.Urgency__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Urgency__c.label)}';
+    } else if(popUpId == 'Broadcast'){
+        pageName = 'BroadcastsPage';
+        tabHeader = '{!JSENCODE($ObjectType.Broadcasts__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Broadcasts__c.label)}';
+    } else if(popUpId == 'Status'){
+        pageName = 'StatusPage';
+        tabHeader = '{!JSENCODE($ObjectType.Status__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Status__c.label)}';
+    } else if(popUpId == 'Priority'){
+        pageName = 'PriorityPage';
+        tabHeader = '{!JSENCODE($ObjectType.Priority__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Priority__c.label)}';
+    } else if(popUpId == 'Action'){
+        pageName = 'ActionPage';
+        tabHeader = '{!JSENCODE($ObjectType.Action__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Action__c.label)}';
+    } else if(popUpId == 'Staff'){
+        pageName = 'UserPage';
+        tabHeader = '{!JSENCODE($ObjectType.User.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.User.label)}';
+    } else if(popUpId == 'IncidentHistory'){
+        pageName = 'IncidentHistoryPage';
+        tabHeader = '{!JSENCODE($ObjectType.IncidentHistory__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.IncidentHistory__c.label)}';
+    } else if(popUpId == 'BroadcastHistory'){
+        pageName = 'BroadcastHistoryPage';
+        tabHeader = '{!JSENCODE($ObjectType.BroadcastHistory__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.BroadcastHistory__c.label)}';
+    } else if(popUpId == 'TaskHistory'){
+        pageName = 'TaskHistoryPage';
+        tabHeader = '{!JSENCODE($ObjectType.TaskHistory__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.TaskHistory__c.label)}';
+    } else if(popUpId == 'Task'){
+        pageName = 'TaskPage';
+        tabHeader = '{!JSENCODE($ObjectType.Task__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Task__c.label)}';
+    } else if(popUpId == 'StandardDescription'){
+        pageName = 'StandardDescriptionPage';
+        tabHeader = '{!JSENCODE($ObjectType.StandardDescription__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.StandardDescription__c.label)}';
+    } else if(popUpId == 'Quickview'){
+        pageName = 'DashboardPage';
+        tabHeader = '{!JSENCODE($Label.SysQuickViewWindowHeaderSearchPage)}';
+        windowHeader = '{!JSENCODE($Label.StandardDescription)}';
+    } else if(popUpId == 'Staff'){
+        pageName = 'StaffPage';
+        tabHeader = '{!JSENCODE($Label.IncidentsStaff)}';
+        windowHeader = '{!JSENCODE($Label.IncidentsStaff)}';
+    } else if(popUpId == 'Template'){
+        pageName = 'TemplatePage';
+        tabHeader = '{!JSENCODE($ObjectType.SYSTemplate__c.Label)}';
+        windowHeader = '{!JSENCODE($ObjectType.SYSTemplate__c.Label)}';
+    } else if(popUpId == 'EmailServicesAddress'){
+        pageName = 'ESAddressPage';
+        tabHeader = '{!JSENCODE($Label.EmailServicesAddressWindowHeaderSearchPage)}';
+        windowHeader = '{!JSENCODE($Label.EmailServicesAddressWindowHeaderSearchPage)}';
+    } else if(popUpId == 'FAQ'){
+        pageName = 'FAQPage';
+        tabHeader = '{!JSENCODE($ObjectType.FAQ__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.FAQ__c.label)}';
+    } else if(popUpId == 'FAQCategory'){
+        pageName = 'FAQCategoryPage';
+        tabHeader = '{!JSENCODE($ObjectType.FAQ_Category__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.FAQ_Category__c.label)}';
+    } else if(popUpId == 'SYSTemplate'){
+        pageName = 'TemplatePage';
+        tabHeader = '{!JSENCODE($Label.TemplatePageWindowHeaderSearchPage)}';
+        windowHeader = '{!JSENCODE($Label.Navigator_SelfServiceSettings)}';
+    } else if(popUpId == 'EmailTemplate'){
+        pageName = 'EmailTemplate';
+        tabHeader = '{!JSENCODE($Label.EmailTemplateWindowHeaderSearchPage)}';
+        windowHeader = '{!JSENCODE($Label.EmailTemplateWindowHeaderSearchPage)}';
+    }else if(popUpId == 'SSCategory'){
+        pageName = 'CategoryPage';
+        tabHeader = '{!JSENCODE($ObjectType.Category__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Category__c.label)}';                            
+    }else if(popUpId == 'SSFAQ'){
+        pageName = 'FAQPage';
+        tabHeader = '{!JSENCODE($ObjectType.FAQ__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.FAQ__c.label)}';                            
+    }else if(popUpId == 'SSTemplate'){
+        pageName = 'TemplatePage';
+        tabHeader = '{!JSENCODE($ObjectType.SYSTemplate__c.Label)}';
+        windowHeader = '{!JSENCODE($ObjectType.SYSTemplate__c.Label)}';                            
+    }else if(popUpId == 'ChangeAssessment'){
+        pageName = 'ChangeAssessmentPage';
+        tabHeader = '{!JSENCODE($ObjectType.Change_Assessment__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Change_Assessment__c.label)}';
+    }
+    else if(popUpId == 'Change'){
+        pageName = 'ChangeRequestPage';
+        tabHeader = '{!JSENCODE($ObjectType.Change_Request__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Change_Request__c.label)}';                            
+    }else if(popUpId == 'Problem'){
+        pageName = 'ProblemPage';
+        tabHeader = '{!JSENCODE($ObjectType.Problem__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Problem__c.label)}';                            
+    }
+    else if(popUpId == 'SLA'){
+        pageName = 'SLAPage';
+        tabHeader = '{!JSENCODE($ObjectType.ServiceLevelAgreement__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.ServiceLevelAgreement__c.label)}';                            
+    }
+    else if(popUpId == 'ProjectedServiceOutage'){ 
+        pageName = 'BlackOutPage'; 
+        tabHeader = '{!JSENCODE($ObjectType.Projected_Service_Outage__c.label)}'; 
+        windowHeader = '{!JSENCODE($ObjectType.Projected_Service_Outage__c.label)}';
+    }else if(popUpId == 'CustomActions'){ 
+        pageName = 'CustomActionPage'; 
+       tabHeader = '{!JSENCODE($ObjectType.Custom_Action__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Custom_Action__c.label)}'; 
+    }else if(popUpId == 'SLT'){
+        pageName = 'ServiceTargetPage';
+        if(targetType && targetType == 'Operational Level Agreement'){
+	        tabHeader = '{!JSENCODE($Label.OperationalTargets)}';
+	        windowHeader = '{!JSENCODE($Label.OperationalTarget)}'; 
+        }  else{
+        	tabHeader = '{!JSENCODE($ObjectType.Service_Target__c.label)}';
+	        windowHeader = '{!JSENCODE($ObjectType.Service_Target__c.label)}'; 
+        }                         
+    }else if(popUpId == 'SRM_RequestDefinition'){
+        pageName = 'RequestDefPage';
+        tabHeader = '{!JSENCODE($ObjectType.SRM_RequestDefinition__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.SRM_RequestDefinition__c.label)}';                            
+    }else if(popUpId == 'Release'){
+        pageName = 'ReleasePage';
+        tabHeader = '{!JSENCODE($ObjectType.Release__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Release__c.label)}';                            
+    }else if(popUpId == 'chatter_listener'){    	
+        pageName = 'ChatterListenerPage';
+        tabHeader = '{!JSENCODE($ObjectType.Chatter_Listener__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Chatter_Listener__c.label)}';                            
+    }
+    else if(popUpId == 'KnowledgeArticle'){
+        pageName = 'KnowledgeArticlePage';
+        tabHeader = '{!JSENCODE($ObjectType.KM_KnowledgeArticle__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.KM_KnowledgeArticle__c.label)}'; 
+    }
+	else if(popUpId == 'Suggested_Owner'){
+        pageName = 'SuggestedOwnerMappingCriteria';
+        tabHeader = '{!JSENCODE($Label.SuggestedOwnerAndQueueAssignmentMapping)}';
+        windowHeader = '{!JSENCODE($Label.SuggestedOwnerAndQueueAssignmentMapping)}'; 
+    }
+	else if(popUpId == 'WebAPIConfiguration'){
+        pageName = 'WebAPIConfiguration';
+        tabHeader = '{!JSENCODE($ObjectType.WebAPIConfiguration__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.WebAPIConfiguration__c.label)}';
+    }
+	else if(popUpId == 'CMDB_Class'){
+        pageName = 'CustomCMDBClasses';
+        tabHeader = '{!JSENCODE($ObjectType.CMDB_Class__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.CMDB_Class__c.label)}';
+    }
+	else if(popUpId == 'Model'){
+        pageName = 'AdminModelPage';
+        tabHeader = '{!JSENCODE($ObjectType.Model__c.label)}';
+        windowHeader = '{!JSENCODE($ObjectType.Model__c.label)}';
+    }
+    else if(popUpId.toLowerCase() == 'reconciliation'){
+        pageName = 'AdminCMDBReconciliation';
+        tabHeader = '{!JSENCODE($Label.Reconciliation)}';
+        windowHeader = '{!JSENCODE($Label.Reconciliation)}';
+    }
+    else if(popUpId == 'Location'){
+        pageName = 'AdminLocationPage';
+        tabHeader = '{!JSENCODE($Label.Location)}';
+        windowHeader = '{!JSENCODE($Label.Location)}';
+    }
+	else if(popUpId == 'NormalizationRule'){
+    	pageName = 'AdminNormalizationPage';
+        tabHeader = '{!JSENCODE($Label.Normalization_Rules)}';
+        windowHeader = '{!JSENCODE($Label.Normalization_Rules)}';
+    }
+	pageName = getFormAssignment(pageName);
+    //Dont change in below if
+    if(popUpId == "{!popupId}" && "{!pageLink}"!=""){
+        pageName = '{!pageLink}';
+        if(tabHeader=="")
+            tabHeader = '{!tabHeader}';
+        if(windowHeader=="")
+            windowHeader = '{!winHeader}';
+    }
+    //
+    if(returnId==3)
+        return windowHeader;
+    else if(returnId==2)
+        return tabHeader;
+    else
+        return pageName;
+}
+</script>
+<apex:outputPanel id="copyButtonTogglePanel" >
+<script>
+    function toggleCopyButton(){
+        if({!isCustomerPortalUser} && Ext.getCmp("copyId")!=null)
+        { 
+            Ext.getCmp("copyId").setDisabled(true);
+            Ext.getCmp('copyId').setIconClass('bmcCopyDisable');
+        }else if(popUpId == 'CMDB_Class' || popUpId == 'NormalizationRule'){
+        	Ext.getCmp("copyId").setDisabled(true);
+        	Ext.getCmp("copyId").setVisible(false);
+        }else if(document.getElementById('copyId') != null && typeof document.getElementById('copyId') != 'undefined'){
+            if(isUserPermitted('copy')){
+            Ext.getCmp('copyId').setDisabled(false);
+            Ext.getCmp('copyId').setIconClass('bmcCopy');
+        }
+    }
+    }
+ </script>
+</apex:outputPanel>
+<apex:outputPanel id="seqid" >
+<script>
+
+if('{!chksequence }' != '' && Ext.getCmp('deleteId') != null){
+	if (popUpId == 'SLT'){
+	     Ext.getCmp('deleteId').setDisabled(true);
+	     Ext.getCmp('deleteId').setIconClass('bmcDeleteSLTDisable'); 		
+	} else {
+	     Ext.getCmp('deleteId').setDisabled(true);
+	     Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable'); 	
+	}
+}else if(Ext.getCmp('deleteId') != null){
+	if(isUserPermitted('delete')){
+		if (popUpId == 'SLT'){
+			Ext.getCmp('deleteId').setDisabled(false);
+			Ext.getCmp('deleteId').setIconClass('bmcDeleteSLT');		
+		} else {    
+		    Ext.getCmp('deleteId').setDisabled(false);
+		    Ext.getCmp('deleteId').setIconClass('bmcDelete'); 
+		}
+    }
+}
+</script>
+</apex:outputPanel>
+<apex:outputPanel id="wholePage" rendered="true">
+<apex:form id="frmSearch">
+<script>
+var RoundedOffServiceTargets;    
+var strCMDBClasstooltip = '{!JSENCODE(CMDBAssetClassToolTipString)}';
+
+var arrCMDBTooltip = null;
+var objCMDBTooltip = {};
+
+if(strCMDBClasstooltip != null && typeof(strCMDBClasstooltip) != 'undefined' && strCMDBClasstooltip != ''){
+	arrCMDBTooltip = strCMDBClasstooltip.split(nonPrint);
+	if(arrCMDBTooltip!= null && arrCMDBTooltip.length > 0 ){
+		for(k=0; k < arrCMDBTooltip.length; k++){
+			var strClasstip = arrCMDBTooltip[k];
+			if(strClasstip != null && typeof(strClasstip) != 'undefined' && strClasstip !=''){
+				arrClassTip = strClasstip.split(PE);
+				if(arrClassTip !=null && arrClassTip.length > 1 ){
+					strKey = arrClassTip[0];
+					strValue = arrClassTip[1].replace(/\\/g, '');
+					objCMDBTooltip[strKey]= strValue ;
+				}
+			}
+		}
+	}
+}
+    var parentCategoryName="{!JSENCODE($CurrentPage.parameters.categoryid)}";
+    if(parentCategoryName == ""){
+        parentCategoryName  = "{!JSENCODE($CurrentPage.parameters.filterObjectId)}";
+    }
+	FilterObjectId ="{!JSENCODE($CurrentPage.parameters.filterObjectId)}";
+	var isSuggestExpert = "{!JSENCODE($CurrentPage.parameters.isSuggestExpert)}";
+    
+    notSortableFields ='{!notSortableFields}';
+    var wid="{!JSENCODE($CurrentPage.parameters.wid)}";    
+function chgTitle(){
+    var ttl='{!JSENCODE(objPluralType)} {!JSENCODE($Label.lblAssignedToMe)}';
+    if(document.getElementById("shMine").value.toLowerCase()!='true')
+        ttl='{!JSENCODE($Label.lblAllAvailable)} {!JSENCODE(objPluralType)}';
+    window.parent.changeTitle(wid, '{!JSENCODE(objPluralType)} List - '+ttl,'{!JSENCODE(objPluralType)} List - '+ttl);
+}
+
+    var pageSource = "{!JSENCODE($CurrentPage.parameters.popupId)}"; 
+    var queueFor = "{!JSENCODE($CurrentPage.parameters.queueFor)}";
+    popUpId = "{!popupId}";
+    var qFor = "{!JSENCODE(qFor)}";
+                
+    var hasNext = {!hasNext};
+    var hasPrevious = {!hasPrevious};
+
+    var isLookup = "{!JSENCODE($CurrentPage.parameters.islookup)}";
+    var assessorheading = "{!JSENCODE($CurrentPage.parameters.assessorheading)}";
+    var objectPluralType = '{!JSENCODE(objPluralType)}';
+    if(isLookup){
+          if(objectPluralType == 'Queue Sobjects'){
+            window.parent.changePopUpTitle('{!JSENCODE($Label.selectFrom)}'+' '+'{!JSENCODE($Label.Queue)}');
+          }else if(objectPluralType == 'Clients'){
+            //sridhar-1448
+            var filterClauseStr = "{!JSENCODE($CurrentPage.parameters.filterClause)}";
+            var windownameflag = "{!JSENCODE($CurrentPage.parameters.windownameflag)}";
+            var hasTitle = "{!JSENCODE($CurrentPage.parameters.hasTitle)}";
+            
+            if(!(hasTitle != null && hasTitle == 'true' && hasTitle != ''))
+            {
+	            if(!isStdPage && ("" == filterClauseStr || 1 == windownameflag) )
+	               	window.parent.popUpWindow.setTitle('{!JSENCODE($Label.selectFrom)}'+' '+'{!JSENCODE($Label.ClientWindowHeaderSearchPage)}'); 	
+	            else{
+	                if(!isStdPage)
+	               		window.parent.popUpWindow.setTitle('{!JSENCODE($Label.selectFrom)}'+' '+'{!JSENCODE($Label.IncidentsStaff)}');
+	               	
+	            }//end sridhar    
+            }
+            
+            
+          }
+          else if(IsServiceTargetPopup()) {
+          	// do nothing
+          }
+          else{
+			if((window.parent.changePopUpTitle != null) && (typeof(window.parent.changePopUpTitle) != 'undefined'))
+				window.parent.changePopUpTitle('{!JSENCODE($Label.selectFrom)}'+' '+'{!JSENCODE(objPluralType)}');
+          }
+    }
+   
+    var mnuBar;
+    function wrapText(data, metadata, record, rowIndex, columnIndex, store){
+        //while(data.indexOf('<br')!=-1) data=data.replace('<br/>', ' ').replace('<br>', ' ');
+        return data.length>25 ? '<div class="tipstring" title="' + data +'">' + data.substr(0,20) + '.....</div>' : data;
+    }
+    function copyObject(){
+        activeWindowFlag=false;
+        var recs=getSelectedIds();        
+        if(recs!="" && recs.substring(recs.length-1)==",")   
+            recs=recs.substring(0, recs.length-1);
+        if(recs.indexOf(",")!=-1){
+            msgbox("{!JSENCODE($Label.validateOneRecordSearchPage)}", "", 2);
+            return false;
+        }
+        cpId=document.getElementById("selectedSOId").value;
+        var pageName = getPopupDetails("{!popupId}", 1);
+        var tabHeader = getPopupDetails("{!popupId}", 2);
+        var windowHeader = getPopupDetails("{!popupId}", 3);
+        // for Service Targets tab popup
+        if (popUpId=='SLT'){
+          SID = getSlaID();
+         recname = grid.getSelectionModel().getSelected()
+         targetType = window.parent.agreementTypePicklist.value;
+	      if(targetType){
+	    	    windowHeader = getPopupDetails(popUpId, 3);
+    	  }
+         ServiceTargetheading = windowHeader+' - '+  recname.get(nameFld);
+         if(windowHeader==operationalTarget){
+			openiframepopup(pageName+"?copyId="+cpId+"&title="+encodeURIComponent(windowHeader)+"&SlaId="+SID,560,699, ServiceTargetheading);
+		 }else{
+			openiframepopup(pageName+"?copyId="+cpId+"&title="+encodeURIComponent(windowHeader)+"&SlaId="+SID,500,699, ServiceTargetheading);
+		 }
+        }else{
+        		if(popUpId == 'Suggested_Owner'){
+	                window.parent.parent.addTab(pageName+"?copyId="+cpId+"&title="+encodeURIComponent(windowHeader),windowHeader,windowHeader);
+	            }
+	            else {
+        			window.parent.addTab(pageName+"?copyId="+cpId+"&title="+encodeURIComponent(windowHeader),windowHeader,windowHeader);
+        		}
+       		
+       	}
+    }
+ //Function added by Himanshoo forOpen Help File story
+        function showFrameHelp(stringpassedfromnav)
+
+        {            
+            var Modulenameforhelp= "{!PopupId}";
+             OpenHelppage(Modulenameforhelp,'module',stringpassedfromnav);
+        }
+//Addition ends
+
+  
+    function addLink(data, metadata, record, rowIndex, columnIndex, store){
+    	if(disableFirstColLink!='undefined' && disableFirstColLink!=undefined && disableFirstColLink!=null && disableFirstColLink == 'true'){
+    		return data;
+    	}else{
+            RoundedOffServiceTargets = JSON.parse('{!JSENCODE(strRoundedOffServiceTargets)}');
+	        var modData=colRenderer(data, metadata, record, rowIndex, columnIndex, store);
+            if(""+getPopupDetails("{!popupId}", 1)!="undefined" && getPopupDetails("{!popupId}", 1)!=""){
+                if(popUpId == 'Model' && (cols[columnIndex].toLowerCase()=='normalized_with_model__c' || cols[columnIndex].toLowerCase()=='fkmodel__r_name')){
+					if(modData != '-')
+						modData='<a onclick="showNormalizedRecord()">'+modData+'</a>';
+				}
+				else if(popUpId == 'Normalization_Exception' && (cols[columnIndex].toLowerCase()=='pending_count__c' || cols[columnIndex].toLowerCase()=='approved_count__c')){
+                    if(modData == '0')
+						modData = '-';
+					else{
+                        var colClicked = cols[columnIndex].toLowerCase();
+						modData='<a onclick="showRecord('+'\''+colClicked+'\''+')">'+modData+'</a>';
+					}	
+                }
+				else
+					modData='<a onclick="showRecord()">'+modData+'</a>';
+			}
+			return modData;
+		}
+    }
+    
+    function IsServiceTargetPopup() {
+    	return {!IsServiceTargetPopup};
+    }
+	
+	function convertBooleanToYesNo(data, metadata, record, rowIndex, columnIndex, store){
+		if(data == true || data == 'true')
+			return '{!JSENCODE($Label.ExtjsMessageYes)}';
+		else 
+			return '{!JSENCODE($Label.ExtjsMessageNo)}';
+	}
+	
+	function appendInfoIcon(data, metadata, record, rowIndex, columnIndex, store){
+		var strCurrentData;
+		if("{!objType}"=="ReconciliationRule__c")
+			strCurrentData = record.get('FKCMDB_Class__r_CMDBClassType__c');
+		else
+			strCurrentData = record.get('CMDBClassType__c');
+		strCurrentData = "'" + strCurrentData + '_' + rowIndex + "'"; 
+		
+		var strSearchString = lblCMDBAssetClass + ' (';
+		
+		if(strCurrentData.indexOf(strSearchString) > -1 ){   
+			return data + '</div> <div  class="bmcInfoDiv"><img src="/s.gif" id='+ strCurrentData + ' class="bmcInfoPopup" onmouseout="hideToolTip()" onmouseover="showToolTip(event,' + rowIndex + ',' + columnIndex + ', this,\'CMDBClassType\');">';
+		}else 
+			return data;
+	}
+	
+	
+    function colRenderer(data, metadata, record, rowIndex, columnIndex, store){
+        if(data==null) data="";
+        //if(1>rowIndex) alert(columnIndex +":"+ cols[columnIndex]+":"+colsHdrs[columnIndex]);
+        if(cols[columnIndex].toLowerCase()=='state__c' && !IsServiceTargetPopup())
+            data=shState(data, metadata, record, rowIndex, columnIndex, store);
+        else if(cols[columnIndex].toLowerCase().indexOf('description')!=-1)
+            data=addToolTip(data, metadata, record, rowIndex, columnIndex, store);
+        else if("{!objType}"=="SYSBRInformation__c" && cols[columnIndex].toLowerCase()=="modulename__c")
+            data=modBrInfo(data, metadata, record, rowIndex, columnIndex, store);
+        else if(cols[columnIndex].toLowerCase()=='defaultstatus__c')
+            data=shDefStatus(data, metadata, record, rowIndex, columnIndex, store);
+        else if(cols[columnIndex].toLowerCase()=='question__c' || cols[columnIndex].toLowerCase()=='answer__c')
+            data=addToolTip(data, metadata, record, rowIndex, columnIndex, store);
+		else if("{!objType}"=="Action__c" && (cols[columnIndex].toLowerCase()=="automodify__c" || cols[columnIndex].toLowerCase()=="system__c"))
+            data=shBooleanData(data, metadata, record, rowIndex, columnIndex, store);
+        else if("{!objType}"=="Category__c" && cols[columnIndex].toLowerCase()=="parenttree__c"){
+            data=addToolTip(data, metadata, record, rowIndex, columnIndex, store);  
+		}
+		else if("{!objType}"=="SRM_RequestDefinition__c" && cols[columnIndex].toLowerCase()=="online__c"){
+			data=convertBooleanToYesNo(data, metadata, record, rowIndex, columnIndex, store);
+		}
+		else if("{!objType}"=="CMDB_Class__c" && cols[columnIndex].toLowerCase()=="exposure__c"){
+			data=convertBooleanToYesNo(data, metadata, record, rowIndex, columnIndex, store);
+		}
+		else if("{!objType}"=="CMDB_Class__c" && cols[columnIndex].toLowerCase()=="abstract__c"){
+			data=convertBooleanToYesNo(data, metadata, record, rowIndex, columnIndex, store);
+		}
+		else if("{!objType}"=="CMDB_Class__c" && cols[columnIndex].toLowerCase()=="iscustomclass__c"){
+			data=convertBooleanToYesNo(data, metadata, record, rowIndex, columnIndex, store);
+		}
+		else if("{!objType}"=="CMDB_Class__c" && cols[columnIndex].toLowerCase()=="cmdbclasstype__c"){
+			data=appendInfoIcon(data, metadata, record, rowIndex, columnIndex, store);
+		}
+		else if("{!objType}"=="ReconciliationRule__c" && cols[columnIndex].toLowerCase()=="fkcmdb_class__r_cmdbclasstype__c"){
+			data=appendInfoIcon(data, metadata, record, rowIndex, columnIndex, store);
+		}
+		else if("{!objType}"=="ReconciliationRule__c" && cols[columnIndex].toLowerCase()=="fkcmdb_class__r_iscustomclass__c"){
+			data=convertBooleanToYesNo(data, metadata, record, rowIndex, columnIndex, store);
+		}
+		else if("{!objType}"=="ReconciliationRule__c" && cols[columnIndex].toLowerCase()=="fkcmdb_class__r_exposure__c"){
+			data=convertBooleanToYesNo(data, metadata, record, rowIndex, columnIndex, store);
+		}
+		else if("{!objType}"=="ReconciliationRule__c" && cols[columnIndex].toLowerCase()=="inactive__c"){
+			data=convertBooleanToYesNo(data, metadata, record, rowIndex, columnIndex, store);
+		}
+		else if("{!objType}"=="User" && cols[columnIndex].toLowerCase()=="isoutofoffice__c"){
+			data=convertBooleanToYesNo(data, metadata, record, rowIndex, columnIndex, store);
+		}
+		else if("{!objType}"=="SupportAssignments__c" && cols[columnIndex].toLowerCase()=="fkuser__r_isoutofoffice__c"){
+			data=convertBooleanToYesNo(data, metadata, record, rowIndex, columnIndex, store);
+		}else if("{!objType}"=="User" && cols[columnIndex].toLowerCase()=="contact_account_name"){
+            if(data == null || data=='' || data == '-' )
+                 data=record.get('Account_Name__c');
+        }
+		
+        //else return data;
+        
+        if(cols[columnIndex].toLowerCase()=='status__c' && IsServiceTargetPopup()) {
+
+			var status_img = null;
+			var status_tooltip = null;
+			
+			status_tooltip = '{!JSENCODE($Label.ServiceTarget)} ' + data;        	
+			
+        	if(data=='{!JSENCODE($Label.ServiceTargetStatus_Missed)}')
+        		status_img = 'svt-missed.png';
+        	else if(data=='{!JSENCODE($Label.ServiceTargetStatus_Cancelled)}')
+        		status_img = 'svt-cancelled.png';
+        	else if(data=='{!JSENCODE($Label.ServiceTargetStatus_Warning)}')
+        		status_img = 'svt-warning.png';
+        	else if(data=='{!JSENCODE($Label.ServiceTargetStatus_Met)}')
+        		status_img = 'svt-attached_ok_met.png';
+        	else if(data=='{!JSENCODE($Label.ServiceTargetStatus_OK)}')
+        		status_img = 'svt-attached_ok_met.png';
+        		
+        	if(status_img!=null)
+	       		data='<img height="16px" width="16px" src="{!$Resource.SDEFStyles}/SDEFicons/'+status_img+'"></img>';
+	       		
+       		if(status_tooltip!=null)
+		        metadata.attr = 'title="'+status_tooltip+'" style="text-align:center; vertical-align:middle;"';
+	    }        
+		if(RoundedOffServiceTargets && cols[columnIndex].toLowerCase()=='elapsedtime__c' && IsServiceTargetPopup()) {
+            var roundedOffElapsedTimeLabel = '{!JSENCODE($Label.RoundedOffElapsedTime)}';
+			for( var i = 0; i < RoundedOffServiceTargets.length; i++ ) {
+                if( RoundedOffServiceTargets[i] == record.data.Id ) {
+            		metadata.attr = 'title="'+roundedOffElapsedTimeLabel+'" style="text-align:center; vertical-align:middle;"';
+                }
+            }
+            
+        }
+        if(cols[columnIndex].toLowerCase()=='targettype__c' && IsServiceTargetPopup()) {
+        	if(data=='{!JSENCODE(CONST_SLT_RESPONSE_TIME)}')
+        		data = '{!JSENCODE($Label.ResponseTime)}';
+        	else if(data=='{!JSENCODE(CONST_SLT_RESOLUTION_TIME)}')
+        		data = '{!JSENCODE($Label.ResolutionTime)}';
+        	else if(data=='{!JSENCODE(CONST_SLT_INITIATION_TIME)}')
+        		data = '{!JSENCODE($Label.InitiationTime)}';
+        	else if(data=='{!JSENCODE(CONST_SLT_COMPLETION_TIME)}')
+        		data = '{!JSENCODE($Label.CompletionTime)}';
+		}
+		if(cols[columnIndex].toLowerCase()=='fkpriority__r_name'){
+			if(!isNaN(data)){
+				var priority_val=parseInt(data);
+				var priority_img='';
+				if(priority_val >= 6 )
+					priority_img = priorityArray[6];
+				else
+					priority_img = priorityArray[data];
+			data='<img height="16px" width="16px" src="{!$Resource.SDEFStyles}/SDEFimages/'+priority_img+'"></img>';
+			}
+
+		}  
+		        
+        return data;
+    }
+    function defaultCategoryIconHandler(item){
+        openPage("ManageCategoryIcon",'{!JSENCODE($Label.managedefaulticon)}','{!JSENCODE($Label.managedefaulticon)}');
+    }
+    var saveArg=null;
+    function linkUnlink(item){
+           if('{!popId}'=='ManageCategories'){
+        openPage("ManagePage?manageId=Categories&paramId=Categories",'{!JSENCODE($Label.ManageCategories)}','{!JSENCODE($Label.ManageCategories)}');
+         }else if('{!popId}'=='ManagePopularRequest'){
+         openPage("ManagePage?manageId=Top Requests&paramId=Templates",'{!JSENCODE($Label.ManageTopRequests)}','{!JSENCODE($Label.ManageTopRequests)}');
+         }else if('{!popId}'=='ManageFAQs'){
+          openPage("ManagePage?manageId=FAQs&paramId=FAQs",'{!JSENCODE($Label.ManageFAQs)}','{!JSENCODE($Label.ManageFAQs)}');
+         }
+         else{
+        document.getElementById("linkIds").value="";
+        document.getElementById("selectedSOId").value=getSelectedIds();
+        if(!validateSelection()) return false;
+        if(document.getElementById("selectedSOId").value==""){msgbox("{!JSENCODE($Label.validateLinkUnlinkSearchPage)}", "", 2); return;}
+        //var retVal = window.showModalDialog("/apex/SearchPage?popupId={!popId}", "searchpage","dialogWidth=600px; dialogHeight=600px; resizable=yes");
+        saveArg = item;
+        if(saveArg.text.toLowerCase().indexOf("unlink")==0)
+            doLinkUnlink('');
+        else
+            openPopup('SearchPage?popupId={!popId}&isLookup=true', doLinkUnlink);
+        //doLinkUnlink(retVal);
+    }}
+    function doLinkUnlink(retVal){
+        if(saveArg!=null && saveArg.text.toLowerCase().indexOf("link")==0){
+            if(retVal != null && retVal != '' ) {
+                document.getElementById("linkIds").value = retVal;
+            }else if(document.getElementById("returnVal").value!=''){
+                document.getElementById("linkIds").value = document.getElementById("returnVal").value;
+            }
+            if(document.getElementById("linkIds").value==""){msgbox("{!JSENCODE($Label.validateLinkUnlinkSearchPage)}", "", 2); return;}
+            linkit();
+        }else if(saveArg!=null && saveArg.text.toLowerCase().indexOf("unlink")==0){
+            unlinkit();
+        }
+        saveArg = null;
+    }
+//Function added by Manish to check if the default status is true.for bug 1457
+        function getDefaultStatus(){
+        var defStatus='';
+        var d = grid.getSelectionModel().getSelections();
+        
+        for(j=0; j < d.length; j++){
+           defStatus = defStatus + d[j].get(cols[4])+",";
+        }
+       
+        if(defStatus != null && defStatus != '')
+            defStatus = defStatus.substring(0,defStatus.length-1);
+        return defStatus;
+    }
+    function changeSRDStatus(menus){
+    	var selectedIds = getSelectedIds();
+    	if(selectedIds != null && selectedIds != ''){
+    		if(menus.text.toLowerCase().indexOf("online") != -1){
+            	changeStatus(selectedIds, 'true');
+            }else{
+            	changeStatus(selectedIds, 'false');
+            }
+    
+        }else{
+        	msgbox("{!JSENCODE($Label.validateOnlineOfflineSearchPage)}", "", 2); return;
+        }
+    }
+    function deleteObj(){
+        if("{!objType}"=="User"){
+            msgbox("{!JSENCODE($Label.validateDeleteUserSearchPage)}", 2);
+            return;
+        }
+        if("{!objType}"=="EmailServicesAddress"){
+            msgbox("{!JSENCODE($Label.validateDeleteEmailServiceAddressSearchPage)}", "", 2);
+            return;
+        }
+        if("{!objType}"=="Action__c" && selectedRecord != null && typeof(selectedRecord) != 'undefined' && selectedRecord.get('system__c') == 'true' ){
+            showMessage('{!JSENCODE($Label.cannotDeleteSystemActions)}');
+            return;
+        }
+        document.getElementById("selectedSOId").value=getSelectedIds();
+         // added by manish for bug 1457
+        document.getElementById("defStatus").value=getDefaultStatus();
+        if(!validateSelection()) return false;
+        if(document.getElementById("selectedSOId").value==""){msgbox("{!JSENCODE($Label.validatenullDeleteSearchPage)}", "", 2); return;}
+        
+      
+         if("{!objType}"=="SYSTemplate__c"){
+          Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.deleteTemplatePage)}',
+          function(btn){ if(btn === 'yes'){ deleteObject(); }});
+        }
+        else if ("{!objType}"=="FAQ_Category__c"){
+          validateFAQCategoryDeletion();
+          }
+         // added by manish for bug 1457
+        else if ("{!objType}"=="Status__c" && document.getElementById("defStatus").value == 'true'){
+          msgbox("{!JSENCODE($Label.defaultStatusErrorMessage)}", "", 1);
+          return;
+        } 
+        else{
+        	var selectedrecord = document.getElementById("selectedSOId").value;
+     		var selectedrecordArray =new Array();
+     		selectedrecordArray=selectedrecord.split(',');
+     		
+     		if(selectedrecordArray.length>1){
+          		Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.MultipleDeleteConfirmMessage)}',
+          		function(btn){ if(btn === 'yes'){ deleteObject(); }});
+          	}
+			else if("{!objType}"=="CMDB_Class__c"){
+          		Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.DeleteConfirmMsgForCMDBClasses)}',
+          		function(btn){ if(btn === 'yes'){ deleteObject(); }});
+          	}
+          	else{
+          		Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}',
+          		function(btn){ if(btn === 'yes'){ deleteObject(); }});
+          	}
+        }
+    }
+    function deleteMultiObj(){
+        if(idList == null ){
+            msgbox("{!JSENCODE($Label.validatenullDeleteSearchPage)}", "", 2);
+            return;
+        }
+        if(idList != null){
+            deleteMultiObject(idList);
+        }
+
+    }
+    function editObj(){
+        var selectedRecordId = document.getElementById("selectedSOId").value;
+        if(selectedRecordId == ""){
+            msgbox("{!JSENCODE($Label.validateDataSeletctForEditSearchPage)}", "", 2);
+            return;
+        }
+		var selectedRecIds =getSelectedIds();        
+        if(selectedRecIds !="" && selectedRecIds.substring(selectedRecIds.length-1)==",")   
+            selectedRecIds =selectedRecIds.substring(0, selectedRecIds.length-1);
+        if(selectedRecIds.indexOf(",")!=-1){
+            msgbox("{!JSENCODE($Label.validateOneRecordSearchPage)}", "", 2);
+            return false;
+        }
+        var pageName = getPopupDetails("{!popupId}", 1);
+        var tabHeader = getPopupDetails("{!popupId}", 2);
+        var windowHeader = getPopupDetails("{!popupId}", 3);
+        // for Service target tab
+        if(popUpId=='SLT'){
+          recname = grid.getSelectionModel().getSelected()
+          targetType = window.parent.agreementTypePicklist.value;
+	      if(targetType){
+	    	    windowHeader = getPopupDetails(popUpId, 3);
+    	  } 
+         ServiceTargetheading = windowHeader+' - '+  recname.get(nameFld);
+         if(windowHeader==operationalTarget){
+			openiframepopup(pageName+"?id="+selectedRecordId+"&title="+encodeURIComponent(windowHeader),560,699, ServiceTargetheading);
+		 }else{
+			openiframepopup(pageName+"?id="+selectedRecordId+"&title="+encodeURIComponent(windowHeader),500,699, ServiceTargetheading);
+		 }
+          
+        }
+        else if(popUpId == 'Suggested_Owner') {
+        window.parent.parent.addTab(pageName+"?id="+selectedRecordId+"&title="+encodeURIComponent(windowHeader),windowHeader,windowHeader);
+        }
+        else
+        window.parent.addTab(pageName+"?id="+selectedRecordId+"&title="+encodeURIComponent(windowHeader),windowHeader,windowHeader);
+    }
+   
+    
+    function copyObj(){if(document.getElementById("selectedSOId").value==""){msgbox("{!JSENCODE($Label.validateDataSeletctForCopySearchPage)}", "", 2); return;} copyObject();}
+    function pageRefresh(){pageSearch();/*pgReset(true); pgRefresh();*/}
+    
+    function pageSearch() { 
+      document.getElementById("{!$Component.frmSearch.txtSrchCrit}").value="";
+      isSearchHasDone = true; 
+      pgRefresh(); 
+    }
+
+    function pageRefreshCMDBFilter(strFilter){
+    	if(popUpId == 'CMDB_Class' || popUpId.toLowerCase() == 'reconciliation'){
+    		pgCMDBFliterRefresh(strFilter);
+    	}else if(popUpId == 'BMC_BaseElement'){
+    		var isCJK=false;
+    		var searchstring = ''
+			if(document.getElementById("txtSrch") != null){
+				searchstring = document.getElementById("txtSrch").value;
+				searchstring = searchstring.replace("*","");
+            	document.getElementById("txtSrch").value = searchstring;
+            	if(2>searchstring.trim().length ){
+                	isCJK=isCJKChar(searchstring);                
+            		if(!isCJK){
+               		 	msgbox("{!JSENCODE($Label.GsErrorMsg)}", "", 2);
+	                	 return;
+       		    	}
+            	}
+            	if(searchstring == lblSearch){	
+					searchstring = '';
+				}
+            	document.getElementById("{!$Component.frmSearch.txtSrchCrit}").value=searchstring;
+            	pgCMDBFliterRefresh(strFilter,isCJK);
+			}else{
+				pgCMDBFliterRefresh(strFilter,isCJK);
+			}    
+    	}
+    	
+    		
+    }
+    function pgReset(fullPage){
+        document.getElementById("inactiveOption").value=document.getElementById("oriInactiveOption").value;
+        document.getElementById("stateOption").value=document.getElementById("oriStateOption").value;
+        pageSearch();
+    }
+    function specialKey( field, e ) {
+ 	    var keyCode =  parseInt(e.getKey());
+    	if(keyCode == 27) //esc key
+        	window.close();
+        else if ( e.getKey() == e.RETURN || e.getKey() == e.ENTER ) {
+            var searchstring = document.getElementById("txtSrch").value;
+			searchstring = searchstring.replace("*","");
+            document.getElementById("txtSrch").value = searchstring;
+            //alert('replaced'+searchstring);
+            var isCJK=false;
+            if(2>searchstring.trim().length ){
+                isCJK=isCJKChar(searchstring);                
+            	if(!isCJK){
+               		 msgbox("{!JSENCODE($Label.GsErrorMsg)}", "", 2);
+	                 return;
+       		    }
+            }
+            document.getElementById("{!$Component.frmSearch.txtSrchCrit}").value=searchstring;
+            isSearchHasDone = true;
+            pgRefresh(isCJK);
+        }
+    }
+    function specialKeyForAction(e) {
+        var textInput = document.getElementById('txtSrch');
+        var clearBtn = document.getElementById('crossIcon');
+        clearBtn.style.visibility = (textInput.value.length) ? "visible" : "hidden";
+        
+        var keyCode = e.which || e.charCode || e.keyCode;
+        if(keyCode == 27) //esc key
+        	window.close();
+        else if ( keyCode == '13' ) {
+            var searchstring = document.getElementById("txtSrch").value;
+			searchstring = searchstring.replace("*","");
+            document.getElementById("txtSrch").value = searchstring;
+            //alert('replaced'+searchstring);
+            var isCJK=false;
+            if(2>searchstring.trim().length ){
+                isCJK=isCJKChar(searchstring);                
+            	if(!isCJK){
+                    var title="{!JSENCODE($Label.Warning)}";
+                    var msg = "{!JSENCODE($Label.GsErrorMsg)}";
+                    
+                    Ext.MessageBox.show({
+                       title: title,
+                       msg: msg,
+                       width:300,
+                       buttons: Ext.MessageBox.OK,
+                       icon: Ext.MessageBox.WARNING
+                   });
+                   
+                    return;
+       		    }
+            }
+            document.getElementById("{!$Component.frmSearch.txtSrchCrit}").value=searchstring;
+            isSearchHasDone = true;
+            pgRefresh(isCJK);
+        }
+    }
+    function clearActionSearch(obj) {
+    	var textInput = document.getElementById('txtSrch');
+		textInput.value = "";
+        obj.style.visibility = "hidden";
+        pageRefresh();
+		
+    }
+    
+	//Function added for bug 57077
+    function blurfun() {
+    	checkforsearch = false;
+       	if(document.getElementById("txtSrch").value.trim().length == 0)
+       	{
+       		//alert('Set to true');
+       		checkforsearch = true;
+       	}
+    }
+    function txtSearch(){
+		
+		var searchstring = document.getElementById("txtSrch").value;
+    	searchstring = searchstring.replace(/[*"]/gi,'');
+        var isCJK=false;
+		if(checkforsearch)
+		{    
+            if(searchstring=="{!JSENCODE($Label.Search)}"){
+                msgbox("{!JSENCODE($Label.GsErrorMsg)}", "", 2);
+                return;
+            }else if(2>searchstring.trim().length){ 
+                isCJK=isCJKChar(searchstring);
+            	if(!isCJK){
+            		msgbox("{!JSENCODE($Label.GsErrorMsg)}", "", 2);
+	           	    return;
+	        	}
+            }	
+			checkforsearch = false;
+	    }
+	    else
+	    {
+            if(2>searchstring.trim().length){             
+                isCJK=isCJKChar(searchstring);
+            	if(!isCJK){
+            		msgbox("{!JSENCODE($Label.GsErrorMsg)}", "", 2);
+	                return;
+	            }
+            }	
+	    
+	    }
+        document.getElementById("{!$Component.frmSearch.txtSrchCrit}").value=document.getElementById("txtSrch").value;
+        lengthofstring = 0;
+        
+        document.getElementById("{!$Component.frmSearch.istxtSrchCrit}").value= true;
+        isSearchHasDone = true;
+        pgRefresh(isCJK);
+    }
+    function searchTextInitialize(){
+        var searchText = document.getElementById("{!$Component.frmSearch.txtSrchCrit}").value;
+        if(searchText != null && searchText != '' && typeof(searchText) != 'undefined'){
+            document.getElementById("txtSrch").value = searchText;
+            //document.getElementById("txtSrch").focus();
+            if( popUpId == 'Action' && isNewUI == true ) {
+            	document.getElementById('txtSrch').focus();
+                var clearBtn = document.getElementById('crossIcon');
+                clearBtn.style.visibility = "visible";
+            } else {
+            	Ext.getCmp('txtSrch').focus(true);
+            }
+            
+        }
+    }
+    
+    var resultSet= new Array({!resultSet.size});
+    //alert(resultSet.length);
+    var colsSize = {!cols.size};
+    var noName = false;
+    var j=0, k=0;
+    var idFld="", nameFld="";
+    var index = 0;
+	var statusfilterOption = "{!statusFilter}";
+    var cols = new Array(colsSize);j=0;/*Set columnn names*/
+    var colsHdrs = new Array(colsSize);j=0;/*Set columnn headers*/
+    var colsWidth = new Array(colsSize);j=0;
+    {!resultSetString}
+    {!colsString}
+    {!colsHeadersString}
+    {!colsWidthString}
+    if(pageSource.toLowerCase() == 'document'){
+      cols[cols.length] = 'Image';
+      colsWidth[cols.length-1] = 'Thumbnail=20';
+      colsHdrs[cols.length-1] = '{!JSENCODE($Label.BrandingSettingsLabelImage)}';
+      if(resultSet.length > 0){
+        for(var i=0; i < resultSet.length ; i++){
+          var doc = resultSet[i];
+          if(doc[4] == 'png' || doc[4] == 'jpeg' || doc[4] == 'svg' || doc[4] == 'tiff' || doc[4] == 'bmp' || doc[4] == 'gif' || doc[4] == 'jpg'){
+            doc[doc.length] = '<img height="20px" width="20px" src="'+getSFDocumentURL(doc[0])+'"/>';
+          }          
+        }
+      }
+    }
+    for(i=0;i<cols.length;i++){
+    	while(cols[i].indexOf(".")!=-1)
+            cols[i]=cols[i].replace(".","_");
+    }
+    for(i=0;i<colsWidth.length;i++){
+    	while(colsWidth[i].indexOf(".")!=-1)
+            colsWidth[i]=colsWidth[i].replace(".","_");
+    }
+    
+    var sortedCols=new Array(colsSize);
+    var sortedColHeaders=new Array(colsSize);
+    {!headersStringSorted}
+    for(i2=0;i2<sortedColHeaders.length;i2++){
+    	if(sortedColHeaders[i2]==null) continue;
+        sortedCols[i2]=cols[getColsIdxForHeader(sortedColHeaders[i2])];
+    }
+    var groupoptions = new Array(sortedColHeaders.length);
+    j=0; groupoptions[j++] = ['', '{!JSENCODE($Label.None)}'];
+    for(var i=0;i<sortedColHeaders.length;i++) {//Assuming first field will always be Id
+        if(sortedColHeaders[i]==null || sortedColHeaders[i]=='') continue;
+        if(typeof(sortedCols[i]) !='undefined' && sortedCols[i].toLowerCase()=='id') continue;
+        if(typeof(sortedCols[i]) !='undefined')
+        groupoptions[j++] = [sortedCols[i], sortedColHeaders[i]];
+    }
+    for(;groupoptions.length>j;) groupoptions[j++] = ['',''];
+
+    var lblAllClasses = '{!JSENCODE($Label.AllClasses)}';
+	var lblAssetClasses = '{!JSENCODE($Label.AssetClasses)}';
+	var lblCIClasses = '{!JSENCODE($Label.CIClasses)}';
+    
+	var showCMDBClassFilters= new Array(3);
+	j=0; 
+	showCMDBClassFilters[j++] = ['AllClasses', '{!JSENCODE($Label.AllClasses)}'];
+	showCMDBClassFilters[j++] = ['AssetClasses', '{!JSENCODE($Label.AssetClasses)}'];
+	showCMDBClassFilters[j++] = ['CIClasses', '{!JSENCODE($Label.CIClasses)}'];
+    
+    function getSelectedInstanceFilter(popUpId){
+		var strCurrentInstanceFilter = "CIClasses";	
+		if(popUpId == "BMC_BaseElement" ){
+			strCurrentInstanceFilter = Ext.util.Cookies.get('apex__' + 'InstanceFilter');
+		}else if(popUpId == "CMDB_Class" ){
+			strCurrentInstanceFilter = Ext.util.Cookies.get('apex__' + 'Admin_ClassesFilter');
+		}else if(popUpId.toLowerCase() == 'reconciliation'){
+			strCurrentInstanceFilter = Ext.util.Cookies.get('apex__' + 'Admin_ReconciliationFilter');
+		}
+		if(strCurrentInstanceFilter != null && typeof(strCurrentInstanceFilter) != 'undefined'){
+			if(strCurrentInstanceFilter == "CIClasses"){
+				selectedCMDBClassFilter = lblCIClasses;
+			}else if(strCurrentInstanceFilter == "AssetClasses"){
+				selectedCMDBClassFilter = lblAssetClasses;
+			}else if(strCurrentInstanceFilter == "AllClasses"){
+				selectedCMDBClassFilter = lblAllClasses;
+			}else{
+				selectedCMDBClassFilter = lblCIClasses;	
+			}
+		}else{
+			selectedCMDBClassFilter = lblCIClasses;	
+		}	
+		return  selectedCMDBClassFilter;
+	}
+    
+    function setIdSet(){
+    	var idSet=new Array({!resultSet.size});
+        if(window.parent!=null && window.parent.listOfId!=null) {window.parent.listOfId(idSet);}    
+        for(i=0;resultSet.length>i;i++){if(0<resultSet[i].length) {idSet[i]=resultSet[i][0];}}
+		listOfId(idSet);
+    }
+    setIdSet();    
+    function listOfId(listId){
+       setOfIds=listId;
+    }
+    function returnListOfId(){
+       return setOfIds;
+    }
+    for(i=0;cols.length>i;i++){
+        if(colsHdrs[i]==null) colsHdrs[i]='';
+        if(cols[i]==null) cols[i]='';
+        if(cols[i].toLowerCase()=="name"){nameFld="fld"+(j-1);}
+    }
+	var SLookupFlag = '{!selfLookupFlag}';
+	for(i=0;cols.length>i;i++){
+        if(cols[i].toLowerCase()=="id") idFld=cols[i];
+        if(cols[i].toLowerCase()=="username"){ nameFld=cols[i];}
+        if(cols[i].toLowerCase() == 'fkbmc_baseelement__c') idFld=cols[i]; 
+        if(cols[i].toLowerCase()=='name' || cols[i].toLowerCase() == 'fkbmc_baseelement__r_name') nameFld=cols[i];
+        if(cols[i].toLowerCase()=='queueid') idFld = cols[i];
+        
+        if(cols[i].toLowerCase()=='queue_name') nameFld = cols[i];
+        
+    }
+    /*-----------Added by Rajan--------*/
+    for(i=0;cols.length>i;i++){ if(cols[i].toLowerCase()=='isactive__c'){ index=i; break;} }
+
+    /*-------------------*/
+    if(idFld=="" && cols.length>0) idFld=cols[0];
+    if(nameFld=="" && cols.length>1) nameFld=cols[1];
+
+    var arrCols = new Array(colsSize);
+    setArrCols(arrCols);
+    if(durationflag){
+        for(i=0;resultSet.length>i;i++){
+        
+            var totalSec = resultSet[i][4]; 
+            var hours = parseInt( totalSec / 3600 ) ;
+            var minutes = parseInt( totalSec / 60 ) % 60;
+          
+
+            resultSet[i][4] = (hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes);
+        
+        }  
+    }
+    //4 New,Copy,Del, filter button, link button + 3 Separators + 5 buttons (Find textbox,Search icon, Refresh+Fill+Prev+Next)
+    var tbarOptions = new Array(23);j=0;
+	var isTbarButtonsAvlbl = true;
+    var newBtnClass = 'bmcNew',
+    	editBtnClass = 'bmcEdit',
+    	copyBtnClassDisable = 'bmcCopyDisable',
+    	deleteBtnClassDisable = 'bmcDeleteDisable';
+    	
+    if(popUpId.toUpperCase()=='SLT' || popUpId == 'Suggested_Owner'){
+        newBtnClass = 'bmcNewSLT';
+        editBtnClass = 'bmcEditSLTDisable';
+        copyBtnClassDisable = 'bmcCopyDisable';
+        deleteBtnClassDisable = 'bmcDeleteSLTDisable';    	
+    }
+    
+	tbarOptions[j++]={iconCls: 'bmcRefreshDasboard', id: 'refreshButtonID', tooltip:  '{!JSENCODE($Label.refresh)}', tooltipType: 'title', scale: 'medium', handler: pageRefresh, hidden:(!IsServiceTargetPopup()) };
+    if({!showNew}){
+        if({!showNewforChangeAssesmnet})
+        {
+        	if(!isUserPermitted('new')){
+        	  if(popUpId.toUpperCase()=='SLT' || popUpId == 'Suggested_Owner'){
+                 tbarOptions[j++]={iconCls: 'bmcNewSLTDisable',  id: 'newId', tooltip: '{!JSENCODE($Label.new)}', tooltipType: 'title', scale: 'medium', handler: shNew,disabled:true};
+                }
+                else
+            	tbarOptions[j++]={iconCls: 'bmcNewDisable', tooltip: '{!JSENCODE($Label.new)}', tooltipType: 'title', scale: 'medium', handler: shNew,disabled:true};
+            }else if(popUpId.toUpperCase()=='SLT' || popUpId == 'Suggested_Owner') {
+                tbarOptions[j++]={iconCls: newBtnClass,  id: 'newId', tooltip: '{!JSENCODE($Label.new)}', tooltipType: 'title', scale: 'medium', handler: shNew};
+	          }else{
+            tbarOptions[j++]={iconCls: 'bmcNew',  id: 'newId', tooltip: '{!JSENCODE($Label.new)}', tooltipType: 'title', scale: 'medium', handler: shNew};
+        }   
+        }   
+        if({!showBRList}){
+                tbarOptions[j++]={iconCls: 'bmcEdit', id: 'editId', tooltip:  '{!JSENCODE($Label.CMDBEdit)}', tooltipType: 'title', scale: 'medium', handler: editObj};
+
+        }
+        if(popUpId.toUpperCase()=='SLT' || popUpId == 'Suggested_Owner'){
+        	tbarOptions[j++]={iconCls: editBtnClass, id: 'editId', tooltip:  '{!JSENCODE($Label.CMDBEdit)}', tooltipType: 'title', scale: 'medium', handler: editObj,disabled:true};
+        }
+        
+        if(popUpId.toUpperCase()=='SLT' || popUpId == 'Suggested_Owner'){
+        	tbarOptions[j++]={iconCls: copyBtnClassDisable, id: 'copyId', tooltip: '{!JSENCODE($Label.copy)}', tooltipType: 'title', scale: 'medium', handler: copyObj,disabled:true};
+        }else if(popUpId == 'CMDB_Class' || popUpId == 'NormalizationRule'){}
+		else if(popUpId != 'Priority'){
+        	tbarOptions[j++]={iconCls: 'bmcCopyDisable', id: 'copyId', tooltip: '{!JSENCODE($Label.copy)}', tooltipType: 'title', scale: 'medium', handler: copyObj,disabled:true};
+        }
+        if({!showBRList}){
+            tbarOptions[j++]={iconCls: 'bmcDeleteDisable', id: 'deleteId', tooltip: '{!JSENCODE($Label.delete)}', tooltipType: 'title', scale: 'medium', handler: deleteMultiObj,disabled: true};
+        }else if(popUpId.toUpperCase()=='SLT' || popUpId == 'Suggested_Owner'){
+        	tbarOptions[j++]={iconCls: deleteBtnClassDisable, id: 'deleteId',hidden:isHidden(), tooltip: '{!JSENCODE($Label.delete)}', tooltipType: 'title', scale: 'medium', handler: chkForChangeBeforeDelete,disabled: true};
+        }else{          
+            tbarOptions[j++]={iconCls: 'bmcDeleteDisable', id: 'deleteId',hidden:isHidden(), tooltip: '{!JSENCODE($Label.delete)}', tooltipType: 'title', scale: 'medium', handler: chkForChangeBeforeDelete,disabled: true};
+        }
+        if({!showBRList}){
+             tbarOptions[j++]={iconCls: 'bmcActive', id: 'activeId', tooltip:  '{!JSENCODE($Label.activeToolTipSearchPage)}', tooltipType: 'title', scale: 'medium',handler: activeObj};
+             tbarOptions[j++]={iconCls: 'bmcInActive', id: 'InactiveId', tooltip:  '{!JSENCODE($Label.Inactive)}', tooltipType: 'title', scale: 'medium',handler: inActiveObj};
+        }
+    }else{
+        tbarOptions[j++]='';
+        tbarOptions[j++]='';
+        tbarOptions[j++]='';
+        isTbarButtonsAvlbl = false;
+    }
+    function openScheduler(){
+        window.open('/apex/WebAPIJobsSettings',"WebAPISettings", "width=560, height=230, top=400, left=400, scrollbars=yes");
+    }
+   function isHidden(){
+     if('{!deleteDisabled}'=='true')
+        return true;
+     else 
+        return false;
+   }
+   if(!IsServiceTargetPopup()) {
+    if(isTbarButtonsAvlbl){
+        tbarOptions[j++]='-';
+    }else{
+        tbarOptions[j++]='';
+    }
+   }
+    var isChecked=false;
+    var isDisabled=false;
+    var sep="___";
+    var filterMenus = new Array({!inactiveOptions.size}+{!remedyAccOptions.size}+{!stateOptions.size}+{!markAsDeletedOptions.size}+6); var jj=0;
+    if(!isLookup && ('{!objType}'.toLowerCase()=='incident__c' || '{!objType}'.toLowerCase()=='task__c' ||  '{!objType}'.toLowerCase()=='broadcasts__c' || 
+    '{!objType}'.toLowerCase()=='change_assessment__c' || '{!objType}'.toLowerCase()=='change_request__c' || '{!objType}'.toLowerCase()=='problem__c')){                  
+         //Increase array size for incidents list view to add filter options like Service Requests/Incidents
+        if ('{!objType}'.toLowerCase()=='incident__c')
+            filterMenus = new Array({!inactiveOptions.size}+{!stateOptions.size}+12);
+        else
+			filterMenus = new Array({!inactiveOptions.size}+{!stateOptions.size}+9);
+       
+	   filterMenus[jj++]={xtype:'checkbox', name: 'shmy', group: 'shmy', checked: {!shMine}, iconCls: 'emptyIcon', boxLabel: '{!JSENCODE($Label.assignedToMyself)}', inputValue: '{!shMine}', handler: shMineHandler};
+        filterMenus[jj++]='-';
+    }    
+    var clientIdforSrm = '{!JSENCODE($CurrentPage.parameters.clientIdforSrm)}'; 
+	var catIdForSrd = '{!JSENCODE($CurrentPage.parameters.catIdForSrd)}';
+    
+</script>
+<apex:repeat value="{!stateOptions}" var="opt">
+<script>var opt=('{!opt}').split(sep);
+isChecked=false; if("{!stateOption}".indexOf(","+opt[0]+",")!=-1) {isChecked=true;}
+//added to fix bug 1677
+var referenceObjectName = '{!referenceObjectName}';
+if((popUpId == 'Broadcast' && isLookup == 'true' && opt[0] == 'Close') || (referenceObjectName == 'Broadcasts__c' && isLookup == 'true' && opt[0] == 'Close')){isDisabled = true;} else {isDisabled = false;}
+filterMenus[jj++]={xtype:'checkbox', name: 'sopt', group: 'soptg', checked: isChecked, iconCls: 'emptyIcon', boxLabel: opt[1], inputValue: opt[0], handler: srchStaHandler, disabled: isDisabled};</script>
+</apex:repeat>
+
+<script>var isChecked=false;
+</script>
+<apex:repeat value="{!userQueueOptions}" var="opt">
+<script>
+pageSource = "{!popupId}";
+if(pageSource=='Client' || pageSource=='SuggestedStaff'){pageSource='{!JSENCODE($Label.User)}'}else if(pageSource=='Queue'){pageSource=queueLabel;}  if('{!JSENCODE(opt)}' == pageSource){isChecked = true;}
+filterMenus[jj++]={xtype:'radio', name: 'iopt1', group: 'ioptg1',checked: isChecked,   iconCls: 'emptyIcon', boxLabel: '{!JSENCODE(opt)}', inputValue: '{!JSENCODE(opt)}', handler: srchUserorQueueHandler};
+isChecked = false;
+</script>
+</apex:repeat>
+<apex:repeat value="{!ciFilterOptions}" var="opt">
+<script>
+if(pageSource =='BMC_BaseElement')if('{!JSENCODE(opt)}' == selectedCIFilter){isChecked = true;}
+filterMenus[jj++]={xtype:'radio', name: 'iopt1', group: 'ioptg1',checked: isChecked,   iconCls: 'emptyIcon', boxLabel: '{!JSENCODE(opt)}', inputValue: '{!JSENCODE(opt)}', handler: FilterOnCI };
+isChecked = false;
+</script>
+</apex:repeat>
+<script>var setDisableFlag = false;if({!shState}){filterMenus[jj++]='-';}</script>
+<apex:repeat value="{!inactiveOptions}" var="opt">
+<script>var opt=('{!opt}').split(sep);
+isChecked=false;isDisabled=false; if(isLookup){if((String('{!popupId}') == String("BMC_BusinessService")) || isOnlyQueueList == "true" || (String('{!popupId}') == String("Document"))){setDisableFlag = true;}isDisabled=true;if(String('{!popupId}') == String("Client")) isDisabled=false;}if("{!inactiveOption}".indexOf(","+opt[0]+",")!=-1) {isChecked=true;}; //  if(isLookup=="true"){isDisabled=true; };
+if( String('{!popupId}') == String("Action") && isNewUI == true ) {
+	filterMenus[jj++]={text: opt[1], iconCls: (isChecked) ? 'ActionChecked' : 'ActionUnchecked', disabled: isDisabled};
+} else {
+	filterMenus[jj++]={xtype:'checkbox', name: 'iopt', group: 'ioptg', checked: isChecked, iconCls: 'emptyIcon', boxLabel:opt[1], inputValue:opt[0], handler: srchInaHandler, disabled: isDisabled};
+}
+</script>    
+</apex:repeat>
+<apex:repeat value="{!markAsDeletedOptions}" var="opt">
+<script>var opt=('{!opt}').split(sep);
+isChecked=false;isDisabled=false; if("{!markAsDeletedOption}".indexOf(","+opt[0]+",")!=-1) {isChecked=true;}; 
+filterMenus[jj++]={xtype:'checkbox', name: 'iopt', group: 'ioptg', checked: isChecked, iconCls: 'emptyIcon', boxLabel:opt[1], inputValue:opt[0], handler: srchMarkAsDeleteHandler, disabled: isDisabled};</script>
+</apex:repeat>
+<apex:repeat value="{!statusOptions}" var="opt">
+<script>var opt=('{!opt}').split(sep);
+isChecked=false;isDisabled=false; if("{!statusFilter}".indexOf(","+opt[0]+",")!=-1) {isChecked=true;}; 
+filterMenus[jj++]={xtype:'checkbox', name: 'iopt', group: 'ioptg', checked: isChecked, iconCls: 'emptyIcon', width:'150px', boxLabel:opt[1], inputValue:opt[0], handler: srchStatusFilterHandler, disabled: isDisabled};</script>
+</apex:repeat>
+<apex:repeat value="{!remedyAccOptions}" var="opt">
+	<script>
+		var showRemedyAcc =('{!opt}').split(sep);
+		isChecked=(showRemedyAcc[0]=='true')?true:false;
+		filterMenus[jj++]={xtype:'checkbox', name: 'iopt', group: 'ioptg', checked: isChecked, iconCls: 'emptyIcon', boxLabel:showRemedyAcc[1],  handler: remedyAccHandler};
+	</script> 
+</apex:repeat>
+<script>if(!isLookup){if(String('{!popupId}') == String("Incident")) filterMenus[jj++]='-';}</script>
+<apex:repeat value="{!incidentOptions}" var="opt">
+<script>if(!isLookup) {
+var opt=('{!opt}').split(sep);
+if(String('{!popupId}') == String("Incident")){
+	var isIncidentOptionChecked = false;
+	var inputVarJs  = '{!incidentoption}';
+	if(inputVarJs.indexOf(opt[0]) != -1)
+		isIncidentOptionChecked = true;
+filterMenus[jj++]={xtype:'checkbox',checked:isIncidentOptionChecked,name: 'iopt', group: 'ioptg',  iconCls: 'emptyIcon', boxLabel:opt[1], inputValue:opt[0], handler: srchServiceRequestHandler};
+}
+}
+</script>
+</apex:repeat>
+
+
+<script>
+if(isLookup && String('{!showFilterMenu}') == String("true")){if(String('{!popupId}') == String("Category__c") || String('{!popupId}') == String("Category")) filterMenus[jj++]='-';}
+</script>
+<apex:repeat value="{!categoryOptions}" var="opt">
+<script>
+if(isLookup && String('{!showFilterMenu}') == String("true")){if(String('{!popupId}') == String("Category__c") || String('{!popupId}') == String("Category")) {
+var opt=('{!opt}').split(sep);
+if(String('{!popupId}') == String("Category__c") || String('{!popupId}') == String("Category")){
+    var isCategoryOptionChecked = false;
+    var inputVarJs  = '{!categoryoption}';
+    if(inputVarJs.indexOf(opt[0]) != -1)
+        isCategoryOptionChecked = true;
+    filterMenus[jj++]={xtype:'radio',checked:isCategoryOptionChecked,name: 'ropt', group: 'roptg',  iconCls: 'emptyIcon', boxLabel:opt[1], inputValue:opt[0], handler: srchCategoryFilterHandler};
+}
+}
+}
+</script>
+</apex:repeat>
+
+<script>
+if(popUpId.toUpperCase() != 'SLT' && popUpId != 'Normalization_Exception'){	
+	addRefreshMenu(filterMenus, jj, '{!(lastrefreshtime)}');
+}
+</script>
+
+<script>var strIconCls='';var linkMenus=new Array({!linkMenu.size});jj=0;</script>
+<apex:repeat value="{!linkMenu}" var="opt">
+	<script>
+		strIconCls="bmc"+("{!opt}".substring(0, "{!opt}".indexOf("П")));
+		if("{!opt}" == "{!JSENCODE($Label.ManageDefaultIcon)}")
+			linkMenus[jj++]={text: "{!opt}".substring("{!opt}".indexOf("П")+1,"{!opt}".length), iconCls: strIconCls, scale: 'medium', handler: defaultCategoryIconHandler}
+		else
+			linkMenus[jj++]={text: "{!opt}".substring("{!opt}".indexOf("П")+1,"{!opt}".length), iconCls: strIconCls, scale: 'medium', handler: linkUnlink}
+	</script>
+</apex:repeat>
+<script>
+if(!{!showBRList}){
+//filterMenus[filterMenus.length-3]='-';
+if(String('{!popupId}') != String("SSCategory") && String('{!popupId}') != String("SSFAQ") && String('{!popupId}') != String("SSTemplate")) {
+if('{!isqueueoruser}' =='true')
+{
+filterMenus[filterMenus.length-3]='-';
+filterMenus[filterMenus.length-2]={text: '{!JSENCODE($Label.Apply)}', iconCls: 'mnuList', handler: doApply};
+filterMenus[filterMenus.length-1]='';//{text: 'Reset', handler: pgReset};
+var newfilterMenus = new Array(), i=0;
+    for(i=0; i< filterMenus.length; i++){
+        if(filterMenus[i]){
+            newfilterMenus.push(filterMenus[i]);
+        }
+    }
+    
+    filterMenus = newfilterMenus
+}   
+//-----Added by Roop for Apply button on Incident Search Page for linking
+//if(isLookup && (popUpId == 'Incident' || popUpId == 'Change' || popUpId == 'Problem'))
+{
+filterMenus[filterMenus.length-3]='-';
+if( String('{!popupId}') == String("Action") && isNewUI == true ) 
+	filterMenus[filterMenus.length-2]={xtype:'button',cls:'ApplyButton',text: '{!JSENCODE($Label.Apply)}', iconCls: 'mnuList',handler: doApply, disabled: setDisableFlag};
+else
+	filterMenus[filterMenus.length-2]={text: '{!JSENCODE($Label.Apply)}', iconCls: 'mnuList', handler: doApply, disabled: setDisableFlag};
+
+filterMenus[filterMenus.length-1]='';//{text: 'Reset', handler: pgReset};
+}
+for(jj=0;jj<filterMenus.length;jj++){if(filterMenus[jj]==null) filterMenus[jj]='';}
+
+var className = 'bmcView1';
+if( String('{!popupId}') == String("Action") && isNewUI == true ) {
+    className = 'd-icon-app_list_eye';
+}
+
+if(({!inactiveOptions.size}+{!stateOptions.size})>0 && filterMenus.length>0 && isOnBehalfOf != "true" || (String('{!popupId}') == String("BMC_BaseElement") && isLookup && tempParentName == 'Incident__c')|| String('{!popupId}') == String("NormalizationRule")){ tbarOptions[j++]={iconCls: className, tooltip: '{!JSENCODE($Label.views)}', tooltipType: 'title',id:'btnView', scale: 'medium', menu: filterMenus}; }
+else if(({!markAsDeletedOptions.size} > 0 && filterMenus.length>0)){
+	tbarOptions[j++]={iconCls: 'bmcView1', tooltip: '{!JSENCODE($Label.views)}', tooltipType: 'title',id:'btnView', scale: 'medium', menu: filterMenus};
+}else if(({!statusOptions.size} > 0 && filterMenus.length>0)){
+	tbarOptions[j++]={iconCls: 'bmcView1', tooltip: '{!JSENCODE($Label.views)}', tooltipType: 'title',id:'btnView', scale: 'medium', menu: filterMenus};
+}
+for(jj=0;jj<linkMenus.length;jj++){if(linkMenus[jj]==null) linkMenus[jj]='';}
+}
+if(String('{!popupId}') != String("Category") && String('{!popupId}') != String("FAQ") && String('{!popupId}') != String("Template")) {
+if(linkMenus.length>0){ tbarOptions[j++]={iconCls: 'bmcAction1', tooltip: '{!JSENCODE($Label.actions)}', tooltipType: 'title',id:'btnActions', scale: 'medium', menu: linkMenus}; }
+//tbarOptions[j++]='-';
+	if(popUpId == 'SRM_RequestDefinition'){
+       	var actionMenus = new Array(2);
+       	actionMenus[0] = {text : '{!JSENCODE($Label.ReqDefOnline)}', iconCls: 'strIconCls', scale: 'medium', handler: changeSRDStatus};
+       	actionMenus[1] = {text : '{!JSENCODE($Label.ReqDefOffline)}', iconCls: 'strIconCls', scale: 'medium', handler: changeSRDStatus};
+       	
+        tbarOptions[j++]={iconCls: 'bmcAction1', tooltip: '{!JSENCODE($Label.actions)}', tooltipType: 'title',id:'btnSRMActions', scale: 'medium', menu: actionMenus};
+    }
+}
+}
+if(popUpId.toUpperCase()=='WEBAPICONFIGURATION'){
+        tbarOptions[j++]={iconCls: 'job-scheduler', id: 'SchedulerId', tooltip:  'Scheduler', tooltipType: 'title', scale: 'medium',handler: openScheduler};            
+    }
+/*---*/
+
+    // generate the admin search bar
+    var admSearchDS = new Ext.data.ArrayStore({
+        fields: groupoptions
+    });
+	
+	var cmdbClassFilter = new Ext.data.ArrayStore({
+        fields: showCMDBClassFilters
+    });
+	
+    if(popUpId == 'Incident'){
+            customToolwidth=145;
+        }
+		
+	if(popUpId.toLowerCase() == 'reconciliation'){
+            customToolwidth=120;
+        }
+    var adminSearchBar = new Ext.form.ComboBox( {
+        store: groupoptions,
+        typeAhead: true,
+        mode: 'local',editable: false,
+        triggerAction: 'all',
+        emptyText:'{!JSENCODE($Label.None)}',
+        disabled:{!isGroupByDiasabled},
+        value:selectedfield,
+      width: customToolwidth,
+        selectOnFocus:true,
+        //cls:'adminSearchBarCls',
+        listeners :{select: changeGrouping, change: changeGrouping},
+        id: 'groupoptions',
+		hidden : popUpId == 'WebAPIConfiguration' || popUpId == 'Location' ?true:false
+    });
+	
+	var groupByEllipsis="{!JSENCODE($Label.GroupBy)}";
+    
+    if(isCMDBFliterShown){
+    
+    if( popUpId == 'CMDB_Class' || popUpId == 'BMC_BaseElement' || popUpId.toLowerCase() == 'reconciliation'){
+    	if(sprClsLookup == 'RBA' || filterBy == 'RBA' || filterBy == 'NONRBA'){
+    		isApplyCMDBClassFilter = false;
+    	}else{
+    		isApplyCMDBClassFilter = true;
+    	}
+    	if(popUpId == 'BMC_BaseElement' || isApplyCMDBClassFilter)
+	    	selectedCMDBClassFilter = getSelectedInstanceFilter (popUpId);
+    }
+    
+    
+    
+	var adminCMDBFilter = new Ext.form.ComboBox( {
+	store: showCMDBClassFilters,
+	typeAhead: true,
+	mode: 'local',editable: false,
+	triggerAction: 'all',
+	emptyText:'{!JSENCODE($Label.CIClasses)}',
+	value:selectedCMDBClassFilter,
+	width: customToolwidth,
+	selectOnFocus:true,
+	listeners :{select: AppplyCMDBClassFilter, change: AppplyCMDBClassFilter},
+	id: 'showCMDBClassFilters',
+	hidden : isApplyCMDBClassFilter==true?false:true
+    });
+	var showclassfilter="{!JSENCODE($Label.ShowClasses)}";
+	}
+var isLocationOrWebAPI = false;
+if(popUpId == 'Location' || popUpId == 'WebAPIConfiguration')
+	isLocationOrWebAPI = true;
+if(popUpId.toUpperCase() != 'SLT' && !IsServiceTargetPopup() && popUpId != 'Suggested_Owner'){	
+    tbarOptions[tbarOptions.length-13]=new Ext.form.Label({ html:'<div style="width:70px;text-overflow:ellipsis;word-break:break-word;overflow:hidden"> '+groupByEllipsis+'</div>',hidden :isLocationOrWebAPI, tooltipType:'title', tooltip:"{!JSENCODE($Label.GroupBy)}", id:'GroupByLabelId'});
+    tbarOptions[tbarOptions.length-12]=adminSearchBar;
+    
+    if(isCMDBFliterShown && !isLocationOrWebAPI)
+    {
+        if( !(popUpId == 'Action'&& isNewUI == true) ) {
+        	tbarOptions[tbarOptions.length-11]='-';
+		}
+		tbarOptions[tbarOptions.length-10]=new Ext.form.Label({ html:'<div style="width:70px;text-overflow:ellipsis;word-break:break-word;overflow:hidden;margin-left: 25px;"> '+showclassfilter+'</div>',hidden : isApplyCMDBClassFilter==true?false:true, tooltipType:'title', tooltip:"{!JSENCODE($Label.ShowClasses)}", id:'ShowClassesLabelId'});	
+    	tbarOptions[tbarOptions.length-9]=adminCMDBFilter;
+    }    
+}
+/*-Coded Added By Adil--*/
+if(((String('{!popupId}') == String("BMC_BaseElement")) || (String('{!popupId}') == String("BMC_BusinessService"))) && isLookup ){
+    var propSearchAllCIs = {!propSearchAllCIs};
+
+    var searchCIs;
+    var  tempPopupID;
+    tempPopupID = '{!JSENCODE($CurrentPage.parameters.popupId)}';
+    
+    if(tempParentName == 'Client' && tempPopupID == 'BMC_BaseElement'){ //added check if the page is opened from Client for CI
+        searchCIs = new Ext.form.Checkbox({checked: propSearchAllCIs, handler: srchAllCIsHandler, cls: 'clsSrchCheckBox', style: 'margin-left:20px'});
+        tbarOptions[tbarOptions.length-8]=searchCIs;
+        var showAllCIEllipsis = Ext.util.Format.ellipsis("{!JSENCODE($Label.ShowAllCIs)}",16);
+        tbarOptions[tbarOptions.length-7]=new Ext.form.Label({text: showAllCIEllipsis, id:'ShowAllCILabel', cls:'adminSearchBarCls1', style:'margin-left:5px'});
+    }
+	
+	else if(tempParentName == 'Client' && tempPopupID == 'BMC_BusinessService'){ //added check if the page is opened from Client for Services
+        searchCIs = new Ext.form.Checkbox({checked: propSearchAllCIs, handler: srchAllCIsHandler, cls: 'clsSrchCheckBox', style: 'margin-left:200px'});
+        tbarOptions[tbarOptions.length-8]=searchCIs;
+        var showAllCIEllipsis = Ext.util.Format.ellipsis("{!JSENCODE($Label.ShowAllServices)}",25);
+        tbarOptions[tbarOptions.length-7]=new Ext.form.Label({text: showAllCIEllipsis, id:'ShowAllCILabel', cls:'adminSearchBarCls1', style:'margin-left:5px'});
+    }
+}
+
+  
+	if(String('{!popupId}') == "SSCategory"){
+	var EnableCategoryDescriptionToolTip = '{!JSENCODE(showCategoryDescription)}';
+    var showCategoryDescriptionChecked = EnableCategoryDescriptionToolTip=='true'? true: false;    
+	var toolTipRefreshBtn = showCategoryDescriptionChecked ? 'ON' : 'OFF'; 
+    var imageCls = showCategoryDescriptionChecked ? 'auto-refresh-on' : 'auto-refresh-off';
+    var showCatDescSwitch = new Ext.Button({
+    id:'showCatDescSwitch',
+    iconCls: imageCls,
+    icon:'',
+    disabled: false,
+    enableToggle : true,
+	tooltip: toolTipRefreshBtn,
+    cls:'rf-on-off-btn',
+    pressed : showCategoryDescriptionChecked,
+    toggleHandler:function(btn,state){
+      showWaitMsgBar();
+      if(state){
+        btn.setIconClass('auto-refresh-on');
+		toolTipRefreshBtn = 'ON';
+      }else{
+        btn.setIconClass('auto-refresh-off');        
+		toolTipRefreshBtn = 'OFF';
+      }
+	  btn.setTooltip(toolTipRefreshBtn);
+      saveCategoryDescriptionSetting(state);
+         }
+    });
+    tbarOptions[tbarOptions.length-8]= showCatDescSwitch;
+    var showCatDescLabel = {xtype: 'tbtext',id:'CatDescLabel',text: '{!JSENCODE($Label.DisplayCategoryDescription)}'};
+    tbarOptions[tbarOptions.length-9]= showCatDescLabel;
+  }
+		
+if(popUpId.toLowerCase() == 'reconciliation'){ //added check if the page is opened from Client for Reconciliation
+        var enableRecon = {!enableRecon};
+        var imageCls, reconToolTip,isPressed;
+        if(enableRecon){
+        	imageCls = 'auto-refresh-on';
+			reconToolTip = offReconToolTip;
+			isPressed = false;
+        } else {
+        	imageCls = 'auto-refresh-off';
+			reconToolTip = onReconToolTip;
+			isPressed = true;
+        }
+        
+        //tbarOptions[tbarOptions.length-13]='-';
+        //tbarOptions[tbarOptions.length-12]= new Ext.form.Label({ html:'<div style="margin-right:25px;"></div>'});			
+        tbarOptions[tbarOptions.length-15]=new Ext.form.Label({ html:'<div Class="btnToggleClass">{!JSENCODE($Label.enableReconciliation)}</div>'});
+        tbarOptions[tbarOptions.length-14]={
+        								 xtype:'button',
+										 id:'btnToggleId',
+										 iconCls: imageCls,
+										 disabled: false,
+										 enableToggle : true,
+										 tooltipType : 'title',
+										 cls:'rf-on-off-btn',
+										 style:'margin-right: 20px;',
+										 tooltip: reconToolTip,
+										 pressed : isPressed,
+										 width:25,
+										 toggleHandler:function(btn,state){
+											 if(state){         																												
+												btn.setIconClass('auto-refresh-off');						
+												btn.setTooltip(onReconToolTip);							   
+											 }else{
+												btn.setIconClass('auto-refresh-on');
+												btn.setTooltip(offReconToolTip);											   
+											 }
+										enableReconciliation(!state);
+									}
+        };
+        
+		function openReports(){
+         if({!NOT($ObjectType.CMDB_log__c.Accessible)}) {
+              Ext.Msg.show({       
+                  title:'{!JSENCODE($Label.ERROR)}',
+                  msg: ({!isAdminUser} ? '{!JSENCODE($Label.ProfileSysAdminPermission)} <a href="{!JSENCODE(wikiUrlForReconLogReport)}" target="_blank">{!$Label.here}</a>' : '{!JSENCODE($Label.ProfileNonSysAdminPermission)}'),
+                  buttons: Ext.Msg.OK,
+                  width:  450,       
+                  icon: Ext.MessageBox.WARNING 
+              });
+        } 
+          else window.open('{!JSENCODE(reconReportURL)}');
+        }
+        
+        
+        function ReconLogsConfig(){
+			if(reconLogConfig != null && reconLogConfig != ''){
+				reconFailenableVal = reconLogConfig.getComponent('reconFailenable').getValue();
+				reconSuccessenableVal = reconLogConfig.getComponent('reconSuccessenable').getValue();
+				reconClearLogVal = reconLogConfig.getComponent('reconClearLog').getValue();
+				saveReconLogSettings(reconFailenableVal,reconSuccessenableVal, reconClearLogVal);
+			}
+        }
+        
+        var ClrSuccesslogDiv = '<span style="padding-right: 25px">'+'{!JSENCODE($Label.ClearLogs)}'+'</span>'
+        var reconLogConfig = new Ext.menu.Menu({items: [
+                                {itemId:'reconFailenable', xtype:'checkbox', checked: {!reconFailureLogsEnabled}, iconCls: 'emptyIcon', boxLabel: '{!JSENCODE($Label.EnableFailureLogs)}'},
+                                {itemId:'reconSuccessenable', xtype:'checkbox', checked: {!reconSuccessLogsEnabled}, iconCls: 'emptyIcon', boxLabel: '{!JSENCODE($Label.EnableSuccessLogs)}'},
+								'-',
+								{itemId:'reconClearLog', xtype:'checkbox', checked: {!reconClearLogConfig}, iconCls: 'emptyIcon', boxLabel: ClrSuccesslogDiv},
+								'-',
+								{text: '{!JSENCODE($Label.Apply)}', iconCls: 'mnuList', handler: ReconLogsConfig}
+							]});
+        
+        tbarOptions[tbarOptions.length-16]={iconCls: 'reports', tooltip: '{!JSENCODE($Label.Logs)}', tooltipType: 'title', id:'reportBtn', scale: 'medium', handler: openReports}; 
+        tbarOptions[tbarOptions.length-17]={iconCls: 'reconSetting', tooltip: '{!JSENCODE($Label.LogSettings)}', tooltipType: 'title', id:'btnSetting', scale: 'medium', menu: reconLogConfig};
+    }
+    if( !(popUpId == 'Action' && isNewUI == true ))
+        tbarOptions[tbarOptions.length-6]=new Ext.Toolbar.Fill();
+            
+if(popUpId.toUpperCase() != 'SLT' && !IsServiceTargetPopup() && popUpId != 'Suggested_Owner'){	
+    var srchTxtFld;
+    if( popUpId == 'Action' && isNewUI == true ) {
+        srchTxtFld = {xtype:'panel', id:'ActionSearchTextBox', width:200, 
+                      html:'<span id="txtInput" class="searchtext-input-wrapper"> <a title="{!JSENCODE($Label.search)}" class="rf-icon-search" onclick="txtSearch();"></a><input type="text" id="txtSrch" name="txtSrch" onkeyup="specialKeyForAction(event);" onblur="blurfun()" class="searchText" autocomplete="off" size="26" placeholder="{!JSENCODE($Label.search)}"/><a id="crossIcon" title="{!$Label.Refresh}" onclick="clearActionSearch(this);" class="rf-icon-cross"></a></span> '}; 
+    	tbarOptions[tbarOptions.length-5]=srchTxtFld;
+        
+    } else {
+    	srchTxtFld = new Ext.form.TextField({
+        id: 'txtSrch',
+        name: 'txtSrch',
+        fieldLabel: '{!JSENCODE($Label.search)}',
+        width: customToolwidth,
+        allowBlank: true,
+        emptyText: '{!JSENCODE($Label.search)}'});
+        
+        srchTxtFld.on("specialkey", specialKey);
+        //Action added for bug 57077
+        srchTxtFld.on("Blur", blurfun);
+        tbarOptions[tbarOptions.length-5]=srchTxtFld;
+        tbarOptions[tbarOptions.length-4]={iconCls: 'bmcSearch', tooltip: '{!JSENCODE($Label.search)}', tooltipType: 'title',id:'searchBtn', handler: txtSearch };
+    }
+ 
+
+
+
+}
+if( !(popUpId == 'Action' && isNewUI == true)  ) {
+	tbarOptions[tbarOptions.length-3]={scale: 'medium', iconCls: 'bmcRefresh', tooltip: '{!JSENCODE($Label.Reset)}', tooltipType: 'title',id:'refreshbtn', style:{align: 'left'}, handler: pageRefresh, hidden:(IsServiceTargetPopup())};
+	tbarOptions[tbarOptions.length-2]={xtype : 'box', autoEl:  {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif', title:'{!JSENCODE($Label.previousPage)}' }, cls:'cursorCls',id:'prevId',disabled:true,listeners : { render: function(f){f.el.on('click', PreviousBtnHandler)}}};
+	tbarOptions[tbarOptions.length-1]={xtype : 'box', autoEl:  {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif', title:'{!JSENCODE($Label.nextPage)}' }, id:'nextId',cls:'cursorSpaceCls', listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}};
+
+} else {
+	tbarOptions[tbarOptions.length-3]= new Ext.Toolbar.Fill();
+}
+for(j=tbarOptions.length-1;j>0;j--)
+    if(tbarOptions[j]==null) tbarOptions[j]=' ';
+
+function refreshPortlet(){
+    if({!doPortletRefresh}===true){
+            if(typeof(window.parent.parent.refreshActionItemsPortlet) == 'function'){
+        if('{!objType}'.toLowerCase()=="broadcasts__c")
+                window.parent.parent.refreshActionItemsPortlet('Action Items','BROAD');
+        if('{!objType}'.toLowerCase()=="incident__c")
+                window.parent.parent.refreshActionItemsPortlet('Action Items','INC');
+        if('{!objType}'.toLowerCase()=="task__c")
+                window.parent.parent.refreshActionItemsPortlet('Action Items','TASK');
+        if('{!objType}'.toLowerCase()=="change_request__c")
+                window.parent.parent.refreshActionItemsPortlet('Action Items','CR');
+        if('{!objType}'.toLowerCase()=="problem__c")
+                window.parent.parent.refreshActionItemsPortlet('Action Items','PRB');
+    }
+    }
+    if("{!objType}"=="Broadcasts__c"){
+        if(typeof(window.parent.parent.refreshPortletByTitle('Broadcasts')) == 'function')
+            window.parent.parent.refreshPortletByTitle('Broadcasts');
+    }
+}
+
+function srchAllCIsHandler(item, checked){
+        CIRefresh(checked);
+    }
+
+function showFAQCategoryValidation(){
+     Ext.Msg.show({       
+            title:'{!JSENCODE($Label.delete)}',
+            msg: '{!JSENCODE($Label.FAQCategoryDeletionErrorMessage)}',
+            buttons: Ext.Msg.OK,
+            width:  450,       
+            icon: Ext.MessageBox.WARNING 
+      });
+}
+function showFAQCategoryValidation1(){
+  	var selectedrecord = document.getElementById("selectedSOId").value;
+	var selectedrecordArray =new Array();
+	selectedrecordArray=selectedrecord.split(',');
+	
+	if(selectedrecordArray.length>1){
+   		Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.MultipleDeleteConfirmMessage)}',
+ 		function(btn){ if(btn === 'yes'){ deleteObject(); }});
+   	}
+   	else{
+   		Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}',
+ 		function(btn){ if(btn === 'yes'){ deleteObject(); }});
+   	}
+}
+function  showFAQCategoryValidation2(){
+ Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.FAQCategoriesDeletionErrorMessage)}',
+ function(btn){ if(btn === 'yes'){ deleteObject(); }});
+}
+</script>
+<apex:actionFunction action="{!loadQueueMembers}" name="loadQueueMembers" rerender="qMembersPanel" onComplete="loadQMdata();">
+	<apex:param name="selectedQueueId" value="" />
+</apex:actionFunction>
+<apex:actionFunction action="{!handleNextClick}" name="doNext" onComplete="pgRefresh();" />
+<apex:actionFunction action="{!handlePreviousClick}" name="doPrevious" onComplete="pgRefresh();"/>
+ <apex:actionFunction name="handleColumnClick" action="{!handleColumnClick}" oncomplete="pgRefresh();doGrouping();"  rerender="sortOrder">
+    <apex:param name="sortColumn" value="" assignTo="{!sortColumn}"/>
+    <apex:param name="orderSeq" value="" assignTo="{!orderSeq}"/>
+   </apex:actionFunction>
+   <apex:actionFunction name="handleColClickWithoutGrp" action="{!handleColumnClick}" oncomplete="pgRefresh();"  rerender="sortOrder">
+    <apex:param name="sortColumn" value="" assignTo="{!sortColumn}"/>
+    <apex:param name="orderSeq" value="" assignTo="{!orderSeq}"/>
+   </apex:actionFunction>
+<apex:actionFunction name="handleResize" action="{!handleresize}" oncomplete="if(firstTime){firstTime = false;} else {pgRefresh();}" reRender="">
+            <apex:param name="gridHeight" value="" assignTo="{!gridHeight}"/>
+</apex:actionFunction>
+<apex:actionFunction name="validateFAQCategoryDeletion" action="{!validateFAQCategoryDeletion}" oncomplete="if('{!JSENCODE(checkFAQCategoryDeletion)}' == 'singleDeletionValidation'){showFAQCategoryValidation();}else {if('{!JSENCODE(checkFAQCategoryDeletion)}' == 'bulkDeletionValidation' ){showFAQCategoryValidation2();}else{showFAQCategoryValidation1();}} ">
+</apex:actionFunction>
+
+<apex:actionFunction name="linkit" action="{!linkage}" reRender="wholePage" />
+<apex:actionFunction name="unlinkit" action="{!unlinkage}" reRender="wholePage" />
+<apex:actionFunction name="copyObject1" action="{!copyObject}" reRender="wholePage"/>
+<apex:actionFunction name="activeObject" action="{!setActiveObject}" reRender="wholePage">
+<apex:param assignTo="{!savedID}" name="savedID" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="inActiveObject" action="{!setInActiveObject}" reRender="wholePage">
+<apex:param assignTo="{!savedID}" name="savedID" value=""/>
+</apex:actionFunction>
+
+<apex:actionFunction name="changeStatus" action="{!toggleSrdOnOff}" reRender="validationComponent" oncomplete="showError();pgRefresh();">
+<apex:param name="srdIds" value=""/>
+<apex:param name="isSrdOnline" value=""/>
+</apex:actionFunction>
+
+<apex:actionFunction name="deleteMultiObject" action="{!deleteSelectedMultiObject}" reRender="wholePage">
+<apex:param assignTo="{!savedID}" name="savedID" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="deleteObject" action="{!deleteObject}" reRender="validationComponent,wholePage" oncomplete="deleteOwnerCriteria();showError();if(deletedIds.length==1){afterDelete();}else{afterMultiDelete();}refreshPortlet();"/>
+<apex:actionFunction name="pgRefresh" action="{!research}" reRender="wholePage" onComplete="deleteOwnerCriteria();searchTextInitialize();clearQMdata();">
+      <apex:param name="isCJKVar" assignTo="{!isCJKChar}" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="pgCMDBFliterRefresh" action="{!FilteredClasses}" reRender="wholePage" onComplete="hideWaitMsgBar();deleteOwnerCriteria();searchTextInitialize();clearQMdata();">
+      <apex:param name="ApplyCMDBClassFilter" assignTo="{!CMDBClassFilter}" value=""/>
+      <apex:param name="isCJKVar" assignTo="{!isCJKChar}" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="enableReconciliation" action="{!enableReconciliation}" rerender="">
+    <apex:param name="EnableRecon" value=""/>
+</apex:actionFunction>      
+<apex:actionFunction name="CIRefresh" action="{!research}" reRender="wholePage">
+    <apex:param name="SearchAllCIs" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="checksequence" action="{!checksequence}" reRender="seqid">
+    <apex:param name="actionid" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="checkstatussequence" action="{!checkstatussequence}" reRender="seqid">
+    <apex:param name="statusid" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="checkClientProfile" action="{!checkclientprofile}" reRender="copyButtonTogglePanel" onComplete="toggleCopyButton()">
+    <apex:param name="clientid" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="saveReconLogSettings" action="{!saveReconLogConfig}" reRender="" onComplete="">
+	<apex:param assignTo="{!reconFailureLogsEnabled}" name="reconFailenableVal" value=""/>
+	<apex:param assignTo="{!reconSuccessLogsEnabled}" name="reconSuccessenableVal" value=""/>
+	<apex:param assignTo="{!reconClearLogConfig}" name="reconClearLogVal" value=""/>
+</apex:actionFunction>
+
+<div id="grid"></div>
+<apex:inputhidden id="txtSrchCrit" value="{!txtSrchCrit}" />
+<apex:inputhidden id="istxtSrchCrit" value="{!isSearchFirstTime}" />
+<input type="hidden" id="returnVal" name="returnVal" value=""/>
+<input type="hidden" id="inactiveOption" name="inactiveOption" value="{!inactiveOption}"/>
+<input type="hidden" id="markAsDeletedOption" name="markAsDeletedOption" value="{!markAsDeletedOption}"/>
+<input type="hidden" id="statusFilter" name="statusFilter" value="{!statusFilter}"/>
+<input type="hidden" id="stateOption" name="stateOption" value="{!stateOption}"/>
+<input type="hidden" id="oriInactiveOption" name="oriInactiveOption" value="{!inactiveOption}"/>
+<input type="hidden" id="oriStateOption" name="oriStateOption" value="{!stateOption}"/>
+<input type="hidden" name="selectedSOId" id="selectedSOId" value="" />
+<input type="hidden" name="defStatus" id="defStatus" value="" />
+<input type="hidden" name="linkIds" id="linkIds" value="" />
+<input type="hidden" name="shMine" id="shMine" value="{!shMine}" />
+<input type="hidden" id="incidentOption" name="incidentOption" value="{!incidentOption}"/>
+<input type="hidden" id="categoryOption" name="categoryOption" value="{!categoryOption}"/>
+<input type="hidden" id="remedyAccOption" name="remedyAccOption" value="{!remedyAccOption}"/>
+
+<script>
+	qMemType = '{!JSENCODE($Label.Type)}'; 
+	qMemName = '{!JSENCODE($Label.Name)}'; 
+	qmGridHeader = '{!JSENCODE($Label.QMGridHeader)}';
+</script>
+<c:ValidationComponent errorMsgList="{!JSENCODE(errMsgs)}" id="validationComponent"></c:ValidationComponent>
+<script>var errMsgs = "{!JSENCODE(errMsgs)}";showError();</script>
+<script>Ext.onReady(extInit ); 
+if (popUpId!='SLT' && popUpId != 'Suggested_Owner' && popUpId != 'Location' && popUpId != 'NormalizationRule' && popUpId!='Normalization_Exception'){
+if(!isLookup && '{!objType}' != null)window.parent.changeTitle(wid, '{!JSENCODE(objPluralType)}','{!JSENCODE(objPluralType)}');
+}
+
+</script>
+
+<!--pre>{!log}</pre-->
+<input type="hidden" id="lookupdataval" name="lookupdataval" value=""/>
+</apex:form>
+<apex:outputPanel id="qMembersPanel">
+	<script>
+		qMembersStr = {!qMembersStr};
+	</script>
+</apex:outputPanel>
+</apex:outputPanel>
+</body>
+<script>
+
+if(!isLookup){
+		window.onload = autoRefresh;
+}
+</script>
+<!-- std form -->
+<apex:form >
+<apex:actionFunction name="saveCategoryDescriptionSetting" action="{!saveCategoryDescriptionSetting}" rerender="validationComponent" oncomplete="hideWaitMsgBar()"> 
+	<apex:param assignTo="{!showCategoryDescription}" name="showCategoryDescription" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="addToHistory" action="{!addToHistory}" oncomplete="openEditWindow('{!historyRecordId}','{!actionId}','{!parentId}','{!enableEdit}','{!filterClause}');"> 
+	<apex:param assignTo="{!actionId}" name="actionId" value=""/>
+ </apex:actionFunction>
+<apex:actionFunction name="linkCIIncident" action="{!linkCIIncident}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('incidentId');window.close();">
+<apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkCIChange" action="{!linkCIChange}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('changeid');window.close();">
+<apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkPrimaryCIIncident" action="{!linkPrimaryCIIncident}" rerender="null" oncomplete="window.parent.reloadIncidentform();window.parent.close();">
+<apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+
+<apex:actionFunction name="linkCIRelease" action="{!linkCIRelease}" rerender="null" oncomplete="dispalyErrorMessageStaffCI();" >
+<apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkCIProblem" action="{!linkCIProblem}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('problemid');window.close();">
+<apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkCITask" action="{!linkCITask}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('taskid');window.close();">
+<apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkProblemToChange" action="{!linkProblemToChange}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('changeid');window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkChangeToProblem" action="{!linkChangeToProblem}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('changeid');window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkCRtToInc" action="{!linkCRtToInc}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('changeid1');window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkIncidentToChange" action="{!linkIncidentToChange}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('changeid1');window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkIncidentToProblem" action="{!linkIncidentToProblem}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('changeid1');window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkProblemToIncident" action="{!linkProblemToIncident}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('changeid1');window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name=" linkBroadcastInc" action="{!linkBroadcastInc}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('id');window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name=" linkProblemToRelease" action="{!linkProblemToRelease}" rerender="null" oncomplete="if(getUrlParameter('isCalledFromConsole')=='true'){window.opener.refreshRelatedLists();}else{win.location.href='/'+getUrlParameter('changeid1');}window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name=" linkChangeToRelease" action="{!linkChangeToRelease}" rerender="null"  oncomplete="dispalyErrorMessageStaffChange();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name=" linkIncidentToRelease" action="{!linkIncidentToRelease}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('changeid1');window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name=" linkReleaseToProblem" action="{!linkReleaseToProblem}" rerender="null" oncomplete="if(getUrlParameter('isCalledFromConsole')=='true'){window.opener.refreshRelatedLists();}else{win.location.href='/'+getUrlParameter('changeid1');}window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name=" linkReleaseToIncident" action="{!linkReleaseToIncident}" rerender="null" oncomplete="if(getUrlParameter('isCalledFromConsole')=='true'){window.opener.refreshRelatedLists();}else{win.location.href='/'+getUrlParameter('changeid1');}window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name=" linkReleaseToChange" action="{!linkReleaseToChange}" rerender="null" oncomplete="if(getUrlParameter('isCalledFromConsole')=='true'){window.opener.refreshRelatedLists();}else{win.location.href='/'+getUrlParameter('changeid1');}window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkKnowledgeArticleToChange" action="{!linkKnowledgeArticleToChange}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('changeId1');window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="linkKnowledgeArticleToProblem" action="{!linkKnowledgeArticleToProblem}" rerender="null" oncomplete="win.location.href='/'+getUrlParameter('problemid');window.close();">
+   <apex:param assignTo="{!LinkObjectId}" name="ciId" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="setAssignedToSuggestedStaffNext" action="{!setAssignedToSuggestedStaffNext}" reRender="validationComponent" oncomplete="if( '{!JSENCODE(errMsgs)}' == ''){closeCurrentWindow();}else{showError();}"> 
+    <apex:param assignTo="{!objIdTest}" name="objId" value=""/>
+     <apex:param assignTo="{!objName}" name="objName" value=""/>
+</apex:actionFunction>
+
+<script>
+    function openEditWindow(hisid ,actionId ,parentId, enableEdit, filterClause){
+        if(enableEdit == 'true'){
+          if(filterClause == 'appliesToIncident__c=true'){	
+			if(getUrlParameter('isCalledFromConsole')=='true') 
+                var win1 = window.open('/apex/incidentHistoryPage?isLookup=true&isCalledFromConsole=true&enableSelfClosing=false&standardLayout=true&Id='+hisid +'&historyActionId='+actionId+'&incidentId='+parentId,'_blank',"status = 1,height ="+stdLayoutScreenHeight+", width ="+ stdLayoutScreenWidth+",left="+stdScreenLeft()+",top="+stdScreenTop()+", resizable = 0,scrollbars=no");
+                else
+                var win1 = window.open('/apex/incidentHistoryPage?isLookup=true&isCalledFromConsole=false&enableSelfClosing=false&standardLayout=true&Id='+hisid +'&historyActionId='+actionId+'&incidentId='+parentId,'_blank',"status = 1,height ="+stdLayoutScreenHeight+", width ="+ stdLayoutScreenWidth+",left="+stdScreenLeft()+",top="+stdScreenTop()+", resizable = 0,scrollbars=no");
+            
+		}else if(filterClause == 'appliesToTask__c=true'){	
+				if(getUrlParameter('isCalledFromConsole')=='true')
+				window.open('/apex/taskHistoryPage?isLookup=true&standardLayout=true&isCalledFromConsole=true&Id='+hisid+'&taskId='+parentId,'_blank',"status = 1,height ="+stdLayoutScreenHeight+", width ="+ stdLayoutScreenWidth+",left="+stdScreenLeft()+",top="+stdScreenTop()+", resizable = 0,scrollbars=no");
+				else
+				window.open('/apex/taskHistoryPage?isLookup=true&standardLayout=true&isCalledFromConsole=false&Id='+hisid+'&taskId='+parentId,'_blank',"status = 1,height ="+stdLayoutScreenHeight+", width ="+ stdLayoutScreenWidth+",left="+stdScreenLeft()+",top="+stdScreenTop()+", resizable = 0,scrollbars=no");
+		}else if(filterClause == 'appliesToBroadcasts__c=true'){	 
+				window.open('/apex/BroadcastHistoryPage?isLookup=true&standardLayout=true&Id='+hisid+'&broadcastId='+parentId,'_blank',"status = 1,height ="+stdLayoutScreenHeight+", width ="+ stdLayoutScreenWidth+",left="+stdScreenLeft()+",top="+stdScreenTop()+", resizable = 0,scrollbars=no");
+      	  }else if(filterClause == 'appliesToChange__c=true'){
+      	  		window.open('/apex/ObjectHistoryPage?isLookup=true&standardLayout=true&formname=Change_Request__c&Id='+hisid+'&changeRequestId='+parentId,'_blank',"status = 1,height ="+stdLayoutScreenHeight+", width ="+ stdLayoutScreenWidth+",left="+stdScreenLeft()+",top="+stdScreenTop()+", resizable = 0,scrollbars=no");
+      	  }else if(filterClause == 'appliesToProblem__c=true'){	
+      	  		window.open('/apex/ObjectHistoryPage?isLookup=true&standardLayout=true&formname=Problem__c&id='+hisid+'&problemId='+parentId,'_blank',"status = 1,height ="+stdLayoutScreenHeight+", width ="+ stdLayoutScreenWidth+",left="+stdScreenLeft()+",top="+stdScreenTop()+", resizable = 0,scrollbars=no");
+	      }else if(filterClause == 'appliesToRelease__c=true'){
+	      		window.open('/apex/ObjectHistoryPage?isLookup=true&standardLayout=true&formname=Release__c&id='+hisid+'&releaseId='+parentId,'_blank',"status = 1,height ="+stdLayoutScreenHeight+", width ="+ stdLayoutScreenWidth+",left="+stdScreenLeft()+",top="+stdScreenTop()+", resizable = 0,scrollbars=no");
+          }else if(filterClause == 'appliesToServiceUnavailability__c=true'){
+                window.open('/apex/UnavailabilityHistoryPage?isLookup=true&isCalledFromConsole=false&enableSelfClosing=false&standardLayout=true&Id='+hisid +'&historyActionId='+actionId+'&unavailabilityId='+parentId,'_blank',"status = 1,height ="+stdLayoutScreenHeight+", width ="+ stdLayoutScreenWidth+",left="+stdScreenLeft()+",top="+stdScreenTop()+", resizable = 0,scrollbars=no");
+	      }
+		  functionCalled = true;
+        }else{
+            if(getUrlParameter('isCalledFromConsole')=='true')
+            {
+				window.opener.refreshRelatedLists();
+            }
+            else{
+				if(!(filterClause == 'appliesToServiceUnavailability__c=true')){
+					win.location.href='/'+parentId;
+				}
+                else{
+					if(typeof window.opener.refreshRelatedLists == 'function')
+					window.opener.refreshRelatedLists();
+                }
+            }
+            window.close();
+        }
+    }
+	
+	
+	function closeWindowParent(){
+    
+	if(getUrlParameter('isCalledFromConsole')=='true')
+        {
+            window.opener.refreshRelatedLists();
+        }
+    else
+        {
+			win.location.href='/'+getUrlParameter('parentId');
+    	}
+    window.close();
+    
+    }
+    function closeCurrentWindow() {
+    	if (getUrlParameter('fromconsole') == 'true' || getUrlParameter('fromconsole') == true) {
+    		window.opener.setIsNeedToRefreshForm(true);
+			window.close();
+   		}
+   		else {
+   			window.opener.location.href='/'+getUrlParameter('id');
+   			window.close();
+		}
+    }
+	
+	document.onkeydown = function(e) {
+	    e = e || window.event;
+	    if(typeof(e) == 'undefined' || e == 'null')
+	        return; 
+	    k = e.which || e.charCode || e.keyCode;
+	    if(k==27) 
+			if((window.parent) && (window.parent.closePopup)) window.parent.closePopup();
+		return;
+    }
+</script>
+</apex:form>
+<!-- end std form -->
+<script>
+    if(Sarissa._SARISSA_IS_IE && ((navigator.userAgent.indexOf("Trident/5")>-1) || (navigator.userAgent.indexOf("Trident/6")>-1))) { 
+      window.XMLSerializer = function(){};      
+      window.XMLSerializer.prototype.serializeToString=function(oNode){return oNode.xml;}    
+    }
+</script>
+<!-- Manasi -->
+<Style>
+.x-form-field{
+
+        vertical-align/*\**/:inherit\9 !important;
+
+}
+.reconSetting {
+	background-image: url('{!$Resource.SDEFStyles}/SDEFicons/icon_admin_bar_closed.gif') !important;
+}
+
+.reports{
+	background-image: url('{!$Resource.SDEFStyles}/SDEFbuttons/b_recon_log.png') !important;
+}
+
+.lblReconLog{
+	margin-right: 25px;
+}
+</Style>
+</body>
+<!-- End Manasi -->
+</apex:page>

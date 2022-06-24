@@ -1,0 +1,97 @@
+<apex:page controller="BMCServiceDesk.SSRightSidebarController" showheader="false" sidebar="false" standardStylesheets="false">
+<script>
+    var passedid = '{!JSENCODE($CurrentPageReference.parameters.keywords)}';
+
+    function renderPortlet() {
+        if (document.getElementById('keywords').value != '') {
+
+            document.getElementById('sideSearchImage').disabled = false;
+            document.getElementById('sideSearchImage').style.cursor = "cursor";
+        }
+        else {
+
+            document.getElementById('sideSearchImage').disabled = true;
+            document.getElementById('sideSearchImage').style.cursor = "default";
+        }
+    }
+
+    function opensearchresult() {
+        var url = '{!url}';
+        var allowIntanet = '{!searchIntranet}';
+        var searchKeyword = document.getElementById('keywords').value;
+
+
+
+        if ({!searchIntranet}) {
+            if (url != '')
+            var finalURL;
+            if (url.indexOf("{searchParam}") != -1) {
+                finalURL = url.replace("{searchParam}", searchKeyword);
+            } else {
+                finalURL = url + searchKeyword;
+            }
+            window.open(finalURL);
+        }
+
+        /* var stringtopass = document.getElementById('keywords').value;
+             var glbsrch = "knowledgesearch?str=" + stringtopass;
+             var my_num=Math.random();
+             var randomnumber =(my_num*11);
+             glbsrch = glbsrch + '&r=' + randomnumber;
+            window.parent.addNewTab("knowledgesearch","Global Search",glbsrch);*/
+    }
+
+    function showErrorMsg(messageString) {
+        var icon = Ext.MessageBox.WARNING;
+        Ext.Msg.show({
+            title: 'Warning',
+            msg: messageString,
+            buttons: Ext.Msg.OK,
+            icon: icon,
+            width: 350
+        });
+    }
+
+
+    function enableButton() {
+        srchText = document.getElementById('keywords').value;
+        if (srchText != null && srchText != '') {        
+            document.getElementById('sideSearchImage').disabled = false;
+            document.getElementById('sideSearchImage').style.cursor = "pointer";
+        } else {
+            document.getElementById('sideSearchImage').disabled = true;
+            document.getElementById('sideSearchImage').style.cursor = "default";
+        }
+    }
+
+
+
+    function onEnter(evt, frm) {
+        var keyCode = null;
+
+        if (evt.which) {
+            keyCode = evt.which;
+        } else if (evt.keyCode) {
+            keyCode = evt.keyCode;
+        }
+        if (13 == keyCode || keyCode == 1) {
+            opensearchresult();
+            return false;
+        }else if(evt.type == 'click' && Ext.isIE){
+            opensearchresult();
+            return false;
+        }
+        return true;
+    }
+</script>
+
+<form name="SearchIntranetForm">
+    <input class="searchIntranetInput" id="keywords" title="{!$Label.SearchInternetToolTip}" maxlength="255" name="keywords" onkeypress="return onEnter(event,this.form);" onkeyup="enableButton();" />
+    <input alt="Search Intranet" class="searchIntranetIcon" id="sideSearchImage" name="sideSearchImage" onclick="return onEnter(event,this.form);" src="{!$Resource.Themes}/{!staticResource}/SDEFimages/icon_knowledge_search.gif" type="image" />
+</form>
+
+<script>
+    document.getElementById('keywords').value = passedid;
+</script>
+
+</apex:page>

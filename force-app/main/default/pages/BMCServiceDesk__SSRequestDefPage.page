@@ -1,0 +1,116 @@
+<apex:page id="SSRequestDefPage" controller="BMCServiceDesk.SSRequestDefController" sidebar="false" showHeader="false" standardStylesheets="false">
+<c:SelfServiceCommonIncludes />
+<script>
+    var showCartPortlet = {!showCartPortlet};
+    function closeRequestDef(){
+   		window.parent.closePopUp();
+    }
+	function getUrlParameter( param ){
+			if(param != undefined || param != null || param != ''){
+
+			param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+			var r1 = "[\\?&]"+param+"=([^&#]*)";
+			var r2 = new RegExp( r1 );
+			var r3 = r2.exec( window.location.href );
+			if( r3 == null ){return ""}
+			else {return r3[1]};
+		}
+	}
+    function openRequestDetailinPopUp(){
+        var title = '{!JSINHTMLENCODE(requestDef.serviceRequestTitle__c)}';
+        var id = '{!requestDef.Id}';  
+        
+        // US131397 ---      
+        var homePortalManager ;
+        var parentWin = getUrlParameter('parentWin');
+        if(parentWin=='ssHome'){
+            homePortalManager = window.parent.Ext.getCmp('ssHomePortalManager');
+        }
+        
+        else if(parentWin=='ssSearch'){
+            
+            homePortalManager = parent.parent.Ext.getCmp('ssHomePortalManager');
+        }
+	    window.parent.openRequestDetail(title,id,homePortalManager.getLayout().activeItem.xtype);
+   }
+</script>
+ <c:ValidationComponent errorMsgList="{!errorMessage}" id="validationCompId"></c:ValidationComponent>
+	<apex:form >
+	<div class="{!IF(isTurnAround,'turnAroundDiv','hideDiv')}">
+	<table>
+	<tr height="1"></tr>
+		<tr>
+		  <td width="4" ></td>
+		     	<td>
+		        	<apex:outputLabel styleclass="turnaroundPrice" value="{!$Label.bmcservicedesk__reqdefturnaroundtime}">:</apex:outputLabel>        
+		        </td>
+		        <td class="ssBrowsecls" >
+					  <span id="turnAroundReadOnly">{!turnaroundTime}</span>&nbsp;
+				  </td>
+		         
+		        </tr>
+	  </table>      
+	  </div>
+	    <div   class="{!IF(isPrice,IF(isTurnAround,'reqDefDesPT','reqDefDesPrice'),IF(isTurnAround,'reqDefDesTurnAround','reqDefDes'))}" >
+	     <table>
+	     <tr height="8"></tr>
+	       <tr>
+			        <td width="9">
+			        </td>
+			        <td>  <apex:outputField id="turnAroundReadOnly" value="{!requestDef.BMCServiceDesk__Description__c}" /></td>
+	       </tr>      
+	         </table>
+	   </div>
+	  <div class="{!IF(isPrice,'priceDiv','hideDiv')}">
+	    <table>
+     	<tr height="5"></tr> 
+		<tr>
+		  <td width="3" ></td>
+		     	<td>
+		        	<apex:outputLabel styleclass="turnaroundPrice" value="{!$Label.bmcservicedesk__reqdefprice}">:</apex:outputLabel>        
+		        </td>
+		   </tr>
+		        <tr>
+			         <td width="5" ></td>
+			         <td class="ssBrowsecls" >&nbsp;&nbsp;
+						                         <apex:outputText id="priceReadOnly" value="{!customerPrice}"></apex:outputText>&nbsp;&nbsp;
+					 </td>
+		        </tr>
+	  </table> 
+	   </div>
+     <div class="buttonDiv">
+		<table>
+		   <tr height="5"></tr>
+			<tr>
+			 <td width="9"></td>
+                <td>
+                  <input type="button"  value="{!$Label.RequestNow}" class="clsRequestNowBtn"  id="requestId" onClick="openRequestDetailinPopUp();closeRequestDef();"/>
+                </td>
+                 <td widht="10"></td>
+                <td style="display: {!if(showCartPortlet ,'','none')};">
+                   <input type="button" id="addToCartBtnID" value="{!$Label.saveToCart}" class="clsSSAddToCartButtonStyle"  onclick="addToCart();"/>
+                </td>
+			</tr>
+		</table>
+      </div>
+      <apex:outputpanel id="msgPanel">
+      <script>
+      				var insertFailedMsg ="{!errorMessage}";
+      				var cartData= [{!cartData}];
+      </script>
+      </apex:outputpanel>
+		<apex:actionFunction name="addToCart"  action="{!addToCart}" rerender="validationCompId,msgPanel" oncomplete="afterAddToCart();">
+		</apex:actionFunction>
+		<script>
+			function afterAddToCart(){
+					if(insertFailedMsg!=''){ 
+				 	showError();
+				 	}else{
+				 	window.parent.refreshCartDataFromSR(cartData);
+					//window.parent.initHelpRequestDataForSRD(); 
+					closeRequestDef();
+					}
+			}
+		</script>
+	</apex:form> 
+</apex:page>

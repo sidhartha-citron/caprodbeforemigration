@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Fill_In_the_PO_Number_field</fullName>
+    <active>true</active>
+    <description>If the associated Account Requires a PO , PO# needs to be filled in to close/win the opportunity</description>
+    <errorConditionFormula>AND( 
+ISCHANGED(StageName), 
+OR(Text(PRIORVALUE(StageName)) &lt;&gt; &apos;Signed Awaiting Survey Approval&apos;, Text(PRIORVALUE(StageName)) &lt;&gt; &apos;Signed&apos;), 
+OR((Text(StageName)=&apos;Signed&apos;), (TEXT(StageName)=&apos;Signed Awaiting Survey Approval&apos;)), 
+ISPICKVAL(Account.PO_Required_for_Orders__c, &apos;PO Required Before&apos;),
+ISBLANK( PO_Number__c ) 
+)</errorConditionFormula>
+    <errorMessage>Please fill in Purchase Order Number(PO#) field to close win this Opportunity.</errorMessage>
+</ValidationRule>

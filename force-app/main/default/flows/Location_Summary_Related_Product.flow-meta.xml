@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <interviewLabel>Location Summary Related Product {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Location Summary Related Product</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>FieldServiceMobile</processType>
+    <recordLookups>
+        <description>Get Work Orders</description>
+        <name>getWrkOrd</name>
+        <label>getWrkOrd</label>
+        <locationX>194</locationX>
+        <locationY>50</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>ProductSummary</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>Id</elementReference>
+            </value>
+        </filters>
+        <object>WorkOrder</object>
+        <outputReference>ptWrkOrd</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Product_Summary__c</queriedFields>
+    </recordLookups>
+    <screens>
+        <name>ProductSummary</name>
+        <label>Product Summary</label>
+        <locationX>322</locationX>
+        <locationY>50</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <fields>
+            <name>txtSummary</name>
+            <fieldText>&lt;p&gt;{!ptWrkOrd.Product_Summary__c}&lt;span style=&quot;color: rgb(45, 45, 231);&quot;&gt;&lt;span class=&quot;ql-cursor&quot;&gt;﻿&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <startElementReference>getWrkOrd</startElementReference>
+    <status>Active</status>
+    <variables>
+        <description>Record Id from FSL Mobile App</description>
+        <name>Id</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Work Order record list</description>
+        <name>ptWrkOrd</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>WorkOrder</objectType>
+    </variables>
+</Flow>

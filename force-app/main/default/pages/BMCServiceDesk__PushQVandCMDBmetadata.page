@@ -1,0 +1,326 @@
+<apex:page controller="BMCServiceDesk.HandleFutureFailures" >
+<script>
+	var message = '{!message}';
+	function showMessage(){
+		
+		if(message != null && message != '' && message !='null'){
+			alert(message);
+		}
+	
+	}
+
+</script> 
+<apex:outputpanel id="messagePanel">
+<script>
+message = '{!message}';
+
+</script>
+</apex:outputpanel>
+<apex:form id="formID">
+
+<apex:outputpanel id="formpanelId" >
+	
+		<table>
+			<tr>
+				<td>
+					<apex:inputSecret id="authCodeId" value="{!authCode}" rendered="{!renderAuthPanel}"/>
+					
+				</td>
+				<td>
+				</td>
+				<td>
+					<!-- input type="button" value="confirm" onclick="Confirm();" /> -->
+					<apex:commandButton id="verifyBtnId" value="Verify Code" action="{!verify}" rendered="{!renderAuthPanel}" rerender="messagePanel,formpanelId" oncomplete="showMessage();" />
+					
+				</td>
+				
+			</tr>
+			<tr>
+				<td colspan="4">
+				<apex:outputpanel id="setPasnelId" >
+				<table>
+					<tr>
+						<td> <apex:outputLabel value="To upload OOTB Dashboard & QuickViews" rendered="{!renderButtonPanel}"/>
+						</td>
+						
+						<td>
+                        <apex:actionStatus id="QV">
+                            <apex:facet name="stop">
+                            <apex:outputText value="CRUDFLSCheck# No explicit check required to do PushQVs as this page is accessed by Admin's only." rendered="false"/>
+                        <apex:commandButton id="Upload_QV" status="QV" value="Upload QV" rendered="{!renderButtonPanel}" action="{!PushQVs}" disabled="{!Qvbutton}" rerender="messagePanel,formpanelId" onComplete="showMessage();" />
+                        </apex:facet>
+                        <apex:facet name="start">
+                            <apex:commandButton value="Upload QV" disabled="true"/>
+                        </apex:facet>
+                    </apex:actionStatus>
+						</td>
+					</tr>
+					<tr>
+						<td> <apex:outputLabel value="To upload CMDB Metadata" rendered="{!renderButtonPanel}"/>
+						</td>
+						
+						<td>
+                        <apex:actionStatus id="CMDB">
+                            <apex:facet name="stop">
+                            <apex:outputText value="CRUDFLSCheck# No explicit check required to do pushCMDB as this page is accessed by Admin's only." rendered="false"/>
+                        <apex:commandButton value="Upload CMDB"  status="CMDB" rendered="{!renderButtonPanel}" action="{!pushCMDB}" disabled="{!CMDBButton}"  rerender="messagePanel,formpanelId" onComplete="showMessage();" />
+                        </apex:facet>
+                        <apex:facet name="start">
+                            <apex:commandButton value="Upload CMDB" disabled="true"/>
+                        </apex:facet>
+                         </apex:actionStatus>
+						</td>
+					</tr>
+					<tr>
+						<td> <apex:outputLabel value="{!$Label.bmcservicedesk__batchjobsforsummer11} " rendered="{!renderButtonPanel}"/>
+						</td>
+						
+						<td>
+                        <apex:actionStatus id="Batch">
+                         <apex:facet name="stop">
+                         <apex:outputText value="CRUDFLSCheck# No explicit check required to do CallBatchJobs as this page is accessed by Admin's only." rendered="false"/>
+                        <apex:commandButton disabled="{!BatchButton}" status="Batch" value="{!$Label.bmcservicedesk__executebatchjobs}" action="{!CallBatchJobs}" id="ExecuteBatch"   rendered="{!renderButtonPanel}" rerender="messagePanel,formpanelId" onComplete="showMessage();"/>
+                        </apex:facet>
+                        <apex:facet name="start">
+                            <apex:commandButton value="{!$Label.bmcservicedesk__executebatchjobs}" disabled="true"/>
+                        </apex:facet>
+                         </apex:actionStatus>
+						</td>
+					</tr>
+					<tr>
+						<td> <apex:outputLabel value="To execute post install future methods" rendered="{!renderButtonPanel}"/>
+						</td>
+						
+						<td>
+                        <apex:actionStatus id="FutureMethods">
+                         <apex:facet name="stop">
+                         <apex:outputText value="CRUDFLSCheck# No explicit check required to do PostInstallUpgradeFutureMethods as this page is accessed by Admin's only." rendered="false"/>
+                        <apex:commandButton disabled="{!FutureMethods}" status="FutureMethods" value="Execute Future Methods" action="{!PostInstallUpgradeFutureMethods}" id="FutureMethodsButton"   rendered="{!renderButtonPanel}" rerender="messagePanel,formpanelId" onComplete="showMessage();"/>
+                        </apex:facet>
+                        <apex:facet name="start">
+                            <apex:commandButton value="Execute Future Methods" disabled="true"/>
+                        </apex:facet>
+                         </apex:actionStatus>
+						</td>
+					</tr>
+					<tr>
+						<td> <apex:outputLabel value="To schedule KPI processor" rendered="{!renderButtonPanel}"/>
+						</td>
+						
+						<td>
+							<apex:outputText value="CRUDFLSCheck# No explicit check required to do scheduleKPIProcessor as this page is accessed by Admin's only." rendered="false"/>
+                            <apex:commandButton value="Schedule KPI Processor" disabled="{!scheduleKPI}" action="{!scheduleKPIProcessor}" id="ScheduleKPIProcessor"   rendered="{!renderButtonPanel}" rerender="messagePanel,formpanelId" onComplete="showMessage();" />
+						</td>
+					</tr>
+                    <tr>
+						<td>
+						<apex:outputText value="CRUDFLSCheck# No association with any sObject fields." rendered="false"/>
+						<apex:inputText id="customID" size="50" title="Enter the API name of the custom setting. For example, BMCServiceDesk__ RemedyforceSettings__c." value="{!custominput}" rendered="{!renderButtonPanel}" />
+					
+						</td>
+						
+						<td>
+						
+                            <apex:commandButton id="customBtnId" value="Get Custom Settings" rerender="nothing" onclick="openCsvPage();"  rendered="{!renderButtonPanel}" /> 
+					
+						</td>
+				
+					</tr>
+				</table>
+				</apex:outputpanel>
+				
+				</td>
+				</tr>
+			</table>
+            <table style="line-height:30px;">
+                <tr>
+                    <td><apex:outputLabel value="Type" rendered="{!renderUpdateForm}"/></td>
+                    <td><apex:selectList size="1" id="objectName" value="{!objectName}" rendered="{!renderUpdateForm}">
+                            <apex:selectOption itemLabel="--None--" itemvalue="" ></apex:selectOption>
+                            <apex:selectOption itemLabel="BMCSYSProperties" itemvalue="BMCSYSProperties__c"></apex:selectOption>
+                            <apex:selectOption itemLabel="RemedyforceSettings" itemvalue="RemedyforceSettings__c"></apex:selectOption>
+                            <apex:selectOption itemLabel="Profile Layout Assignment" itemvalue="Profile_Layout_Assignment__c"></apex:selectOption>
+                            <apex:selectOption itemLabel="Console Layout" itemvalue="Console_Layout__c"></apex:selectOption>
+                            <apex:selectOption itemLabel="Remedyforce KPI" itemvalue="RemedyforceKPI__c"></apex:selectOption> 
+                            <apex:actionSupport event="onchange" reRender="property,fieldPanel"/>
+                        </apex:selectList>    
+                    </td> 
+                </tr>
+                <tr> 
+                    <td><apex:outputLabel value="Custom Setting" rendered="{!renderUpdateForm}"/></td>
+                    <td><apex:selectList size="1" value="{!property}" id="property" rendered="{!renderUpdateForm}">
+                            <apex:selectOptions value="{!properties}"/>
+                            <apex:actionSupport event="onchange" action="{!getPropertyValues}" reRender="fieldPanel"/>
+                        </apex:selectList>
+                    </td> 
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <apex:outputPanel id="fieldPanel" rendered="{!renderUpdateForm}">
+                            <table>
+                                <apex:repeat value="{!listFields}" var="field">
+
+                <tr>
+                                        <td><apex:outputText value="{!$ObjectType[objectName].fields[field].Label}" /></td>
+                                        <td><apex:inputField value="{!sobj[field]}" /> </td>
+                                    </tr>
+                                    
+                                </apex:repeat>
+                            </table>
+                    </apex:outputPanel>
+                    </td>
+                </tr>
+                <tr>    
+                    <td>
+                    	<apex:outputText value="CRUDFLSCheck# No explicit check required to do UpsertCustomSettings as this page is accessed by Admin's only." rendered="false"/>
+                    	<apex:commandButton id="UpdateProperty" value="Save" action="{!UpsertCustomSettings}" oncomplete="showMessage();" rendered="{!renderUpdateForm}" rerender="messagePanel,formpanelId"/></td> 
+                </tr>
+            </table>
+
+            <apex:outputPanel rendered="{!renderKPIAnalysisPanel}">
+            <table>
+                <tr>
+                    <td><apex:commandButton value="Scan Utility"  rendered="{!Not(showScannedResult)}" action="{!analyzeKPI}"></apex:commandButton></td><td></td>
+                </tr>
+                <apex:outputPanel id="ScannedResult" rendered="{!showScannedResult}">
+                    <tr>
+
+                        <td>
+                            Is the Utility job in running state? 
+
+                        </td> 
+                        <td>:</td>
+                        <td>
+                            {!if(isUtilityJobExists,"Yes","No")}
+                        </td>
+
+                    </tr>
+                    <tr>
+
+                        <td>
+                           Is the Milestone job in running state? 
+
+                        </td> 
+                        <td>:</td> 
+                        <td>
+                            {!if(isMilestoneJobExists,"Yes","No")}
+                            <br/>
+                            <a href="/{!runningUserIdMilestone}" target="_blank">{!runningUserNameMilestone}</a>
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <td>
+                            Is the Utility job running while the user is active?
+
+                        </td> 
+                        <td>:</td>
+                        <td>
+                            {!if(isUserInActive,"Yes","No")}
+                        </td>
+
+                    </tr>
+                    <tr>
+
+                        <td>
+                            Is the Utility job running for a user with Salesforce license?
+
+                        </td> 
+                        <td>:</td>
+                        <td>
+                            {!if(isUserSysAdmin,"Yes","No")}
+                            <br/>
+                            <a href="/{!runningUserId}" target="_blank">{!runningUserName}</a>
+                        </td>
+
+                    </tr>
+                    <tr>
+
+                        <td>
+                            Is the status for usage metrics job active? 
+
+                        </td> 
+                        <td>:</td>
+                        <td>
+                            {!if(isUsageMetricsActiveAndOnTime,"Yes","No")} <br/> <apex:outputText value="{!usageMetricsNextRun}" escape="false"></apex:outputText>
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <td>
+                            Is the status for KPI job active?  
+
+                        </td> 
+                        <td>:</td>
+                        <td>
+                            {!if(isKPIActiveAndOnTime,"Yes","No")} <br/> {!KPINextRun}
+                        </td>
+
+                    </tr>
+                    <tr>
+
+                        <td>
+                            Is the organization deliverability access level set to All Email?
+
+                        </td> 
+                        <td>:</td>
+                        <td>
+                            {!if(isDeliverabilityAllMails,"Yes","No")}
+                        </td>
+
+                    </tr>
+                    <tr>
+                            <td colspan="3"><apex:commandButton value="Show KPI Data"  action="{!showKPIData}">                                    
+                            </apex:commandButton> &nbsp;<apex:commandButton value="Calculate KPI Data"  action="{!generateFreshKPIData}" oncomplete="alert('Batch ran, please check the logs');">                                    
+                            </apex:commandButton></td>                          
+                        </tr>
+                        <apex:outputPanel rendered="{!if(kpiJson=='',false,true)}">
+                            <tr >
+                                <td colspan="3">
+                                    {!kpiJson}
+                                </td>
+                            </tr>
+
+                        </apex:outputPanel>
+                        <tr>
+                                <td><apex:commandButton value="Calculate and Show Utilization Score"  action="{!showUtilizationScore}">                                    
+                                </apex:commandButton></td><td></td><td></td>                           
+                            </tr>
+                            <apex:outputPanel rendered="{!if(utilizationStr=='',false,true)}">
+                                <tr >
+                                    <td colspan="3" style="word-break: break-word;">
+                                        {!utilizationStr}
+                                    </td>
+                                </tr>
+    
+                            </apex:outputPanel>    
+                    <tr>
+                        <td><apex:commandButton value="Run Usage Metrics Batch Without Email"  action="{!runBatchWithoutEmail}" oncomplete="alert('Batch ran, please check the logs');">                                    
+                        </apex:commandButton></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                            <td><apex:commandButton value="Run Usage Metrics Batch With Email"  action="{!runBatchWithEmail}" oncomplete="alert('Batch ran, please check the logs')">                                    
+                            </apex:commandButton></td><td></td><td></td>
+                        </tr>
+                </apex:outputPanel>
+            </table>
+        </apex:outputPanel>
+</apex:outputpanel>	
+<script>
+	function openCsvPage(){
+		var custominput = document.getElementById('{!JSENCODE($Component.formID.customID)}').value;
+		if(custominput != null && custominput != '' && custominput !='null'){
+			// use type to specify the object type
+			window.open('/apex/CreateCsv?type=cs&objectname='+custominput);
+		}
+		else{
+			alert('Please enter the API name of the custom setting.');
+		}
+	}
+</script>
+ </apex:form> 
+</apex:page>

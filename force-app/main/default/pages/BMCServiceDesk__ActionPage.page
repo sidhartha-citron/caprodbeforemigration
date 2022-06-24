@@ -1,0 +1,761 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.ActionController" standardStylesheets="false">
+<c:CommonIncludes />
+<!--<script type="text/javascript" src="{!$Resource.ExtJs}/ext-all-debug.js"></script>-->
+    <style>
+        .clsAbbrInputTextBox {
+                vertical-align: top;
+                color: #000000;
+                width: 195px;
+                height: 13px;
+                font-family: Tahoma, MS Sans Serif;
+                font-size: 11px;
+                border: 1px solid;
+                border-top-color: #6a7378;
+                border-left-color: #6a7378;
+                border-right-color: #bac3c8;
+                border-bottom-color: #bac3c8;
+                padding: 2px;
+                margin: 0px;
+                padding-left: 5px;
+                text-transform:uppercase;
+}
+
+        .panelContent {
+            overflow:hidden;
+        }
+        
+        .clsIdInputTextBox{
+            *height:13px;
+        }
+        
+        .boxContainer{
+			background-color: #ffc;
+			border: 1px solid #FFAD00;
+			border-radius: 4px;
+			padding: 5px;
+		}
+        
+    </style>
+
+    <script>
+    
+        /*
+            Code for handling Data change on Page
+            - START
+        */
+        var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+        var clickedOnce = false;  
+        document.onclick = activateWindow; 
+        function getWID(){
+                return '{!JSENCODE($CurrentPage.parameters.wid)}';
+        }
+        function handleChange(){
+            if(!clickedOnce){
+                clickedOnce = true;
+                window.parent.registerChange(wid2);
+            }
+        }
+            
+        function handleResetChange(){
+            if(clickedOnce){
+               clickedOnce = false;
+               window.parent.registerSave(wid2);
+           }
+           }
+      
+       function afterSaveAction(){ 
+            var modName = "{!JSENCODE($CurrentPage.parameters.moduleName)}";  
+            var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";
+            if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined'){
+                return;
+                //window.parent.closeTab(wid);
+            }else{
+                showError();
+            }
+            window.parent.refreshList();
+        }
+        function afterResetSI(){
+            var modName = "{!JSENCODE($CurrentPage.parameters.moduleName)}";  
+            var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";
+            if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined' && errormsg=='{!JSENCODE($Label.savedSuccessfully)}'){
+                window.parent.parent.refreshSupportingInformation(parentWid,modName);
+            }
+        }
+         /*
+            END
+        */
+     
+     var actionName;               
+     var actionId;
+     var errormsg;
+     var chkBoxValue;
+     var msgSavedSuccessfully = '{!JSENCODE($Label.savedSuccessfully)}';
+     var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+     var actionHeader = '{!JSENCODE($ObjectType.Action__c.label)}';
+    
+     var isLookup = "{!JSENCODE($CurrentPage.parameters.islookup)}";
+     if(isLookup){
+          window.parent.changePopUpTitle('{!objLabel}');
+     }
+     
+    function saveRecords(){
+        if((actionName != null && actionName != '')&&(errormsg == null||errormsg ==''||errormsg==msgSavedSuccessfully)){   
+        if(isLookup){       
+          window.parent.refreshDocs();
+          window.parent.closePopup();
+       }
+     }
+     }
+       
+        function callCopyPage(){
+            window.parent.addTab("ActionPage?copyId=" + actionId +"",actionHeader,actionHeader); 
+        }
+        function completeDelete(){
+	        if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}'){
+	            showError();
+	        }else{
+	            closeWindow();
+	        }
+	     }
+        
+        function closeWindow(){
+            if(errormsg == null ||errormsg == ''){
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+            }else{
+                showError();
+            }
+        }
+        
+        var disableTrue = true;
+        Ext.onReady(function(){
+        if({!isRecDeleted}){
+            Ext.Msg.alert('{!JSENCODE($Label.Information)}', '{!JSENCODE($Label.DeletedRecord)}', function(){
+                if ((typeof(window.parent) != 'undefined') && (typeof(window.parent.popUpWindow) != 'undefined'))
+                    window.parent.popUpWindow.close();
+                    closeWindow();
+            });
+        }
+        nonEditableSystemActionName();
+        nonEditableSystemActionAbbr();
+        Ext.QuickTips.init();
+         if(isLookup){
+            disableTrue = true;
+          }else{ 
+          disableTrue = false; }
+        
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event) {  activeAllWindowFlag=false;     openPage("ActionPage",actionHeader,actionHeader); };
+        var SaveBtnHandler = function(button,event) {  
+        chkBoxValue=Ext.getCmp('idInactive').getValue();
+        Ext.getCmp('actionsave_id').setDisabled(true);
+        waitbox(0); 
+        saveAction(chkBoxValue); };
+        var CopyBtnHandler = function(button,event) { activeAllWindowFlag=false; callCopyPage();};
+       var DeleteBtnHandler = function(button,event) { 
+                                                        Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}', function(btn){
+                                                           if(btn == 'yes'){
+                                                                deleteAction(); 
+                                                           }                                                           
+                                                         });
+                                                        
+                                                         };
+        var FindBtnHandler = function(button,event) {  /*searchIncident();*/ };
+        var ResetBtnHandler = function(button,event) {  resetAction(); 
+        Ext.getCmp('idInactive').setValue('{!action.inactive__c}');
+
+        };
+        var NextBtnHandler = function (button,event) { if(document.getElementById('nextId').disabled!=true) nextActionBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { if(document.getElementById('prevId').disabled!=true) previousActionBtnHandler1();};
+        
+        var SamplePanel = Ext.extend(Ext.Panel, {
+
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+             cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+            	id: 'actionnew_id',
+                scale: 'medium',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.new)}',
+                iconCls: 'bmcNew',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },            
+                handler:NewBtnHandler
+            },{
+                scale: 'medium',
+                id: 'actionsave_id',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.save)}',
+                iconCls: 'bmcSave', 
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },              
+                handler:SaveBtnHandler
+                
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.copy)}',
+                hidden:disableTrue, 
+                id:'copyId', 
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },               
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.delete)}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },
+                id:'deleteId',
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcRefreshDasboard',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.Refresh)}',
+                id:'resetId',
+                hidden:disableTrue,
+           
+                handler:ResetBtnHandler
+            },
+             new Ext.Toolbar.Fill(), 
+            {
+                  id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               align:'top',
+               checked: false,
+               boxLabel:'{!JSENCODE($ObjectType.Action__c.fields.inactive__c.label)}',
+               cls:'chkStyle',
+               boxLabel:'<span class="checkboxLabelCls">{!JSENCODE($ObjectType.Action__c.fields.inactive__c.label)}</span>',
+           listeners:{
+                    render:function(){
+                        Ext.QuickTips.register({
+                            target:this,
+                            dismissDelay: 25000,
+                            text:'{!JSENCODE($ObjectType.Action__c.fields.inactive__c.label)}'
+                        });
+                    }               
+               }
+    
+           
+            
+              
+            }, {
+               
+               
+                  xtype : 'box',
+                  id    : 'prevId',
+                autoEl:  {tag: 'img', 
+                          src:('{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif'),   
+                         title:'{!JSENCODE($Label.previousRecord)}'
+                         },
+                          
+                cls:'cursorCls',
+               listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                             
+            },{
+               
+                xtype : 'box',
+                id    : 'nextId',
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif',
+                          title:'{!JSENCODE($Label.nextRecord)}' },
+                cls:'cursorSpaceCls',
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+               
+                
+            }
+            ] 
+        });
+
+        Ext.getCmp('idInactive').setValue('{!action.inactive__c}');
+       
+        if('{!JSENCODE(Sequenceval)}' != ''){
+            disbalesavedelete();
+        }
+        actionId = '{!JSENCODE(action.Id)}';    
+        if(actionId == null ||actionId == ''){ 
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+        Ext.getCmp('copyId').setDisabled(true);
+        Ext.getCmp('resetId').setDisabled(true);
+        Ext.getCmp('prevId').setDisabled(true);
+        Ext.getCmp('nextId').setDisabled(true);  
+        document.getElementById('{!$Component.formId.Action__c_id_name}').focus();
+        }
+        
+        handleElemEvent();
+	
+		setResetParentAll();
+        var isStaffUser = {!isStaffUser};
+        if(isStaffUser) {
+        	Ext.getCmp('actionnew_id').setDisabled(true);
+        	Ext.getCmp('actionsave_id').setDisabled(true);
+        	Ext.getCmp('deleteId').setDisabled(true);
+        	Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+        	Ext.getCmp('copyId').setDisabled(true);
+        	Ext.getCmp('resetId').setDisabled(true);
+        	Ext.getCmp('prevId').setDisabled(true);
+        	Ext.getCmp('nextId').setDisabled(true);  
+		}
+    });
+
+        var actionIdSet;
+        if(actionIdSet == null || actionIdSet == ''){
+            if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+            if(typeof(window.parent.returnListOfId)=='function')
+            actionIdSet = window.parent.returnListOfId();
+        }else{
+            if(typeof(window.parent.parent.getIdArray)=='function')
+                actionIdSet=window.parent.parent.getIdArray();
+                window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+            }
+        }  
+
+function setResetSelectAllJS(chkVal){
+            var arrappliedCB = document.getElementsByTagName("input"); 
+            var arrappliedCheckBox = [];;
+            for(var i=0; i < arrappliedCB.length; i++){
+                if(arrappliedCB[i].type == "checkbox"  && arrappliedCB[i].className == 'FirstPanel'){
+                    arrappliedCheckBox.push(arrappliedCB[i]);
+                }
+            }
+            
+            if(arrappliedCheckBox != null ){
+            for (var i = 0; i < arrappliedCheckBox.length; i++) {
+                    if(chkVal){
+                        arrappliedCheckBox[i].checked = true; 
+                    }else{
+                        arrappliedCheckBox[i].checked = false;
+                    }                   
+            }
+        }
+}
+
+function setResetParentAll(){
+    var arrappliedCB = document.getElementsByTagName("input");
+    var arrappliedCheckBox = [];
+    for(var i=0; i < arrappliedCB.length; i++){
+        if(arrappliedCB[i].type == "checkbox" && arrappliedCB[i].className == 'FirstPanel' ){
+            arrappliedCheckBox.push(arrappliedCB[i]);
+        }
+    }
+    var parentAllEle = document.getElementById('selectAll');
+    parentAllEle.checked = true;
+    if(parentAllEle != null && arrappliedCheckBox != null){
+        for (var i = 0; i < arrappliedCheckBox.length; i++) {
+            if(arrappliedCheckBox[i].checked == false){
+                parentAllEle.checked = false;
+                break;
+            }           
+     }
+   }
+}
+        function previousActionBtnHandler1(){
+            //alert('id string 2 ');
+            var idSetString='';
+            var i=0;
+            //alert('id string 1 '+idset[0]);
+            while(actionIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=actionIdSet[i];
+                }else{
+                    idSetString=idSetString+','+actionIdSet[i];
+                }
+                i++;
+            }
+            previousActionBtnHandler(idSetString);
+        
+        }
+       
+       function nextActionBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(actionIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=actionIdSet[i];
+                }else{
+                    idSetString=idSetString+','+actionIdSet[i];
+                }
+                i++;
+            }
+            nextActionBtnHandler(idSetString);
+        
+        }
+    
+    function buttonValidator() {
+       
+       if((actionName != null && actionName != '')&&(errormsg == null||errormsg ==''||errormsg==msgSavedSuccessfully)){   
+  
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('deleteId').setIconClass('bmcDelete');
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('resetId').setDisabled(false);
+        
+       }       
+   }
+   
+    </script>
+   
+     <apex:outputPanel id="titlePanel">
+        <script>
+            function updateList(){
+               var newActionId = '{!JSENCODE(action.Id)}'; 
+               saveRecords();
+                window.parent.refreshList();
+            }
+        
+        </script>
+    </apex:outputPanel> 
+    <apex:outputPanel id="afterSavePanel">
+        <script>
+           function handleSave(){
+               var id = "{!JSENCODE(action.id)}";
+            window.parent.handleSave(wid, id);
+        }
+         function updateTitle(){   
+           var newTitle = "{!JSENCODE(action.name)}";
+           if(newTitle != ""){
+	           window.parent.changeTitle(wid,newTitle,actionHeader);          
+           }
+         }   
+    
+        </script>
+     </apex:outputPanel>
+    <apex:outputPanel id="nextprevPanel">
+        <script>
+           function disableSysAction(){
+               }     
+               function disbalesavedelete(){
+                 var system_val="{!action.system__c}";    
+                
+                
+                    if('{!JSENCODE(Sequenceval)}' != '' && Ext.getCmp('deleteId') != null && Ext.getCmp('actionsave_id') != null){
+
+                        Ext.getCmp('deleteId').setDisabled(true);
+                        Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+                        document.getElementById('{!$Component.formId.Action__c_id_abbreviation}').disabled = true;
+                        
+                        
+                        if(system_val == 'true'){
+                            var savebtndisable2 = Ext.getCmp('actionsave_id');
+                            savebtndisable2.disable();
+                            document.getElementById('{!$Component.formId.Action__c_id_name}').disabled =true;
+                        }
+                        if(system_val == 'false'){
+                            
+                            var savebtndisable2 = Ext.getCmp('actionsave_id');
+                            savebtndisable2.enable();
+                        //  document.getElementById('{!$Component.formId.Action__c_id_name}').disabled = true;
+                            
+                        }
+                        
+                    }else if('{!JSENCODE(Sequenceval)}' == '' && Ext.getCmp('deleteId') != null && Ext.getCmp('actionsave_id') != null){
+                        var savebtndisable2 = Ext.getCmp('actionsave_id');
+                        savebtndisable2.enable();
+                        Ext.getCmp('deleteId').setDisabled(false);
+                        Ext.getCmp('deleteId').setIconClass('bmcDelete');
+                    }
+                }      
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="sysPanel">
+        <script>
+           function sysActWithNextPrev(){
+                            
+                    }
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           actionName = '{!JSENCODE(action.name)}';               
+           actionId = '{!JSENCODE(action.Id)}';      
+        
+        </script>
+        </apex:outputPanel>
+        
+         <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+        
+       <apex:outputPanel id="inactivePanel">
+        <script>
+        if(Ext.getCmp('idInactive') != null)
+        Ext.getCmp('idInactive').setValue('{!action.inactive__c}');
+        </script>
+       </apex:outputPanel>
+           
+    <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form id="formId" >
+                <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+
+                <apex:actionFunction name="saveAction" action="{!saveAction}" reRender="validationComponent,panelId,afterSavePanel,errorId,nextprevPanel" oncomplete="waitMsg.hide();afterSaveAction();buttonValidator();disableSysAction();handleElemEvent();handleSave();disbalesavedelete();updateTitle();Ext.getCmp('actionsave_id').setDisabled(false);">
+                 <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+                 </apex:actionFunction>
+         
+                <apex:actionFunction name="newAction" action="{!newAction}"/>
+                <apex:actionFunction name="resetAction" action="{!reset}" rerender="actionPanelId, tablePanel,afterSavePanel, actionPanelBar,inactivePanel,nextprevPanel" oncomplete="handleResetChange();handleElemEvent();disbalesavedelete();"/>
+                <apex:actionFunction name="deleteAction" action="{!deleteAction}" reRender="validationComponent,errorId" oncomplete="completeDelete();"/>
+                <apex:actionFunction action="{!nextBtnHandler}" name="nextActionBtnHandler" rerender="sysPanel,actionPanelId, tablePanel,afterSavePanel, actionPanelBar,inactivePanel,nextprevPanel" oncomplete="disableSysAction();handleResetChange();handleElemEvent();sysActWithNextPrev();disbalesavedelete();updateTitle();"> 
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+                </apex:actionFunction>
+                <apex:actionFunction action="{!previousBtnHandler}" name="previousActionBtnHandler" oncomplete="disableSysAction();handleResetChange();handleElemEvent();sysActWithNextPrev();disbalesavedelete();updateTitle();"
+                                    rerender="sysPanel,actionPanelId, tablePanel, afterSavePanel,actionPanelBar,inactivePanel,nextprevPanel" > 
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+                </apex:actionFunction>
+                <div id="capsule" class="CapsuleDiv1">
+                    <table cellpadding="0" cellspacing="0" class="clsMainTable">
+                        <tr class="clsRowGreyBg">
+                            <td height="100%">
+                                <div id="btnToolbar"></div>
+                            </td>
+                        </tr>  
+                        <tr>
+                            <td>
+                            <table cellpadding="0" cellspacing="0" class="clsTable">
+                            
+		                    <tr>
+		                    	<td class="clsInputLabelTD" colspan="3">
+		                     		<apex:outputpanel rendered="{!(!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__appliesToServiceUnavailability__c.Accessible)}">
+		                     		<table>
+	                          			<tr>
+											<td style="height:5px;"></td>
+	                    				</tr>
+	                    			</table>
+		                          	<table class="boxContainer">
+			                          	<tr>
+			                          		<td><img src="/img/msg_icons/warning24.png"/></td>
+			                            	<td>
+				                            	<apex:outputpanel rendered="{!NOT(isAdminUser)}">
+				                            		<apex:outputLabel value="{!$Label.bmcservicedesk__profilenonsysadminpermission}"/>
+				                            	</apex:outputpanel>
+				                            	<apex:outputpanel rendered="{!isAdminUser}">
+				                            		<apex:outputLabel value="{!$Label.bmcservicedesk__profilesysadminpermission}" />&nbsp;
+				                            		<apex:outputLink value="https://docs.bmc.com/docs/display/REMF/Performing+minimum+post-upgrade+procedures" target="_blank">{!$Label.bmcservicedesk__here}</apex:outputLink>
+				                            		<apex:outputText value="."/>
+				                            	</apex:outputpanel>
+			                            	</td>
+			                           	</tr>
+		                          	</table>
+		                         </apex:outputpanel>
+		                        </td>
+		                    </tr>
+							
+                            <tr>
+                                <td class="clsTopAlignment75">
+                                    <apex:outputPanel id="tablePanel">
+                                        <table cellpadding="0" cellspacing="0" class="clsTable">
+                                            <tr>
+                                                <td colspan="3"><div class="div15pxVspacing"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Action__c.fields.Name.label}"/><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                                <td class="clsInputTextBoxTD">
+                                                    <apex:inputText value="{!action.name}" title="{!$Label.bmcservicedesk__tooltipactionactionid}" styleClass="clsIdInputTextBox" id="Action__c_id_name"/>
+                            <script>
+                            function nonEditableSystemActionName(){
+                                 var sysDisable="{!action.system__c}";                                                     
+                                 var copyCheck=document.getElementById('{!$Component.Action__c_id_name}').value;                                                     
+                                 if(sysDisable == 'true' &&(copyCheck != ''))                                                    
+                                 {                                                    
+                                    document.getElementById('{!$Component.Action__c_id_name}').disabled = true;
+                                    document.getElementById('{!$Component.Action__c_id_name}').className = 'clsPanelInputTextboxReadOnly';
+                                    document.getElementById('{!$Component.Action__c_id_name}').style['width'] = '195px';
+                                    converdisabletoreadonly();
+                                 } 
+                                 } 
+                                                    </script>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__Abbreviation__c.label}"/></td>
+                                                <td class="clsInputTextBoxTD">
+                                                    <apex:inputText value="{!action.BMCServiceDesk__Abbreviation__c}" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__Abbreviation__c.InlineHelpText}" styleClass="clsAbbrInputTextBox" id="Action__c_id_abbreviation" />
+                                                    
+                                                    <script>
+                                function nonEditableSystemActionAbbr(){
+                                 var sysDisable="{!action.system__c}";                                                     
+                                 var copyCheck=document.getElementById('{!$Component.Action__c_id_abbreviation}').value;                                                     
+                                 if(sysDisable == 'true' &&(copyCheck != ''))                                                    
+                                 {                                                    
+                                    document.getElementById('{!$Component.Action__c_id_abbreviation}').disabled = true;
+                                    document.getElementById('{!$Component.Action__c_id_abbreviation}').className = 'clsPanelInputTextboxReadOnly';
+                                    document.getElementById('{!$Component.Action__c_id_abbreviation}').style['width'] = '195px';
+                                    converdisabletoreadonly();
+                                 } 
+                                 } 
+                                                    </script>
+                                                </td>
+                                            </tr>
+                                         </table>
+                                </apex:outputPanel>
+                                </td>
+                                  <td><div class="div17pxHspacing"/></td>
+                                <td class="clsTopAlignment25">
+                                    <div class="panelCapsule" width="100%">
+                                                <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" id="actionPanelBar">
+                                                    <apex:panelBarItem label="{!$Label.bmcservicedesk__appliesto}" id="panelHeader" expanded="true" headerClass="panelHeader" contentClass="panelContent">
+                                                        <table cellpadding="0" cellspacing="0" class="clsTable">
+                                                            <tr>
+																<td class="clsPanelInputCheckboxTDSA" colspan="2" style="border-bottom: thin solid;border-color:#C0C0C0">
+                                                                    <input type="checkbox" id="selectAll" tabindex="8" onclick="setResetSelectAllJS(this.checked);"/> 
+                                                                    <apex:outputLabel for="selectAll" value="{!JSENCODE($Label.bmcservicedesk__all)}" styleClass="clsPanelCheckBoxLabel" style="vertical-align:5px;"/>
+                                                                </td>
+                                                                <td colspan="3"><div class="div15pxVspacing"/></td>
+                                                            </tr>
+                                                            <tr>
+                                                              <td class="clsPanelInputCheckboxTDSA">
+                                                                    <apex:inputCheckbox styleclass="FirstPanel" id="appliesToBroadcast" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__appliesToBroadcasts__c.InlineHelpText}" value="{!action.BMCServiceDesk__appliesToBroadcasts__c}"  onclick="setResetParentAll();"/>
+                                                                    <apex:outputLabel for="appliesToBroadcast" styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Broadcasts__c.LabelPlural}"/>
+                                                                 </td>
+                                                            </tr>
+                                                        
+                                                            <tr>
+                                                                
+                                                                 <td class="clsPanelInputCheckboxTDSA">
+                                                                    <apex:inputCheckbox id="appliesToIncident" styleclass="FirstPanel" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__appliesToIncident__c.InlineHelpText}" value="{!action.BMCServiceDesk__appliesToIncident__c}" onclick="setResetParentAll();"/>
+                                                                    <apex:outputLabel for="appliesToIncident" styleClass="clsPanelCheckBoxLabel" value="{!JSENCODE($Label.bmcservicedesk__incidentandservicerequests)}"/>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputCheckboxTDSA">
+                                                                    <apex:inputCheckbox id="appliesToTask" styleclass="FirstPanel" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__appliesToTask__c.InlineHelpText}" value="{!action.BMCServiceDesk__appliesToTask__c}" onclick="setResetParentAll();" />
+                                                                    <apex:outputLabel for="appliesToTask" styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Task__c.LabelPlural}"/>
+                                                                 </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputCheckboxTDSA">
+                                                                    <apex:inputCheckbox id="appliesToChangeRequests" styleclass="FirstPanel" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__appliesToChange__c.InlineHelpText}" value="{!action.BMCServiceDesk__appliesToChange__c}" onclick="setResetParentAll();"/>
+                                                                    <apex:outputLabel for="appliesToChangeRequests" styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Change_Request__c.LabelPlural}"/>
+                                                                </td>
+                                                            </tr>
+                                                          
+                                                            <tr>
+                                                                <td class="clsPanelInputCheckboxTDSA">
+                                                                    <apex:inputCheckbox id="appliesToProblems" styleclass="FirstPanel" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__appliesToProblem__c.InlineHelpText}" value="{!action.BMCServiceDesk__appliesToProblem__c}" onclick="setResetParentAll();"/>
+                                                                    <apex:outputLabel for="appliesToProblems" styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Problem__c.LabelPlural}"/>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+																<td class="clsPanelInputCheckboxTDSA">
+																	<apex:inputCheckbox id="appliesToReleases" styleclass="FirstPanel" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__appliesToRelease__c.InlineHelpText}" value="{!action.BMCServiceDesk__appliesToRelease__c}" onclick="setResetParentAll();"/>
+																	<apex:outputLabel for="appliesToReleases" styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Release__c.LabelPlural}"/>
+																</td>
+														   </tr>                                                            
+                                                           <tr>                                                                
+                                                                 <td class="clsPanelInputCheckboxTDSA">
+                                                                    <apex:inputCheckbox id="appliesToSLA" styleclass="FirstPanel" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__appliesToSLA__c.InlineHelpText}" value="{!action.BMCServiceDesk__appliesToSLA__c}" onclick="setResetParentAll();"/>
+                                                                    <apex:outputLabel for="appliesToSLA" styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.LabelPlural}"/>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>                                                                
+                                                                 <td class="clsPanelInputCheckboxTDSA">
+                                                                    <apex:inputCheckbox id="appliesToCI" styleclass="FirstPanel" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__appliesToConfigurationItems__c.InlineHelpText}" value="{!action.BMCServiceDesk__appliesToConfigurationItems__c}" onclick="setResetParentAll();"/>
+                                                                    <apex:outputLabel for="appliesToCI" styleClass="clsPanelCheckBoxLabel" value="{!$Label.bmcservicedesk__configurationitems}" />
+                                                                </td>
+                                                            </tr>  
+                                                            <tr>                                                                
+                                                                 <td class="clsPanelInputCheckboxTDSA">
+                                                                    <apex:inputCheckbox id="appliesToUnavailability" styleclass="FirstPanel" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__appliesToServiceUnavailability__c.InlineHelpText}" value="{!action.BMCServiceDesk__appliesToServiceUnavailability__c}" onclick="setResetParentAll();"/>
+                                                                    <apex:outputLabel for="appliesToUnavailability" styleClass="clsPanelCheckBoxLabel" value="{!$Label.bmcservicedesk__navigator_projectedserviceoutage}" />
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </apex:panelBarItem>
+                                                    <apex:panelBarItem label="{!$Label.bmcservicedesk__details}" expanded="true" headerClass="panelHeader" contentClass="panelContent">
+                                                        <table cellpadding="0" cellspacing="0" class="clsTable">
+                                                            <tr>
+                                                                <td><div class="div15pxVspacing"/></td><td></td>
+                                                            </tr>
+                                                            <tr>
+                                                                  <td class="clsPanelInputCheckboxTDSA">
+                                                                    <apex:inputCheckbox id="autoModify" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__autoModify__c.InlineHelpText}" value="{!action.BMCServiceDesk__autoModify__c}" />
+                                                                   	<apex:outputLabel for="autoModify" styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__autoModify__c.label}"/>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputCheckboxTDSA">
+                                                                    <apex:inputCheckbox id="displayInSelfService" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__Display_In_SelfService__c.InlineHelpText}" value="{!action.BMCServiceDesk__Display_In_SelfService__c}"/>
+                                                                    <apex:outputLabel for="displayInSelfService" styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__Display_In_SelfService__c.label}"/>
+                                                                </td>
+                                                            </tr>
+                                                          
+                                                            <tr>
+                                                                 <td class="clsPanelInputCheckboxTDSA">
+                                                                   <apex:inputCheckbox id="appliesToTrackTime" title="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__HideDuration__c.InlineHelpText}" value="{!action.BMCServiceDesk__HideDuration__c}"/>
+                                                                   <apex:outputLabel for="appliesToTrackTime" styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Action__c.fields.BMCServiceDesk__HideDuration__c.label}"/>
+                                                                </td>
+                                                            </tr>
+
+                                                        </table>
+                                                    </apex:panelBarItem>
+                                                
+                                                
+                                               
+                                             </apex:panelBar>
+                                            </div>
+                                </td>
+                            </tr>
+                            </table>
+                            </td>
+                        </tr>
+                        <tr>
+                                 <td colspan="3"><div class="div15pxVspacing"/></td>
+                            </tr>
+                        <tr class="clsRowGreyBg" valign="middle" width="5%">
+                           <td valign="middle" style="width: 100%">
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                    <tr>
+                                        <td>
+                                            &nbsp;
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                </tr>
+                    </table>
+                </div>    
+            </apex:form>
+    </apex:outputPanel>  
+</apex:page>

@@ -1,0 +1,139 @@
+<aura:component extends="c:US2_BaseComponent"
+                implements="lightning:actionOverride,flexipage:availableForRecordHome,force:lightningQuickActionWithoutHeader,lightning:isUrlAddressable,force:hasRecordId,lightning:hasPageReference,force:hasSObjectName"
+                description="OrderandServices"
+                controller="OrderandServicesController">
+
+    <aura:attribute name="columns" type="List" />
+    <aura:attribute name="viewData" type="Object" />
+    <aura:attribute name="statusOptions" type="List" default="[{ value: 'new', label: 'New' },
+    { value: 'in-progress', label: 'In Progress' },
+    { value: 'finished', label: 'Finished' }]"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+    <aura:attribute name="parent" type="Aura.Component"/>
+
+    <div class="slds-page-header">
+        <div class="slds-page-header__row">
+            <div class="slds-page-header__col-title">
+                <div class="slds-media">
+                    <div class="slds-media__figure">
+                        <lightning:icon iconName="standard:shipment" size="large"
+                            alternativeText="Request Change to Services" />
+                    </div>
+                    <div class="slds-media__body">
+                        <div class="slds-page-header__name">
+                            <div class="slds-page-header__name-title">
+                                <h1 class="slds-page-header__title slds-truncate slds-align-middle"
+                                    title="Request Change to Services">
+                                    Request Change to Services
+                                </h1> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-page-header__col-actions">
+                <div class="slds-page-header__controls">
+                    <div class="slds-page-header__control">
+                        <div class="slds-grid slds-gutters">
+                            <div class="slds-col">
+                                <lightning:button label="Cancel" 
+                                                variant="neutral" 
+                                                onclick="{!c.changeStateToSummary}" />
+                            </div>
+                            <div class="slds-col">
+                                <lightning:button label="Next" 
+                                                variant="brand" 
+                                                onclick="{!c.changeStateToCaseView}" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <br />
+    <lightning:accordion allowMultipleSectionsOpen="true" activeSectionName="{!v.viewData.listOfRooms}">
+        <aura:iteration items="{!v.viewData.roomList}" indexVar="index" var="room">
+            <aura:if isTrue="{!room.locationName}">
+                <lightning:accordionSection name="{!room.locationId}"
+                    label="{!room.locationName + ' (' + room.recCount + ')'}">
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th class="" scope="col">
+                                    <div class="slds-truncate" title="Product Name">Product Name</div>
+                                </th>
+                                <th class="" scope="col">
+                                    <div class="slds-truncate" title="Product Family">Product Family</div>
+                                </th>
+                                <th class="" scope="col">
+                                    <div class="slds-truncate" title="Quantity">Quantity</div>
+                                </th>
+                                <th class="" scope="col">
+                                    <div class="slds-truncate" title="Service Frequency">Service Frequency</div>
+                                </th>
+                                <th class="" scope="col">
+                                    <div class="slds-truncate" title="Reason for Change">Reason for Change</div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <aura:iteration items="{!room.services}" indexVar="serviceIndex" var="service">
+                                <aura:iteration items="{!service.families}" indexVar="familyIndex" var="family">
+                                    <aura:iteration items="{!family.lineItems}" indexVar="itemIndex" var="lineItem">
+                                        <aura:if isTrue="{!(lineItem.frequency != 'One-Time')}">
+                                            <tr class="slds-hint-parent">
+                                                <td class="slds-align-top td-productName" data-label="Product Name">
+                                                    <div class="slds-truncate" title="{!lineItem.productName}">
+                                                        {!lineItem.productName}</div>
+                                                </td>
+                                                <td class="slds-align-top td-productFamily" data-label="Product Family">
+                                                    <div class="slds-truncate" title="{!family.familyName}">{!family.familyName}
+                                                    </div>
+                                                </td>
+                                                <td class="slds-align-top td-quantity" data-label="Quantity">
+                                                    <!-- <div class="slds-truncate" title="{!lineItem.newQuantity}">{!lineItem.newQuantity}</div> -->
+                                                    <lightning:input type="number" 
+                                                                    variant="label-hidden"
+                                                                    disabled="{!lineItem.doNotAllowEdit}"
+                                                                    min="1"
+                                                                    messageWhenRangeUnderflow="Please contact your Sales Rep to cancel this service."
+                                                                    value="{!lineItem.newQuantity}" />
+                                                </td>
+                                                <td class="slds-align-top td-frequency" data-label="Service Frequency">
+                                                    <!-- <div class="slds-truncate" title="{!lineItem.newFrequency}">{!lineItem.newFrequency}</div> -->
+                                                    <lightning:select variant="label-hidden"
+                                                                        class="frequencySelect"
+                                                                        disabled="{!lineItem.doNotAllowEdit}"
+                                                                        value="{!lineItem.newFrequency}">
+                                                        <aura:iteration items="{!lineItem.allowableFreq}" var="option">
+                                                            <aura:if isTrue="{!!(and(lineItem.frequency != 'One-Time', option == 'One-Time'))}">
+                                                                <option text="{!option}" value="{!option}" />
+                                                            </aura:if>
+                                                        </aura:iteration>
+                                                    </lightning:select>
+
+                                                </td>
+                                                <td class="slds-align-top td-note" data-label="Note">
+                                                    <!-- <div class="slds-truncate" title="{!lineItem.notes}">{!lineItem.notes}</div> -->
+                                                    <lightning:textarea variant="label-hidden"
+                                                                        disabled="{!lineItem.doNotAllowEdit}" 
+                                                                        class="slds-form_inline"
+                                                        value="{!lineItem.notes}" />
+                                                </td>
+                                            </tr>
+                                        </aura:if>
+                                    </aura:iteration>
+                                </aura:iteration>
+                            </aura:iteration>
+                        </tbody>
+                    </table>
+                </lightning:accordionSection>
+            </aura:if>
+        </aura:iteration>
+    </lightning:accordion>
+
+</aura:component>

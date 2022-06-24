@@ -1,0 +1,490 @@
+<apex:page controller="BMCServiceDesk.AdminSelfServiceController" showHeader="false" standardStylesheets="false" action="{!AdminSelfServiceGeneralInit}"  id="pg" >
+
+
+ <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSSIncident.css" id="incidentCSS"/>
+ <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/> 
+ <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+ 
+
+<style>
+
+	.clsheaderalign{
+	
+	*margin-left:19px;
+	margin-left:10px\0/;
+	color: #004376;
+	font-size: 10pt;
+	font-weight: bold;
+	font-family: arial;
+	}
+    
+    .clsSubheader{
+        font-size: 10pt;
+        font-weight: bold;
+        font-family: arial;
+    }
+    
+	.verticalSpaceCls {
+		height: 15px;
+	}
+	.clsURLalign{
+	
+	*margin-left:19px;
+	margin-left:10px\0/;
+	vertical-align:bottom;
+	}
+	label{
+		margin-right:5px;
+		vertical-align: super !important;
+	}
+    .x-small-editor
+	{
+		width:100% !important;
+	}
+    .x-toolbar{
+		 background-image:none !important;
+		 background-color: #DEE0E0 !important;
+    }
+    .clsMarginLeft{
+    	margin-left:3px;
+    	 margin-left:14px\9;
+    	margin-left:15px\0;
+    	*margin-left:25px;
+    }
+    #saveBtn {
+    	margin-left:10px !important;
+    }
+    .clsMainContainer{
+    	margin-left:7px\9 !important;
+    	*margin-left:0px !important;
+    }
+</style>
+<apex:outputPanel id="gridDataload">
+	<script>
+	    var AvailableStatus 		= new Array();  
+	    var SelectedStatustodisplay = new Array();
+	    var i						= 0;
+	     
+	    <apex:repeat var="AvailList" value="{!availableFieldsforStatus}"  >    
+	        AvailableStatus[i] = new Array(2);
+	        AvailableStatus[i][0]='{!(AvailList)}'; 
+	        AvailableStatus[i][1]='{!(AvailList)}'; 
+	        i++;
+	    </apex:repeat>
+	    
+	    i=0;
+	    <apex:repeat var="selectedList" value="{!selectedFieldsforStatus}" >    
+	        SelectedStatustodisplay[i] = new Array(2);
+	        SelectedStatustodisplay[i][0]='{!(selectedList)}';
+	        SelectedStatustodisplay[i][1]='{!(selectedList)}';
+	        i++;
+	    </apex:repeat>
+	    
+	</script>
+</apex:outputPanel>
+	
+    <apex:form id="form">
+    	<div id = "btnToolbar"></div>
+    	<div id="helpDiv" class="clshelpDiv"></div>
+    	<apex:outputPanel id="mainPanel"  styleClass="ClsContainer">
+    		<div Class="clsMainContainer">
+    		
+	    		<table class="MainDiv">
+	    			<apex:outputText rendered="{!(!isSSSwitchNewUI)}">               
+		                <tr>                       
+							<td class="clsInputCheckBox" align="right" ><apex:inputCheckbox id="switchToNewUI" value="{!isSSSwitchNewUI}"/></td>
+							<td><apex:outputLabel value="{!$Label.bmcservicedesk__switchtonewssui}"  styleClass="clsInputCheckBoxLabel"/></td> 
+						</tr>
+						<tr><td class="clsTRHeight"></td><td></td></tr>
+						<tr>
+							<td class="clsInputCheckBox" align="left" colspan="2">
+											<apex:outputLabel value="{!$Label.bmcservicedesk__defaultview}" styleClass="clsInputradioLabel clsMarginLeft"/>
+								
+											<apex:selectRadio value="{!selectedDefaultView}" styleClass="clsInputCheckBoxLabel"  id="defaultview" >
+												<apex:selectOptions value="{!defaultView}"  />
+											</apex:selectRadio>
+								</td>
+						</tr>
+						<tr><td class="clsTRHeight"></td><td></td></tr>
+					</apex:outputText>
+					
+					<tr>
+						<td class="clsInputCheckBox" align="right">
+							<apex:inputCheckbox value="{!selfServiceBean.KnowledgeArticlehasPriority}" />
+							</td>
+							<td><apex:outputLabel value="{!$Label.bmcservicedesk__knowledgearticlehaspriority}" styleClass="clsInputCheckBoxLabel"/></td>
+					</tr>
+					<tr><td class="clsTRHeight"></td><td></td></tr>
+					
+					<apex:outputText rendered="{!(isSS3Configured)}">
+						<tr>
+							<td class="clsInputCheckBox" align="right" >
+								<apex:inputCheckbox id="Enable_Cat_For_Articles" value="{!selfServiceBean.EnableCategoriesForArticles}"/>
+							</td>
+							<td>
+								<apex:outputLabel value="{!$Label.bmcservicedesk__enablecategoriesforarticles}" styleClass="clsInputCheckBoxLabel"/>
+							</td>
+						</tr>
+						<tr><td class="clsTRHeight"></td></tr>
+					</apex:outputText>
+					
+					<apex:outputText rendered="{!(isSSSwitchNewUI)}">
+						<tr>
+							<td class="clsInputCheckBox" align="right" >
+								<apex:inputCheckbox id="Enable_Auto_Suggestion" value="{!selfServiceBean.EnableAutoSuggestion}"/>
+								</td><td>
+								<apex:outputLabel value="{!$Label.bmcservicedesk__showksnsroncs}" styleClass="clsInputCheckBoxLabel"/>
+							</td>
+						</tr>
+						<tr><td class="clsTRHeight"></td></tr>
+					</apex:outputText>
+						<tr> <td class="clsInputCheckBox" align="right" > 
+								<apex:inputCheckbox id="showTasks" value="{!selfServiceBean.ShowTaskStatus}" onclick="disableTaskFieldSet();"/> </td>
+								<td> <apex:outputLabel value="{!$Label.bmcservicedesk__ssshowtaskstatus}" styleClass="clsInputCheckBoxLabel"/> </td>
+						</tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+					 		<tr >
+                                <td></td><td> <apex:outputLabel value="{!$Label.bmcservicedesk__sstaskfieldset}" styleClass="clsInputCheckBoxLabel"/><br/>
+                                 </td>
+                          </tr>
+                                 <tr><td class="clsTRHeight"></td></tr>
+                                <tr><td></td><td> <div id="taskfields">
+                                 </div> </td> </tr>
+							<tr><td class="clsTRHeight"></td></tr>
+					<tr>
+                        <td class="clsInputCheckBox" colspan="2" align="left">
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__ssurl}" styleClass="clsURLalign"/>
+							<apex:inputText id="txtSSURL"  style="width:350px"   styleClass="clsInputSiteURl" value="{!selfServiceBean.SiteURL}"/>
+						</td>
+						<tr><td class="clsTRHeight"></td></tr>
+						<tr><td class="clsTRHeight"></td></tr>
+					</tr>
+                </table>
+				</div>
+				<div class="clsLeftPadd">
+                    <table>
+                        <tr>
+                            <td class="clsInputCheckBox" colspan="3" align="left">
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__userinterface}" styleClass="clsheaderalign"/>
+                            </td>
+                        </tr>
+                        
+                        <tr><td colspan="3" class="clsTRHeight"></td></tr>
+						<apex:outputText rendered="{!isEnhancedUiSettingVisible}">
+                            <tr>
+                                <td class="clsInputCheckBox" align="right" >
+                                    <apex:inputCheckbox id="enableEnhancedUI" value="{!isSwitchToEnhancedUI}" />
+                                </td>
+                                <td>
+                                    <apex:outputLabel value="{!$Label.bmcservicedesk__switchtoenhanceduilabel}" styleClass="clsInputCheckBoxLabel"/>
+                                </td>           
+                                <td>
+                                   <img id="helpIconEnSS3" title="{!JSENCODE($Label.SSEnhancedUIHelp)}"  src= "{!$Resource.SSThemes}/SSDefaultTheme/SDEFicons/status-16-information.png" alt="" ></img>
+
+                                </td>                    
+                            </tr>
+						</apex:outputText>
+                        <tr><td colspan="3" class="verticalSpaceCls"></td></tr>                       
+                    </table>
+                    <apex:outputPanel rendered="{!isSS3Configured}" layout="none">
+                        <table>
+                        <tr>
+                        <td class="clsInputCheckBox" colspan="2" align="left">
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__sslookups}" styleClass="clsSubheader"/>
+                            </td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                        <tr>
+                            <td class="clsInputCheckBox" align="left" >
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__ssnumberoffieldsinlookupdata}" styleClass="clsInputCheckBoxLabel"/>
+                            </td>
+                            <td>
+                                <apex:selectList value="{!selfServiceBean.lookupCardDefaultSize}" multiselect="false" size="1" 
+                                styleclass="x-form-field x-form-focus" style="width: 45px;">
+	                             	<apex:selectOption itemValue="1" itemLabel="1"/>
+	             					<apex:selectOption itemValue="2" itemLabel="2"/>
+	             					<apex:selectOption itemValue="3" itemLabel="3"/>
+            					</apex:selectList>
+                            </td>
+                            <td class="clsInputCheckBox lookup-show-label" align="left">
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__showlabels}" styleClass="clsInputCheckBoxLabel"/>
+                            </td>
+                            <td>
+                                <apex:inputcheckbox value="{!selfServiceBean.showLabels_lookupCardDefaultSize}"> </apex:inputcheckbox>
+                            </td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                         <tr>
+                            <td class="clsInputCheckBox" align="left">
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__ssnumberofexpandedfieldsinlookupdata}" styleClass="clsInputCheckBoxLabel"/>
+                            </td>
+                            <td>
+                                <apex:selectList value="{!selfServiceBean.lookupCardExpandedSize}" multiselect="false" size="1" styleclass="x-form-field x-form-focus" style="width: 45px;">
+	                             	<apex:selectOption itemValue="0" itemLabel="0"/> 
+	             					<apex:selectOption itemValue="1" itemLabel="1"/>
+	             					<apex:selectOption itemValue="2" itemLabel="2"/>
+	             					<apex:selectOption itemValue="3" itemLabel="3"/>
+	             					<apex:selectOption itemValue="4" itemLabel="4"/> 
+	             					<apex:selectOption itemValue="5" itemLabel="5"/>
+	             					<apex:selectOption itemValue="6" itemLabel="6"/>
+	             					<apex:selectOption itemValue="7" itemLabel="7"/>
+	             					<apex:selectOption itemValue="8" itemLabel="8"/>
+	             					<apex:selectOption itemValue="9" itemLabel="9"/>
+	             					<apex:selectOption itemValue="10" itemLabel="10"/>
+            					</apex:selectList>
+                            </td>
+                             <td class="clsInputCheckBox lookup-show-label" align="left">
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__showlabels}" styleClass="clsInputCheckBoxLabel"/>
+                            </td>
+                            <td>
+                               <apex:inputcheckbox value="{!selfServiceBean.showLabels_lookupCardExpandedSize}"> </apex:inputcheckbox>
+                            </td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                        </table>
+                    </apex:outputPanel>
+                </div>
+                <div class="clsLeftPadd">
+                    <apex:outputPanel rendered="{!(isSS3Configured)}">
+                        <table>
+                        <tr>
+                        <td class="clsInputCheckBox" colspan="2" align="left">
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__ss_approvalshome}" styleClass="clsheaderalign"/>
+                            </td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td><td></td></tr>
+						<tr>
+							<td class="clsInputCheckBox" align="right">
+                                <apex:inputCheckbox value="{!selfServiceBean.ShowonlyRFApprovalRequests}" />
+                            </td>
+                                <td><apex:outputLabel value="{!$Label.bmcservicedesk__showonlyrfapprovalrequests}" styleClass="clsInputCheckBoxLabel"/></td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                        <tr>
+                            <td class="clsInputCheckBox" align="right">
+                                <apex:inputCheckbox id="showHistoryDetailsForPendingApprovals" value="{!selfServiceBean.showPendingApprovalHistory}"/>
+                            </td>
+                            <td>
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__manageapprovals_showapprovalhistory}" styleClass="clsInputCheckBoxLabel"/>
+								</td>
+						</tr>
+						<tr><td class="clsTRHeight"></td></tr>
+						<tr>
+							<td class="clsInputCheckBox" align="right">
+                                <apex:inputCheckbox id="showRecordDetailForPendingApprovals" value="{!selfServiceBean.showPendingApprovalRecordDetail}"/>
+                            </td>
+                            <td>
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__manageapprovals_showrecorddetailsforpendingapprovals}" styleClass="clsInputCheckBoxLabel"/>
+                            </td>
+                        </tr>
+                       
+                        <tr><td class="clsTRHeight"></td></tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                        </table>
+                    </apex:outputPanel>
+                </div>
+				<div class="clsLeftPadd">
+                    <apex:outputPanel rendered="{!isSSSwitchNewUI}" layout="none">
+                        <table>
+                        <tr>
+                        <td class="clsInputCheckBox" colspan="2" align="left">
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__onbehalfof_header}" styleClass="clsheaderalign"/>
+                            </td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                        <tr>
+                            <td class="clsInputCheckBox" align="right" >
+                                <apex:inputCheckbox id="Submit_for_lower_role" value="{!selfServiceBean.SubmitTicketForBelowRole}"/>
+                            </td>
+                            <td>
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__submitticketforlowerrole}" styleClass="clsInputCheckBoxLabel"/>
+                            </td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                         <tr>
+                            <td class="clsInputCheckBox" align="right" >
+                                <apex:inputCheckbox id="Submit_for_same_account" value="{!selfServiceBean.SubmitTicketForSameAccount}"/>
+                            </td>
+                            <td>
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__submitticketforsameaccount}" styleClass="clsInputCheckBoxLabel"/>
+                            </td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                         <tr>
+                            <td class="clsInputCheckBox" align="right" >
+                                <apex:inputCheckbox id="Submit_for_all_users" value="{!selfServiceBean.SubmitTicketForAllUsers}" onClick="DisableOtherOnBehalfOfSettings(AllUserCheckbox)"/>
+                            </td>
+                            <td>
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__submitticketforallusers}" styleClass="clsInputCheckBoxLabel"/>
+                            </td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                        </table>
+                    </apex:outputPanel>
+                </div>
+                <div class="clsLeftPadd">
+					
+					<apex:outputPanel rendered="{!isSSSwitchNewUI}" layout="none">
+					<table>
+						<tr>
+                        <td class="clsInputCheckBox" colspan="2" align="left">
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__chat_header}" styleClass="clsheaderalign"/>
+							</td>
+						</tr>
+						<tr><td class="clsTRHeight"></td></tr>
+						<tr>
+							<td class="clsInputCheckBox" align="right" >
+								<apex:inputCheckbox id="Enable_Chat" value="{!selfServiceBean.EnableChat}" onClick="ChangeValueOfChild(EnableChatCheckbox);" />
+							</td>
+							<td>
+								<apex:outputLabel value="{!$Label.bmcservicedesk__chat_setting}" styleClass="clsInputCheckBoxLabel"/>
+							</td>
+						
+							<td class="clsInputCheckBox" align="right" style="padding-left: 35px;">
+								<apex:inputCheckbox id="EnableChatforMobile" value="{!selfServiceBean.EnableChatForMobile}" onClick="ChangeValueOfChild(EnableChatforMobile);"/>
+							</td>
+							<td>
+								<apex:outputLabel value="{!$Label.bmcservicedesk__sf1adminchatsetting}" styleClass="clsInputCheckBoxLabel"/>
+							</td>
+							
+						</tr>
+						
+						<tr> <td class="clsTRHeight"></td></tr>
+                        <tr >
+                            <td class="Seprator"></td>
+                            <td>
+                                <input type="radio" value="AllAccounts" name="selectRadio" id="RFChatAcc:1" onClick="AllAccountsChat();" />
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__allaccountsentitlement}" styleClass="clsInputCheckBoxLabel" />
+                            </td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+                        <tr >
+                            <td class="Seprator"></td>
+                            <td>
+                                <input type="radio" value="SelectedAccounts"  name="selectRadio" id="RFChatAcc:2" onClick="radioSelectedAccounts();" />
+								<apex:outputLabel value="{!$Label.bmcservicedesk__selectedaccounts}" styleClass="clsInputCheckBoxLabel" />
+                            </td>
+                        </tr>
+                </table>
+				
+				<table>
+                        <tr><td class="clsTRHeight"></td></tr>
+                        <tr>
+							<td width="30px"></td>
+							<td id="multiSelectBox" style="width: 175px;">
+								<select  id="SelectedAccountId" size="8" class="clsAccountTextareaDisable" >
+								 </select>
+							</td>
+							<td id="multiSelectBoxBtn"  dir="ltr" style=" vertical-align: top; " >
+                                    <img id ="selectAccountLookupId" class="lookupIcon" 
+									   onmouseover="this.className = 'lookupIconHover';this.className = 'lookupIconHover';" title = "{!JSENCODE($Label.RFChatSelectedAccount)}"
+										   onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';" onclick="openAccountSelectWindow();return false;" 
+									   onfocus="this.className = 'lookupIconHover';" onblur="this.className = 'lookupIcon';"  src="/s.gif" style="opacity : 0.4 ; filter: alpha(opacity=40); " />
+							</td>   
+                        </tr>
+                </table>
+                        
+                <table>
+                        <tr><td class="clsTRHeight"></td></tr>
+					 	<tr >
+                            <td class="Seprator"></td>
+							<td>
+                                <apex:inputCheckbox id="Enable_PreChat" value="{!selfServiceBean.EnablePreChat}" onclick="ChangePreChatCategoryCheckbox(PreChatCheckbox);"/>
+								<apex:outputLabel value="{!$Label.bmcservicedesk__enableprechatform}" styleClass="clsInputCheckBoxLabel"/>
+							</td>
+						
+						</tr>
+                        <tr><td class="clsTRHeight"></td></tr>
+						<tr>
+                            <td class="Seprator"></td>
+                            <td class="clsLeftPadd">
+								<apex:inputCheckbox id="PreChatCategory" value="{!selfServiceBean.EnableDefaultCategory}" title="{!$Label.bmcservicedesk__showcategoryonprechatformtooltip}"/>
+								<apex:outputLabel value="{!$Label.bmcservicedesk__showcategoryonprechatform}" styleClass="clsInputCheckBoxLabel"/>
+							
+							</td>
+							
+						</tr>
+				 </table>		
+				 <table>
+				 	<tr><td class="clsTRHeight"></td></tr> 
+				 	<tr >
+                        <td class="clsInputCheckBox" colspan="2" align="left">
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__ssstatus_header}" styleClass="clsheaderalign"/>
+						</td>
+					</tr>
+					<tr><td class="clsTRHeight"></td></tr>
+					       
+			    </table> 		
+					</apex:outputPanel>
+				
+    	 	</div>
+    	 	<script>               
+	               var message = '{!JSENCODE(messageString)}';                  
+	           </script>
+    	</apex:outputPanel>
+        <apex:actionfunction name="save" action="{!AdminSelfServiceGeneralSave}" rerender="mainPanel,RFChatPanel" onComplete="waitbox.hide(); showErrorMsg(); disableChild(EnableChatCheckbox,PreChatCheckbox); showComboBox();disableTaskFieldSet();DisableOtherOnBehalfOfSettings(AllUserCheckbox)" >
+			<apex:param assignTo="{!csvAccountID}" name="csvAccountListparam" value=""/>
+			<apex:param assignTo="{!selectedTaskFieldset}" name="selectedTaskFieldset" value=""/>
+			<apex:param assignTo="{!SelectedStatus}" name="SelectedStatus" value=""/>
+		</apex:actionfunction>
+        <apex:actionfunction name="reset" action="{!AdminSelfServiceGeneralInit}" rerender="mainPanel,RFChatPanel" onComplete="waitbox.hide(); " ></apex:actionfunction>
+    	
+    	<script type="text/javascript" src="{!$Resource.SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+		<script type="text/javascript" src="{!$Resource.SDEFExtJS}/ext-all.js" id="ext-all-js"/>
+    	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/JSCommon.js" />
+    	<script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/SliderTip.js"/>
+    	<script>
+    		var AvailableStatusStore;
+    		var SelectedStatusStore;
+    		var avaliableStatusValuesLbl 		= '{!JSENCODE($Label.Available_Status_Values)}';
+			var selectedStatusValuesLbl 		= '{!JSENCODE($Label.Selected_Status_Values)}';
+    		var invalidSSURLLabel			= '{!JSENCODE($Label.invalidSelfServiceURL)}';
+    		var saveLabel 					= '{!JSENCODE($Label.save)}';
+    		var undoDefaultSettingPageLabel	= '{!JSENCODE($Label.Reset)}';
+    		var urlsaveimage 				= '{!$Resource.SDEFStyles}/SDEFbuttons/b_pick.gif';
+    		var newSelfServiceUI 			= '{!JSENCODE($Component.form.switchToNewUI)}';
+    		var confirmLabel 				= '{!JSENCODE($Label.ConfirmHomePage)}';
+    		var SDEFStylesPath  			= '{!$Resource.SDEFStyles}';
+    		var confirmNewSSUILabel 		= '{!JSENCODE($Label.ConfirmNewSSUI)}';
+    		var helpLabel 					= '{!JSENCODE($Label.TooltipHelp)}';
+	    	var txtSSURLvar 				= '{!$Component.pg.form.txtSSURL}';
+	    	var SaveMsgHeader 				= '{!JSENCODE($Label.GeneralSelfServiceSettings)}';
+	    	var helpLink					= parent.getStdFormHelpPath()+'/new_self_service_UI_migration.htm';
+	    	var waitImg 					= '{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif'; 
+	    	var PreChatCheckbox				= '{!$Component.Enable_PreChat}';
+	    	var PreChatCategoryCheckbox 	= '{!$Component.PreChatCategory}';
+	    	var EnableChatCheckbox			= '{!$Component.Enable_Chat}';
+	    	var EnableChatforMobile			= '{!$Component.EnableChatforMobile}';
+	    	var showTaskFieldsets			= '{!$Component.pg.form.showTasks}';
+	    	var waitbox;
+			var wikiUrl='{!wikiUrl}';
+			var AccountSelectorPage = '{!$Page.AccountSelector}';
+			var taskFieldsets='{!taskFieldsets}';
+			var selectedTaskFieldset = '{!selfServiceBean.taskFieldSetValue}';
+			var AllUserCheckbox             = '{!$Component.Submit_for_all_users}';
+            var SameAccountCheckbox         = '{!$Component.Submit_for_same_account}';
+            var BelowHierarchyCheckbox      = '{!$Component.Submit_for_lower_role}';
+    	</script>
+		<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AppAdminItemselector.js" id="itemselector"/>
+        <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminSelfServiceGeneral.js" />
+		<apex:outputPanel id="RFChatPanel" >
+        <script>
+          var AllAccountForChat = {!ChatEnabledForAllAccount};
+          var listData = {!accountJSON};
+          var EnableChat = {!selfServiceBean.EnableChat};
+		  initAccountList();
+        </script>
+        </apex:outputPanel>
+		
+		<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js" />
+	</apex:form>
+	<div class="containerCls clsLeftPadd">
+		
+			<div id="MultipicklistLabels" ></div>
+			<tr><td class="clsTRHeight"></td></tr>
+		  	<div id="Multipicklist"></div>
+		
+  	</div>
+</apex:page>

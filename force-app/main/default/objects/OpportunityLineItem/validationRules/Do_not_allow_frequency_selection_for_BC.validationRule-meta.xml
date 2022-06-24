@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Do_not_allow_frequency_selection_for_BC</fullName>
+    <active>false</active>
+    <description>BC region sales will not choose 15/30/60 days product.</description>
+    <errorConditionFormula>AND(
+   OR(ISPICKVAL(Service_Frequency__c, &apos;Twice Monthly&apos;),
+      ISPICKVAL(Service_Frequency__c, &apos;Monthly&apos;),
+      ISPICKVAL(Service_Frequency__c, &apos;Bi-Monthly&apos;)
+     ),
+   OR(UPPER(Opportunity.Account.ShippingState) = &apos;BC&apos;,
+      UPPER(Opportunity.Account.ShippingState) = &apos;AB&apos;),
+   Line_of_Business__c=&apos;Hygiene&apos;
+)</errorConditionFormula>
+    <errorDisplayField>Service_Frequency__c</errorDisplayField>
+    <errorMessage>The product frequency is not sold in this customer region (confirm with business)</errorMessage>
+</ValidationRule>

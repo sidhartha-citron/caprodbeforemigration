@@ -1,0 +1,63 @@
+<aura:component controller="EDW_ConfigureAppointmentController">
+    <aura:attribute type="EDW_ViewModels.MainViewModel" name="initData" />
+    <aura:attribute type="EDW_ViewModels.TableOrderItem[]" name="tableRows" />
+    <aura:attribute type="String[]" name="selectedOrderItemIds" />
+    <aura:attribute type="String" name="recordId" />
+    <aura:attribute type="String" name="mode" />
+    <aura:attribute type="Boolean" name="isOrderInserted" default="false" />
+    
+    <lightning:spinner alternativeText="Loading" size="medium" aura:id="theSpinner"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}" />
+    <aura:handler name="ModalCloseEvent" event="c:ModalCloseEvt" action="{!c.hidePopup}"/>
+    <aura:handler name="NewSurveyLocationEvent" event="c:SurveyRoomCreated" action="{!c.newSurveyLocationCreated}"/>
+    <aura:handler name="updateCurrentTableRowList" event="c:EDW_UpdateCurrentTableRowListEvent" action="{!c.updateTableOrderItemList}"/>
+    <aura:handler name="openAddSurveyLocationEvent" event="c:EDW_OpenAddSurveyLocationEvent" action="{!c.openNewSurveyLocationForm}"/>
+    <aura:handler event="c:EDW_OrderCancelledEvent" action="{!c.orderCancelledPopup}"/>
+    <aura:handler event="c:EDW_OrderItemSelectionChangeEvent" action="{!c.updateListOfSelectedOrderItems}"/>
+    <aura:handler event="c:EDW_GenerateWorkOrderEvent" action="{!c.navigateToNextScreen}" />
+    
+    <!--<div>
+        <h2 class="slds-text-heading_medium">N.D.S.</h2>
+        <div>Number of Rows: {!v.initData.orderItemCount}</div>
+        <div>PO Number: {!v.initData.poNumber}</div>
+        <div>PO Number on Order: {!v.initData.order.PoNumber}</div>
+        <div>Number of Resources: {!v.initData.numberOfResources}</div>
+        <div>SYSTEM Total Est. Duration: {!v.initData.workTypeEstimatedDuration}</div>
+        <div>USER Total Est. Duration: {!v.initData.totalEstimatedDuration}</div>
+        <div>Total Est. Price: {!v.initData.totalOrderAmount}</div>
+        <div>Is Next Button Disabled: {!!v.initData.isValidToGenerateWorkOrder}</div>
+        <div>Mode: {!v.initData.mode}</div>
+        <div>isCancelOrderButtonAccessible: {!v.initData.isCancelOrderButtonAccessible}</div>
+    </div>-->
+    
+    <c:EDW_ConfigureAppointmentHeaderComponent recordId="{!v.initData.order.Id}" orderNumber="{!v.initData.orderNumber}" isCancelOrderButtonAccessible="{!v.initData.isCancelOrderButtonAccessible}" />
+    
+    <c:EDW_ConfigureAppointmentCustomerInformationSectionComponent initData="{!v.initData}" orderId="{!v.initData.order.Id}" poNumber="{!v.initData.poNumber}" resourceRange="{!v.initData.resourcesRange}" numberOfResources="{!v.initData.numberOfResources}" previousEffectiveDate="{!v.initData.orderEffectiveDate}" previousEffectiveTime="{!v.initData.orderEffectiveTime}" />
+    
+    <c:EDW_ConfigureLocationsAndRoomsComponent aura:id="configureLocationsAndRooms" areRowsSelectedForEditing="{!v.selectedOrderItemIds.length > 0}" numberOfRooms="{!v.initData.numberOfRooms}" infestationLevels="{!v.initData.infestationLevels}" treatmentTypes="{!v.initData.treatmentTypes}" isMultiRes="{!v.initData.account.Is_Multi_Res__c}" />
+    
+    <c:EDW_CurrentOrderComponent aura:id="currentOrderComponent" selectedOrderItemIds="{!v.selectedOrderItemIds}" initData="{!v.initData}" tableRows="{!v.tableRows}" />
+    
+    <div class="slds-container--fluid">
+        <lightning:button variant="brand" label="{!$Label.c.Back_to_Select_Customer}" onclick="{!c.navigateBack}" />
+        <lightning:button variant="brand" label="{!$Label.c.Save_and_Next}" onclick="{!c.saveAndNext}" disabled="{!!v.initData.isValidToGenerateWorkOrder}" class="slds-float_right" />
+    </div>
+    
+    <div aria-hidden="true" role="dialog" class="slds-modal slds-modal_medium slds-modal--prompt slds-fade-in-hide" aura:id="modalAddSurveyRoom">
+        <div class="slds-modal__container">
+            <div class="slds-modal__header slds-theme--info">
+                <lightning:buttonIcon iconName="utility:close" variant="bare" 
+                                      onclick="{!c.hidePopup}" class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                      iconClass="slds-button__icon slds-button__icon_large" alternativeText="{!$Label.c.Site_Survey_Close}"/>
+                <h2 class="slds-text-heading--medium">{!$Label.c.Site_Survey_Title_Add_Edit_Location}</h2>
+            </div>
+            <div class="slds-modal__content slds-p-around--medium">
+                <c:AddSurveyRoom aura:id="AddSurveyRoom" siteSurveyId="{!v.initData.account.Site_Survey__c}"/> 
+            </div>
+        </div>
+    </div>
+    
+    <div class="slds-backdrop slds-backdrop--hide" aura:id="backdrop"></div>
+    <div aura:id="CompleteOrderDialog"></div>
+</aura:component>

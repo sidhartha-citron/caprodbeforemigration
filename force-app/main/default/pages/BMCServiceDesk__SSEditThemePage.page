@@ -1,0 +1,440 @@
+<apex:page controller="BMCServiceDesk.SSEditThemePageController" standardStylesheets="false" showHeader="false" sidebar="false">
+    <head><title>{!$Label.EditTheme}</title></head> 
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/> 
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <script type="text/javascript" src="{!$Resource.jscolor}/jscolor.js"></script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/SSEditThemePage.js" ></script>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SSEditThemePage.css" />
+   
+    <link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/bmc-all.css" rel="stylesheet" /> 
+	<link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/dpl-iconfont.css" rel="stylesheet" /> 
+    <link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/bootstrap-3.3.5.css" rel="stylesheet" />
+   
+    <script>
+    var themeName = '{!JSENCODE(themeName)}';
+    var themeData = '{!JSENCODE(themeData)}';
+    var colorMap = JSON.parse('{!JSENCODE(themeData)}'); 
+    var selectedComponentId = '';
+    var selectedComponent ='';
+    var jsonToken = '';
+    var finalJson = '';
+    var isThemeAssigned ='{!isThemeAssignedFlag}';
+    var userLanguage = '{!userLanguage}';
+    var tooltipLegendImgSrc;
+    var LegendToolTip = null;
+    var LegendImgSrc = "{!$Resource.SDEFStyles}/SDEFbuttons/b_change_schedule_legend.png";
+    var SaveLbl = '{!JSENCODE($Label.save)}';
+	var Delete = '{!JSENCODE($Label.Delete)}';
+    var ThemeDeleteValidationMsg = '{!JSENCODE($Label.ThemeDeleteValidationMsg)}';
+    var Theme_Config = '{!JSENCODE($Label.Theme_Config)}';
+    var Theme_Saved = '{!JSENCODE($Label.Theme_Saved)}';
+    var ThemeDelete = '{!JSENCODE($Label.ThemeDelete)}';
+    var themeInvalidColorCodeMessage = '{!JSENCODE($Label.ThemeInvalidColorCodeMessage)}';
+	var Theme_Name_Required = '{!JSENCODE($Label.Theme_Name_Required)}';
+	var Theme_Name_Length = '{!JSENCODE($Label.Theme_Name_Length)}';
+	var isDeletable = {!IF(isDeletable,true,false)};
+	
+	var isSelfService3 = {!isSelfService3};
+	var logoUrl = '';
+	var userData;
+	if(isSelfService3){
+		userInfoMap = '{!JSENCODE(userInfoJSON)}';
+		userData = JSON.parse(userInfoMap);
+		logoUrl = '{!JSENCODE(logoUrl)}';
+		if(logoUrl!='')
+        	logoUrl = '/servlet/servlet.FileDownload?file=' + logoUrl;
+        else
+        	logoUrl = '{!URLFOR($Resource.SSThemes,staticResource + "/SDEFimages/BMCHelix-Remedyforce_Logo.png")}';
+	}
+	
+    var clist = {!componentData};
+    if({!isSelfService3}){
+    	var imgPath= '{!$Resource.SSjs_1}' + '/BMCRF_Images/hoverImage_EN-256.png';
+	    if (userLanguage == 'ja')
+	    {
+	        imgPath= '{!$Resource.SSjs_1}' + '/BMCRF_Images/hoverImage_JA-256.png';
+	    }
+	    else if(userLanguage == 'de')
+	    {
+	        imgPath='{!$Resource.SSjs_1}'+ '/BMCRF_Images/hoverImage_GE-256.png';
+	    }
+	    else if(userLanguage == 'fr')
+	    { 
+	        imgPath= '{!$Resource.SSjs_1}' + '/BMCRF_Images/hoverImage_FR-256.png';
+	    }
+	    else if(userLanguage == 'es') 
+	    {
+	        imgPath= '{!$Resource.SSjs_1}' + '/BMCRF_Images/hoverImage_SP-256.png';
+	    }
+	    else if(userLanguage == 'pt_BR'){
+	    	imgPath= '{!$Resource.SSjs_1}' + '/BMCRF_Images/hoverImage_PO-256.png';
+	    }
+    }
+    else{
+	    var imgPath= '{!$Resource.SSjs}/SSTemplateTheme' + '/BMCRFimages_en/branding_legend_toolTip.png';
+	    if (userLanguage == 'ja')
+	    {
+	        imgPath= '{!$Resource.SSjs}/SSTemplateTheme' + '/BMCRFimages_ja/branding_legend_toolTip.png';
+	    }
+	    else if(userLanguage == 'de')
+	    {
+	        imgPath= '{!$Resource.SSjs}/SSTemplateTheme' + '/BMCRFimages_de/branding_legend_toolTip.png';
+	    }
+	    else if(userLanguage == 'fr')
+	    {
+	        imgPath= '{!$Resource.SSjs}/SSTemplateTheme' + '/BMCRFimages_fr/branding_legend_toolTip.png';
+	    }
+	    else if(userLanguage == 'es')
+	    {
+	        imgPath= '{!$Resource.SSjs}/SSTemplateTheme' + '/BMCRFimages_es/branding_legend_toolTip.png';
+	    }
+    }
+    </script>
+    
+    <apex:form id="CreateTheme">
+        <div id="btnToolbar" width="100%"></div>
+        <div id="helpDiv" class="clshelpDiv"></div>
+        <table width="85%" style="margin-left:30px">
+           <tr>
+               <td><div style="margin-top:20px;"></div></td>
+           </tr>
+           <tr>
+               <td><div style="margin-top:10px;"><span class='editThemeTitle'>{!JSENCODE($Label.Theme_Name)}</span>:&nbsp;&nbsp;<input type="text" id="themeNameTxt" value="{!themeName}"/></div></td>
+           </tr>
+            <tr>
+               <td><div style="margin-top:20px;"></div></td>
+           </tr>
+           <tr class="editThemeTitle">
+               <td>
+                <div style="float:left;margin-top:5px">{!JSENCODE($Label.User_Interface_Elements)}:</div>
+                <div style="float:right;margin-right:19px;margin-bottom:5px"><img id="legendIcon"  src="{!$Resource.SDEFStyles}/SDEFbuttons/b_change_schedule_legend.png" onmouseover="showLegendTip(this);" /></div>
+               </td>
+               <td>{!JSENCODE($Label.Element_Color)}:</td>
+           </tr>
+           <tr style="height:100%;">
+               <td style="height:200px;width:340px"><div id="gridDiv" style="height:100%;"></div></td>
+               <td valign="top" style="height:100%;">
+                    <table width="50%" style="height:100%;border-style:solid;border-width:1px;border-color:#BBC4BD">
+           <tr>
+                            <td width="10%">
+                                <div style="margin-top:15px;margin-left:15px;width:100%"><img id="colorPickerIcon"  src="{!$Resource.SDEFStyles}/SDEFicons/icon_color_picker.png" title="{!JSENCODE($Label.ColorPickerIconToolTip)}"/></div>
+							</td>
+							<td width="90%">
+                                <div style="margin-top:15px;">
+                                   <input id="colorTxt" class="color {pickerPosition:'right'}" value="FFFFFF" style="height:20px;width:65px" onchange="populateColorCodes();" disabled="true"/>
+                               </div>
+                            </td>
+                                   </tr>
+                                    <tr>
+                            <td colspan="2">
+                                <div style="margin-top:25px;margin-left:43px;">{!JSENCODE($Label.New)}</div>
+                                <table id="innerTable" border="1" width="70px" style="margin-left:25px;">
+                                    <tr>
+                                       <td height="25px" id="NewColor"></td>
+                                    </tr>
+                                    <tr height="25px">
+                                       <td id="CurrentColor"></td>
+                                    </tr>
+                                </table>
+                                <div style="margin-left:40px;margin-bottom:20px">{!JSENCODE($Label.Current_Color)}</div>
+                           </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" width="100%" style="background:#E0E0E0">
+                                <div style="margin-top:7px;margin-left:15px;margin-bottom:7px">
+                                   <input class="btn" type="button" style="height:24px" onClick="preview();" value="{!JSENCODE($Label.Apply)}" id="applyBtn" />
+                                </div>
+                           </td>
+                        </tr>
+                  </table>
+               </td>
+              
+           </tr>
+           
+        </table>
+        <br/><hr style="color:#E0E0E0;border: 0; border-top: 1px solid #E0E0E0;"/>
+        <table id="previewSection" width="95%" style="margin-left:30px">
+            <tr class="editThemeTitle">
+               <td>{!JSENCODE($Label.SSEditThemePreviewTitle)}</td>
+            </tr>           
+            <tr class="editThemeTitle">
+               <td>
+               		<br/>
+               		<apex:outputLabel rendered="{!isSelfService3}">{!JSENCODE($Label.bmcservicedesk__staticpagenoteonsseditthemepage)}</apex:outputLabel>
+               </td>
+            </tr>
+            <tr>
+               <td>
+                   <apex:iframe id="previewPage" src="/apex/SSLandingPage?previewList={}" frameborder="true" rendered="{!NOT(isSelfService3)}"/>
+                   <apex:outputPanel rendered="{!isSelfService3}">
+                   <div style="border: 1px solid;" disabled="true">
+                   		<div id="headerDiv" class="headerDivCls cursorCls" style=" cursor: default;">
+							<div id="applicationBannerDiv" class="applicationBannerDivCls cursorCls">
+							<div style="width: 1000px; margin-left: auto; margin-right: auto; cursor: default;">
+								<img id="companyLogo" class="floatLeftCls cursorCls"></img>
+								<div id="userImageAndNameDiv" class="userImageAndNameDivCls floatRightCls cursorCls">
+									<img id='userSmallProfileImg' class="userSmallProfileImgCls cursorCls"></img>
+									<label id="userNameLbl" Class="userNameLblCls fontCls floatRightCls cursorCls"></label>
+								</div>
+							</div>
+							</div>
+							<div id="bradcastBarDiv" class="bradcastBarDivCls cursorCls" >
+                                    <div id="broadCastImageId" class="d-icon-speaker broadcast-ticker-icon cursorCls"/>
+                                    <div id="broadcastCountId" style ="display : block;" class="broadcast_10f3">1 {!JSENCODE($Label.Of)} 3</div>
+                                    
+                                    <div style ="display : block;" class="broadcastMsgTextcls cursorCls" >
+                                        <span id="broadcastText">{!JSENCODE($Label.WebmailisdownETAtofixisonehour)}</span>
+                                    </div>
+                                    
+                                    
+                                    <div class="right-side">
+                                        <div class="show-all-div float-left">
+                                            <div class="show_all_scroll" title="{!JSENCODE($Label.viewAllBroadcasts)}"/>
+                                        </div>   
+                                        <div id="Prevbutton" class="Rectangle-left float-left padding-top-6px" >
+                                            <div class="d-icon-triangle_left left_icon"  />
+                                        </div>
+                                         <div class=" float-left padding-top-6px" >                      
+                                        <div class="d-icon-triangle_right right_icon padding-top-5px" />
+                                        </div>
+                                    </div>
+                              
+                            </div>
+						</div>
+						<div id="bodyDiv" class="bodyDivCls cursorCls">
+							<div id="leftHandSideTilePanelDiv" class="leftHandSideTilePanelDivCls cursorCls">
+								<div id="searchBoxDiv" class="searchBoxDivCls cursorCls">
+									<input id="searchBox" class="searchBoxCls fontCls cursorCls" type="text" placeholder="{!JSENCODE($Label.SSSearch)}" style="background: #fff url({!$Resource.SelfServiceMyITUI}/SelfService/styles/img/search_grey.png) no-repeat 12px;"></input>
+								</div>
+								<div id="TilesDiv">
+									<div class="tilesCls fontCls cursorCls">
+										<span class="d-icon-file_text_o tileIconsCls floatLeftCls cursorCls"></span>
+										<label class="tilesLabelCls floatLeftCls cursorCls">{!JSENCODE($Label.SS_IncidentHome)}</label>
+										<span class="d-icon-right-angle_right tileIconsCls floatRightCls cursorCls"></span>
+									</div>
+									<div id="reqAServiceDiv" class="reqAServiceDivCls tilesCls fontCls cursorCls">
+										<span class="d-icon-file_atom_o tileIconsCls floatLeftCls cursorCls"></span>
+										<label class="tilesLabelCls floatLeftCls cursorCls">{!JSENCODE($Label.SSRequestService)}</label>
+										<span class="d-icon-right-angle_right tileIconsCls floatRightCls cursorCls"></span>
+									</div>
+									<div class="tilesCls fontCls cursorCls">
+										<span class="d-icon-check_shield tileIconsCls floatLeftCls cursorCls"></span>
+										<label class="tilesLabelCls floatLeftCls cursorCls">{!JSENCODE($Label.SS_ApprovalsHome)}</label>
+										<span class="d-icon-right-angle_right tileIconsCls floatRightCls cursorCls"></span>
+									</div>
+									<div class="tilesCls fontCls cursorCls">
+										<span class="d-icon-lightbulb_o tileIconsCls floatLeftCls cursorCls"></span>
+										<label class="tilesLabelCls floatLeftCls cursorCls">{!JSENCODE($Label.SS_KnowledgeArticlesHome)}</label>
+										<span class="d-icon-right-angle_right tileIconsCls floatRightCls cursorCls"></span>
+									</div>
+									<div class="tilesCls fontCls cursorCls">
+										<span class="d-icon-file_pulse_o tileIconsCls floatLeftCls cursorCls"></span>
+										<label class="tilesLabelCls floatLeftCls cursorCls">{!JSENCODE($Label.ServiceHealth)}</label>
+										<span class="d-icon-right-angle_right tileIconsCls floatRightCls cursorCls"></span>
+									</div>
+								</div>
+								<div id="viewMyActivityDiv" class="support-view-activity-panel cursorCls">
+									 <span class="d-icon-activity_feed_clock_o support-view-activity-icon"></span>
+									<br/>
+									<span id="ViewMyActivityQuesLabel" class="support-view-activity-panel__title">{!JSENCODE($Label.LookingForExistingAppointmentsAndRequests)}</span>
+									<button id="viewMyActivityBtn" class="btn_nofill btn-view-activity-panel-multiline" >{!JSENCODE($Label.ViewInMyActivity)}</button>
+									<button id="draftBtn" class="btn_nofill btn-view-activity-panel btn-draft cursorCls"><span id="draftCountId" class="btn-draft-count cursorCls" style="border-width: 1px;border-style: solid;">0</span>{!JSENCODE($Label.SS3Drafts)}</button>
+								</div>
+							</div>
+							
+							<div id="RightHandSidePanelDiv" class="RightHandSidePanelDivCls floatRightCls cursorCls">
+								<h4 class="popularKALabelCls floatLeftCls fontCls cursorCls" style="">{!JSENCODE($Label.SS_PopularFAQsHome)}</h4>
+								<div class="KACountCls floatLeftCls fontCls cursorCls">
+									<label class="KACountLblCls fontCls cursorCls">22</label>
+								</div>
+								<div class="allLinkDivCls floatRightCls fontCls cursorCls">
+									<label id="allLbl" class="allLabelCls floatLeftCls fontCls cursorCls">{!JSENCODE($Label.All)}</label>
+									<span id="allLblPointer" class="d-icon-right-angle_right allLinkIconCls floatRightCls cursorCls"></span>
+								</div>
+								
+								<div id="helpArticlesDiv" class="helpArticlesDivCls fontCls cursorCls">
+									<table style="width: 100%; cursor: default;">
+										<tr class="KATableTRCls cursorCls">
+											<td class="KATableTDCls cursorCls">
+												<div class="KADivCls cursorCls">
+													<table>
+														<tr>
+															<td>
+																<div class="KAIconCls floatLeftCls cursorCls" style="background: url({!$Resource.SelfServiceMyITUI}/SelfService/styles/img/KA_faq_26.png) no-repeat;"></div>
+															</td>
+															<td>
+																<label class="KALabelCls floatLeftCls fontCls cursorCls">{!JSENCODE($Label.HowdoIaddanewprinter)}</label>
+															</td>
+														</tr>
+													</table>
+												</div>
+											</td>
+											<td class="KATableTDCls cursorCls">
+												<div class="KADivCls cursorCls">
+													<table>
+														<tr>
+															<td>
+																<div class="KAIconCls floatLeftCls cursorCls" style="background: url({!$Resource.SelfServiceMyITUI}/SelfService/styles/img/KA_faq_26.png) no-repeat;"></div>
+															</td>
+															<td>
+																<label class="KALabelCls floatLeftCls fontCls cursorCls">{!JSENCODE($Label.KnownErrorandRootCauseAnalysis)}</label>
+															</td>
+														</tr>
+													</table>
+												</div>
+											</td>
+											<td class="KATableTDCls cursorCls">
+												<div class="KADivCls cursorCls">
+													<table>
+														<tr>
+															<td>
+																<div class="KAIconCls floatLeftCls cursorCls" style="background: url({!$Resource.SelfServiceMyITUI}/SelfService/styles/img/KA_howTo_26.png) no-repeat;"></div>
+															</td>
+															<td>
+																<label class="KALabelCls floatLeftCls fontCls cursorCls">{!JSENCODE($Label.Whatisourmobilepolicy)}</label>
+															</td>
+														</tr>
+													</table>
+												</div>
+											</td>
+										</tr>
+										<tr class="KATableTRCls cursorCls">
+											<td class="KATableTDCls cursorCls">
+												<div class="KADivCls cursorCls">
+													<table>
+														<tr>
+															<td>
+																<div class="KAIconCls floatLeftCls cursorCls" style="background: url({!$Resource.SelfServiceMyITUI}/SelfService/styles/img/KA_faq_26.png) no-repeat;"></div>
+															</td>
+															<td>
+																<label class="KALabelCls floatLeftCls fontCls cursorCls">{!JSENCODE($Label.HowdoIsetupmyvoicemail)}</label>
+															</td>
+														</tr>
+													</table>
+												</div>
+											</td>
+											<td class="KATableTDCls cursorCls">
+												<div class="KADivCls cursorCls">
+													<table>
+														<tr>
+															<td>
+																<div class="KAIconCls floatLeftCls cursorCls" style="background: url({!$Resource.SelfServiceMyITUI}/SelfService/styles/img/KA_faq_26.png) no-repeat;"></div>
+															</td>
+															<td>
+																<label class="KALabelCls floatLeftCls fontCls cursorCls">{!JSENCODE($Label.HowdoIrequesttimeoff)}</label>
+															</td>
+														</tr>
+													</table>
+												</div>
+											</td>
+											<td class="KATableTDCls cursorCls">
+												<div class="KADivCls cursorCls">
+													<table>
+														<tr>
+															<td>
+																<div class="KAIconCls floatLeftCls cursorCls" style="background: url({!$Resource.SelfServiceMyITUI}/SelfService/styles/img/KA_problem_26.png) no-repeat;"></div>
+															</td>
+															<td>
+																<label class="KALabelCls floatLeftCls fontCls cursorCls">{!JSENCODE($Label.CannotaccessemailonmyiOSdevice)}</label>
+															</td>
+														</tr>
+													</table>
+												</div>
+											</td>
+										</tr>
+									</table>
+								</div>
+								<div id="seperatorDiv" class="seperatorDivCls cursorCls"></div>
+								<div id="ApprovalSectionDiv" class="ApprovalSectionDivCls cursorCls">
+									<h4 class="floatLeftCls fontCls cursorCls" style="margin-top: 0px; margin-bottom: 0px;">{!JSENCODE($Label.PendingApprovals)}</h4>
+									<div class="homeLblDivCls floatRightCls fontCls cursorCls">
+										<label id="homeLbl" class="floatLeftCls fontCls cursorCls" style="margin-right: 5px;">{!JSENCODE($Label.SSHome)}</label>
+										<span id="homeLblPointer" class="d-icon-right-angle_right homeIconCls floatRightCls cursorCls"></span>
+									</div>
+									<br/>
+									<hr style="margin-bottom: 5px;margin-top: 9px;"></hr>
+									<div>
+										<button id="approveRejectBtnId" class="btn manage-approval-buttons cursorCls" style="color: #ffffff;">{!JSENCODE($Label.Approve)}&nbsp;/&nbsp;{!JSENCODE($Label.Reject)}</button>
+										<button id="reassignBtnId" class="btn manage-approval-buttons cursorCls">{!JSENCODE($Label.Reassign)}</button>
+										<button id="selectAllBtnId" class="btn manage-approval-buttons cursorCls">{!JSENCODE($Label.SelectAll)}</button>
+										<button id="clearAllBtnId" class="btn manage-approval-buttons cursorCls">{!JSENCODE($Label.ClearAll)}</button>
+	
+									</div>
+									<br/>
+									<div id="approvalDetailsDiv" class="approvalDetailsDivCls cursorCls">
+										<div id="dateOntheApporvalTimeLine" class="dateOntheApporvalTimeLineCls cursorCls" style="margin-top: -20px;">
+											<label id="timeLineDateLbl" class="timeLineDateLblCls fontCls cursorCls" style="color: #ffffff; font-size: 10px;text-align: center;">{!currentDate}</label>
+										</div>
+										<div id="boxOnTheTimeLine" class="boxOnTheTimeLineCls cursorCls"></div>
+											<span class="activity-item__type-icon d-icon-file_atom_clock iconSize" style="margin-left: -53px;"></span>
+											<div class="timeline-activity-item__timeline-time">{!currentTime}</div>
+										<div id="approvalItemDiv" class="approvalItemDivCls cursorCls" style= "height: 160px;">
+											<div style="background: url({!$Resource.SelfServiceMyITUI}/SelfService/styles/img/icons.png); background-position: -256px -292px; width: 8px; height: 12px; margin-left: -18px; margin-top: -1px; cursor: default;"></div>
+												<div class= "activity-item__header">
+													<div style="pointer-events: all;"><input type="checkbox" disabled="true" class="activity-item_input_checkbox" /></div>
+													<div class="activity-item__request-name approval-request-name nowrap-line">00000000&nbsp;&nbsp;|&nbsp;&nbsp;{!JSENCODE($Label.SSHelpRequest)}</div>
+			  									</div>
+			  									<br/>
+			  									<div class="activity-item-field" style= "margin-top: 10px;"><label class="activity-item__labels approval-item-label" >{!JSENCODE($Label.SSApprovalListColumnHeaderSubmitter)}</label>
+			  										<label id="submittersNameLbl" class="approvalItemLabelCls"></label></div>
+			  									<div class="activity-item-field"><label class="activity-item__labels approval-item-label">{!JSENCODE($Label.SSApprovalListColumnHeaderAssignedTo)}</label>
+			  										<label id="assignedToNameLbl" class="approvalItemLabelCls"></label></div>
+			  									<div style="float:left" class="activity-item-field"><label class="activity-item__labels approval-item-label">{!JSENCODE($Label.SSApprovalListColumnHeaderDateSubmitted)}</label>
+			  										<label id="submittedDateLbl" class="approvalItemLabelCls">{!currentDate}</label></div>
+			  										<br/>
+			  										<label id="showDetailsLbl" class="showDetailsLblCls floatRightCls fontCls cursorCls" style="float: right;  cursor: default; width:auto; font-size: 12px">{!JSENCODE($Label.ShowDetails)}</label>	
+											<br/>
+											<hr class="activity-item_hr_above_link" />
+											<div class="modal-footer__btn-container modal-footer__btn-container_manage_approval">
+												<span id="reassignLbl" class="manage-approval-links">{!JSENCODE($Label.Reassign)}</span>
+												<span>
+													|
+													<span id="approveRejectLbl" class="manage-approval-links">{!JSENCODE($Label.Approve)}&nbsp;/&nbsp;{!JSENCODE($Label.Reject)}</span>
+												</span>
+												<span>
+													|
+													<span id="approvalHistoryLbl" class="manage-approval-links">{!JSENCODE($Label.ApprovalHistory)}</span>
+												</span>
+												<span>
+													|
+													<span id="showRecordLbl" class="manage-approval-links">{!JSENCODE($Label.ShowRecord)}</span>
+												</span>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+								<div class="closePopupDivCls fontCls cursorCls" style="margin-top: -18px;">
+									<div id="popupHdrDiv" class="popupHeaderDivCls fontCls cursorCls">
+										<label id="popupHdrLbl" class="popupHeaderLblCls fontCls cursorCls" style="">{!JSENCODE($Label.Close)}</label>
+									</div>
+									<div class="cursorCls" style="padding: 15px;">
+										<label class="fontCls cursorCls popupQuesLblCls">{!JSENCODE($Label.SS_CloseRequestMessage)}</label>
+									</div>
+									<div class="popupFooterDivCls cursorCls">
+										<buttons id="closeBTN" class="closeButtonCls fontCls cursorCls">{!JSENCODE($Label.Close)}</buttons>
+										<buttons id="cancelBTN" class="cancelButtonCls fontCls cursorCls">{!JSENCODE($Label.SSCancel)}</buttons>
+									</div>
+								</div>
+							</div>
+						
+						</div>
+					</div>
+                   </apex:outputPanel>
+               </td>
+           </tr>
+        </table>
+        <script>
+        	preview();
+        	window.opener.parent.addHelpOnPage(document.getElementById('helpDiv'),'creating_customtheme.htm', '');
+        </script>
+         <apex:actionFunction action="{!save}" name="save" rerender="" oncomplete="loadThemeData('{!themeDataTemp}');SaveOnComplete('{!isError}', '{!errorMsg}');">
+             <apex:param name="themeName" assignTo="{!themeName}" value=""/>
+             <apex:param name="themeColorData" assignTo="{!themeDataTemp}" value=""/>
+         </apex:actionFunction>
+          <apex:actionFunction action="{!deleteTheme}" name="deleteTheme" rerender="" onComplete="window.opener.location.href = window.opener.location.href;window.close();">
+          </apex:actionFunction>
+    </apex:form>
+    
+</apex:page>

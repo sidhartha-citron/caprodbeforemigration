@@ -1,0 +1,295 @@
+<apex:page cache="true" showHeader="false" standardStylesheets="false" controller="BMCServiceDesk.AdminServiceTargetsController" contentType="{!contentTypeForIE}">  
+    <c:CommonIncludes />        
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Spinner.css" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminServiceTargets.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    
+	<body oncontextmenu="return false;">   
+		<apex:form >  
+		<apex:outPutPanel id="msg" >
+			<script>
+				message = '{!message}';
+			</script>
+			
+		</apex:outPutPanel>	 	 	
+		 <div id = "btnToolbar" class="clsRowGreyBg" />
+		 <div id="helpDiv" class="clshelpDiv"></div>
+            <div id = "slmPanelDiv" class = "clsSlmDiv">
+		        <table id="SLMTable1" class="clsTable" cellspacing="0" cellpadding="0" >            
+		            <tr>
+		                <td class="clsInputLabelTD" id="SLCLableId">{!$Label.SLM_Service_Target_Context}</td>
+		            </tr>
+		            <tr>
+		                <td class="TD15pxHeightCls"></td>
+		            </tr>
+		            <tr>
+		                <td colspan="2">
+		                    <div class="clsAppliesToLabel" id="AppliesTotd"></div>
+                            <div  id="AppliesToCombotd" class="clsAllCombo"></div>
+		                </td>  
+		            </tr>
+		            <tr>
+		                <td class="TD5pxHeightCls">  </td>
+		            </tr>
+		            <tr>
+                        <td colspan="3" class= "clsTopMargin10px" >
+                            <div id="priorityCheckboxTD" class="clspriorityCheckbox"></div>
+                            <div class="clsPriorityLabel" id="PriorityTD" ></div>
+                            <div class="clsAllCombo" id="PriorityComboTD" ></div>
+		                </td> 
+		            </tr>
+		            <tr>
+		                <td class="TD15pxHeightCls"></td>
+		            </tr>
+		            <tr>
+		                <td class="clsInputLabelTD" id="WSTLableId">{!$Label.SLM_Warning_Status_Trigger}</td>
+		            </tr>
+		            <tr>
+		                <td class="TD10pxHeightCls">  </td>
+		            </tr>
+		            <tr>
+		                <td colspan="2" >
+		                    <div id="TargetTypeTD" class="clsTargetType"></div>
+                            <div class="clsAllCombo" id="TargetTypeComboTD"></div>
+		                </td> 
+		            </tr>
+		            <tr>
+		                <td class="TD5pxHeightCls">  </td>
+		            </tr>
+		            <tr>
+		                <td colspan="11" >
+                            <div id="TimeRemainingTD" class="clsTimeRemaininglabel"></div>
+                            <div class="clsTimeremainingField" id="TimeRemainingComboTD"></div>
+		                    
+                            <div id="equalLabelTD" class="clsequalLabel"></div>
+                            <div class="clspercentdateLabel" id="percentageFieldTD" ></div>
+                            <div id="perLabelTD" class="clspercentdateField"></div>   
+                                            
+                            <div class="clspercentdateLabel" id="dayFieldTD" ></div>
+                            <div id="dayLabelTD" class="clspercentdateField" ></div>   
+                                            
+                            <div class="clspercentdateLabel" id="hourFieldTD" ></div>
+                            <div id="hourLabelTD" class="clspercentdateField" ></div>
+		                   
+                           
+                            <div class="clspercentdateLabel" id="minuteFieldTD" style = "padding-left: 4px;"></div>
+		                    <div id="minLabelTD" class=" clspercentdateField"></div>   
+		                </td> 
+		            </tr>
+		            <tr>
+		                <td class="TD5pxHeightCls"></td>
+		            </tr>   
+		           <tr>
+		                <td colspan="11" >
+                            <div class=" clsInputtextbox" id="durationTextFieldTD" ></div>
+		                </td>
+		            </tr>       
+		        </table>                   
+		    
+            <div id="ToolBarPanel" class= "clsTopMargin10px" ></div>
+		    <div id="GridPanel" ></div> 
+		    </div>
+		    <apex:actionFunction name="SaveSLMData" action="{!globalSave}" reRender="msg" oncomplete="isComplete();">
+		        <apex:param assignTo="{!storeSLMWarningData}" name="storeCSSData" value=""/>        
+		    </apex:actionFunction>
+   		 </apex:form>    
+    </body>
+    <script type="text/javascript">   
+   
+	    var wherelabel =' '+'{!HTMLENCODE($Label.SLM_Where_Priority)}'+' ';
+	    var store;    
+	    var addClickedFlag = 0;
+	    var Assignto1; 
+	    var WarningPercentage1;
+	    var TargetType1; 
+	    var WarningDuration1;
+	    var Priority1;
+	    var selectedId;
+	    var TimeRemaining;
+	    var serviceTarget; 
+	    var warningStatus;        
+	    var SLMgrid;
+	    var hiddendata;
+	    var Assignto2; 
+	    var WarningPercentage2;
+	    var TargetType2; 
+	    var WarningDuration2;
+	    var Priority2;
+	    var AssignCombo1 = new Array();   
+	    var duration = new Array();     
+	    var PrioCombo1 = new Array();
+	    var TarGet1 = new Array();
+	    var IdArray1 = new Array();
+	    var Warning = new Array();
+	    var minuteWarning = new Array();
+	    var labelWarning = new Array();
+	    var record ;
+	    var gridstring;
+	    var prioChk = false;
+	    var cnt = 0;
+	    var cnt2 = 0;
+	    var update = 0;
+	    var resolution ='{!Sky_ResolutionTime}';
+	    var response = '{!Sky_ResponseTime}';
+	    var completion ='{!Sky_CompletionTime}';
+	    var initiation = '{!Sky_InitiationTime}';
+	    var change = '{!Sky_Change}';
+	    var inc = '{!Sky_Incident}';
+	    var prob = '{!Sky_Problem}';
+	    var Task = '{!Sky_Task}';
+	    var prio;    
+        var ctimejs = '{!HTMLENCODE($Label.CompletionTime)}'; 
+        var resptimejs = '{!HTMLENCODE($Label.ResponseTime)}'; 
+        var resotimejs = '{!HTMLENCODE($Label.ResolutionTime)}'; 
+        var inittimejs = '{!HTMLENCODE($Label.InitiationTime)}'; 
+        var incLabel = '{!HTMLENCODE($ObjectType.Incident__c.label)}';
+        var changeLabel = '{!HTMLENCODE($ObjectType.Change_Request__c.label)}';
+        var problemLabel = '{!HTMLENCODE($ObjectType.Problem__c.label)}';
+        var taskLabel = '{!HTMLENCODE($ObjectType.Task__c.label)}';
+        var message = '{!message}';
+	    var saveToolTip ='{!HTMLENCODE($Label.Save)}'; 
+	    var messageTitle ='{!HTMLENCODE($Label.SLM_Service_Target_Warnings)}';
+	    Ext.ns("SLMSettingPage"); 
+	    SLMSettingPage.Labels = {
+	        Service_Target:'{!HTMLENCODE($Label.SLM_Service_Target_Context)}',
+	        Warning_Status:'{!HTMLENCODE($Label.SLM_Warning_Status_Trigger)}',
+	        AppliesTo: '{!HTMLENCODE($ObjectType.RemedyforceSLMSettings__c.fields.AppliesToObject__c.label)}',
+	        TargetType:'{!HTMLENCODE($ObjectType.RemedyforceSLMSettings__c.fields.TargetType__c.label)}',
+	        Priority:'{!HTMLENCODE($ObjectType.RemedyforceSLMSettings__c.fields.Priority__c.label)}',
+            Incident:incLabel,
+            Change:changeLabel,
+	        Where:'{!HTMLENCODE($Label.SLM_Where_Priority)}',
+	        EqualTo:'{!HTMLENCODE($Label.SLM_Equal_To)}',
+	        AND: '{!HTMLENCODE($Label.SLM_AND)}',
+	        Days:'{!HTMLENCODE($Label.Days)}',
+	        HHMM:'{!HTMLENCODE($Label.HHMM)}',
+	        HoursLabel:'{!HTMLENCODE($Label.HoursLabel)}',
+	        Minutes: '{!HTMLENCODE($Label.MinutesLabel)}',
+	        Percent_of_Time_Remaining: '{!HTMLENCODE($Label.SLM_Percent_Time_Remaining)}',
+	        Time_Remaining: '{!HTMLENCODE($Label.SLM_Time_Remaining)}',
+	        Record_Exists:'{!HTMLENCODE($Label.SLM_Record)}',
+	        Add:'{!HTMLENCODE($Label.Add)}',
+	        Remove:'{!HTMLENCODE($Label.Remove)}',
+	        Cancel:'{!HTMLENCODE($Label.Cancel)}',
+	        Update:'{!HTMLENCODE($Label.Update)}',
+	        ResponseTime:'{!HTMLENCODE($Label.ResponseTime)}',
+	        ResolutionTime:'{!HTMLENCODE($Label.ResolutionTime)}',
+	        CompletionTime:'{!HTMLENCODE($Label.CompletionTime)}',
+	        InitiationTime:'{!HTMLENCODE($Label.InitiationTime)}',               
+	        EnterDays:'{!HTMLENCODE($Label.EnterDays)}'
+   		 }
+        
+      
+      
+        eval('{!AppliesToType}');
+        eval('{!Priority}');
+        eval('{!TargetTypeForIncident}'); 
+        eval('{!TargetTypeForChangeRequest}');
+        eval('{!TargetTypeForProblem}');
+        eval('{!TargetTypeForTask}');
+        eval('{!TimeRemaining}');
+        function dbvalues(){
+        var AssignObj;
+        var Tartype;
+            <apex:repeat value="{!SLMdetails}" var="slm" >
+                 IdArray1[cnt] = '{!slm.id}';
+                 AssignObj = '{!slm.AppliesToObject__c}';
+                 if(AssignObj == inc){
+                	 AssignCombo1[cnt] = inc;
+                 }else if(AssignObj == change){
+                 	AssignCombo1[cnt] = change;
+                 }else if(AssignObj == prob){
+                 	AssignCombo1[cnt] = prob;
+                 }else if(AssignObj == Task){
+                 	AssignCombo1[cnt] = Task;
+                 }
+                 prio = '{!slm.Priority__c}';
+                 if(prio==''){
+                 PrioCombo1[cnt]='';
+                 }
+                 else{
+                 PrioCombo1[cnt] = parseInt(prio);  
+                 }
+                
+                 Tartype=  '{!slm.TargetType__c}';
+                 if(Tartype == response){
+                   TarGet1[cnt] = response;
+                 }
+                 else if(Tartype ==resolution){
+                    TarGet1[cnt] = resolution;
+                 }
+                  else if(Tartype ==initiation){
+                    TarGet1[cnt] = initiation;
+                 }
+                  else{
+                   TarGet1[cnt] = completion;
+                  }        
+                 Warning[cnt] = parseInt('{!slm.WarningPercentage__c}');                 
+                 minuteWarning[cnt] = parseInt('{!slm.WarningDuration__c}');
+                if(minuteWarning[cnt]!= -1.00){
+                       var numberOfDays = ((minuteWarning[cnt]) / 1440); 
+                       var numOfDays = parseInt(numberOfDays);
+                       var remainingmin = (minuteWarning[cnt] - (numOfDays * 1440))
+                       var numberOfHours = remainingmin/ 60;
+                       var numOfHours = parseInt(numberOfHours);
+                       var numOfMinutes =parseInt( minuteWarning[cnt] - (numOfDays * 1440) - (numOfHours * 60));
+                       duration[cnt] = padNumberToTwodigit(numOfDays) +' '+SLMSettingPage.Labels.Days+' ' +padNumberToTwodigit(numOfHours)+':'+padNumberToTwodigit(numOfMinutes)+' '+SLMSettingPage.Labels.HHMM;
+                   }
+                 if(Warning[cnt] == -1.00){    
+                       
+                   labelWarning[cnt] = SLMSettingPage.Labels.Time_Remaining;
+                 }
+                 if(minuteWarning[cnt] == -1.00){                                    
+                   labelWarning[cnt] = SLMSettingPage.Labels.Percent_of_Time_Remaining;
+                   duration[cnt] = -1;
+                 } 
+                 cnt++;
+            </apex:repeat>
+           
+           cnt--;
+       }
+       function padNumberToTwodigit(number) {
+             return (number < 10 ? '0' : '') + number;
+        }
+       dbvalues();
+    function SLMWarningSaveHandler(){
+        waitMsg.show();        
+        var storeCSSData = '';
+       
+        for (var i=0; i<store.data.length; i++)
+        {
+            //Assumption is that data is always validated.                
+             storeCSSData += String.format('{0},{1},{2},{3},{4},{5};', hiddendata.getAt(i).get('Id'),hiddendata.getAt(i).get('AppliesToObject'),hiddendata.getAt(i).get('Priority'),hiddendata.getAt(i).get('TargetType'),hiddendata.getAt(i).get('WarningPercentage'),hiddendata.getAt(i).get('WarningDuration'));
+           
+        }                                 
+      
+        SaveSLMData(storeCSSData);
+        return true;
+          
+       	}
+       	var saveMessage = '{!HTMLENCODE($Label.SavedSuccessfully)}';
+       	var waitMsg =   new Ext.Window({ 
+                height:100, 
+                width:200, 
+                resizable:false, 
+                closable : false, 
+                header:false,
+                frame:false, 
+                shadow :false, 
+                modal:true,
+                items:[{ 
+                    xtype:'panel', 
+                    height:100, 
+                    width:200, 
+                    bodyStyle:'background-color:transparent;border:none;', 
+                    html:'<div align="center"><img src="{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif" /></div>' 
+                }] 
+        });
+        var wikiUrl = '{!wikiUrl}';
+        parent.addHelpOnPage(document.getElementById('helpDiv'),'ST_warning.htm',wikiUrl);
+	</script>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/Spinner.js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/SpinnerField.js"/>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>	
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminServiceTargets.js"/>
+    </apex:page>

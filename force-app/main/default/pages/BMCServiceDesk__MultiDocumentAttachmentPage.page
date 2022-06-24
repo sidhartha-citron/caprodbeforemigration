@@ -1,0 +1,239 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.MultiDocumentAttachmentController" standardStylesheets="false" action="{!generateAttachmentReference}">
+<c:CommonIncludes />
+    <style>
+     .attachMentGrid .x-grid3-hd-row td {
+        background:#2E7DB3 none repeat scroll 0 0;
+        border: none;
+        }
+		.bgBtnGrey,.buttonDisabled {
+			height:19px;
+			width:auto;
+			padding:0 5px 0px 5px;
+		}
+		.portletTdFont
+		{	
+	 		white-space: nowrap	
+		}	
+    </style>
+   <script>
+	var imgPath = '{!$Resource.SDEFStyles}/SDEFbuttons/b_delete_email.png';
+	var resultSet;
+	var resultSet_consolidated;
+	
+	var listOfAttachments = new Map();
+    listOfAttachments = JSON.parse('{!JSENCODE(ListOfAttachments)}');
+    var count = 0;
+    resultSet = new Array();
+    for(var attachment in listOfAttachments)
+	{
+	   resultSet[count]=new Array(4);
+	   resultSet[count][0]=attachment;
+	   resultSet[count][1]=listOfAttachments[attachment];
+	   count++;
+	}
+    
+    var consolidatedListOfAttachments = new Map();
+    consolidatedListOfAttachments = JSON.parse('{!JSENCODE(ConsolidatedListOfAttachments)}');
+    count = 0;
+    resultSet_consolidated = new Array();
+    for(var attachment in consolidatedListOfAttachments)
+	{
+	   resultSet_consolidated[count]=new Array(4);
+	   resultSet_consolidated[count][0]=attachment;
+	   resultSet_consolidated[count][1]="<a href='javascript:void(0);' onclick='javascript:setOpenAttachmentFlag();' />" + consolidatedListOfAttachments[attachment] +"</a>";
+	   count++;
+	}
+	
+	Ext.ns("MultiDocumentAttachmentPage");
+			
+            MultiDocumentAttachmentPage.Labels = {
+				fileColumnHeader: '{!$Label.File}',
+				Attachment_File_Name_Length_Validation: '{!$Label.Attachment_File_Name_Length_Validation}',
+				Attachment_Grid_Header: '{!$Label.Attachments}'
+			}
+	
+	var stdLayout = '{!JSENCODE($CurrentPage.parameters.standardLayout)}';
+	var isConsolePage = '{!JSENCODE($CurrentPage.parameters.isConsolePage)}';
+	 
+	var stdLayoutSaveAttachmentToolTip = '{!JSENCODE($Label.stdLayout_saveAttachments_sendemail_tooltip)}';
+	var stdLayoutSaveAttachment = '{!JSENCODE($Label.stdLayout_saveAttachments_sendemail)}';
+	 	
+	Ext.ns("MultiDocumentAttachmentPageComp");
+	
+			MultiDocumentAttachmentPageComp.ComponentVars = {
+				str_Incident_attachments: '{!$Component.attachMentMainForm.str_Incident_attachments}',
+				str_Incident_attachmentsOld: '{!$Component.attachMentMainForm.str_Incident_attachmentsOld}',
+				str_attachMentIdForDelete: '{!$Component.attachMentMainForm.str_attachMentIdForDelete}',
+				inputfile: '{!$Component.attachMentMainForm.inputfile}',
+				save_attachmentID: '{!$Component.attachMentMainForm.save_attachmentID}'
+			}
+			
+	var errorMessage ="{!errorString}";
+
+	function attachmentOkClosePopup(){
+		var ParentWin = window.parent;
+		if(ParentWin != null) {
+			ParentWin.showWaitMask();
+			ParentWin.setFlagForSaveAttachments(document.getElementById('{!$Component.attachMentMainForm.save_attachmentID}').checked);
+			ParentWin.setPopUpVar('{!JSENCODE(str_Incident_attachments)}');
+			ParentWin.closePopupForLightningNow();
+		}
+	}
+	var  isFileUploadOptionSelected = {!if(isFileUploadOptionSelected,true,false) };
+   </script>
+   <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/multiDocumentAttachment.js" />
+   
+   <apex:form id="attachMentMainForm">
+    
+        <apex:outputPanel id="formPanel">
+            <table class="clsMainTable" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+					<td colspan="2" class="clsTD100 TD15pxHeightCls" ></td>
+				</tr>
+				
+				<tr>
+					<td ><div class="div10pxHspacing"/></td>
+					<td class="clsTD100" >
+						<div id="errorDiv" style="color:red"> </div>
+					</td>
+					
+				</tr>
+				<tr>
+					<td ><div class="div10pxHspacing"/></td>
+					<td class="clsBoldInputLabelTD">
+						{!$Label.SelectAttachmentToAdd}
+					</td>
+				</tr>
+				 <tr>
+					<td colspan="2"><div class="div5pxVspacing"/></td>
+				</tr>
+				 <tr>
+					<td ><div class="div10pxHspacing"/></td>
+					<td>
+						<table cellspacing="0" cellpadding="0" border="0">
+							<tr>
+								
+								<td>
+									<input type="radio" id="attachmentRadioID1" onclick="enableDisableControls();" name="AttachFile" value="File"/>
+								</td>
+								<td ><div class="div10pxHspacing"/></td>
+								<td >
+									<span class="portletTdFont">{!$Label.File}</span>
+								</td>
+								<td ><div class="div20pxHspacing"/></td>
+								<td class="clsTD100">
+									<apex:inputFile onKeyDown="this.blur()" disabled="true" fileName="{!attach.name}" id="inputfile" styleclass="inputfileCls" fileSize="{!filesize}" value="{!attach.body}" onchange="validateFile();"  size="51"/>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="5" ><div class="div10pxVspacing"/></td>
+							</tr>
+							<tr>
+								
+								<td>
+									<input type="radio" id="attachmentRadioID2" onclick="enableDisableControls();" name="AttachFile" value="IncidentAttachments"/>
+								</td>
+								<td ><div class="div10pxHspacing"/></td>
+								<td class="clsTD100" colspan="3">
+									<span class="portletTdFont">{!JSENCODE(FilesAttachedToObject)}</span>
+								</td>
+								
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2"><div class="div10pxVspacing"/></td>
+				</tr>
+				<tr>
+					<td ><div class="div10pxHspacing"/></td>
+					<td>
+						<!-- grid for incident -->
+						<div id="grid" />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2"><div class="div10pxVspacing"/></td>
+				</tr>
+				<tr>
+					<td ><div class="div10pxHspacing"/></td>
+					<td >
+						
+						<input type="button" name="addBtn" id="addBtn" onclick="getAttachmentsFromIncidentGridOrSystem();" value="{!$Label.Add} > " style="width:auto;" disabled="true" class="buttonDisabled" />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2"><div class="div15pxVspacing"/></td>
+				</tr>
+				<tr>
+					<td ><div class="div10pxHspacing"/></td>
+					<td>
+						<!-- Grid for attached documents -->
+						<div id="grid_attachments" />
+						<apex:inputHidden id="str_Incident_attachments" value="{!str_Incident_attachments}" />
+                        <apex:inputHidden id="str_Incident_attachmentsOld" value="{!str_Incident_attachmentsOld}" />						
+						<apex:inputHidden id="str_attachMentIdForDelete" value="{!str_attachMentIdForDelete}" />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2"><div class="div10pxVspacing"/></td>
+				</tr>
+				
+				<!-- Start				-->
+				<tr>
+					<td ><div class="div10pxHspacing"/></td>
+					<td>
+						<table cellspacing="0" cellpadding="0" border="0">
+							<tr>
+								<td>
+									<apex:outputText value="CRUDFLSCheck# False Positive: Since this is part of Remedyforce functional process which is expected to work outside of FLS and CRUD permission on this field." rendered="false" />
+									<apex:inputCheckbox id="save_attachmentID" title="{!$Label.bmcservicedesk__saveattachments_sendemail_tooltip}" value="{!save_attachments_flag}" /> 
+								</td>
+								<td ><div class="div10pxHspacing"/></td>
+								<td valign='top'>
+									<span id="saveAttachmentSpanID" class="portletTdFont">{!JSENCODE($Label.saveAttachments_sendemail)}</span>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<!-- End -->
+				<tr>
+					<td colspan="2"><div class="div15pxVspacing"/></td>
+				</tr>
+				<tr class="row-gray">
+					<td ><div class="div10pxHspacing"/></td>
+					<td>
+						<table cellspacing="0" cellpadding="0" border="0">
+							<tr>
+								<td colspan="2"><div class="div10pxVspacing"/></td>
+							</tr>
+							<tr>
+								<td colspan="2">
+									 <!-- <apex:commandButton action="{!attachFile}" id="okBtnID" value="{!$Label.Ok}" styleClass="bgBtnGrey"/> -->
+									 <input type="button" disabled="true" name="okBtn" id="okBtnID" onclick="attachmentOkClosePopup();" value="{!$Label.Ok}" class="buttonDisabled" />
+									 
+									<span class="qvwidth5px"></span> 
+									<apex:actionregion >
+									<apex:commandButton value="{!$Label.bmcservicedesk__cancel}" action="{!cancelAttachment}" onComplete="window.parent.setPopUpVar('null');window.parent.closePopup();" styleClass="bgBtnGrey"/>
+									</apex:actionregion>
+
+									
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2"><div class="div10pxVspacing"/></td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+            </table>
+        </apex:outputPanel>   
+			<apex:actionFunction action="{!attachFile}" name="attachFileJS"/>
+			<apex:actionFunction action="{!pageReload}" name="pageReloadJS"/>
+			<apex:actionFunction action="{!deleteAttachment}" name="deleteAttachmentJS"/>
+	</apex:form>
+	<script>
+		enableDisableOkButton();
+	</script>
+</apex:page>

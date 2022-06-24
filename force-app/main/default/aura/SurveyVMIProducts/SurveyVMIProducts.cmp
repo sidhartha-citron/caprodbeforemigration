@@ -1,0 +1,161 @@
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId" access="global" controller="SiteSurveyVMIController">
+    <aura:attribute name="columnAPINames" type="String[]" default="['VMI_Product__c.Product__c','VMI_Product__c.Par_Level__c','VMI_Product__c.Notes__c']"/>
+    <aura:attribute name="columns" type="SiteSurveyVMIController.ColumnRecord[]"/>
+    
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="siteSurveyId" type="String" />
+    <!--<aura:attribute name="securityRecord" type="SiteSurveySettingsController.FieldSecurity"/>-->
+    <aura:attribute name="newVMIProduct" type="VMI_Product__c"/>
+    <aura:attribute name="existingVMIProducts" type="VMI_Product__c[]"/>
+    <aura:attribute name="selectedProduct" type="VMI_Product__c"/>
+    <aura:attribute name="VMIToDelete" type="VMI_Product__c"/>
+    <aura:attribute name="openSection" type="Boolean" default="false"/>
+    <aura:attribute name="searchString" type="String"/>
+    <aura:attribute name="searchResults" type="SObject[]"/>
+    <aura:attribute name="AllVMIFlaggedProducts" type="SiteSurveyVMIController.vmiFlaggedProduct[]"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <aura:handler name="skillChosenEvent" event="c:SkillSelected" action="{!c.handleSkillEvent}"/>
+    <aura:handler name="skillSavedEvent" event="c:SkillSaved" action="{!c.handleSkillSaveEvent}"/>
+    
+    <c:CustomToast aura:id="customToast" />
+    <c:VMIProductsSection newVMIProduct="{!v.newVMIProduct}" columns="{!v.columns}" aura:id="lobSelector" existingVMIProducts="{!v.existingVMIProducts}"/>
+    
+    <lightning:button class="btn-add" label="{!$Label.c.Site_Survey_Action_Add_New_VMI_Prod}" iconName="utility:new" onclick="{!c.handleAddVMIProds}"/> 
+    
+    <div class="slds-scrollable">
+        <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+            <thead>
+                <tr class="slds-text-title--caps">
+                    <th scope="col"/>
+                    <aura:iteration items="{!v.columns}" var="s" indexVar="i">
+                        <th scope="col">
+                        	<div class="slds-truncate" title="{!s.label == 'Par Level' ? $Label.c.Par_Level_Definition : s.Label}">{!s.label}</div>
+                        </th>
+                    </aura:iteration>
+                    <th scope="col">
+                        <div class="slds-truncate" title="{!$Label.c.Site_Survey_Actions}">{!$Label.c.Site_Survey_Actions}</div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <aura:iteration items="{!v.existingVMIProducts}" var="s" indexVar="i">
+                    <tr class="slds-hint-parent">
+                        <td>{!i+1}</td>
+                        <th scope="row">
+                            <div class="slds-cell-wrap">
+                                <div class="slds-truncate">{!s.Product__r.Name}</div>
+                            </div>
+                        </th>
+                        <td class="slds-cell-wrap">
+                            <div class="slds-truncate">{!s.Par_Level__c}</div>
+                        </td>
+                        <td class="slds-cell-wrap">
+                            <div class="">{!s.Notes__c}</div>
+                        </td>
+                        <td class="slds-cell-wrap">
+                            <div class="slds-truncate" style="float:left;"><lightning:button variant="" label="{!$Label.c.Site_Survey_Edit}" value="{!s}" onclick="{!c.editVMI}" class=""/><lightning:button variant="" label="{!$Label.c.Site_Survey_Delete}" value="{!s}" onclick="{!c.showDeleteModal}" class=""/></div>
+                        </td>
+                    </tr>
+                </aura:iteration>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="slds-hide" aura:id="theModal">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-theme--info">
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Site_Survey_Action_Add_New_VMI_Prod}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <table class="slds-table slds-table_bordered slds-table_fixed-layout">
+                        <thead>
+                            <tr class="slds-text-title--caps">
+                                <th scope="col" class="slds-text-align_right slds-text-title_caps slds-cell-fixed" style="width: 3.25rem;"></th>
+                                <aura:iteration items="{!v.columns}" var="s" indexVar="i">
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="{!s.label}">{!s.label}</div>
+                                    </th>
+                                </aura:iteration>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <aura:iteration items="{!v.AllVMIFlaggedProducts}" var="prod">
+                                <aura:if isTrue="{!prod.hasFamilyChanged}">
+                                	<tr>
+                                    	<td style="font-size:1.1rem" colspan="4">{!prod.family}</td>
+                                    </tr>
+                                </aura:if>
+                                <tr class="slds-hint-parent">
+                                    <td role="gridcell" class="slds-text-align_right">
+                                        <aura:if isTrue="{!prod.isChecked}">
+                                            <lightning:buttonIcon iconName="utility:check" variant="brand" name="{!prod}" alternativeText="" onclick="{!c.removeVMIProd}"/>
+                                            <aura:set attribute="else">
+                                                <lightning:buttonIcon iconName="utility:add" variant="border-filled" name="{!prod}" alternativeText="" onclick="{!c.addVMIProd}"/>
+                                            </aura:set>
+                                        </aura:if>
+                                    </td>
+                                    <td class="slds-cell-wrap" role="gridcell">
+                                        <ui:outputText value="{!prod.name}"></ui:outputText>
+                                    </td>
+                                    <td class="slds-cell-wrap" role="gridcell">
+                                        <aura:if isTrue="{!prod.isChecked}">
+                                            <lightning:input variant="label-hidden" type="number" value="{!prod.parLevel}" min="1"/>
+                                            <aura:set attribute="else">
+                                                <lightning:input variant="label-hidden" type="number" value="{!prod.parLevel}" disabled="true"/>
+                                            </aura:set>
+                                        </aura:if>
+                                    </td>
+                                    <td class="slds-cell-wrap" role="gridcell">
+                                        <aura:if isTrue="{!prod.isChecked}">
+                                            <lightning:input variant="label-hidden" type="text" value="{!prod.notes}"/>
+                                            <aura:set attribute="else">
+                                                <lightning:input variant="label-hidden" type="text" value="{!prod.notes}" disabled="true"/>
+                                            </aura:set>
+                                        </aura:if>
+                                    </td>
+                                </tr>
+                            </aura:iteration>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeModal}"/>
+                    <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Submit}" onclick="{!c.saveProduct}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+    
+    <div class="slds-hide" aura:id="deleteModal">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-theme--info">
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Site_Survey_Delete_Confirm}</h2>
+                </header>
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeDeleteModal}"/>
+                    <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Delete}" onclick="{!c.deleteVMI}"/>
+                </footer>
+            </div>
+        </section>
+    </div>
+    
+    <div class="slds-hide" aura:id="confirmModal">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-theme--info">
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Site_Survey_Change_Confirm}</h2>
+                </header>
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeConfirmModal}"/>
+                    <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Submit}" onclick="{!c.saveProduct}"/>
+                </footer>
+            </div>
+        </section>
+    </div>
+</aura:component>

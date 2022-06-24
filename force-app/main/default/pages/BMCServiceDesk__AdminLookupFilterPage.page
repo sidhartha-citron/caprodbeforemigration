@@ -1,0 +1,426 @@
+<apex:page showheader="false" standardStylesheets="false" controller="BMCServiceDesk.AdminLookupFilterController">
+  <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+  <link rel="stylesheet" type="text/css"  href="{!$Resource.SDEFStyles}/AdminHome.css" />
+  <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+  <apex:variable var="isFromCMDB" value="{!IF($CurrentPage.Parameters.from == 'CMDB',true,false)}"/>
+  <apex:form id="AdminLookupform">
+	<apex:actionFunction name="updateCorruptData" action="{!updateCorruptData}" rerender="none">
+    </apex:actionFunction>
+    <apex:actionFunction action="{!fetchClassFields}" name="fetchClassFields" rerender="refreshFieldsData" oncomplete="reloadCriteriaGrid();ReloadFieldStore();hideWaitbox();">
+          <apex:param name="className" assignTo="{!ClassName}" value=""/>  
+      </apex:actionFunction>
+      <apex:actionFunction action="{!getFieldsForSelectedFieldCMDB}" name="getFieldsForSelectedFieldCMDB" rerender="refreshFieldsData,fieldsPanelData" onComplete="hideWaitbox();reloadCriteriaGrid();isDuplicateFilter();populateLookupFieldsData();showCIFilters();">
+          <apex:param name="filterForField" assignTo="{!filterForField}" value=""/>  
+      </apex:actionFunction>
+      <apex:inputHidden value="{!ClassName}" id="ClassName"/>
+      <apex:inputHidden value="{!CMDBClass}" id="CMDBClass"/>
+      <apex:inputHidden value="{!cmdbFilterType}" id="cmdbFilterType"/>
+<apex:actionFunction name="getFieldValues" action="{!getFieldValues}"  rerender="lookupForId,fieldsPanel,fieldsPanelData" oncomplete="populatelookupFieldStore();hideWaitbox();">
+          <apex:param name="lookupFilterConsole" assignTo="{!lookupFilterConsole}" value=""/>
+      </apex:actionFunction>
+
+      <apex:actionFunction name="getFieldsForSelectedField" action="{!getFieldsForSelectedField}"  rerender="lookupForId,fieldsPanel,fieldsPanelData" oncomplete="hideWaitbox();populateLookupFieldsData();isDuplicateFilter();showCIFilters();">
+          <apex:param name="lookupFilterConsoleLookupField" assignTo="{!lookupFilterConsoleLookupField}" value=""/>
+      </apex:actionFunction>
+
+
+      
+    
+    <apex:actionFunction action="{!save}" name="save" rerender="fieldsPanel,fieldsPanelData,consoleId,lookupForId,filterTypeId,InactiveId,SScheckbox,filterLogicId" onComplete="afterSave();reloadConsoleFilterGrid();reloadCriteriaGrid();hideWaitbox();showExtMsg('{!JSENCODE(MsgStr)}');fireChangeEvent=true;">
+    </apex:actionFunction>
+    <apex:actionFunction action="{!deleteConsoleFilter}" reRender="fieldsPanel,consoleId,lookupForId,filterTypeId,InactiveId,filterLogicId,fieldsPanel,fieldsPanelData,SScheckbox,CISSFilterID" name="deleteConsoleFilter" oncomplete="clearLookupAndSelectFieldCombo();resetComboboxes();reloadConsoleFilterGrid();hideWaitbox();reloadCriteriaGrid();showCIFilters();">
+            <apex:param name="filterId" assignTo="{!consoleFilterId}" value=""/>
+    </apex:actionFunction>
+    
+    <apex:actionFunction action="{!createNewLookup}" name="createNewLookup" rerender="consoleId,lookupForId,filterTypeId,InactiveId,SScheckbox,filterLogicId,fieldsPanel,fieldsPanelData,refreshFieldsData,CISSFilterID" oncomplete="hideWaitbox();reloadCriteriaGrid();hideShowSScheckbox('');showCIFilters();fireChangeEvent=true;">
+    </apex:actionFunction>
+     
+    <apex:actionFunction action="{!getLookupRecord}" name="loadLookupFilterRec" rerender="consoleId,lookupForId,filterTypeId,InactiveId,SScheckbox,fieldsPanel,fieldsPanelData,CISSFilterID,filterLogicId" oncomplete="fireChangeEvent=true;setComboboxValues();reloadCriteriaGrid();populateLookupFieldsData();showCIFilters();hideWaitbox();">
+            <apex:param name="filterId" assignTo="{!consoleFilterId}" value=""/>
+    </apex:actionFunction> 
+
+     <apex:actionFunction action="{!getLookupRecordCMDB}" name="loadLookupFilterRecCMDB" rerender="filterTypeId,InactiveId,fieldsPanel,refreshFieldsData,fieldsPanelData,filterLogicId" oncomplete="setComboboxValues();reloadCriteriaGrid();populateLookupFieldsData();ReloadFieldStore();hideWaitbox();">
+            <apex:param name="filterId" assignTo="{!consoleFilterId}" value=""/>
+    </apex:actionFunction> 
+  
+  	<apex:actionFunction action="{!getPicklistValues}" name="getPicklistValues" rerender="picklistPanel" oncomplete="setPickListOptions();hideWaitbox();">
+            <apex:param name="filterId" assignTo="{!picklistAPIName}" value=""/>
+    </apex:actionFunction>
+    
+	<!-- Criteria grid data -->
+	<apex:inputHidden id="CriteriaGridStrId"  value="{!CriteriaGridStr}"/>
+    <!-- End of Criteria grid data -->
+
+	<div class="rf-filter-maindiv">
+      <table width="99%" >
+	    <tr>
+        <td> 
+            <div id="helpDiv" class="clshelpDiv"></div>
+        </td>
+       </tr>
+       <tr>
+        <td style="padding-bottom:10px;"> 
+            <apex:outputText rendered="{!!isFromCMDB}" styleClass="rf-label-bold"  value="{!$Label.bmcservicedesk__adminlookupfilter}">
+                <apex:param value="{!$Label.bmcservicedesk__consoles}"/>                
+            </apex:outputText>
+            <apex:outputText rendered="{!isFromCMDB}" styleClass="rf-label-bold"  value="{!$Label.bmcservicedesk__adminlookupfilter}"  >
+                <apex:param value="CMDB"/>
+            </apex:outputText>			
+		</td>
+       </tr>
+       <td class="rf-td-toolbar"> 
+       <button type="button" class="rf-btn" onClick="CallNew();">{!$Label.New}</button> 
+       <button id="del-filter-btn" class="rf-btn" disabled="disabled" onClick="RemoveAttachment();return false;">{!$Label.Delete}</button> 
+       </td>
+       <tr>
+        <td class="rf-gray-border">
+         <div id="filterGrid" /> 
+        </td>
+       </tr>
+      <tr>
+         <td height="15">
+        </td>
+       </tr>
+       
+       
+       <tr>
+        <td >
+          <table width="100%"  class="rf-gray-border" border="0">
+          <tr>
+           <td colspan="{!colSpan}" class="rf-td-toolbar"> 
+            <apex:outputLabel id="editTbarId" styleClass="rf-label-bold"  value="{!$Label.bmcservicedesk__newfilter}" />
+           </td>
+         </tr>
+         <tr>
+         <td height="10">
+        </td>
+       </tr>
+            <tr>
+                <apex:outputPanel rendered="{!(OR(NOT(isFromCMDB),AND(isFromCMDB,isAssetManagementEnabled,isCIManagementEnabled)))}">
+                <td class="rf-form-td-lookupFilter" > 
+                     <span id="ConsolePicklist"/>
+                     <span id="CMDBClassType"/>
+                </td>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!isFromCMDB}">
+                <td class="rf-form-td-lookupFilter">
+                     <span id="spanCMDBClassName"/>
+                  </td>
+                </apex:outputPanel>                
+                <td class="rf-form-td-lookupFilter">
+                    <span id="FilterForConsole"/>
+                    <span id="FilterForCMDB"/>
+                </td>
+                <td class="rf-form-td-lookupFilter">                     
+                     <span id="FilterTypeCMDB"/>
+                </td>
+                <td class="rf-form-td-lookupFilter">
+<apex:inputCheckbox value="{!filterObj.BMCServiceDesk__Inactive__c}" id="InactiveId" /> 
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__inactive}" style=" vertical-align: bottom;padding-left:3px;"/>
+                </td>
+            </tr>
+            <tr>
+               <td colspan="{!colSpan}" height="5">
+               </td>
+           </tr>
+            <tr id="SelfServicecheckboxid" style="visibility:hidden; display: none;">
+                <td class="rf-form-td-lookupFilter" colspan="5"> 
+                    <apex:outputLabel value="{!($ObjectType.BMCServiceDesk__LookupFilter__c.fields.BMCServiceDesk__Console__c.label)}" style="padding-right:10px; visibility: hidden"/>                    
+                    <apex:inputCheckbox id="SScheckbox" value="{!filterObj.BMCServiceDesk__ApplyToSelfService__c}" onChange="showCIFilters();"/> 
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__applyinselfservice}" style=" vertical-align: top; padding-left:3px;"/>                     
+				
+					<span class="rf-form-td-lookupFilter" id="SettingsToShowCIS" style="visibility:hidden; display: none;">
+						<apex:outputpanel id="CISSFilterID">
+							<apex:outputtext value="|" style=" vertical-align: top; padding-right:10px;"/>
+							<apex:outputLabel value="{!$Label.bmcservicedesk__cmdbss3filtersetting}" style=" vertical-align: top; padding-right:10px;"/> 
+							
+							<apex:inputCheckbox id="CIClientFilterId" title="{!$Label.bmcservicedesk__cmdbss3filterclienttooltip}" value="{!isCILinkedToClient}"/> 
+		                    <apex:outputLabel value="{!$Label.bmcservicedesk__clientwindowheadersearchpage}" title="{!$Label.bmcservicedesk__cmdbss3filterclienttooltip}" style=" vertical-align: top; padding-left:3px;padding-right:10px;"/> 
+		                    
+		                    <apex:inputCheckbox id="CIAccountFilterId" title="{!$Label.bmcservicedesk__cmdbss3filterclientsaccounttooltip}" value="{!isCILinkedToAccount}"/> 
+		                    <apex:outputLabel value="{!$Label.bmcservicedesk__clientsaccount}" title="{!$Label.bmcservicedesk__cmdbss3filterclientsaccounttooltip}" style=" vertical-align: top; padding-left:3px;padding-right:10px;"/> 
+		                    
+		                    <apex:inputCheckbox id="CIAllFilterId" title="{!$Label.bmcservicedesk__cmdbss3filteralltooltip}" value="{!isAllCIs}" onChange="toggleCISSFilters();"/> 
+		                    <apex:outputLabel value="{!$Label.bmcservicedesk__all}" title="{!$Label.bmcservicedesk__cmdbss3filteralltooltip}" style=" vertical-align: top; padding-left:3px;padding-right:10px;"/> 
+	                    </apex:outputpanel>
+					</span>
+				</td>
+            </tr>
+            <tr>
+               <td colspan="{!colSpan}" height="10">
+               </td>
+           </tr>
+           <tr>
+            <td colspan="{!colSpan}" >
+                <table width="100%" >
+                    <tr class="rf-td-toolbar">
+                        <td style="padding-left:10px;" >
+                            <div id="lookupFieldCombo"/>
+                        </td>
+                        <td >
+                            <div id="compareOpDiv"/>
+                        </td>
+                        <td >
+                            <div id="fieldValueCombo"/>
+                        </td>
+                        <td>
+						    <div id="selectFieldCombo"/>
+           					<apex:inputText id="inputTxt" style="display:none;"  styleClass="filterInputEle"/ >
+           					<input type="text" id="referenceID" value=""  style="display:none;" />
+           					<apex:inputText id="datetimeinput" styleClass="filterInputEle" style="display:none"/>
+           					<apex:inputText id="inputDate" styleClass="filterInputEle" style="display:none"/>
+           					<apex:inputTextarea id="inputTxtArea" style="display:none" styleClass="filterTextarea" onkeyup="validateLength('{!$Component.AdminLookupform.inputTxtArea}',selectedTextAreaLength);"/>
+           				
+                   			<input type="button" id="lookUp" class="filterLookupIconOn" style="display:none;" onClick="openQualLookup();"/>
+           					<input type="button" id="inputTxtAreaButtonEle" class="filterTextBoxPopupIcon" style="display:none" onclick="showTextEditor('{!$Component.AdminLookupform.inputTxtArea}', selectedLabel, selectedTextAreaLength, '{!$Label.OK}', '{!$Label.Cancel}');" />
+           					<apex:image id="dateTimePopupImg"  styleClass="CMDB_DatePickerImage" style="display:none" width="19px" height="19px" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDateTimePicker();"/>
+                   			<apex:image id="datePopupImg"  styleClass="CMDB_DatePickerImage" style="display:none" width="19px" height="19px" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDatePicker();"/>
+           		   		</td>
+           		   		<td>
+           					<div id="picklistCombo"/>	
+           					<div id="booleanCombo"/>		
+           				</td>
+                        
+                        <td width="300">
+                            <button type="button" id="AddBtnId"  disabled="disabled" class="rf-btn" onClick="addToCriteriaGrid();">{!$Label.Add}</button> 
+							<button type="button" id="UpdateBtnId" class="rf-btn" style="display:none;" onClick="upadateCriteriaGrid();">{!$Label.Update}</button> 
+                            <button type="button" id="DelCriteriaBtnId"   disabled="disabled" class="rf-btn" onClick="deleteFromCriteriaGrid();">{!$Label.Delete}</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="7">
+                            <div id="criteriaGrid"/>        
+                        </td>
+                    </tr>
+                </table>
+            </td>
+           </tr>
+            <tr>
+           <td colspan="{!colSpan}" height="20" class="rf-gray-border">
+           </td>
+       </tr>
+       <tr>
+           <td colspan="{!colSpan}"  style=" background-color: #DEE0E0;height: 39px;padding-left:20px;"> 
+               <table width="100%">
+                    <tr>
+                        <td>
+                            <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__LookupFilter__c.fields.BMCServiceDesk__FilterLogic__c.label}" for="" style="padding-right:10px;"/>
+                        
+                            <apex:inputField id="filterLogicId" value="{!filterObj.BMCServiceDesk__FilterLogic__c}" styleClass="rf-filter-logic" />
+                        
+                            <apex:outputLabel value="Example: (1 AND 2) OR 3" for="" style="padding-left:10px;"/>
+                        </td>
+                        <td align="right" style="padding-right:20px;">
+                            <button id="SaveBtnId" type="button" class="rf-btn" onClick="showWaitbox();callSave();">{!$Label.Save}</button> 
+                            <button id="CancelBtnId" type="button" class="rf-btn" onClick="callCancel();">{!$Label.Cancel}</button>
+                        </td>
+                    </tr>
+               </table>
+           </td>
+       </tr>
+          </table>      
+        </td>
+       </tr>
+       
+      
+      </table>
+  </div> 
+  
+  
+  
+  
+  
+  
+  
+ </apex:form> 
+<apex:outputpanel id="fieldsPanelData">
+  <script>    
+    var ConsolefieldStr = JSON.parse('{!JSENCODE(ConsolefieldStr)}');
+    var fieldStr = JSON.parse('{!JSENCODE(fieldStr)}');    
+    var CriteriaGridData=JSON.parse('{!JSENCODE(LookupCriteriaGridData)}');      
+    var isFilterExists={!isDuplicateFilter};    
+    var cmdbFilterType = '{!JSENCODE(cmdbFilterType)}';
+    lookupFilterConsole = '{!JSENCODE(lookupFilterConsole)}';
+    lookupFilterConsoleLookupField = '{!JSENCODE(lookupFilterConsoleLookupField)}';
+    consoleLookupFieldsStore = JSON.parse('{!JSENCODE(SelectedLKFields)}');
+  </script>
+</apex:outputpanel>
+<apex:outputPanel id="fieldsPanel">
+ 
+<script>
+  var FilterGridData=JSON.parse('{!JSENCODE(LookupFilterGridData)}');
+  var SelectedLKFields = JSON.parse('{!JSENCODE(SelectedLKFields)}');
+  fieldStr = JSON.parse('{!JSENCODE(fieldStr)}');    
+    var CMDBClassTypeCombo = '{!JSENCODE(CMDBClassType)}';
+    var CMDBClassNameCombo = '{!JSENCODE(ClassName)}';
+    var CMDBClassId = '{!JSENCODE(CMDBClassId)}';
+    isFilterExists={!isDuplicateFilter};    
+  ConsolefieldStr = JSON.parse('{!JSENCODE(ConsolefieldStr)}');
+  var CriteriaGridData=JSON.parse('{!JSENCODE(LookupCriteriaGridData)}');
+  var showCISettings={!showCISSSettings};
+    var filterForField = '{!JSENCODE(filterForField)}';
+  var consoleFilterId='{!JSENCODE(consoleFilterId)}';
+  var message = '{!JSENCODE(MsgStr)}';
+  var ConsolePicklistDOM = document.getElementById('{!$Component.AdminLookupform.consoleId}');
+  var SScheckboxId = document.getElementById('{!$Component.AdminLookupform.SScheckbox}');
+  var CIClientFilterId,CIAccountFilterId, CIAllFilterId;
+  var lookupFilterConsole = '{!JSENCODE(lookupFilterConsole)}';
+  var lookupFilterConsoleLookupField = '{!JSENCODE(lookupFilterConsoleLookupField)}';
+    
+  if(showCISettings){
+  		CIClientFilterId = document.getElementById('{!$Component.AdminLookupform.CIClientFilterId}');
+  		CIAccountFilterId = document.getElementById('{!$Component.AdminLookupform.CIAccountFilterId}');
+  		CIAllFilterId = document.getElementById('{!$Component.AdminLookupform.CIAllFilterId}');
+  }
+  var isCorruptDataFound = {!isCorruptDataFound};
+  if(isCorruptDataFound){
+  	 updateCorruptData();
+  }
+ </script>
+ </apex:outputPanel>
+
+<apex:outputpanel id="picklistPanel">
+<script>
+  var picklistStr = '{!picklistValuesStr}';
+</script>
+ </apex:outputpanel>
+ 
+  <apex:outputpanel id="refreshFieldsData">
+      <apex:outputPanel id="fieldsDataPanel">  
+      <script>            
+        var fieldsStoreData = {!fieldStore};
+      </script>
+      </apex:outputPanel>  
+    </apex:outputpanel>
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+
+<script>
+Ext.ns("LookupFilter");
+     LookupFilter.Labels = {
+        labelField : 'Field',
+        labelValue : 'Value',
+		DeleteConfirmMessage : '{!JSENCODE($Label.DeleteConfirmMessage)}',
+		Delete : '{!JSENCODE($Label.Delete)}',
+		Console: '{!JSENCODE($ObjectType.LookupFilter__c.fields.Console__c.label)}',
+		FilterFor: '{!JSENCODE($ObjectType.LookupFilter__c.fields.FilterFor__c.label)}',
+		FilterType: '{!JSENCODE($ObjectType.LookupFilter__c.fields.FilterType__c.label)}',
+		Inactive: '{!JSENCODE($Label.Inactive)}',
+		Criterion : "{!JSENCODE($Label.Criterion)}",
+		FieldName:'{!JSENCODE($Label.FieldName)}',
+		Operator : "{!JSENCODE($Label.Operator)}",
+		operandValue : "{!JSENCODE($Label.Value)}",
+		SelectFieldErrMsg:'{!JSENCODE($Label.ErrorMsgTemplateS)}',
+        SelectCompOpMessage:'{!JSENCODE($Label.SelectCompOpMessage)}',
+        EnterValMsg:'{!JSENCODE($Label.EnterValueMsg)}',
+        FilterLogicValidation:'{!JSENCODE($Label.FilterLogicValidation)}',
+        FilterExists:'{!JSENCODE($Label.FilterExists)}',
+        PleaseWait:'{!JSENCODE($Label.PleaseWait)}',
+        cancelConfirm : '{!JSENCODE($Label.AdminLookupFilterCancel)}',
+        FilterLogicLimitExceeded: '{!JSENCODE($Label.ProjectedServiceOutageTextAreaOverflow)}',
+        CompatibleErrorMsg: '{!JSENCODE($Label.CompatibleErrorMsg)}',
+        Cancel: '{!JSENCODE($Label.Cancel)}',
+		EditFilter:'{!JSENCODE($Label.EditFilter)}',
+		NewFilter:'{!JSENCODE($Label.NewFilter)}',		
+		FilterLogicAddCriteriaValidation: '{!JSENCODE($Label.FilterLogicAddCriteriaValidation)}',
+        FilterLogicDeleteCriteriaValidation: '{!JSENCODE($Label.FilterLogicDeleteCriteriaValidation)}',
+        FilterLogicModifyCriteriaValidation: '{!JSENCODE($Label.FilterLogicModifyCriteriaValidation)}',
+        labelTrue: '{!JSENCODE($Label.True)}',
+        labelFalse: '{!JSENCODE($Label.False)}',
+		lblInvalidCondition: '{!JSENCODE($Label.invalidCondition)}',
+        lblErrorMsgEncryptedFldInCondition: '{!JSENCODE($Label.errorMsgEncryptedFldInCondition)}',
+        lblQVEncryptionError: '{!JSENCODE($Label.QVEncryptionError)}',
+        lblInstance : '{!JSENCODE($Label.Instance)}',
+        CMDBAttributeTitle:'{!JSENCODE($Label.CMDBAttributeTitle)}',
+        Fields:'{!JSENCODE($Label.Fields)}',
+        Incident:'{!JSENCODE($Label.incident)}',
+        Task:'{!JSENCODE($Label.task)}',
+        Problem:'{!JSENCODE($Label.problem)}',
+        ChangeRequest:'{!JSENCODE($Label.Change_Request)}',
+        Release:'{!JSENCODE($Label.release)}',
+        None1:'{!JSENCODE($Label.None1)}',
+        ConsolePicklistLabel:'{!JSENCODE($ObjectType.LookupFilter__c.fields.Console__c.label)}',
+        ConsoleFilterForLabel:'{!($ObjectType.LookupFilter__c.fields.FilterFor__c.label)}'
+		}
+   var compStore = new Object();
+   var labelField = '{!JSENCODE(labelField)}';
+   var isSwitchToSSNewUI = '{!isSwitchToSSNewUI}';
+   var labelOperator = '{!JSENCODE(labelOperator)}';
+   var picklistDOM = document.getElementById('{!$Component.AdminLookupform.lookupForId}');
+   var extJsResource ='{!$Resource.ExtJS4_1_3}';
+   var EF = 'ф';
+   var DZHE ='џ'; //Cyrillic character
+   var nonPrint = '¬';
+   var PE = 'П';
+   var SDEDateFormat = '{!userDateFormat}';
+   var classStoreData = JSON.parse('{!JSENCODE(classList)}');
+    var isCIManagementEnabled = {!isCIManagementEnabled};
+    var isAssetManagementEnabled = {!isAssetManagementEnabled};
+    var fieldsStoreData = {!fieldStore};
+    var CI = '{!JSENCODE($Label.CMDB_TAB_CIs)}';
+    var Asset = '{!JSENCODE($Label.CMDB_TAB_Assets)}';
+    var CIandAsset = '{!JSENCODE($Label.CIAndAsset)}';
+    var namespacePrefix = 'BMCServiceDesk__';
+    var RuleBasedAsset = '{!JSENCODE($Label.RulebasedAsset)}';
+    var labelDeleteRow = '{!JSENCODE($Label.DeleteRow)}';
+    var BasedonCIClass = '{!JSENCODE($Label.BasedonCIClass)}';
+    var CMDBAssetRule = '{!JSENCODE($Label.CMDBAssetRule)}';
+    var NoClassRulesDefined = '{!JSENCODE($Label.NoCriteriaDefined)}';
+    var SDEFStylesResource = '{!$Resource.SDEFStyles}';
+    var cmdbClassName = '{!JSENCODE($Label.Cmdbclassname)}';
+    var cmdbClassType = '{!JSENCODE($Label.Cmdbclasstype)}';
+    var isFromCMDB = {!isFromCMDB};    
+    var fireChangeEvent = true;
+    var cmdbFilterTypeStore = {!cmdbFilterTypeStore};
+	var cmdbFilterTypeDefaultValue = '{!JSENCODE(cmdbFilterTypeDefaultValue)}';
+    var filterTypeFieldLabel = '{!JSENCODE($ObjectType.LookupFilter__c.fields.FilterType__c.label)}';
+   
+   function getInputTxtEle(){
+   	return document.getElementById('{!$Component.AdminLookupform.inputTxt}');
+   }
+   function getInputTextAreaEle(){
+   	return document.getElementById('{!$Component.AdminLookupform.inputTxtArea}');
+   } 
+   function getDateTimeInputEle(){
+   	return document.getElementById('{!$Component.AdminLookupform.datetimeinput}');	
+   }
+   function getDateTimePickerImg(){
+   	return document.getElementById('{!$Component.AdminLookupform.dateTimePopupImg}');
+   }
+   function getDateInputEle(){
+   	return document.getElementById('{!$Component.AdminLookupform.inputDate}');	
+   }
+   function getDatePickerImg(){
+   	return document.getElementById('{!$Component.AdminLookupform.datePopupImg}');
+   }
+   function getLookupEle(){
+   	return document.getElementById('lookUp');
+   }
+   function getLookUpPanelEle(){
+   	return document.getElementById('{!$Component.lookUpPanel}');
+   }
+   function getCriteriaGridStrEle(){
+   	return document.getElementById('{!$Component.AdminLookupform.CriteriaGridStrId}');
+   }
+   
+   function showDateTimePicker(){
+    var dateTimeInputId = document.getElementById('{!$Component.AdminLookupform.datetimeinput}');
+	_datePicker.Show(dateTimeInputId);
+   }
+   function showDatePicker(){
+	var dateInputId = document.getElementById('{!$Component.AdminLookupform.inputDate}');
+	_datePicker.Show(dateInputId);
+   }  
+   function getFilterLogicObj(){
+        return document.getElementById('{!$Component.AdminLookupform.filterLogicId}');  
+   } 
+  
+   function getEditFilterObj(){
+      return document.getElementById('{!$Component.AdminLookupform.editTbarId}');
+   }
+  var wikiUrl = '{!wikiUrl}';
+  parent.addHelpOnPage(document.getElementById('helpDiv'),'lookup_filters_consoles.htm',wikiUrl );   
+</script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminLookupFilterPage.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"></script>
+</apex:page>

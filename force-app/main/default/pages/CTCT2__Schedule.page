@@ -1,0 +1,289 @@
+<apex:page controller="CTCT2.Schedule_Controller" action="{!initPage}" sidebar="false">
+
+	<style>
+		.message {margin-bottom: 10px;} /* Add some space after the pageMessages component. */
+		td.somespace {padding-bottom: 10px;}
+	</style>
+
+	<apex:form >
+		<apex:outputPanel id="thePage">
+
+			<apex:sectionHeader title="Constant Contact for Salesforce"	subtitle="Sync Options"/>
+
+			<apex:pageMessages id="errors" />
+
+			<apex:outputPanel layout="none" rendered="{!canAccessSettings}">
+	
+				<div
+					style="text-align: center; padding-bottom: 10px; background-color: white;">
+				<!-- Same buttons appear at the bottom of this page. --> 
+					<apex:commandButton value="Edit" action="{!DoEditMode}" rendered="{!canEditSettings && IsView}" immediate="true" />
+					<apex:commandButton value="Edit" action="{!DoEditMode}" rendered="{!NOT(canEditSettings)}" onclick="alert('{!canEditMessage}'); return false;"/>
+					<apex:actionRegion >
+						<apex:commandButton id="theButton" value="Sync Now"
+							rerender="errors,blnManualSyncError" rendered="{!IsView}" immediate="false"
+							rerender="errors,blnManualSyncError" action="{!DoManualSync}"
+							status="waitStatus"
+							oncomplete="if('false'==document.getElementById('{!$Component.blnManualSyncError}').value) alert('The sync process has started. Check the Sync History tab to monitor its progress.');" />
+						<apex:actionstatus id="waitStatus" startText="  Please Wait..." />
+						<apex:inputHidden value="{!blnManualSyncError}"	id="blnManualSyncError" />
+					</apex:actionRegion>
+					<apex:commandButton value="Save" action="{!Save}"
+					rendered="{!IsEdit}" immediate="false" /> <apex:commandButton value="Cancel" action="{!Cancel}" rendered="{!IsEdit}"
+					immediate="true" /></div>
+	
+	
+				<!-- Start of Sync Options -->
+				<apex:pageBlock title="Sync Options" id="panelSyncSchedule"
+					helpTitle="Help for this page"
+					helpUrl="{!helpURL.helpurlSyncSchedule}">
+					<table>
+						<tr>
+							<td style="width: 150px; text-align: right;"><c:FieldLabel label="Schedule Type:"
+								helptext="Schedule Type allows you to select how often the data sync should occur: Manual, Daily, Weekly or Monthly"
+								location="right" /></td>
+							<td><apex:actionRegion >
+								<apex:selectRadio value="{!settings.CTCT2__Sync_Frequency__c}"
+									disabled="{!IsView}">
+									<apex:selectOptions value="{!SelectOptionsForSyncFrequency}" />
+									<apex:actionSupport event="onclick" rerender="panelSyncSchedule" />
+								</apex:selectRadio>
+							</apex:actionRegion></td>
+						</tr>
+					</table>
+	
+	
+					<!-- Schedule Type: No Sync -->
+					<apex:pageBlockSection title="Schedule Type: No Sync"
+						showHeader="false" id="editScheduleNoSync"
+						rendered="{!ScheduleType=='No Sync'}" collapsible="false"
+						columns="1">
+						<div style="padding-left: 160px; width: 270px;">
+						No sync will be performed.
+						</div>
+					</apex:pageBlockSection>
+					<!-- Schedule Type: No Sync -->
+	
+	
+					<!-- Schedule Type: Manual -->
+					<apex:pageBlockSection title="Schedule Type: Manual"
+						showHeader="false" id="editScheduleManual"
+						rendered="{!ScheduleType=='Manual'}" collapsible="false"
+						columns="1">
+						<div style="padding-left: 160px; width: 270px;">You will need
+						to click the Sync Now button at the top of this page or on the Sync
+						History page to manually run the data sync each time.</div>
+					</apex:pageBlockSection>
+					<!-- Schedule Type: Manual -->
+	
+	
+					<!-- Schedule Type: Daily -->
+					<apex:pageBlockSection title="Schedule Type: Daily"
+						showHeader="false" id="editScheduleDaily"
+						rendered="{!ScheduleType=='Daily'}" collapsible="false" columns="1">
+						<apex:outputPanel >
+							<table style="width: 575px; padding-left: 45px;">
+								<tr style="vertical-align: top;">
+									<td style="text-align: right; padding-top: 5px;">
+									</td>
+									<td style="padding-left:95px;">
+										<apex:selectRadio value="{!settings.CTCT2__Daily_Frequency__c}" layout="pageDirection"
+										disabled="{!IsView}" >
+										<apex:selectOptions value="{!SelectOptionsForDailyFrequency}" />
+									</apex:selectRadio></td>
+								</tr>
+							</table>
+						</apex:outputPanel>
+					</apex:pageBlockSection>
+					<!-- Schedule Type: Daily -->
+	
+	
+					<!-- Schedule Type: Weekly -->
+					<apex:pageBlockSection title="Schedule Type: Weekly"
+						showHeader="false" id="editScheduleWeekly"
+						rendered="{!ScheduleType=='Weekly'}" collapsible="false"
+						columns="1">
+						<apex:outputPanel rendered="{!IsView}">
+							<table style="padding-left: 150px; width: 375px;">
+								<tr>
+									<td class="somespace"><apex:outputField value="{!settings.CTCT2__Monday__c}" style="padding:0px;margin:0px;" />&nbsp;Monday</td>
+									<td><apex:outputField value="{!settings.CTCT2__Saturday__c}"
+										style="padding:0px;margin:0px;" />&nbsp;Saturday</td>
+								</tr>
+								<tr style="margin-bottom: 10px;">
+									<td class="somespace"><apex:outputField value="{!settings.CTCT2__Tuesday__c}" style="padding:0px;margin:0px;" />&nbsp;Tuesday</td>
+									<td><apex:outputField value="{!settings.CTCT2__Sunday__c}"
+										style="padding:0px;margin:0px;" />&nbsp;Sunday</td>
+								</tr>
+								<tr style="margin-bottom: 10px;">
+									<td class="somespace"><apex:outputField value="{!settings.CTCT2__Wednesday__c}"
+										style="padding:0px;margin:0px;" />&nbsp;Wednesday</td>
+								</tr>
+								<tr style="margin-bottom: 10px;">
+									<td class="somespace"><apex:outputField value="{!settings.CTCT2__Thursday__c}" style="padding:0px;margin:0px;" />&nbsp;Thursday</td>
+								</tr>
+								<tr style="margin-bottom: 10px;">
+									<td class="somespace"><apex:outputField value="{!settings.CTCT2__Friday__c}" style="padding:0px;margin:0px;" />&nbsp;Friday</td>
+								</tr>
+							</table>
+						</apex:outputPanel>
+	
+						<apex:outputPanel rendered="{!NOT(IsView)}">
+							<table style="padding-left: 150px; width: 375px;">
+								<tr>
+									<td class="somespace"><apex:inputField value="{!settings.CTCT2__Monday__c}" style="padding:0px;margin:0px;" />&nbsp;Monday</td>
+									<td><apex:inputField value="{!settings.CTCT2__Saturday__c}"
+										style="padding:0px;margin:0px;" />&nbsp;Saturday</td>
+								</tr>
+								<tr style="margin-bottom: 10px;">
+									<td class="somespace"><apex:inputField value="{!settings.CTCT2__Tuesday__c}" style="padding:0px;margin:0px;" />&nbsp;Tuesday</td>
+									<td><apex:inputField value="{!settings.CTCT2__Sunday__c}"
+										style="padding:0px;margin:0px;" />&nbsp;Sunday</td>
+								</tr>
+								<tr style="margin-bottom: 10px;">
+									<td class="somespace"><apex:inputField value="{!settings.CTCT2__Wednesday__c}"
+										style="padding:0px;margin:0px;" />&nbsp;Wednesday</td>
+								</tr>
+								<tr style="margin-bottom: 10px;">
+									<td class="somespace"><apex:inputField value="{!settings.CTCT2__Thursday__c}" style="padding:0px;margin:0px;" />&nbsp;Thursday</td>
+								</tr>
+								<tr style="margin-bottom: 10px;">
+									<td class="somespace"><apex:inputField value="{!settings.CTCT2__Friday__c}" style="padding:0px;margin:0px;" />&nbsp;Friday</td>
+								</tr>
+							</table>
+						</apex:outputPanel>
+					</apex:pageBlockSection>
+					<!-- Schedule Type: Weekly -->
+	
+	
+					<!-- Schedule Type: Monthly -->
+					<apex:outputPanel id="editScheduleMonthly"
+						rendered="{!ScheduleType=='Monthly'}">
+						<apex:outputPanel rendered="{!IsView}">
+							<div
+								style="padding-left: 160px; padding-bottom: 10px; padding-top: 10px;">
+							<input type="radio" name="month_frequencyView"
+								value="Specific day" disabled="{!IsView}" /> <apex:outputText value="Day " /> &nbsp; <apex:outputField value="{!settings.CTCT2__Day_Of_The_Month__c}" /> of every month</div>
+							<div style="padding-left: 160px; padding-bottom: 10px;"><input
+								type="radio" name="month_frequencyView" value="Specific weekday"
+								disabled="{!IsView}" /> <apex:outputText value="The " /> &nbsp;
+							<apex:outputField value="{!settings.CTCT2__Monthly_On__c}" /> &nbsp; <apex:outputField value="{!settings.CTCT2__Of_Every_Month__c}" /> of every month <br />
+							&nbsp;<br />
+							</div>
+							<script type="text/javascript">
+						if ("{!JSENCODE(settings.Monthly_Frequency__c)}"=='Specific day') {
+							document.getElementsByName('month_frequencyView')[0].checked = true;
+						}
+						else {
+							document.getElementsByName('month_frequencyView')[1].checked = true;
+						}
+						</script>
+						</apex:outputPanel>
+						<apex:outputPanel rendered="{!NOT(IsView)}">
+							<div
+								style="padding-left: 160px; padding-bottom: 10px; padding-top: 10px;">
+							<input type="radio" name="month_frequency" value="Specific day"
+								onChange="if (this.checked) document.getElementById('{!$Component.monthlyfrequency}').value=this.value;" />
+							<apex:outputText value="Day " /> &nbsp; <apex:inputField value="{!settings.CTCT2__Day_Of_The_Month__c}" /> of every month</div>
+							<div style="padding-left: 160px; padding-bottom: 10px;"><input
+								type="radio" name="month_frequency" value="Specific weekday"
+								onChange="if (this.checked) document.getElementById('{!$Component.monthlyfrequency}').value=this.value;" />
+							<apex:outputText value="The " /> &nbsp; <apex:inputField value="{!settings.CTCT2__Monthly_On__c}" /> &nbsp; <apex:inputField value="{!settings.CTCT2__Of_Every_Month__c}" /> of every month <br />
+							&nbsp;<br />
+							</div>
+							<apex:inputField id="monthlyfrequency"
+								value="{!settings.CTCT2__Monthly_Frequency__c}"
+								style="visibility:hidden;display:none;" />
+							<script type="text/javascript">
+						if ("{!JSENCODE(settings.Monthly_Frequency__c)}"=='Specific day') {
+							document.getElementsByName('month_frequency')[0].checked = true;
+						}
+						else {
+							document.getElementById('{!$Component.monthlyfrequency}').value= 'Specific weekday';
+							document.getElementsByName('month_frequency')[1].checked = true;
+						}
+						</script>
+						</apex:outputPanel>
+					</apex:outputPanel>
+					<!-- Schedule Type: Monthly -->
+	
+	
+					<!-- Preferred Start Time - rendered only for Weekly or Monthly -->
+					<apex:outputPanel rendered="{!OR(ScheduleType=='Weekly',ScheduleType=='Monthly')}">
+						<table>
+							<tr>
+								<td style="width: 150px; text-align: right;"><c:FieldLabel label="Preferred Start Time:" helptext="Pref Start Time"
+									location="right" /></td>
+								<td><apex:outputField value="{!settings.CTCT2__Preferred_Start_Time__c}" rendered="{!IsView}" />
+								<apex:inputField value="{!settings.CTCT2__Preferred_Start_Time__c}"
+									required="true" rendered="{!NOT(IsView)}" /></td>
+							</tr>
+						</table>
+					</apex:outputPanel>
+					<!-- Preferred Start Time - rendered only for Weekly or Monthly -->
+	
+	
+					<!--  Opt Out checkboxes -->
+					<apex:outputPanel rendered="{!AND(IsView,settings.CTCT2__Sync_Frequency__c!='No Sync')}">
+						<br/>
+						<table>
+							<tr style="vertical-align:top;">
+								<td style="width: 150px; text-align: right;">
+									<c:FieldLabel label="Email Opt Outs:" helptext="Sync your email opt outs between Salesforce and Constant Contact" location="right" /></td>
+								<td>
+									<apex:outputField value="{!settings.CTCT2__Sync_Opt_Out_From_CTCT__c}" /> 
+										<c:FieldLabel label="Sync Opt Outs from Constant Contact to Salesforce"
+										helptext="" location="right" labelstyle="color:black;" />
+									<div style="height:8px;"></div> 
+									<apex:outputField value="{!settings.CTCT2__Sync_Opt_Out_To_CTCT__c}" /> 
+										<c:FieldLabel label="Sync Opt Outs from Salesforce to Constant Contact"
+										helptext="" location="right" labelstyle="color:black;" />
+									</td>
+							</tr>
+						</table>
+					</apex:outputPanel> 
+					<apex:outputPanel id="settings" rendered="{!AND(NOT(IsView),settings.CTCT2__Sync_Frequency__c!='No Sync')}">
+						<br/>
+						<table>
+							<tr style="vertical-align:top;">
+								<td style="width: 150px; text-align: right;">
+									<c:FieldLabel label="Email Opt Outs:" helptext="Sync your email opt outs between Salesforce and Constant Contact" location="right" /></td>
+								<td>
+									<apex:inputCheckbox value="{!settings.CTCT2__Sync_Opt_Out_From_CTCT__c}"
+										id="fldOptOutFromCTCT"  /> 
+										<c:FieldLabel label="Sync Opt Outs from Constant Contact to Salesforce"
+										helptext="" location="right" labelstyle="color:black;" />
+									<div style="height:8px;"></div> 
+									<apex:inputCheckbox value="{!settings.CTCT2__Sync_Opt_Out_To_CTCT__c}"
+										id="fldOptOutToCTCT" /> 
+										<c:FieldLabel label="Sync Opt Outs from Salesforce to Constant Contact"
+										helptext="" location="right" labelstyle="color:black;" />
+									</td>
+							</tr>
+						</table>
+					</apex:outputPanel>
+					<!--  Opt Out checkboxes -->
+	
+				</apex:pageBlock>
+				<!-- End of Sync Schedule -->
+	
+	
+	
+				<div
+					style="text-align: center; padding-bottom: 10px; background-color: white;">
+				<!-- Same buttons appear at the top of this page. --> <apex:commandButton value="Edit" action="{!DoEditMode}" rendered="{!IsView}"
+					immediate="true" /> <apex:actionRegion >
+					<apex:commandButton id="theButton2" value="Sync Now"
+						rerender="errors,blnManualSyncError2" rendered="{!IsView}" immediate="false"
+						rerender="errors,blnManualSyncError2" action="{!DoManualSync}"
+						status="waitStatus"
+						oncomplete="if('false'==document.getElementById('{!$Component.blnManualSyncError2}').value) alert('The sync process has started. Check the Sync History tab to monitor its progress.');" />
+					<apex:inputHidden value="{!blnManualSyncError}"
+						id="blnManualSyncError2" />
+				</apex:actionRegion> <apex:commandButton value="Save" action="{!Save}"
+					rendered="{!IsEdit}" immediate="false" /> <apex:commandButton value="Cancel" action="{!Cancel}" rendered="{!IsEdit}"
+					immediate="true" /></div>
+			</apex:outputPanel>
+		</apex:outputPanel>
+	</apex:form>
+</apex:page>

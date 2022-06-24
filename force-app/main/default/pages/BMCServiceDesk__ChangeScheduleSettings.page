@@ -1,0 +1,58 @@
+<apex:page ShowHeader="false" controller="BMCServiceDesk.ChangeScheduleController" standardStylesheets="false">
+    
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/>
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ChangeScheduleSettings.css" />
+    <div class="dispColorCodes" id ="dispColor"></div>
+    <script>
+        var imgsrc ='{!URLFOR($Resource.SDEFStyles, 'SDEFicons/Change_Scheduler-icon.png')}';
+        var currentPage = 'ChangeScheduleSettings';
+		
+        function getColorCodeData()
+        {
+            codes = {!ChangeColorCodeArray};
+            return codes;
+        }
+        var ChangeColorCodeIcon = "{!$Resource.SDEFStyles}/SDEFicons/Change_Scheduler-icon.png"; 
+		
+		
+		function createRemoteSite()
+        {
+          
+          var binding = new XMLHttpRequest();
+            var request =
+                '<?xml version="1.0" encoding="utf-8"?>' +
+                '<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'+
+                    '<env:Header>' +
+                        '<urn:SessionHeader xmlns:urn="http://soap.sforce.com/2006/04/metadata">' +
+                            '<urn:sessionId>{!$Api.Session_ID}</urn:sessionId>' +
+                        '</urn:SessionHeader>' +
+                    '</env:Header>' +
+                      '<env:Body>' +
+                        '<createMetadata xmlns="http://soap.sforce.com/2006/04/metadata">' +
+                            '<metadata xsi:type="RemoteSiteSetting">' +
+                                '<fullName>ChangeTypeColor</fullName>' +
+                                '<description>Metadata API Remote Site Setting for ChangeColor</description>' +
+                                '<disableProtocolSecurity>false</disableProtocolSecurity>' +
+                                '<isActive>true</isActive>' +
+                                '<url>https://{!Host}</url>' +
+                            '</metadata>' +
+                        '</createMetadata>' +
+                    '</env:Body>' +
+                '</env:Envelope>';
+            binding.open('POST', 'https://{!Host}/services/Soap/m/31.0/00DB00000003DRn');
+            binding.setRequestHeader('SOAPAction','""');
+            binding.setRequestHeader('Content-Type', 'text/xml');
+            var tes = binding.send(request);
+        }
+        createRemoteSite();
+		
+    </script>
+
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ChangeScheduleSettings.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ChangeSchedule.js"></script>
+<script>
+	window.onload = resizeWindow();
+</script>
+<script type="text/javascript" src="{!$Resource.jscolor}/jscolor.js"></script>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+</apex:page>

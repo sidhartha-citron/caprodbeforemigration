@@ -1,0 +1,384 @@
+<apex:page showHeader="false" Controller="BMCServiceDesk.BlackOutController"  standardStylesheets="false">
+
+ 
+    <c:CommonIncludes />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/Blackout.js"/>
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomViews.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/blackout.css" />
+ <apex:outputPanel id="title">
+    <script>
+        
+        window.onload = function(){
+			makeServStatusReq();
+			makeEndDateReq();
+        }
+        
+     var isFlattenedCmdb = {!isFlattenedCmdb};
+     Ext.ns("BlackoutPage");
+                BlackoutPage.Labels = {
+                    Delete: '{!JSENCODE($Label.Delete)}',
+                    DeleteConfirmMessage: '{!JSENCODE($Label.DeleteConfirmMessage)}',                    
+                    New: '{!JSENCODE($Label.New)}',                    
+                    Save: '{!JSENCODE($Label.Save)}',                    
+                    Copy: '{!JSENCODE($Label.Copy)}',                    
+                    Delete: '{!JSENCODE($Label.Delete)}',                    
+                    Reset: '{!JSENCODE($Label.Reset)}',                    
+                    PreviousRecord: '{!JSENCODE($Label.PreviousRecord)}',                    
+                    NextRecord: '{!JSENCODE($Label.NextRecord)}',   
+                    Actions: '{!JSENCODE($Label.Actions)}',
+                    AddNote: '{!JSENCODE($Label.Message1)}',
+                    NewAction: '{!JSENCODE($Label.New_Action)}',
+                    ViewActionHistory: '{!JSENCODE($Label.ViewActionHistory)}',
+                    Blackoutheader: '{!JSENCODE($ObjectType.Projected_Service_Outage__c.label)}',
+                    ToolTipInactive: '{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Inactive__c.label)}', 
+                    Inactive: '{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Inactive__c.label)}',  
+                    savedMsg: '{!JSENCODE($Label.SavedSuccessfully)}' ,
+                    TextAreaOverflow: '{!JSENCODE($Label.ProjectedServiceOutageTextAreaOverflow)}',
+                    TextBoxOverflow: '{!JSENCODE($Label.ProjectedServiceOutageTextBoxOverflow)}'
+     }
+     
+     Ext.ns("BlackoutPageComp");
+          BlackoutPageComp.ComponentVars = {
+            ProjectedServiceOutageDescription: '{!$Component.BlackOutForm.ProjectedServiceOutage_Description__c}',
+            ProjectedServiceOutageName: '{!$Component.BlackOutForm.ProjectedServiceOutage_Name}',
+            ProjectedServiceOutageRootCause: '{!$Component.BlackOutForm.ProjectedServiceOutage_Root_Cause__c}'
+            }
+            
+        function getSDFStylesResPath(){
+            var resPath = '{!$Resource.SDEFStyles}';
+            return resPath;
+        }
+    
+        
+        function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+        }     
+        
+        function getblackoutId(){            
+            return '{!JSENCODE(blackOutBean.blackout.Id)}';            
+        }     
+        
+        function getBlackoutInactive(){
+            return "{!JSENCODE($CurrentPage.parameters.isinactive)}";
+        }
+        
+        function getId(){
+            return '{!JSENCODE($CurrentPage.parameters.id)}';
+        }     
+        
+        function getIsDirect(){        
+            return '{!JSENCODE($CurrentPage.parameters.isDirect)}';
+        }
+        
+        function getName(){                                      
+            return "{!JSENCODE(blackOutBean.blackoutName)}"; 
+        }
+        
+        function updateInactive(){           
+            Ext.getCmp('idInactive').setValue('{!blackOutBean.blackout.Inactive__c}');   
+        }
+        
+        function getNameLabel(){                                      
+            return '{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.name.label)}'; 
+        }
+        
+        function getDescriptionLabel(){                                      
+            return '{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Description__c.label)}'; 
+        }
+
+        function getRootCauseLabel(){                                     
+            return '{!JSENCODE($ObjectType.Projected_Service_Outage__c.fields.Root_Cause__c.label)}'; 
+        }
+         
+        function getPermissions(){
+        	if('{!$ObjectType.Projected_Service_Outage__c.deletable}' == 'true')
+        		return false;
+        	else
+        		return true;
+        }
+         
+        function getIsBlackoutCreatable(){
+            var isBlackoutCreatable = {!blackOutBean.isBlackoutCreatable};
+            return isBlackoutCreatable;
+        }
+        function getIsBlackoutDeletable(){
+            var isBlackoutDeletable = {!blackOutBean.isBlackoutDeletable};
+            return isBlackoutDeletable;
+        }
+        function completeDelete(){
+            if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}'){
+                 showError();
+             }else{
+                 closeWindow();
+             }
+        }
+     	
+		function makeServStatusReq(){
+			var affSerComp = document.getElementById('{!$Component.BlackOutForm.BMC_BaseElement__c_id_name__c}');
+			if(affSerComp==null || typeof(affSerComp)=='undefined'){
+				affSerComp = document.getElementById('{!$Component.BlackOutForm.BMC_BusinessService__c_id_instance_name__c}');
+			}
+			if(affSerComp!=null && typeof(affSerComp) !='undefined'){
+				var blkOutBox = document.getElementById('{!$Component.BlackOutForm.cid5}');
+				if(blkOutBox!=null && typeof(blkOutBox) !='undefined'){
+					var servStatReqdComp = document.getElementById('statusReqd');
+					if(servStatReqdComp!=null && typeof(servStatReqdComp) !='undefined'){
+						if(affSerComp.value!=null && affSerComp.value!=''){
+							if(blkOutBox.checked==false){
+								servStatReqdComp.style.display = '';
+							}
+							else{
+								servStatReqdComp.style.display = 'none';
+							}
+						}
+						else{
+							servStatReqdComp.style.display = 'none';
+						}
+					}
+				}
+			}
+		}
+		
+		function makeEndDateReq(){
+			var blkOutBox = document.getElementById('{!$Component.BlackOutForm.cid5}');
+			if(blkOutBox!=null && typeof(blkOutBox) !='undefined'){
+				var endDateComp = document.getElementById('endDateReqd');
+				if(endDateComp!=null && typeof(endDateComp) !='undefined'){
+					if(blkOutBox.checked==true){
+						endDateComp.style.display = '';
+					}
+					else{
+			var servStatComp = document.getElementById('{!$Component.BlackOutForm.servStatus}');
+			if(servStatComp!=null && typeof(servStatComp) !='undefined'){
+				var opt = servStatComp.options[servStatComp.selectedIndex].value;
+					if(opt!='Maintenance'){
+						endDateComp.style.display = 'none';
+					}
+					else{
+						endDateComp.style.display = '';
+				}
+				}
+					}
+				}
+     		}
+		}
+     	
+    </script>    
+    </apex:outputPanel>
+    
+     <apex:form id="BlackOutForm">
+     <apex:outputPanel id="errorId">
+        <script>
+           errormsg = '{!JSENCODE(blackOutBean.messageString)}';  
+		   var CnfrmSaveChkBxId = '{!JSEncode($Component.CnfrmSaveChkBxId)}'; 
+        </script>
+    </apex:outputPanel>
+    
+    <apex:outputPanel id="afterSaveId">
+        <script>
+            var wid = '{!JSENCODE($CurrentPage.parameters.wid)}'
+            var id = "{!blackOutBean.blackout.id}";
+           function handleSave(){
+                window.parent.handleSave(wid, id);
+            }
+        </script>
+    </apex:outputPanel>
+    <c:ValidationComponent errorMsgList="{!blackOutBean.messageString}" urlParams="{!blackOutBean.csUrlParamsString}"
+        isToAskConfirmation="{!blackOutBean.isToAskConfirmation}" id="validationComponent"></c:ValidationComponent>  
+
+    <apex:actionFunction action="{!saveBlackOut}" name="save" reRender="validationComponent,blackoutdata,title,afterSaveId" oncomplete="waitMsg.hide();Ext.getCmp('saveId').setDisabled(false);handleSave();showError();buttonValidator();updateList();updateTitle();changeMenuHandler();makeServStatusReq();makeEndDateReq();"> 
+              <apex:param assignTo="{!blackOutBean.chkBoxValue}" name="chkBoxValue" value=""/>
+    </apex:actionFunction>                            
+    <apex:actionFunction action="{!resetBlackOut}" name="reset" reRender="title,blackoutdata" oncomplete="updateInactive();"/>
+    <apex:actionFunction action="{!deleteBlackOut}" name="deleteBlackOut" reRender="errorId,validationComponent" oncomplete="completeDelete();"/>
+    <apex:actionFunction action="{!nextBtnHandler}" name="nextBlackoutBtnHandler" reRender="blackoutdata,afterSaveId,title" oncomplete="updateInactive();updateTitle();handleSave();">
+                                <apex:param assignTo="{!blackOutBean.tempString}" name="idSetString" value=""/>  
+    </apex:actionFunction>
+    <apex:actionFunction action="{!previousBtnHandler}" name="previousBlackoutBtnHandler" reRender="blackoutdata,afterSaveId,title" oncomplete="updateInactive();updateTitle();handleSave();">
+                                <apex:param assignTo="{!blackOutBean.tempString}" name="idSetString" value=""/>
+    </apex:actionFunction> 
+    <apex:actionFunction action="{!setSelectedBaseElement}" name="setBlackout" reRender="BMC_BusinessService__c_id_instance_name__c,BMC_BaseElement__c_id_name__c,BMC_BaseElement__c_id_id" oncomplete="makeServStatusReq();">
+                                <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+    </apex:actionFunction> 
+    <apex:actionFunction action="{!setSelectedServiceFromTabout}" name="setBusinessServiceFromTabout" reRender="BMC_BusinessService__c_id_instance_name__c,BMC_BaseElement__c_id_name__c" oncomplete="">  
+                    <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+ </apex:actionFunction>                               
+   <div id="capsule" class="CapsuleDiv1">
+    <apex:outputPanel >
+        <table class="clsMainTable" cellspacing="0" cellpadding="0">
+
+                <tr class="clsRowGreyBg">
+                    <td>
+                    <div id="btnToolbar"></div>
+                    </td>
+                </tr> 
+                <tr>
+                    <td>
+                    <apex:outputPanel id="blackoutdata">
+                        <table class="clsTable"  cellspacing="0" cellpadding="0" style="width:70%;">
+                        <tr>
+                            <td class="TD15pxHeightCls"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="clsInputLabelTD">
+	                        	<apex:outputpanel rendered="{!(!$ObjectType.Projected_Service_Outage__c.fields.Service_Status__c.Accessible ||
+                                        !$ObjectType.Projected_Service_Outage__c.fields.Start_Date__c.Accessible ||
+                                        !$ObjectType.Projected_Service_Outage__c.fields.End_Date__c.Accessible ||
+                                        !$ObjectType.Projected_Service_Outage__c.fields.Root_Cause__c.Accessible ||
+                                        !$ObjectType.Projected_Service_Outage__c.fields.Display_in_Self_Service__c.Accessible)}">
+		                            <table class="boxConatiner">
+		                            	<tr>
+		                            		<td><img src="/img/msg_icons/warning24.png"/></td>
+				                            <td>
+			                                    <apex:outputpanel rendered="{!NOT(isAdminUser)}">
+													<apex:outputLabel value="{!$Label.bmcservicedesk__profilenonsysadminpermission}"/>
+												</apex:outputpanel>
+			                                    <apex:outputpanel rendered="{!isAdminUser}">
+			                                    	<apex:outputLabel value="{!$Label.bmcservicedesk__profilesysadminpermission}" />&nbsp;
+													<apex:outputLink value="https://docs.bmc.com/docs/display/REMF/Performing+minimum+post-upgrade+procedures" target="_blank">{!$Label.bmcservicedesk__here}</apex:outputLink>
+			                                    	<apex:outputText value="."/>
+												</apex:outputpanel>
+				                            </td>
+			                            </tr>
+		                            </table>
+		                            <table>
+										<tr>
+											<td style="height:10px;"></td>
+										</tr>
+		                            </table>
+                                </apex:outputpanel>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="clsInputLabelTD" style="padding-right:35px;"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.name.label}"/> <span class="clsRequiredBlack">&nbsp;*</span></td>
+                            <td class="clsInputTextBoxTD"><apex:inputText id="ProjectedServiceOutage_Name" title="{!$Label.bmcservicedesk__tooltipblackoutname}" value="{!blackOutBean.blackoutName}"
+                                        styleClass="clsIdInputTextBox"/>
+								<apex:inputCheckbox value="{!blackOutBean.isSaveConfirmAgain}" styleClass="againConfirmSaveCheckBox" style="display:none;" id="CnfrmSaveChkBxId"/>
+							</td>
+                                        <td></td>
+                                        <td></td>
+                        </tr>
+                        
+                        <tr>
+							<td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Affected_Service__c.label}"/></td>                                    
+							<td>    
+								<table cellspacing="0" cellpadding="0">
+									<tr>
+                            <td class="clsInputTextBoxTD">
+								<apex:outputpanel rendered="{!NOT(isFlattenedCmdb)}">                                                
+									<apex:inputText title="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Affected_Service__c.InlineHelpText}" id="BMC_BusinessService__c_id_instance_name__c" value="{!blackOutBean.businessServiceName}" styleClass="clsIdInputTextBox" onblur="showDataCommon(event,setBusinessServiceFromTabout,escape('inactive__c = false'));" onchange="makeServStatusReq();"/>                                   
+								</apex:outputpanel>
+								<apex:outputpanel rendered="{!isFlattenedCmdb}">                                                
+									<apex:inputText title="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Affected_Service__c.InlineHelpText}" id="BMC_BaseElement__c_id_name__c" value="{!blackOutBean.businessServiceName}" styleClass="clsIdInputTextBox" onblur="showDataCommon(event,setBusinessServiceFromTabout,escape('inactive__c = false'));" onchange="makeServStatusReq();"/>
+								</apex:outputpanel>	                                   	
+							</td>
+							<td class="lookupIconTD">
+							    <div class="lookUpIconDiv">                                    
+							    	<input type="button" id="affectedService" onclick="openPopupRF('SearchPage?popupId=BMC_BusinessService&isLookup=true&isBlk=true',setBlackout)" class="lookupIconOn"/>                                        
+							    </div>
+							</td>    
+						</tr>
+					</table>
+								</td>
+                            <td></td>
+                            <td></td>
+						</tr>
+								
+						<tr>
+							<td style="height:5px;"/>
+						</tr>
+						
+						<tr>
+							<td></td>                                    
+								<td colspan="3">
+								<apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Blackout__c.InlineHelpText}" value="{!blackOutBean.isBlackout}" id="cid5" onclick="makeEndDateReq();makeServStatusReq();"/>
+								<apex:outputLabel styleClass="checkBlackOutLabel"  value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Blackout__c.label}. {!$Label.bmcservicedesk__projectedserviceoutagelabel}"/>
+							</td>
+						</tr>
+						
+						<tr>
+							<td style="height:5px;"/>
+						</tr>
+                        
+                        <tr>
+							<td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Service_Status__c.label}"/><span id="statusReqd" class="clsRequiredBlack">&nbsp;*</span></td>
+							<td class="clsInputTextBoxTD" title="{!$ObjectType.Projected_Service_Outage__c.fields.Service_Status__c.InlineHelpText}"><apex:inputField value="{!blackOutBean.blackout.BMCServiceDesk__Service_Status__c}" id="servStatus" styleClass="clsInputTextBox" style="height:20px;width:204px;padding-left:0px;" onchange="makeEndDateReq();"/></td>
+							<td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.CreatedDate.label}"/></td>
+							<td><div class="clsPanelReadOnlyInputTextbox" style="width:198px;height:100%;padding-top:2px;padding-bottom:2px;"><apex:outputField value="{!blackOutBean.blackout.CreatedDate}"/></div></td>
+                        </tr>                                  
+                        		                               
+                                                                                                                   
+                                <tr>
+                                	<apex:outputpanel rendered="{!blackOutBean.isBlackoutCreatable}" layout="none">
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Start_Date__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                  <td class="clsInputTextBoxTD"><apex:inputField value="{!blackOutBean.blackout.BMCServiceDesk__Start_Date__c}" styleClass="clsInputTextBox" /></td>
+                                </apex:outputpanel>
+                                <apex:outputpanel rendered="{!!blackOutBean.isBlackoutCreatable}" layout="none">                                                                                         
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Start_Date__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                  <td class="clsPanelReadOnlyInputTextbox"><apex:inputField value="{!blackOutBean.blackout.BMCServiceDesk__Start_Date__c}" styleClass="clsPanelInputTextbox"/></td>
+                                	</apex:outputpanel>	
+									<td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__createdby}"/></td>
+                                    <td><div class="clsPanelReadOnlyInputTextbox" style="width:198px;height:auto;padding-top:2px;padding-bottom:2px;min-height:13px;"><apex:outputtext value="{!blackOutBean.blackout.CreatedBy.Name}" style="overflow-wrap:break-word"/></div></td>
+                                </tr> 
+                                            
+                                <tr>
+                                    <apex:outputpanel rendered="{!blackOutBean.isBlackoutCreatable}" layout="none">
+										<td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__End_Date__c.label}"/><span id="endDateReqd" class="clsRequiredBlack">&nbsp;*</span></td>
+                                    	<td class="clsInputTextBoxTD"><apex:inputField value="{!blackOutBean.blackout.BMCServiceDesk__End_Date__c}" styleClass="clsInputTextBox" /></td>
+									</apex:outputpanel>									
+									<apex:outputpanel rendered="{!!blackOutBean.isBlackoutCreatable}" layout="none">
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__End_Date__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                    <td class="clsPanelReadOnlyInputTextbox"><apex:inputField value="{!blackOutBean.blackout.BMCServiceDesk__End_Date__c}" styleClass="clsPanelInputTextbox" /></td>
+                                </apex:outputpanel>
+									<td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.LastModifiedDate.label}"/></td>
+                                        <td><div class="clsPanelReadOnlyInputTextbox" style="width:198px;height:100%;padding-top:2px;padding-bottom:2px;"><apex:outputField value="{!blackOutBean.blackout.LastModifiedDate}"/></div></td>
+							</tr>
+                                
+							<tr>
+									<td style="height:10px;"/>
+							</tr>
+							<tr>
+									<td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Root_Cause__c.label}"/></td>
+                                    <td colspan="3">
+                                    <div>
+                                      <apex:inputTextarea id="ProjectedServiceOutage_Root_Cause__c" value="{!blackOutBean.blackout.BMCServiceDesk__Root_Cause__c}" title="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Root_Cause__c.InlineHelpText}" styleClass="clsBlackoutInputTextArea" style="width:83%;margin-left:0px;"/>
+                                    </div>
+                                    </td>	
+                                </tr>  
+                                <tr>
+									<td style="height:5px;"/>
+                                </tr>
+                                
+                                <tr>
+                                	<td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Description__c.label}"/></td>
+                                    <td colspan="3">
+                                    <div>
+                                      <apex:inputTextarea id="ProjectedServiceOutage_Description__c" value="{!blackOutBean.blackoutDescription}" styleClass="clsBlackoutInputTextArea" style="width:83%;margin-left:0px;"/>
+                                     </div>
+                                    </td>                                   
+                                </tr>   
+                                
+                                <tr>
+                                  <td height="10px"></td>
+                                </tr>
+                                <tr>                                    
+                                	<td></td>                                      
+                                    <td colspan="3">
+                                       <apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Display_in_Self_Service__c.InlineHelpText}" value="{!blackOutBean.blackout.BMCServiceDesk__Display_in_Self_Service__c}"/>
+                                       <apex:outputLabel styleClass="checkBlackOutLabel" value="{!$ObjectType.BMCServiceDesk__Projected_Service_Outage__c.fields.BMCServiceDesk__Display_in_Self_Service__c.label}"/>
+                                    </td>
+                                </tr>    
+                                <tr>
+                                  <td height="10px"></td>
+                                </tr>  
+                    </table>
+                    </apex:outputPanel>
+                    </td>
+                </tr>
+            </table>
+            
+            </apex:outputPanel> 
+            </div>
+                     <c:TabOutComponent ></c:TabOutComponent>
+        </apex:form>  
+</apex:page>

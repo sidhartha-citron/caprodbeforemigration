@@ -1,0 +1,116 @@
+<apex:page controller="BMCServiceDesk.CIRelationshipsController" showHeader="false" standardStylesheets="false" extensions="BMCServiceDesk.CMDBGenericRemoting" cache="true">
+    <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" />     
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBRelationships.css" />
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />
+    <apex:outputPanel rendered="{!IF( userlocale=='iw', true, false )}">
+        <link rel="stylesheet" href="{!$Resource.SDEFStyles}/CMDBRelationshipsRTL.css" />
+    </apex:outputPanel>
+    
+    <script>
+        
+        var showCI = {!CIShow};
+        var showAsset = {!AssetShow};
+        var updateCI = {!CIUpdate};
+        var updateAsset = {!AssetUpdate};
+        var deleteCI = {!CIDelete};
+        var deleteAsset = {!AssetDelete};
+        var instanceType = '{!JSENCODE(instanceType)}';
+        var tabName = '{!JSENCODE(tabName)}';
+        var flattenedCMDB  = {!isFlattenedCmdb};
+        var isAssetManagementEnabled = {!isAssetManagementEnabled};
+        var isCIManagementEnabled = {!isCIManagementEnabled};
+        
+        var InstanceID = '{!JSENCODE(InstanceID)}';
+        var PageOptions = {
+            prevPage: {
+                img: '{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif', 
+                title:'{!JSENCODE($Label.previousPage)}'
+            },
+            nextPage: {
+                img: '{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif', 
+                title:'{!JSENCODE($Label.nextPage)}' 
+            }
+        }
+        var skywalkerConstant = 'ф';
+        var classNameTitle = '{!JSENCODE($CurrentPage.parameters.classNameTitle)}';
+        var objNames = [];
+        objNames['BMC_BaseElements__c'] = "BMC_BaseElement__c";
+        objNames['BMC_BaseRelationship__c'] = "BMC_BaseRelationship__c";
+        var MarkAsDeletedLabel = "{!JSENCODE($Label.MarkAsDeleted)}";
+        var views = '{!JSENCODE($Label.views)}';
+        var userId = '{!JSENCODE($User.Id)}';
+		var backLabel = '{!JSENCODE($Label.CMDBBack)}';
+    	var userlocale = '{!JSENCODE(userlocale)}';
+		var MsgNoAccessPerm = '{!JSENCODE($Label.MsgNoAccessPerm)}';
+        var _ServerLabels = {};        
+        _ServerLabels.PageFirst = "{!JSENCODE($Label.FirstPage)}"
+        _ServerLabels.PageNext = "{!JSENCODE($Label.Next)}"
+        _ServerLabels.PageRefresh = "{!JSENCODE($Label.Refresh)}"
+        _ServerLabels.PageLast = "{!JSENCODE($Label.LastPage)}"
+        _ServerLabels.PagePrevious = "{!JSENCODE($Label.Previous)}"
+        _ServerLabels.Page = "{!JSENCODE($Label.Page)}"
+        _ServerLabels.Of = "{!JSENCODE($Label.Of)} {0}"
+        _ServerLabels.LabelOf = "{!JSENCODE($Label.Of)}"
+        _ServerLabels.Records = "{!JSENCODE($Label.Records)}"  
+        _ServerLabels.RecordsPerPage = "{!JSENCODE($Label.Records_per_page)}";
+        _ServerLabels.NoRecordFoundMsg = "{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}";
+        _ServerLabels.Clear = "{!JSENCODE($Label.Clear)}";
+        _ServerLabels.Actions = '{!JSENCODE($Label.Actions)}';
+        _ServerLabels.ClearFilters = '{!JSENCODE($Label.ClearFilters)}';
+        _ServerLabels.HasNoFilters = '{!JSENCODE($Label.HasNoFilters)}';
+        _ServerLabels.SelectCIs = '{!JSENCODE($Label.SelectCIs)}';
+        _ServerLabels.SelectCI = '{!JSENCODE($Label.SelectCI)}';
+        _ServerLabels.Select = '{!JSENCODE($Label.Select)}';
+        _ServerLabels.Cancel = '{!JSENCODE($Label.Cancel)}';
+        _ServerLabels.NoRecordFoundMsg = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+        _ServerLabels.pleaseWaitMsg = '{!JSENCODE($Label.PleaseWait)}';
+        _ServerLabels.New = '{!JSENCODE($Label.New)}';
+        _ServerLabels.Delete = '{!JSENCODE($Label.DeleteRelations)}';
+    </script>
+    <apex:form >
+    <div id="capsule">
+    <div id="ciRelationsGrid">
+        
+        </div>
+    </div>
+    <apex:outputPanel id="loadclmn">
+        <script type="text/javascript">
+
+        var colGridforBR ;
+        function loadClmns() {
+            colGridforBR = JSON.parse('{!JSENCODE(colGridforBR)}');
+            loadgrid();
+        }
+        
+        </script>
+    </apex:outputPanel>
+    <apex:actionregion >
+        <apex:actionFunction Name="deletecirelationships" action="{!deletecirelationships}" onComplete="hideWaitMsgBar();DeleteDone();" reRender="successId" >
+            <apex:param name="deletecirelationshipsdata" value="" assignTo="{!deletecirelationshipsdata}" /> 
+        </apex:actionFunction>  
+        <apex:actionFunction Name="loadColumns" action="{!loadGridColumns}" oncomplete="loadClmns()"  reRender="loadclmn" >
+        </apex:actionFunction>      
+    </apex:actionregion>
+    </apex:form>
+    <apex:outputPanel id="successId">
+     <script>
+     var success_message = '{!JSENCODE(success)}';  
+     </script>
+     </apex:outputPanel>
+     <script>
+        var error = '{!JSENCODE($Label.Error)}';
+        var CIFORCE_RES_PATH = '{!$Resource.CIForce}';  
+        var orgNamespace = '{!JSENCODE(orgNamespace)}';
+        function getSDFStylesResPath(){
+            return '{!$Resource.SDEFStyles}';
+         }
+         var isBRCreatable = {!isBRCreatable},isBREditable ={!isBREditable},isBRDeletable={!isBRDeletable},
+         RelationshipEditor="{!JSENCODE($Label.CMDBRelationshipEditor)}";
+         var InstanceTypelabel = "{!$ObjectType.BMC_BaseElement__c.fields.InstanceType__c.label}";
+     </script>
+    <script src="{!$Resource.SDEFCommonJS}/CMDBUtils.js"/>
+    <script src="{!$Resource.SDEFCommonJS}/CMDBRelationships.js"/>
+</apex:page>

@@ -1,0 +1,129 @@
+<apex:page controller="BMCServiceDesk.EncryptionReportController" standardStylesheets="false" showHeader="false">
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ext-all.js" id="ext-all-js"/>
+	<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+	<!--link rel="stylesheet" href="{!$Resource.SDEFStyles}/EncryptionReport.css" type="text/css" /-->
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+	<style>
+		.contentCls{
+			float:left;
+			padding-left: 10px;
+			font: 12px arial !important;
+		}
+		.reportHeader{
+			background-color: #D3D3D3;
+			height: 25px;
+			padding-top: 10px;
+			padding-left: 10px;
+			font: 12pt arial !important;
+		}
+		.scanMsg {
+        	color:blue;
+        	margin-top:8px;
+        	margin-left:10px;
+        }
+	</style>
+	<script>
+		var isScanDateAvailable = {!isScanDateAvailable};
+		var lastScanDate = '{!lastScanDate}';
+		var scanNowLabel = '{!JSENCODE($Label.ScanNowLabel)}';
+	</script>
+	<apex:form >
+		<apex:actionFunction name="scanReport" action="{!scanReport}" rerender="panelPageContent, panelWarning"></apex:actionFunction>
+		<apex:outputPanel >
+			<table cellspacing="0" cellpadding="0" border="0" width="100%">
+				<tr>
+					<td colspan="2">
+						<div class="reportHeader">{!JSENCODE($Label.EncryptionImpactReport)}</div>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<div class="contentCls">
+							<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__encryptionreportprerequisite)}"/>
+							<br /><br />
+							<apex:outputLabel value="{!$Label.bmcservicedesk__encryptedfieldsreporttabcontent}"/>
+						</div>
+					</td>
+					<td>
+						<div  id="helpDiv" class="clshelpDiv" style="margin-top:-20px;"></div>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<apex:outputPanel id="panelPageContent">
+							<apex:outputPanel rendered="{!NOT(ISNULL(lastScanDate))}">
+								<table cellspacing="0" cellpadding="0" border="0">
+									<tr>
+										<td>
+											<div class="contentCls">
+												<label><b>{!JSENCODE($Label.LastScanResult)}</b></label>
+												<label>: {!lastScanDate}</label>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="contentCls">
+												<label><b>{!JSENCODE($Label.Report)}</b></label>
+												<label>: <a target="_blank" href="/{!reportId}">{!JSENCODE($Label.EncryptionImpactReport)}</a></label>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>&nbsp;
+										</td>
+									</tr>
+								</table>
+							</apex:outputPanel>
+						</apex:outputPanel>
+					</td>
+				</tr>
+				<tr>
+                    <td colspan="2">
+                        <table width="100%">
+                    		<tr>
+                    			<td width="70px;">
+									<div id="divScan" class="contentCls">
+			                        </div>
+                    			</td>
+                    			<td>
+                    				<apex:outputPanel id="panelWarning" styleclass="contentCls scanMsg">
+			                            <apex:outputLabel id="lblWarning" rendered="{!AND(isScanDateAvailable, ISNULL(lastScanDate))}" value="{!JSENCODE($Label.bmcservicedesk__reportscantimewarning)}" />
+			                            <apex:outputLabel id="lblError" rendered="{!isReportFailed}" style="color:red" value="{!JSENCODE($Label.bmcservicedesk__encryptionreportfailureerror)}" />
+                        			</apex:outputPanel>
+                    			</td>
+                    		</tr>
+                    	</table>
+                    </td>
+                </tr>
+			</table>
+		</apex:outputPanel>
+		<script>
+			var wikiUrl = '{!wikiUrl}';
+			parent.addHelpOnPage(document.getElementById('helpDiv'),'',wikiUrl);
+			Ext.onReady(function(){
+				new Ext.Button({
+				id: 'btnScan',
+				name: 'btnScan',
+				text:scanNowLabel,
+				renderTo:'divScan',
+				disabled: isScanDateAvailable && lastScanDate == '',
+				handler: function() {
+					this.setDisabled(true);
+					scanReport();
+				}
+			});
+			});
+		</script>
+	</apex:form>
+</apex:page>

@@ -1,0 +1,249 @@
+<apex:page controller="BMCServiceDesk.IncidentTimeTrackingController" showHeader="false" lightningStylesheets="true" action="{!IncidentTimeTracker}" id="pg">
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+    <link rel="Stylesheet" type="text/css"  href="{!$Resource.SDEFStyles}/IncidentTimeTracking.css" />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" /> 
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css"/> 
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+	<html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/svgForIE11.js"></script> 
+    <style>
+        input[type=date]::-webkit-inner-spin-button, 
+        input[type=date]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        }
+		.disabled{
+            cursor: not-allowed !important; 
+            pointer-events: none;
+            color: #c0c0c0 !important;
+            filter: brightness(0.7);
+        }
+    </style>
+    <apex:slds ></apex:slds>  
+    <div id="ToastMessage" class="demo-only slds-hidden" style="display:none;">
+        <div class="demo-only slds-modal slds-fade-in-open slds-modal--medium" style="height:4rem">
+            <div class="slds-notify_container slds-is-relative">
+                <div class="slds-notify slds-notify_toast slds-theme_success" role="status" id="themeToast">
+                    <span class="slds-assistive-text" id="headerToast"></span>
+                    <span id="themeIcon" class="slds-icon_container slds-icon-utility-success slds-m-right_small slds-no-flex slds-align-top" title="Description of icon when needed">
+                    </span>
+                    <div class="slds-notify__content">
+                        <h2 class="slds-text-heading_small " id="msg"></h2>
+                    </div>
+                    <button class="slds-button slds-modal__close slds-button--icon-inverse closeIcon" title="Close" id="closeButtonToast"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <apex:form id="mainform" style="font-family: 'Salesforce Sans">
+        <apex:outputPanel id="queueReportingPanel">
+            <div class=" top15Margin timeTrackingSection">{!JSENCODE($Label.QueueTimeTracking)}
+				<div class="slds-p-horizontal_small slds-float_right">
+					<button  title="{!$Label.TooltipHelp}" type="button" class="slds-button slds-button_icon" onclick="openHelpPage()">
+						<lightning-primitive-icon lightning-primitiveicon_primitiveicon-host="">
+							<svg lightning-primitiveIcon_primitiveIcon="" focusable="false"  aria-hidden="true" class="slds-button__icon">
+								<use xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#question')}"></use>
+							</svg>
+						</lightning-primitive-icon>
+					</button>
+				</div>
+            </div>
+			<apex:actionFunction name="getHistoryTracking" reRender="jsPanel" action="{!fetchHistoryTracking}" oncomplete="callCreateRemoteSite();"></apex:actionFunction>
+            <apex:actionFunction name="saveSetting" action="{!Save}" oncomplete="toastLaunch();" >
+                <apex:param assignTo="{!EnableQueueReportingValue}" name="propenableQueueReporting" value=""/> 
+            </apex:actionFunction> 
+            <div class="top15Margin timeTrackingDesccls"><apex:outputText value="{!JSENCODE($Label.bmcservicedesk__queuetrackingdescription)}"/></div>
+            <div class="slds-form-element top15Margin paddingcls">
+                <label class="slds-checkbox_toggle slds-grid" style="width:fit-content">
+                    <input type="checkbox" id="chkQueueReporting" name="checkbox-toggle-16" onchange="saveQueueReporting()" value="checkbox-toggle-16" aria-describedby="checkbox-toggle-16" />
+                    <span id="checkbox-toggle-16" class="slds-checkbox_faux_container" aria-live="assertive" >
+                        <span class="slds-checkbox_faux floatLeftcls"></span>
+                        <span class="slds-checkbox_on checkboxLblCls" >{!JSENCODE($Label.EnableQueueTimeTracking)}</span>
+                        <span class="slds-checkbox_off checkboxLblCls">{!JSENCODE($Label.EnableQueueTimeTracking)}</span>
+                    </span>
+                </label>
+                <h2 id= "queueandUserassignOff" class="errorColorCls"></h2>
+            </div>
+            <div>
+                <div class="historicalDataSection"><apex:outputText value="{!JSENCODE($Label.bmcservicedesk__queuetimetrackingdata)}"/></div>
+                <div class="timeTrackingDesccls">
+                    <apex:outputText value="{!JSENCODE($Label.bmcservicedesk__backdateddatadescription)}" /><br/>
+                </div>
+				<div class="top15Margin dateCls"><apex:inputField value="{!SysTempObj.BMCServiceDesk__RecurrenceStartDate__c}" id="fromDate" onchange="validateDate()"  StyleClass="slds-input datePickerCls" />
+					<h2 id= "dateValidationError" class="errorColorCls"></h2>
+                </div>                
+				<div id="generateBtnPanel" class="generateBtn"><input type="button" id="btnGenerate" class="slds-button slds-button_neutral" value="{!JSENCODE($Label.Generate)}" immediate="true" onclick="GenerateData()" />
+                </div> 
+				<apex:actionFunction name="validateSelectedDate" action="{!validateDate}" rerender="jsPanel,dateValidationError" oncomplete="{showDateValidation();}">
+                </apex:actionFunction> 
+                <apex:actionFunction name="Generate" action="{!GenerateData}" oncomplete="GenerateDataToast();" >
+                </apex:actionFunction> 
+            </div>
+        </apex:outputPanel><br/><br/><br/>
+        <apex:outputPanel id="mainPanel" rendered="{!showIncidentTracking}">
+            <div id="helpDiv" style="display:none" class="clshelpDiv topHelpPadding"></div>
+            <apex:actionFunction name="saveCriteriaFunction"
+                                 action="{!filterCriteriaReport}"  oncomplete="stopWaitMsgBar();">
+                <apex:param name="reportTimeByParam" value=""/>
+                <apex:param name="forTheLastDaysParam" value=""/>
+                <apex:param name="filterByClosedParam" value="" />
+                <apex:param name="filterByOpenParam" value="" />
+                <apex:param name="filterByInactiveParam" value="" />
+                <apex:param name="filterByActiveParam" value="" />
+            </apex:actionFunction>           
+            <div class=" top15Margin timeTrackingSection">{!JSENCODE($Label.IncidentTimeTrack)}</div>     
+            <div class="timeTrackingDesccls" style="margin-bottom: 10px;"><apex:outputText value="{!JSENCODE($Label.bmcservicedesk__incidenttimetrackinginfomsg)}"/></div> 
+            <div>      
+                <div class="slds-form-element selectListCls">
+                    <label class="slds-form-element__label colorBlack">{!JSENCODE($Label.ReportTimeBy)}</label>
+                    <div class="slds-form-element__control">
+                        <div class="slds-select_container">
+                            <apex:selectList id="reportedById" size="1" value="{!reportedByValue}" styleClass="slds-select">
+                                <apex:selectOptions value="{!ReportedByList}" />
+                            </apex:selectList>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-form-element selectListCls">
+                    <label class="slds-form-element__label colorBlack">{!JSENCODE($Label.ForTheLast)}</label>
+                    <div class="slds-form-element__control">
+                        <div class="slds-select_container">
+                            <apex:selectList id="forTheLastId" size="1" value="{!forTheLastValue}" styleClass="slds-select">
+                                <apex:selectOptions value="{!forTheLastList}" />
+                            </apex:selectList>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-form-element Dayscls"><apex:outputText value="{!JSENCODE($Label.bmcservicedesk__incidenthistorydays)}"/> </div>
+            </div><br/><br/><br/>
+            <div class="tableCls">
+                <div class="checkboxMargin"><apex:outputText styleClass="filterByCls" value="{!JSENCODE($Label.bmcservicedesk__filterby)}"/>
+                </div>
+                <table>
+                    <tr>
+                        <td>
+                            <div class="slds-checkbox checkboxMargin slds-form-element__row slds-form-element">
+                                <apex:outputLabel styleClass="slds-checkbox__label">
+                                    <apex:inputcheckbox id="chkOpen" styleclass="slds-input"/>
+                                    <span class="slds-checkbox--faux boxMargin"></span>
+                                    <span class="slds-form-element__label">{!$Label.Open}</span>
+                                </apex:outputLabel>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="slds-checkbox checkboxMargin slds-form-element__row slds-form-element">
+                                <apex:outputLabel styleClass="slds-checkbox__label">
+                                    <apex:inputcheckbox id="chkActive" styleclass="slds-input"/>
+                                    <span class="slds-checkbox--faux boxMargin"></span>
+                                    <span class="slds-form-element__label">{!$Label.ActiveToolTipSearchPage}</span>
+                                </apex:outputLabel>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="slds-checkbox checkboxMargin slds-form-element__row slds-form-element">
+                                <apex:outputLabel styleClass="slds-checkbox__label">
+                                    <apex:inputcheckbox id="chkClosed" styleclass="slds-input"/>
+                                    <span class="slds-checkbox--faux boxMargin"></span>
+                                    <span class="slds-form-element__label">{!$Label.Closed}</span>
+                                </apex:outputLabel>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="slds-checkbox checkboxMargin slds-form-element__row slds-form-element">
+                                <apex:outputLabel styleClass="slds-checkbox__label">
+                                    <apex:inputcheckbox id="chkInactive" styleclass="slds-input"/>
+                                    <span class="slds-checkbox--faux boxMargin"></span>
+                                    <span class="slds-form-element__label">{!$Label.Inactive}</span>
+                                </apex:outputLabel>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="btnMargin paddingcls"><input type="button" class="slds-button slds-button_neutral"  value="{!JSENCODE($Label.CreateReport)}" immediate="true"
+                                                     onclick="saveCrieria();" />
+            </div> 
+        </apex:outputPanel>  
+		<apex:outputPanel id="jsPanel">
+            <script>
+                var isHistoryTracked = '{!JSENCODE(isHistoryTracked)}' == 'true' ?true : false;
+            	var hasError = '{!JSENCODE(hasError)}' == 'true' ?true : false;
+				var isValidDate = '{!JSENCODE(isValidDate)}' == 'true' ?true : false;
+            </script>
+        </apex:outputPanel>		
+    </apex:form>
+    
+    <script>              
+    var saveMsg = '{!JSENCODE($Label.IncidentTimeTrackingConfirmMsg)}';
+    var waitMsg = '{!JSENCODE($Label.PleaseWait)}';
+    var queue = '{!JSENCODE($Label.Queue)}';
+    var status = '{!JSENCODE($Label.Status)}';
+    var staff = '{!JSENCODE($Label.IncidentsStaff)}';
+    var reportTimeByLabel =  '{!JSENCODE($Label.ReportTimeBy)}';        
+    var year = '{!JSENCODE($Label.Year)}';
+    var forTheLast = '{!JSENCODE($Label.ForTheLast)}';
+    var incidentTimeTrackingStatusActive = '{!JSENCODE($Label.IncidentTimeTrackingStatusActive)}';
+    var incidentTimeTrackingStatusOpen = '{!JSENCODE($Label.IncidentTimeTrackingStatusOpen)}';
+    var closedCheckboxlabel = '{!JSENCODE($Label.Closed)}';
+    var openCheckboxlabel = '{!JSENCODE($Label.Open)}';
+    var inactiveCheckboxlabel = '{!JSENCODE($Label.Inactive)}';
+    var activeCheckboxlabel = '{!JSENCODE($Label.ActiveToolTipSearchPage)}';
+    var filterByLabel = '{!JSENCODE($Label.bmcservicedesk__filterby)}';
+    var createReportLabel = '{!JSENCODE($Label.CreateReport)}';
+    var message = '{!JSENCODE(messageString)}';
+    var incidentTimeTrackingHelpText = '{!JSENCODE($Label.AdminContextHelpText)}';
+    var incidentTimeTrackingHelpTooltip = '{!JSENCODE($Label.AdminContextHelpTooltip)}';
+    var EnableQueueReportingValue = '{!JSENCODE(EnableQueueReportingValue)}';
+    var EnableQueueReporting;
+    var EnableQueueAndUserAssignmentvalue = '{!JSENCODE(EnableQueueAndUserAssignmentvalue)}';
+    var isEnableQueueAndUserAssignment;
+    var QueueReportingEnabledLabel = '{!JSENCODE($Label.QueueReportingEnabled)}';
+    var QueueReportingDisabledLabel = '{!JSENCODE($Label.QueueReportingDisabled)}';
+    var UserAssignmentValidationLabel = '{!JSENCODE($Label.UserAssignmentValidation)}';
+    var GenerateDatatoast = '{!JSENCODE($Label.GenerateDatatoast)}';
+    var generateButtonValidation = '{!JSENCODE($Label.GenerateButtonValidation)}';
+    var EnableQueueTimeTracking ='{!JSENCODE($Label.EnableQueueTimeTracking)}';
+    var reportedById = '{!JSENCODE($Component.mainform.reportedById)}';
+    var forTheLastId = '{!JSENCODE($Component.mainform.forTheLastId)}';
+    var chkActive = '{!JSENCODE($Component.mainform.chkActive)}';
+    var chkInactive = '{!JSENCODE($Component.mainform.chkInactive)}';
+    var chkOpen = '{!JSENCODE($Component.mainform.chkOpen)}';
+    var chkClosed = '{!JSENCODE($Component.mainform.chkClosed)}';
+	var	labelInsert =  '{!JSENCODE($Label.Insert)}';
+	var fromDate = '{!JSENCODE($Component.mainform.fromDate)}';
+	var dateValidationLabel = '{!JSENCODE($Label.ValidDate)}';
+    
+    if(EnableQueueReportingValue.toUpperCase() == 'FALSE' || EnableQueueReportingValue.toUpperCase() == 'FALSE_UPGRADE'){
+        EnableQueueReporting = false;
+    }else{
+        EnableQueueReporting = true;	
+    } 
+    if(EnableQueueAndUserAssignmentvalue.toUpperCase() == 'FALSE'){
+        isEnableQueueAndUserAssignment = false;
+    }else{
+        isEnableQueueAndUserAssignment = true;
+    }
+	
+	var wikiUrl ='{!JSENCODE(wikiUrl)}';
+	parent.addHelpOnPage(document.getElementById('helpDiv'),'incident_time_tracking.htm',wikiUrl); 
+	
+	function callCreateRemoteSite() {
+		if(hasError) {
+			var remoteSettingName    =   "SalesforceBaseUrl";
+			var URL                  =   "{!JSENCODE(baseUrl)}";
+			var description          =   "Remote site created by BMC Helix Remedyforce";
+			var sessionId            =   "{!$Api.Session_ID}";
+			var sfHost               =   "{!JSENCODE(sfHost)}";
+			window.parent.createRemoteSiteSetting(remoteSettingName, URL, description, sessionId, sfHost);
+			getHistoryTracking(); 
+		}
+	}
+    </script>   
+    <script src="{!$Resource.ExtJS4_1_3}/ext-all.js" type="text/javascript" ></script>
+    <script src="{!$Resource.SDEFCommonJS}/IncidentTimeTracking.js" type="text/javascript" ></script>
+    <script src="{!$Resource.BMCRFCommonJS}/StdLayoutCommon.js" type="text/javascript" ></script>
+    <script src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/> 
+	</html>	
+</apex:page>

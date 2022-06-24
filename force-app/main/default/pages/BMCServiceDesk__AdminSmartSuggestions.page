@@ -1,0 +1,108 @@
+<apex:page controller="BMCServiceDesk.AdminSmartSuggestionsController" id="smartSuggestionAdminPage" standardstylesheets="false" showheader="false" >
+<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/ConsoleAdminSetting.css" type="text/css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+ <apex:form id="mainform">
+ <table width="100%" id="tableCls" height="100%" >
+    <tr>
+        <td colspan="3">
+        <div id="divTB"/>
+        </td>
+    </tr>
+    <tr>
+        <td class="enableSmartSuggestionsCls">
+        <apex:outputPanel >
+        <table>
+            <tr>
+                <td>
+                    <apex:inputCheckbox value="{!enableSmartSuggest}"   id="EnableSmartSuggestions" onclick="setSuggestionForOption();" style="margin-top:1px;" styleclass="floatLeft10px"/>
+                    <div class="floatLeft10px stdfont">
+                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__enablesmartsuggestions)}"  style="align:left; margin-right:40px;" />
+                    </div>
+                </td>
+            </tr>
+		</table>
+		<table class="firstLevelIndent">
+            <tr height="15"><td> </td></tr>
+            <tr>
+                <td>
+                    <div class="floatLeft10px BoltFontcls" >
+                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__showsmartsuggestionsfor)}" style="align:left;" />
+                    </div>
+                </td>
+            </tr>
+            <tr height="10"><td> </td></tr>
+            <tr>
+                <td>
+                    <apex:inputCheckbox value="{!enableKnowledgeArticles}" id="enableKnowledgeArticles" style="margin-top:1px;" styleclass="floatLeft10px"/>
+                    <div class="floatLeft10px stdfont" >
+                        <apex:outputLabel value="{!JSENCODE($ObjectType.BMCServiceDesk__KM_KnowledgeArticle__c.LabelPlural)}" style="align:left;" id="enableKnowledgeArticlesLabel"/>
+                    </div>
+                </td>
+            </tr>
+            <tr height="10"><td> </td></tr>
+            <tr>
+                <td>
+                    <apex:inputCheckbox value="{!enableIncident}" id="enableIncidents" style="margin-top:1px;" styleclass="floatLeft10px"/>
+                    <div class="floatLeft10px stdfont" >
+                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__incidentmatching)}" style="align:left;" id="enableIncidentsLabel"/>
+                    </div> 
+                </td>
+            </tr>
+            <tr height="10"><td> </td></tr>
+            <tr>
+                <td>
+                    <apex:inputCheckbox value="{!enableTemplates}" id="enableTemplates" style="margin-top:1px;" styleclass="floatLeft10px"/>
+                    <div class="floatLeft10px stdfont" >
+                        <apex:outputLabel value="{!JSENCODE($ObjectType.BMCServiceDesk__SYSTemplate__c.LabelPlural)}" style="align:left;" id="enableTemplatesLabel"/>
+                    </div> 
+                </td>
+            </tr>
+            <tr height="10"><td> </td></tr>
+            <tr>
+                <td>
+                    <apex:inputCheckbox value="{!enableBroadcast}" id="enableBroadcast" style="margin-top:1px;" styleclass="floatLeft10px"/>
+                    <div class="floatLeft10px stdfont" >
+                        <apex:outputLabel value="{!JSENCODE($ObjectType.BMCServiceDesk__Broadcasts__c.LabelPlural)}" style="align:left;" id="enableBroadcastLabel"/>
+                    </div> 
+                </td>
+            </tr>
+        </table>
+        </apex:outputPanel>       
+        </td>
+		<td style="vertical-align:top;">
+              <div  id="helpDiv" class="clshelpDiv"></div>
+        </td>
+    </tr>
+    </table>
+    <apex:outputPanel id="msgString">
+		<script>
+			messageString='{!JSENCODE(messageString)}';
+		</script>
+	</apex:outputPanel>
+		<script>
+          var enableSmartSuggest =document.getElementById("{!$Component.EnableSmartSuggestions}");
+          var enableSmartSuggest_KA =document.getElementById("{!$Component.enableKnowledgeArticles}");
+          var enableSmartSuggest_TM =document.getElementById("{!$Component.enableTemplates}");
+          var enableSmartSuggest_BR =document.getElementById("{!$Component.enableBroadcast}");
+          var enableSmartSuggest_INC =document.getElementById("{!$Component.enableIncidents}");
+          
+          var enableSmartSuggest_KALbl =document.getElementById("{!$Component.enableKnowledgeArticlesLabel}");
+          var enableSmartSuggest_TMLbl =document.getElementById("{!$Component.enableIncidentsLabel}");
+          var enableSmartSuggest_BRLbl =document.getElementById("{!$Component.enableTemplatesLabel}");
+          var enableSmartSuggest_INCLbl =document.getElementById("{!$Component.enableBroadcastLabel}");
+          
+          var saveLbl='{!JSENCODE($Label.Save)}';
+          var smartSuggestionlbl ='{!JSENCODE($Label.SmartSuggestions)}';
+		  var propSearchRFKnowledge = '{!propSearchRFKnowledge}'; 
+          var messageString;
+		  var wikiUrl = '{!wikiUrl}';
+          parent.addHelpOnPage(document.getElementById('helpDiv'),'',wikiUrl);
+    </script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"></script>
+    <script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script> 
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminSmartSuggestions.js"></script>
+     <apex:actionFunction action="{!saveRecord}" name="saveRecord" rerender="msgString"  oncomplete="onCompleteSave();" />        
+    </apex:form>
+    
+ </apex:page>

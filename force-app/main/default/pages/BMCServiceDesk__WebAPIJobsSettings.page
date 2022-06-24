@@ -1,0 +1,97 @@
+<apex:page controller="BMCServiceDesk.WebAPIJobsSettingsController" sidebar="false" showHeader="false" title="{!JSENCODE($Label.bmcservicedesk__web_api_setting)}" standardStylesheets="true">
+    
+     <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/WebAPIJobsSettings.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <apex:form id="frm">
+    
+        <div id = "saveToolBar"/>
+        <div>
+            <table>
+                <tr>
+                    <td>
+                        <apex:outputPanel id="pgMsg" >
+                            <apex:pagemessages />
+                            <script>    
+                                var retryCount = {!JSENCODE(SelectedRetryCount)};
+                            </script>
+                        </apex:outputPanel>
+                    </td>
+                </tr>
+                <tr>
+                    <td height="20%">
+                        <div class = "heading padding10px headerFont">
+                            {!JSENCODE($Label.SettingsPageHeader)}
+                    
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td height="40%">
+                        <div id = "retrycount-ct" class = "padding10px"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td height="40%">
+                        <apex:commandButton value="{!IF(!isSchedulerRunning, JSENCODE($Label.bmcservicedesk__acstartservice), JSENCODE($Label.bmcservicedesk__acstopservice))}" title="{!IF(!isSchedulerRunning, JSENCODE($Label.bmcservicedesk__acstartservice), JSENCODE($Label.bmcservicedesk__acstopservice))}" action="{!SchedulerActions}"  styleclass="button margin10px"/> 
+                
+                
+                        <apex:actionFunction name="saveRetryCountFromAdmin" action="{!saveRetryCount}" rerender="pgMsg"> 
+                            <apex:param name="SelectedRetryCount" assignTo="{!SelectedRetryCount}" value=""/>
+                        </apex:actionFunction>
+                    </td>
+                </tr>
+            </table>
+        <br/><br/>
+        </div>
+        <script src="{!$Resource.ExtJS4_1_3}/ext-all.js" type="text/javascript" />
+        
+        <script>
+                var lblSave= '{!JSENCODE($Label.Save)}';
+                var RetryCountLabel = '{!JSENCODE($Label.RetryCount)}';
+            Ext.onReady(function(){
+                    var ToolbarPanel = Ext.extend(Ext.Panel, {
+                        id:'menuBarPanel',
+                        renderTo: 'saveToolBar',                
+                        defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+                    });
+                    
+                    new ToolbarPanel({
+                        title: '',
+                        cls:'toolSpCls',
+                        bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;height:0px;',
+                        tbar: [ {
+                            scale: 'medium',
+                            iconCls: 'bmcSave',
+                            tooltipType : 'title',
+                            tooltip: lblSave,
+                            id:'saveId',
+                            listeners: {
+                                click :function(){
+                                     saveRetryCount(); 
+                                }                    
+                            }
+                        } ]
+                    });
+                    
+                    Ext.create('Ext.form.NumberField',{
+                        id: 'RetryCount',
+                        renderTo: 'retrycount-ct',
+                        name: 'RetryCount',
+                        fieldLabel: RetryCountLabel,
+                        value: retryCount,
+                        maxValue: 30,
+                        minValue: 0,
+                        maxLength: 2,
+                        width: 151,
+                        enforceMaxLength : true
+                });
+            });
+
+                function saveRetryCount(){
+                    saveRetryCountFromAdmin(Ext.getCmp("RetryCount").getValue());
+            }
+        </script>
+    </apex:form>
+</apex:page>

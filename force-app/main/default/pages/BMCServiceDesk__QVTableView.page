@@ -1,0 +1,217 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.QVWizardController" id="thePage" standardStylesheets="false">
+<c:CommonIncludes />  
+  <style>
+  .currentStatusTxt
+     {
+          color:#0069a5;
+     }
+     .abc{
+           height: 160px;    
+       }
+     .comboTriggerCls{
+        margin-left:80px;
+        *margin-left:0px;
+      }
+    .clsInputCheckBox, .BRclsInputCheckBox {
+		*padding-left:5px;
+	}
+     
+  </style>
+  <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/QVWizQuery.css" />
+  <script>
+      /*  function blockSQuote(e){
+		    var charCode = (e.which) ? e.which : e.keyCode
+		    if (charCode == 39) 
+		      return false;
+		    return true;
+		}*/
+        var sortOrdercombo;
+        var sortTypecombo;
+        function callSave(){
+            var index = window.parent.getCurrCol();
+            index = index+1;
+            var displaylabel = getControlValue('{!$Component.theForm.DisplayId}');
+            var columnwidth = getControlValue('{!$Component.theForm.ColumnId}');
+            var sortorderid = getExtCmpValue('sortOrderId');
+            var sortdirectionid = getExtCmpValue('sortDirectionId');
+            var isfieldwrappable = getControlValue('{!$Component.theForm.isfieldwrappable}');
+            if(columnwidth ==0 || columnwidth==''){
+            	columnwidth = 0;
+            }
+            window.parent.setCurrColFields(displaylabel, columnwidth, sortorderid,
+                sortdirectionid, isfieldwrappable, index);
+        }
+        
+        function setValuesOnLoad(){
+            var values = window.parent.getCurrColFields();
+            if(values != null && values[0] != null && values[0] != ''){
+                setControlValue("{!$Component.theForm.DisplayId}", values[0]);
+                setControlValue("{!$Component.theForm.ColumnId}", values[1]);
+                setExtCmpValue("sortOrderId", values[2]);
+                setExtCmpValue("sortDirectionId", values[3]);
+                setControlValue("{!$Component.theForm.isfieldwrappable}", values[4]);
+               
+            }
+        }
+        
+        function getControlValue(ctl) {
+            var ctl = document.getElementById(ctl);
+            if (ctl != null){
+                if(ctl.type == 'checkbox'){
+                        return ctl.checked;
+                }else{
+                    return ctl.value;
+                }
+            }
+            return '';
+        }
+        function setControlValue(ctl, val) {
+            var ctl = document.getElementById(ctl);
+            if (ctl != null){
+                if(ctl.type == 'checkbox'){
+                    if(val == 'false'){
+                            ctl.checked = false;
+                    }else{
+                            ctl.checked = true;
+                    }
+                }else{
+                    ctl.value = val;
+                }
+            }
+        }
+       
+        function getExtCmpValue(ctl){
+            var extCtl = Ext.getCmp(ctl);
+            return extCtl.getValue();
+        }
+        function setExtCmpValue(ctl, val){
+            var extCtl = Ext.getCmp(ctl);
+            if(extCtl != null){
+                extCtl.setValue(val);
+            }
+        }
+        
+        
+   Ext.onReady(function(){
+        sortOrdercombo = new Ext.form.ComboBox({
+            store: window.parent.sortOrderList,
+            id: 'sortOrderId',
+            width: 100,
+            displayField:'name',
+            renderTo: 'sortorder',
+            valueField:'value',
+            typeAhead: true,
+            mode: 'local',
+            forceSelection:true,
+            triggerAction: 'all',
+            selectOnFocus:true,
+            triggerClass : 'comboTriggerCls'
+        });
+        sortTypecombo = new Ext.form.ComboBox({
+            store: [['ASC','Ascending'],['DESC','Descending']],
+            id: 'sortDirectionId',
+            width: 100,
+            displayField:'name',
+            renderTo: 'sorttype',
+            valueField:'value',
+            typeAhead: true,
+            mode: 'local',
+            forceSelection:true,
+            triggerAction: 'all',
+            selectOnFocus:true,
+            triggerClass : 'comboTriggerCls'
+        });
+        
+        window.onLoad = setValuesOnLoad();
+   });
+  </script>
+  
+    <apex:form id="theForm">
+       
+         
+    <div class="abc" style="padding-left:10px;">
+      <table width="100%" >
+       
+         <tr>
+           <td>
+            &nbsp;
+           </td>
+         </tr>
+         <tr>
+         
+              <td class="clsInputLabelTD">
+                <apex:outputLabel value="{!$Label.bmcservicedesk__displayname}"></apex:outputLabel>
+              </td>
+             
+              <td class="clsInputTextBoxTD">
+                  <apex:inputText id="DisplayId" title="{!$Label.bmcservicedesk__tooltipquickviewswizarddisplayname}"  />
+              </td> 
+         
+         </tr>
+         
+         <tr>
+         
+              <td class="clsInputLabelTD">
+                <apex:outputLabel value="{!$Label.bmcservicedesk__columnwidth}"></apex:outputLabel>
+              </td>
+             
+              <td class="clsInputTextBoxTD">
+                <apex:inputText id="ColumnId" title="{!$Label.bmcservicedesk__tooltipquickviewswizardcolumnwidth}" maxlength="3"/>
+              </td> 
+         
+         </tr>
+         
+         <tr>
+         
+              <td class="clsInputLabelTD">
+                <apex:outputLabel value="{!$Label.bmcservicedesk__sortorder}"></apex:outputLabel>
+              </td>
+             
+              <td class="clsInputTextBoxTD">
+                <div id="sortorder" title="{!$Label.TooltipQuickViewsWizardSortOrder}"/>
+              </td> 
+         
+         </tr>
+         
+         <tr>
+         
+              <td class="clsInputLabelTD">
+                <apex:outputLabel value="{!$Label.bmcservicedesk__sortdirection}"></apex:outputLabel>
+              </td>
+             
+              <td class="clsInputTextBoxTD">
+                <div id="sorttype" title="{!$Label.TooltipQuickViewsWizardSortDirection}"/>
+              </td> 
+         
+         </tr>
+         
+         <tr>
+         
+              <td colspan="2" class="clsInputCheckBox">
+				<apex:outputText value="CRUDFLSCheck# False Positive: Since this is part of Remedyforce functional process which is expected to work outside of FLS and CRUD permission on this field." rendered="false" />
+                <apex:inputCheckbox id="isfieldwrappable" title="{!$Label.bmcservicedesk__tooltipquickviewswizardenabletextwrapping}"/>
+                 <!--<apex:outputLabel value="{!$Label.enableTextWrapping}" class="clsInputCheckBoxLabel"/>-->
+               <label for="enableTextWrapping" class="clsInputCheckBoxLabel">{!$Label.enableTextWrapping}</label>
+              </td>
+             
+               
+         
+         </tr>
+         
+         <tr><td></td></tr>
+         <tr>
+         <td> </td>
+         
+            <td>
+              <apex:commandButton value="Apply" onClick="callSave();" styleclass="bgBtnGrey"/>
+            </td>
+         </tr>
+         
+          
+      
+      </table>
+      </div> 
+    </apex:form>
+   
+
+</apex:page>

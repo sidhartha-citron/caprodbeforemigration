@@ -1,0 +1,36 @@
+<aura:component implements="force:hasRecordId,flexipage:availableForAllPageTypes" access="global" controller="EDW_ResourcePreferenceTableController">
+    <aura:attribute name="viewModel" type="EDW_ViewModels.ResourcePreferenceViewModel" access="private" />
+    <aura:attribute name="columnNames" type="String[]" access="private" />
+    <aura:attribute name="resourcePreferences" type="ResourcePreference[]" access="private" />
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}" />
+    
+    <lightning:spinner alternativeText="Loading" size="medium" aura:id="theSpinner"/>
+    
+    <div class="related_list_themed_border_top"></div>
+    <lightning:card class="slds-card_boundary related_list_card_border_top" title="{!'Related Technician Preferences (' + v.resourcePreferences.length + ')'}" iconName="standard:resource_preference">
+        <table class="slds-table slds-table_bordered ch-table-compact">
+            <thead>
+                <tr>
+                    <aura:iteration items="{!v.columnNames}" var="column">
+                        <th class="slds-text-title_caps">{!column}</th>
+                    </aura:iteration>
+                </tr>
+            </thead>
+            <tbody>
+                <aura:if isTrue="{!!v.resourcePreferences.length}">
+                    <tr>
+                        <td colspan="3" class="slds-text-align_center">{!$Label.c.No_Data}</td>
+                    </tr>
+                </aura:if>
+                <aura:iteration items="{!v.resourcePreferences}" var="preference">
+                    <tr>
+                        <td>{!preference.Service_Resource__r.Name}</td>
+                        <td>{!preference.Line_of_Business__c}</td>
+                        <td>{!preference.Preference_Type__c}</td>
+                    </tr>
+                </aura:iteration>
+            </tbody>
+        </table>
+    </lightning:card>
+</aura:component>

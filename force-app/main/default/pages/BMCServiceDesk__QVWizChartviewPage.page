@@ -1,0 +1,626 @@
+<apex:page controller="BMCServiceDesk.QVWizardController" showHeader="false" standardStylesheets="false">
+<c:CommonIncludes />
+
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/consolecomponent.css" />
+<style>
+.ext-safari .x-form-field-wrap .x-form-trigger{
+    position:relative;
+    top:8px;
+}
+
+.x-btn-text{
+	height: 24px !important;
+    width: 44px !important;
+}
+.x-btn-tl, .x-btn-tr, .x-btn-tc, .x-btn-ml, .x-btn-mr, .x-btn-mc, .x-btn-bl, .x-btn-br, .x-btn-bc{
+	background-image : none !important;
+}
+
+.x-form-cb-label{
+    vertical-align: top;
+    font-family: Tahoma, "MS Sans Serif";
+    color: rgb(0, 0, 0);
+    font-size: 12px;
+    white-space: nowrap;
+    padding-left: 5px;
+}
+
+.x-btn-icon{
+	margin-left:-4px !important;
+	margin-top:2px !important;
+	margin-bottom:2px !important;
+}
+</style>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/QVWizard.js"/>  
+	
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/highcharts.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/highcharts-3d.js"></script>					 				
+  	
+  	  
+<script>
+var wikiUrl='{!JSENCODE(wikiUrl)}';
+
+var saveMsg = '{!JSENCODE($Label.SaveSuccessfullyQVWizChartviewPage)}';
+var QVDeleted = '{!JSENCODE($Label.QuickViewDeleted)}';
+var infoMsg = '{!JSENCODE($Label.Information)}';
+var isFromConsole = {!isFromConsole};
+var useDeprecatedFusionCharts = {!useDeprecatedFusionCharts};
+var chartTypeName = '{!JSENCODE(chartTypeName)}';
+var is3D = {!is3D};
+function initBtn(){
+    
+    document.getElementById('BTNPrevious').disabled=false;
+    document.getElementById('BTNNext').disabled=false;
+    
+    }
+var iter = 0;
+var fieldsArr = new Array();
+function showHideChartOptions(){
+    var ele = document.getElementById("chartOptionsPicker");
+    if(ele.style.display == "block"){
+        ele.style.display = "none";
+        document.getElementById("arrowright").style.display = "block";
+        document.getElementById("arrowdown").style.display = "none";
+    }else{
+        ele.style.display = "block";
+        document.getElementById("arrowright").style.display = "none";
+        document.getElementById("arrowdown").style.display = "block";
+    }
+}
+function test_data(field) {
+    var value = field.value; 
+    if(isNaN(value)) {
+            Ext.Msg.alert('{!JSENCODE($Label.Warning)}', '{!JSENCODE($Label.ShowMessageQV5)}');
+            field.value='';
+    } else {
+             
+     }
+ } 
+function numbersonly(e){
+    var charCode = (e.which) ? e.which : e.keyCode
+    if (charCode > 31 && (charCode < 48 || charCode > 57))
+      return false;
+    return true;
+}
+  Ext.onReady(function(){
+   var chartViewComboStore = new Ext.data.ArrayStore({
+        fields:['name','value'],
+        data:{!chartNameOptions}
+   
+   });
+     
+    var chartviewcombo = new Ext.form.ComboBox({
+        id:'chartviewcombo',
+        store: chartViewComboStore,
+        width: 150,
+        displayField:'name',
+        renderTo: 'chartview',
+        valueField:'value',
+        typeAhead: true,
+        mode: 'local',
+        forceSelection:true,
+        triggerAction: 'all',
+        selectOnFocus:true,
+        tooltip: "{!JSENCODE($Label.TooltipQuickViewsWizardChartType)}",
+        cls: 'fontCls',
+        //triggerClass : Ext.isIE7 ? 'qvCmbTriggerClsIE' : 'qvCmbTriggerCls',
+        value: '{!JSENCODE(chartTypeName)}',
+        listeners:{
+            'select': function(combo, record, index) {
+            	if(useDeprecatedFusionCharts){
+					refreshChart(index);
+                }else{
+                    var chartTypeNameLowerCase = record.data.value.toLowerCase();
+                	if(document.querySelector('input[id *=chartTypeName]')){
+                		document.querySelector('input[id *=chartTypeName]').value = chartTypeNameLowerCase;
+                	}					
+                    if(chartTypeNameLowerCase == 'column' || chartTypeNameLowerCase == 'bar'){
+                        document.getElementById('showChartOptionsCol').style.visibility = 'visible';
+                    }else{
+                        document.getElementById('showChartOptionsCol').style.visibility = 'hidden';
+                	}
+                    updateNewChart(chartTypeNameLowerCase,(Ext.getCmp('enable3DSwitch').pressed));
+                }                
+                
+            }
+        }
+    });
+           
+    
+   
+      var imageCls= is3D ? 'auto-refresh-on' : 'auto-refresh-off';
+      var toolTipRefreshBtn = is3D ? 'ON' : 'OFF';
+        if(chartTypeName.toLowerCase() == 'column' || chartTypeName.toLowerCase() == 'bar'){
+            document.getElementById('showChartOptionsCol').style.visibility = 'visible';
+        }else{
+            document.getElementById('showChartOptionsCol').style.visibility = 'hidden';
+        }
+	var enable3DViewSwitch = new Ext.Button({           
+		scale: 'large',
+		id:'enable3DSwitch',
+		renderTo :'enable3D',
+		iconCls: imageCls,
+		icon:'',
+		disabled: false,
+		enableToggle : true,
+		 hidden:useDeprecatedFusionCharts,
+		margins:{
+			top:3,
+			bottom:3,
+		 	left:-4		 	
+		},
+		style: {
+			width: '44px !important',
+			height: '22px !important',    		                       
+        },
+		tooltipType : 'title',
+		cls:'rf-on-off-btn',
+		tooltip: toolTipRefreshBtn,
+		pressed : {!is3D},		
+		width:52,		  
+		toggleHandler:function(btn,state){
+			if(state){
+				btn.setIconClass('auto-refresh-on');	
+				toolTipRefreshBtn = 'ON';			   		   			   
+			}else{
+				btn.setIconClass('auto-refresh-off');
+				toolTipRefreshBtn = 'OFF';			   			   			   			  
+			}
+			btn.setTooltip(toolTipRefreshBtn);
+			var chartTypeComboboxVal = Ext.getCmp('chartviewcombo').value.toLowerCase(); 
+			if(document.querySelector('input[id *=is3D]')){
+				document.querySelector('input[id *=is3D]').value = state; 
+            }      		
+         	updateNewChart(chartTypeComboboxVal,state);
+		}                   
+    });
+    
+    var datafieldscomboStore = new Ext.data.ArrayStore({
+        fields:['value','name'],
+        data:fieldsArr,
+        sortInfo: {
+            field: 'name',
+            direction: 'ASC'
+        }
+   
+   });
+    var datafieldscombo = new Ext.form.ComboBox({
+        id:'datafieldscombo',
+        store: datafieldscomboStore,
+        width: 150,
+        displayField:'name',
+        renderTo: 'datafields',
+        tooltip: "{!JSENCODE($Label.TooltipQuickViewsWizardDataField)}",
+        valueField:'value',
+        typeAhead: true,
+        mode: 'local',
+        forceSelection:true,
+        triggerAction: 'all',
+        selectOnFocus:true,
+        cls: 'fontCls',
+        value: '{!JSENCODE(chartDataField)}',
+        tpl: '<tpl for=".">'+'<div class="x-combo-list-item">'+'{name:htmlEncode}'+'</div>'+'</tpl>',
+        listeners:{
+            'select': function(combo, record, index) {
+                setChartDataField(record.get('value'));
+             }
+        }
+
+    });
+    var valuetypecomboStore = new Ext.data.ArrayStore({
+        fields:['value','name'],
+		data:[[0,'{!JSENCODE($Label.numeric)}'],[1,'{!JSENCODE($Label.percentage)}']]
+    }); 
+    var valuetypecombo = new Ext.form.ComboBox({
+        store: valuetypecomboStore,
+        width: 130,
+        displayField:'name',
+        renderTo: 'valuetype',
+        valueField:'value',
+        typeAhead: true,
+        tooltip: "{!JSENCODE($Label.TooltipQuickViewsWizardValueType)}",
+        mode: 'local',
+        forceSelection:true,
+        triggerAction: 'all',
+        selectOnFocus:true,
+        cls: 'fontCls',
+        //triggerClass : Ext.isIE7 ? 'qvCmbTriggerClsIE' : 'qvCmbTriggerCls',
+        value: {!valueType},
+        listeners:{
+            'select': function(combo, record, index) {
+                setValueType(index);
+             }
+        }
+    });
+    var sortingcomboStore = new Ext.data.ArrayStore({
+        fields:['value','name'],
+        data:[[0,'{!JSENCODE($Label.None)}'],[1,'{!JSENCODE($Label.valuesascending)}'],[2,'{!JSENCODE($Label.valuesdescending)}'],[3,'{!JSENCODE($Label.labelsascending)}'],[4,'{!JSENCODE($Label.labelsdescending)}']]
+   
+     }); 
+    var sortingcombo = new Ext.form.ComboBox({
+        store: sortingcomboStore,
+        width: 130,
+        displayField:'name',
+        renderTo: 'sorting',
+        tooltip: "{!JSENCODE($Label.TooltipQuickViewsWizardSorting)}",
+        valueField:'value',
+        typeAhead: true,
+        mode: 'local',
+        forceSelection:true,
+        triggerAction: 'all',
+        selectOnFocus:true,
+        cls: 'fontCls',
+        //triggerClass : Ext.isIE7 ? 'qvCmbTriggerClsIE' : 'qvCmbTriggerCls',
+        value: {!sorting},
+        listeners:{
+            'select': function(combo, record, index) {
+                setSorting(index);
+             }
+        }
+    });
+    var lineLimitTypecomboStore = new Ext.data.ArrayStore({
+        fields:['value','name'],
+        data:[[0,'{!JSENCODE($Label.numeric)}'],[1,'{!JSENCODE($Label.percentage)}']]
+	   
+     }); 
+    var lineLimitTypecombo = new Ext.form.ComboBox({
+        store: lineLimitTypecomboStore,
+        width: 130,
+        displayField:'name',
+        renderTo: 'lineLimitType',
+        tooltip: "{!JSENCODE($Label.TooltipQuickViewsWizardLinesLimitType)}",
+        valueField:'value',
+        typeAhead: true,
+        mode: 'local',
+        forceSelection:true,
+        triggerAction: 'all',
+        selectOnFocus:true,
+        cls: 'fontCls',
+        //triggerClass : Ext.isIE7 ? 'qvCmbTriggerClsIE' : 'qvCmbTriggerCls',
+        value: {!linesLimitType},
+        listeners:{
+            'select': function(combo, record, index) {
+                setLinesLimitType(index);
+             }
+        }
+    });
+    showHideChartOptions();
+    initBtn();
+});
+</script>
+<apex:outputPanel id="valueSetterpanel">
+   <script>
+        //function addQuery(){
+           var queryId = '{!JSENCODE(addedQueryId)}';
+           var queryName=  '{!JSENCODE(addedQueryName)}';
+            if(queryId!="" && queryName!=""){ 
+                window.parent.addQuery(queryId, queryName);
+            }else if(queryName!=""){
+                window.parent.parent.editTreeForQuery();
+            }
+        //}
+    </script>
+ </apex:outputPanel>
+ <apex:outputPanel id="errorId">
+        <script>
+            errormsg = '{!JSENCODE(messageString)}';               
+        </script>
+    </apex:outputPanel>
+<apex:repeat value="{!displayFieldOptions}" var="fieldOption">
+  <script>
+      fieldsArr[iter] = new Array(2);  
+      var listIndex =0; 
+  </script>
+   <apex:repeat value="{!fieldOption}" var="option">  
+   <script>     
+        fieldsArr[iter][listIndex] = '{!JSENCODE(option)}';
+        listIndex = listIndex +1;
+    </script>    
+   </apex:repeat>
+   <script>     
+        iter = iter +1;
+  </script>
+</apex:repeat>
+<apex:outputPanel id="dummyPanel"/>
+<div id="capsule" class="CapsuleDiv1" style="height:100%">
+  <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form >
+            	
+            	<apex:inputHidden id="is3D" value="{!is3D}" />
+                <apex:actionFunction name="refreshChart" rerender="chartPanel">
+                    <apex:param name="index" assignTo="{!chartTypeIndex}" value=""/>
+                </apex:actionFunction>
+                <apex:inputHidden id="chartTypeName" value="{!chartTypeName}" rendered="{!NOT(useDeprecatedFusionCharts)}" />
+                <apex:actionFunction name="stepCalendarview"  action="{!stepCalendarview}" >
+                    
+                </apex:actionFunction>
+                <apex:actionFunction name="stepTableview" action="{!stepTableview}"/>
+
+                <apex:actionFunction name="setChartDataField" rerender="dummyPanel">
+                    <apex:param name="value" assignTo="{!chartDataField}" value=""/>
+                </apex:actionFunction>
+                <apex:actionFunction name="setValueType" rerender="dummyPanel">
+                    <apex:param name="index" assignTo="{!valueType}" value=""/>
+                </apex:actionFunction>
+                <apex:actionFunction name="setSorting" rerender="dummyPanel">
+                    <apex:param name="index" assignTo="{!sorting}" value=""/>
+                </apex:actionFunction>
+                <apex:actionFunction name="setLinesLimitType" rerender="dummyPanel">
+                    <apex:param name="index" assignTo="{!linesLimitType}" value=""/>
+                </apex:actionFunction>
+                  <table cellpadding="0" cellspacing="0" class="clsMainTableQV">
+                  <tBody>
+                    <tr align="center" >
+                       <td align="center" style="background-color:#eff3f5;" colspan="3">
+                        <!-- Progress bar image -->
+                            <table class="clsBrProgressBar" cellpadding="0" cellspacing="0" width="100%" height="100%">
+                                <tr>
+                                    <td height="15px" colspan="21"></td>
+                                </tr>
+                                <tr>
+                                    <td class="qvStyle15perWidth"></td>
+                                    <td class="qvStyle45Width"></td>
+                                    <apex:repeat value="{!lstIntro}" var="string">
+                                        <td class="QVStage1">
+                                            <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                        </td>
+                                        <td class="QVStage2"></td>
+                                        <td class="QVStage2"></td>
+                                    </apex:repeat>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Current.gif"/>
+                                    </td>
+                                     <td id="QVimg2" class="QVStage2"></td>
+                                    <td id="QVimg3" class="QVStage2"></td>
+                                    <td id ="Calview" class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                     <td style="width:5%"></td>
+                                    <td style="width:10%"></td>
+									<td style="width:5% ; text-align: center;">
+									 <a onclick="OpenNewHelpPage();return false;" href="#" style="{!IF(isFromConsole ,'display:block','display:none')}">
+									   <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_console_help.png"/>
+									  </a>
+									</td>
+                                </tr>
+                                <tr>
+                                    <td height="10px" colspan="21"></td>
+                                </tr>
+                                <tr>
+                                    <td class="qvStyle15perWidth"></td>
+                                    <apex:repeat value="{!lstIntro}" var="string">
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarIntro}</td>
+                                    </apex:repeat>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.General}</td>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarQuery}</td>
+                                    <td colspan="3" class="statusTxt" align="center" >{!$Label.QVWizPrgBarTable}</td>
+                                    <td colspan="3" class="currentStatusTxt" align="center">{!$Label.QVWizPrgBarChart}</td>
+                                    <td colspan="3" id="calLabel" class="statusTxt" align="center">{!$Label.QVWizPrgBarCalendar}</td>
+                                    <td colspan="2" class="qvStyle15perWidth"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <div class="div15pxVspacing" />
+                        </td>
+                    </tr>  
+                    <tr style="vertical-align: top;height:100%">
+                      <td class="qvwidth15px"></td>
+                      <td class="qvTopAlignTD" valign="top" style="height:100%">   
+                        <table class="clsBrTable" cellpadding="0" cellspacing="0" width="100%" style="height:100%">
+                          <tbody>   
+                            <tr>
+                              <td class="QVInfoTitle">{!$Label.ChartPageTitle}</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="div15pxVspacing" />
+                                </td>
+                            </tr>
+                            <!-- Put the page contents inside the following TR -->
+                            <tr>
+                                <td valign="top">
+                                    <table cellpadding="0" cellspacing="0" width="100%">
+                                    
+                                        <tr width="100%">
+                                            <td class="qvwidth4px"></td>
+                                                        <td colspan="2">
+                                                            <div class="qvinformationBar">
+                                                                <apex:outputLabel value="{!$Label.bmcservicedesk__qvwizardchartpageintro}" id="QVWizardChartPageIntro"/>
+                                                            </div>       
+                                                        </td>
+                                                       <td class="qvwidth4px"></td> 
+                                                    </tr>
+                                                    <tr>
+                                                         <td>
+                                                            <div class="div15pxVspacing" />
+                                                        </td>
+                                                    </tr>
+                                             
+                                          <tr>
+                                          <td class="qvwidth2px"></td>
+                                            <td valign="top" width="48%">
+                                                <table width="100%" cellpadding="0" cellspacing="0">
+                                                  
+                                                    <tr height="26px">
+                                                        <td class="qvwidth2px"></td>
+                                                        <td class="qvClsInputLabelTD" valign="middle">
+                                                            <apex:outputLabel value="{!$Label.bmcservicedesk__charttype}" id="ChartType"/>
+                                                        </td>
+                                                        <td valign="middle">
+                                                            <div id="chartview" title="{!$Label.TooltipQuickViewsWizardChartType}"></div>
+                                                        </td>
+                                                        </tr>
+                                                    <tr id="3DView">
+                                                        <td class="qvwidth2px"></td>
+                                                        <td class="qvClsInputLabelTD" style="padding-top: 7px;" valign="middle">
+                                                            <apex:outputLabel value="3D View" />
+                                                        </td>                                                        
+                                                        <td valign="middle">
+                                                            <div id="enable3D"></div>
+                                                        </td>                                                                                                                                                                                                                          
+                                                    </tr>                                                    
+                                                        <tr class="div2pxVspacing">
+                                                        <td colspan="3">
+                                                            <div class="div2pxVspacing" />
+                                                        </td>
+                                                        </tr>
+                                                        <tr height="26px">
+                                                        <td class="qvwidth2px"></td>
+                                                        <td class="qvClsInputLabelTD" valign="top">
+                                                            <apex:outputLabel value="{!$Label.bmcservicedesk__datafield}" id="DataField" />
+                                                        </td>
+                                                        <td valign="top">
+                                                            <div id="datafields" title="{!$Label.TooltipQuickViewsWizardDataField}" ></div>
+                                                        </td>
+                                                        <td class="qvwidth2px"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="qvwidth2px"></td>
+                                                        <td colspan="2" id="showChartOptionsCol" valign="top">
+                                                            <div style="float:left;position:relative;" valign="top">
+                                                            <table cellpadding="0" cellspacing="0" style="table-layout:fixed; width:315px ; *width:175px" >
+                                                                <col width="16"/>
+                                                                <col style="width:299px; *width:175px"/>
+                                                                <tr>
+                                                                    <td align="left" valign="middle">
+                                                                        <div id="arrowdown" onclick="showHideChartOptions()" style="display: none;cursor:pointer">
+                                                                                <img src="{!$Resource.SDEFStyles}/SDEFimages/arrow_down_menu.gif"/>
+                                                                        </div>
+                                                                        <div id="arrowright" onclick="showHideChartOptions()" style="display: block;cursor:pointer">
+                                                                                <img src="{!$Resource.SDEFStyles}/SDEFimages/arrow_right_blue.gif"/>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td align="left" class="qvClsInputLabelTD" valign="top">
+                                                                        <a href="#" onclick="showHideChartOptions()" title="{!$Label.TooltipQuickViewsWizardChartOptions}" style="text-decoration:none">
+                                                                            <apex:outputLabel styleClass="cursor:pointer" value="{!$Label.bmcservicedesk__chartoptions}"  id="chartOptions"/>
+                                                                        </a>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr><td class="div10pxVspacing "></td></tr>
+                                                                <tr>
+                                                                    <td></td>
+                                                                    <td align="left">
+                                                                        <div id="chartOptionsPicker" style="display: block" >
+                                                                            <table cellpadding="0" cellspacing="0" align="left" >
+                                                                                <tr height="25px">
+                                                                                    <td class="qvClsInputLabelTD" valign="top"><apex:outputLabel value="{!$Label.bmcservicedesk__valuetype}" id="valueType"/></td>
+                                                                                    <td valign="top"><div id="valuetype" title="{!$Label.TooltipQuickViewsWizardValueType}" /></td>
+                                                                                </tr>
+                                                                                <tr height="25px">
+                                                                                    <td class="qvClsInputLabelTD" valign="top"><apex:outputLabel value="{!$Label.bmcservicedesk__chartsorting}" id="chartSorting"/></td>
+                                                                                    <td valign="top"><div id="sorting" title="{!$Label.TooltipQuickViewsWizardSorting}" /></td>
+                                                                                </tr>
+                                                                                <tr height="25px">
+                                                                                    <td class="qvClsInputLabelTD" valign="top"><apex:outputLabel value="{!$Label.bmcservicedesk__upperlineslimit}" id="upperLinesLimit"/></td>
+																					<td valign="top"><apex:outputText value="CRUDFLSCheck# CRUD & FLS check not required as this is part of business process." rendered="false"/><apex:inputText value="{!linesUpperLimit}" title="{!$Label.bmcservicedesk__tooltipquickviewswizardupper}" size="10" styleClass="qvclsInputTextBox" maxlength="3" onkeypress="return numbersonly(event);"  onblur="test_data(this);"/></td>
+                                                                                </tr>
+                                                                                <tr height="25px">
+                                                                                    <td class="qvClsInputLabelTD" valign="top"><apex:outputLabel value="{!$Label.bmcservicedesk__lowerlineslimit}" id="lowerLinesLimits"/></td>																		
+                                                                                    <td valign="top"><apex:outputText value="CRUDFLSCheck# CRUD & FLS check not required as this is part of business process." rendered="false"/><apex:inputText value="{!linesLowerLimit}"   title="{!$Label.bmcservicedesk__tooltipquickviewswizardlower}" id="TooltipQuickViewsWizardLower"  size="10" styleClass="qvclsInputTextBox" maxlength="3" onkeypress="return numbersonly(event);"  onblur="test_data(this);"/></td>
+                                                                                </tr>
+                                                                                <tr height="25px">
+                                                                                    <td class="qvClsInputLabelTD" valign="top"><apex:outputLabel value="{!$Label.bmcservicedesk__lineslimittype}" id="LinesLimitType"/></td>
+                                                                                    <td valign="top"><div id="lineLimitType" title="{!$Label.TooltipQuickViewsWizardLinesLimitType}"  /></td>
+                                                                                </tr>
+                                                                            </table>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                            </div>  
+                                                        </td>
+                                                        <td class="qvwidth15px"></td>
+                                                    </tr>
+                                                   </table>
+                                            </td>  
+                                                
+                                            <td  width="50%">                                             
+                                                 <table width="100%" cellpadding="0" cellspacing="0">
+                                                 <tr>
+                                                 <td class="clsBoldInputLabelTD" align="left" width="50%">
+                                                            <apex:outputLabel value="{!$Label.bmcservicedesk__chartsample}"/>
+                                                        </td> 
+                                                                           
+                                                </tr>
+                                                <tr>
+                                                <td rowspan="3" align="right" valign="top" width="100%">
+                                                            <table class="QVCalendarOuterTable" cellspacing="15px" style="width:100%">
+                                                                <tr>
+                                                                    <td>
+                                                                        <apex:outputPanel id="chartPanel">
+                                                                          <div id="sampleHighchartPanel"></div>
+                                                                        </apex:outputPanel>
+                                                                    </td>
+                                                                    
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        <td>
+                                                            <div class="div2pxVspacing" />
+                                                        </td>
+                                                    </tr>
+                                                 </table>
+                                           </td>
+                                    
+                                        </tr>
+                                    </table>
+                                </td>
+                                    
+                            </tr>
+                            
+                             <tr style="background-color:#dee0e0;height:35px; width:100%;" >
+                              <td align="right">
+                                <table >
+                                    <tr>
+                                        <td>
+                                            <!--apex:commandButton value="{!$Label.Previous}" id="BTNPrevious" Action="{!stepTableview}" styleclass="bgBtnGrey"/-->
+                                           <input type="button" disabled="true" value="{!$Label.Previous}" id="BTNPrevious" onclick="stepTableview();" class="QvBtnGrey" />
+                                            <!--apex:commandButton value="{!$Label.Next}" id="BTNNext" Action="{!stepCalendarview}" styleclass="bgBtnGrey"/-->
+                                            <input type="button" disabled="true" value="{!$Label.Next}" id="BTNNext" onclick="stepCalendarview();" class="QvBtnGrey"  />
+                                          </td>
+                                         	 <td id="showSave" style="display:none" >
+                                           		<apex:commandButton id="saveButton" value="{!($Label.bmcservicedesk__save + ' ' + $Label.bmcservicedesk__andforchatter + ' ' +$Label.bmcservicedesk__close)}" Action="{!saveQuickView}" onclick="waitbox(0);" oncomplete="shSaved();if (window.parent.isConsoleEnabled != undefined) {window.parent.updateMyQVList();}" styleClass="{! IF(qvQry.System__c ,'QvBtnGreyDisabled','QvBtnGrey')}" reRender="valueSetterpanel,errorId,validationComponent" disabled="{!qvQry.BMCServiceDesk__System__c}"/>
+                                          	 </td>
+                                        <td class="qvwidth5px"></td>
+                                    </tr>
+                                </table>
+                               </td>
+                            </tr>
+                          </tbody>  
+                        </table>
+                      </td>
+                      <td class="qvwidth15px"></td>
+                 </tr>
+                 <tr>
+                        <td class="div15pxVSpacing" colspan="3"></td>
+                 </tr>
+               </tBody>
+              </table>  
+             <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+           </apex:form>
+       </apex:outputPanel>
+</div>  
+
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/QuickViewHighcharts.js"/>
+
+<body onload="hideCalendarViewfromChart();"></body>
+</apex:page>

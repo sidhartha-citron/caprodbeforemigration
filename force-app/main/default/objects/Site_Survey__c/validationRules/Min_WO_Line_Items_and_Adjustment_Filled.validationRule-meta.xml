@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Min_WO_Line_Items_and_Adjustment_Filled</fullName>
+    <active>true</active>
+    <errorConditionFormula>OR ( 
+AND( 
+NOT(ISBLANK(Work_Order_Calculation_Adjustment__c)), 
+ISBLANK(Min_Hygiene_Work_Order_Lines__c), 
+OR ( 
+ISCHANGED(Work_Order_Calculation_Adjustment__c), 
+ISCHANGED(Min_Hygiene_Work_Order_Lines__c)) 
+), 
+AND( 
+ISBLANK( Work_Order_Calculation_Adjustment__c), 
+NOT(ISBLANK(Min_Hygiene_Work_Order_Lines__c)), 
+OR ( 
+ISCHANGED(Work_Order_Calculation_Adjustment__c), 
+ISCHANGED(Min_Hygiene_Work_Order_Lines__c))), 
+
+AND( 
+NOT(ISBLANK(Chem_WorkOrder_Calculation_Adjustment__c)), 
+ISBLANK(Min_Chemical_Work_Order_Lines__c), 
+OR ( 
+ISCHANGED(Chem_WorkOrder_Calculation_Adjustment__c), 
+ISCHANGED(Min_Chemical_Work_Order_Lines__c)) 
+), 
+AND( 
+ISBLANK(Chem_WorkOrder_Calculation_Adjustment__c), 
+NOT(ISBLANK(Min_Chemical_Work_Order_Lines__c)), 
+OR ( 
+ISCHANGED(Chem_WorkOrder_Calculation_Adjustment__c), 
+ISCHANGED(Min_Chemical_Work_Order_Lines__c))), 
+
+AND( 
+NOT(ISBLANK(Pest_WorkOrder_Calculation_Adjustment__c)), 
+ISBLANK(Min_Pest_Work_Order_Lines__c), 
+OR ( 
+ISCHANGED(Pest_WorkOrder_Calculation_Adjustment__c), 
+ISCHANGED(Min_Pest_Work_Order_Lines__c)) 
+), 
+AND( 
+ISBLANK(Pest_WorkOrder_Calculation_Adjustment__c), 
+NOT(ISBLANK(Min_Pest_Work_Order_Lines__c)), 
+OR ( 
+ISCHANGED(Pest_WorkOrder_Calculation_Adjustment__c), 
+ISCHANGED(Min_Pest_Work_Order_Lines__c))) 
+)</errorConditionFormula>
+    <errorMessage>If a Duration Adjustment or a Minimum Work Order Line Item Count field for a Line of Business is populated, both Duration Adjustment and Minimum Work Order Line Item Count fields are then required for that Line of Business.</errorMessage>
+</ValidationRule>

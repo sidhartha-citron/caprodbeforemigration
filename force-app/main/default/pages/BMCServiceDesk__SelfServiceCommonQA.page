@@ -1,0 +1,35 @@
+<apex:page id="SelfServiceCommonQA" controller="BMCServiceDesk.SelfServiceHomePageController"  sidebar="false" showHeader="false" standardStylesheets="false">
+<apex:form >
+<apex:repeat value="{!CommonFAQs}" var="commonQA" id="commonQA">
+
+    <div id="faqreq{!commonQA.FAQId}" class="homeFaqItem">
+        <p class="homeFaqQuestionText" title="{!commonQA.FAQQuestion}"><apex:outputText value="{!commonQA.FAQTrimmedQuestion}" /></p>
+        <p class="homeFaqQuestionBody" title="{!commonQA.FAQAnswer}"><apex:outputText value="{!commonQA.FAQTrimmedAnswer}" /></p>
+    </div>
+    
+    <script>
+        (function() { // wrapped in anonymous function to keep vars from adding to global
+	        var url = "{!$Page.BMCServiceDesk__SSSearchPage}"+'?portletFAQId='+"{!commonQA.FAQId}";
+	        var faqreq{!commonQA.FAQId} = {
+	            xtype: 'ssSearchResultsPortlet',
+	            title: '<div class="portletHeaderIcon searchPortletHeaderIcon"></div><center><apex:outputText value="{!JSENCODE($Label.bmcservicedesk__ssservicerequestoptions)}"></apex:outputText></center>',
+	            html: '<div class=\"sky-iframe\"><iframe src =\"'+ url +'\" class=\"tab-iframe\" /></div>'
+	    	}
+	    
+	    	Ext.get('faqreq{!commonQA.FAQId}').on('click', function(){
+		        setSearchBreadCrumb();
+		        var pm = Ext.getCmp('ssHomePortalManager');
+		        pm.onSwitchPanel('ssSearchPortal', [faqreq{!commonQA.FAQId}]);
+	    	});
+	    })();
+    </script>
+</apex:repeat>
+
+
+        <!-- <apex:actionFunction name="setSearchBreadCrumb" action="{!setSearchBreadCrumb}" rerender="ssHomePortalManager,homeTitle">
+             <apex:param name="searchShowBreadCrumb" assignTo="{!showSearch}" value="true" />
+             <apex:param name="incidentShowBreadCrumb" assignTo="{!showIncident}" value="false" />
+             <apex:param name="incidentShowBreadCrumb" assignTo="{!showPopularRequest}" value="false" />
+        </apex:actionFunction>  -->
+</apex:form>
+</apex:page>

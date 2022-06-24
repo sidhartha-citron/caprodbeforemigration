@@ -1,0 +1,238 @@
+<apex:page showHeader="false" Controller="BMCServiceDesk.DocController" sidebar="false" standardStylesheets="false" lightningStylesheets="true">
+<apex:slds />
+<apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__RemedyforceAdministration, 'styles/remedyforce-administration.css')}" />
+
+<style>
+	.customcss.x-window-dlg .x-window-body {
+		overflow : visible !important;
+	}
+	.x-ie-shadow {
+		background-color: transparent !important;
+	}
+	.disabled{
+		color: #dddbda;
+	}
+
+	.fontClass{
+		font-family: 'Salesforce Sans',Arial,sans-serif !important;
+	}
+
+	.paddingLeft{
+		padding-left: 10px !important;
+	}
+</style>
+<c:CommonIncludes />
+ <apex:form id="attachMentMainForm">
+    
+        <apex:outputPanel id="formPanel">
+            <table class="clsMainTable" cellspacing="0" cellpadding="0" border="0" style="border: none;">
+					
+				<tr>
+					<td class="paddingLeft" style="padding-top: 15px;">
+						<apex:outputLabel styleClass="fontClass slds-form-element__legend" style="font-size: 14px;" value="{!$Label.bmcservicedesk__reqdefimageselect}" />
+					</td>
+				</tr>
+				 <tr>
+					<td colspan="2"></td>
+				</tr>
+				 <tr>
+					<td class="paddingLeft" style="padding-top: 20px;">
+						<table cellspacing="0" cellpadding="0" border="0">
+							<tr>
+								<td colspan="2"></td>
+					</tr>
+					<tr>
+								<td class="clsTD100">
+							<div class="slds-file-selector slds-file-selector_files">
+								<div class="slds-file-selector__dropzone">
+									<apex:inputFile styleClass="slds-file-selector__input slds-assistive-text" accept="image/*" value="{!filebody}" filename="{!filename}" fileSize="{!filesize}"  contentType="{!contentType}" onchange="enableBtn(this);" id="inputfile"/>
+									<apex:outputLabel styleClass="slds-file-selector__body" for="inputfile">
+										<span class="slds-file-selector__button slds-button slds-button_neutral">
+										<svg class="slds-button__icon slds-button__icon_left" aria-hidden="true">
+										<use xmlns:xlink="http://www.w3.org/1999/xlink" 
+											xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#upload')}"></use>
+										</svg>Upload Files</span>
+										<span id="dropFiles" class="slds-file-selector__text">No files chosen</span>
+										<span id="selectedFile" class="slds-file-selector__text slds-medium-show"></span>
+									</apex:outputLabel>
+								</div>
+							</div>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="5" style="height: 50px;">
+									<div id="errordiv" class="slds-inline_icon_text slds-grid slds-inline_icon_text--error" style="display: none; margin-left: 8px;">
+										<svg aria-hidden="true" class="slds-icon slds-icon-text-error" style="width: 1.2rem;">
+											<use xmlns:xlink="http://www.w3.org/1999/xlink" 
+												xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#error')}"></use>
+										</svg>
+										<div id="errorMsg" class="slds-col slds-align-middle slds-text-color_error" style="margin-left: 8px; display: inline-block;"></div>
+									</div>
+									<div id="warningdiv" class="slds-inline_icon_text slds-grid slds-inline_icon_text--warning" style="margin-left: 8px; display: none;">
+										<svg aria-hidden="true" class="slds-icon slds-icon-text-warning" style="width: 1.4rem; margin-bottom: 12px;">
+											<use xmlns:xlink="http://www.w3.org/1999/xlink" 
+												xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#warning')}"></use>
+										</svg>
+										<div class="slds-col slds-align-middle" style="margin-left: 8px; display: inline-block;"><p>{!JSENCODE($Label.ReqDefImageWarningMsg)}</p>
+										</div>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="5" ><div class="div10pxVspacing" style="height: 15px;"/></td>
+							</tr>
+							
+						</table>
+					</td>
+				</tr>
+			
+				
+				<tr class="row-gray">
+					<td class="paddingLeft">
+						<table cellspacing="0" cellpadding="0" border="0">
+							<tr>
+						<td colspan="2"><div style="height: 5px;"/></td>
+							</tr>
+							<tr>
+							<td align="right"   >
+                            <button name="add" id="file-add-btn"  type="button" Class="slds-button slds-button_neutral" style="margin-right: 5px;" onclick="AddAttachment();">{!JSENCODE($Label.Ok)}</button>
+									<button name="Cancel" id="file-Cancel-btn"  type="button" Class="slds-button slds-button_neutral" onclick="closePopup();">{!JSENCODE($Label.Cancel)}</button>
+                            </td>
+							</tr>
+							<tr>
+						<td colspan="2"><div style="height: 5px;"/></td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+            </table>
+        </apex:outputPanel> 
+        <apex:actionFunction name="confirmSave" action="{!confirmSave}">
+	 </apex:actionFunction>
+	 <apex:actionFunction name="deleteDocument" action="{!deleteDoc}">
+	 </apex:actionFunction>
+	 <apex:actionFunction name="SaveIcon" action="{!save}">
+	 </apex:actionFunction>  
+		<apex:outputPanel id="docId">
+      <script>
+            document.getElementById('file-add-btn').disabled=true;
+			document.getElementById('file-add-btn').className += " disabled";
+			var isSRD = '{!JSENCODE($CurrentPage.parameters.isSRD)}';
+            
+                if('{!isSaved}'== 'false'){
+               		showError();
+            	}          
+       
+				 function showError(){
+                    msg = '{!JSENCODE(messageString)}';
+                    var ReqDefImageWarningMsg='{!JSENCODE($Label.ReqDefImageWarningMsg)}';
+                    if(msg!='' && msg == ReqDefImageWarningMsg ){ 
+						document.getElementById('warningdiv').style.display = 'flex';
+                    }else if(msg!=''){
+						document.getElementById('errordiv').style.display = 'block';
+						document.getElementById('errorMsg').innerText = msg;
+						document.getElementById('file-add-btn').disabled=true;
+						document.getElementById('file-add-btn').classList.add('disabled');
+						document.getElementById('warningdiv').style.display = 'none';
+                    }else{
+                        confirmSave();
+                    }
+                }
+  
+                function enableBtn(file){
+					if(file.files.length > 0){
+						var filename = file.files[0].name;
+						if(filename){	
+							document.getElementById('selectedFile').innerText = filename;
+							document.getElementById('dropFiles').style.display = 'none';
+							document.getElementById('selectedFile').style.display = 'block';
+							document.getElementById('errordiv').style.display = 'none';
+		                    document.getElementById('file-add-btn').disabled=false;
+							document.getElementById('file-add-btn').classList.remove('disabled');
+
+							var typeOfDoc = file.files[0].type;
+		
+							if (typeOfDoc.indexOf('image')!=-1){
+								typeofImage = typeOfDoc.replace("image/","");
+								size = file.files[0].size;
+								checkImageFormat();
+							}else{
+								document.getElementById('warningdiv').style.display = 'none';
+								document.getElementById('errordiv').style.display = 'block';
+								document.getElementById('errorMsg').innerText = ImageFileTypeValidationMsg;
+								document.getElementById('file-add-btn').disabled=true;
+								document.getElementById('file-add-btn').classList.add('disabled');
+								return;
+							}
+						}
+					}else{
+						document.getElementById('selectedFile').style.display = 'none';
+						document.getElementById('dropFiles').style.display = 'block';
+						document.getElementById('selectedFile').innerText = '';		
+						document.getElementById('file-add-btn').disabled=true;
+						document.getElementById('file-add-btn').classList.add('disabled');				
+					document.getElementById('errordiv').style.display = 'none';
+					document.getElementById('warningdiv').style.display = 'none';
+					}
+                }
+              
+				function closePopup(){
+					if(isSRD == 'true'){
+						window.parent.rfPopUpClose('rfModalVFPage');
+					}else{
+						window.parent.closePopup();
+					}
+				}
+      </script>
+
+     </apex:outputPanel>    
+
+     
+        <script> 
+        var ImageFileTypeValidationMsg='{!JSENCODE($Label.ReqDefImageFileTypeMsg)}';
+        var ImageTypeValidationMsg='{!JSENCODE($Label.imageTypeValidation)}';
+        var IconAttachmentLimit='{!JSENCODE($Label.IconAttachmentLimit)}';
+        var size, typeofImage;
+        
+         function AddAttachment() {
+                        var fileupload = document.getElementsByName('{!$Component.inputfile}'+':inputFile:file')[0];
+                        if((typeof(fileupload.value) != 'undefined') && (typeof(fileupload.value) != 'undefined')){
+                            			SaveIcon();
+                            }
+                     }
+                
+         function checkImageFormat(){
+         	if (typeofImage != null){
+	         	if (typeofImage != 'jpg' && typeofImage != 'jpeg' && typeofImage != 'gif' && typeofImage != 'bmp' && typeofImage != 'png'){
+						document.getElementById('errordiv').style.display = 'block';
+						document.getElementById('errorMsg').innerText = ImageTypeValidationMsg;
+						document.getElementById('file-add-btn').disabled=true;
+						document.getElementById('file-add-btn').classList.add('disabled');
+						document.getElementById('warningdiv').style.display = 'none';
+						return;
+	         		}else{
+	         		  checkSize();
+	                 }      
+         	}
+         }
+         
+         function checkSize(){
+         	
+                if(size <= 5242880){
+                         if(size >= 1024*20){
+							document.getElementById('warningdiv').style.display = 'flex';										
+                         }else{
+							document.getElementById('warningdiv').style.display = 'none';
+                         }
+                }else{
+					document.getElementById('errordiv').style.display = 'block';
+					document.getElementById('errorMsg').innerText = IconAttachmentLimit;
+					document.getElementById('file-add-btn').disabled=true;
+					document.getElementById('file-add-btn').classList.add('disabled');
+					document.getElementById('warningdiv').style.display = 'none';
+					return;
+                }
+         }
+ </script>              
+    </apex:form>
+</apex:page>

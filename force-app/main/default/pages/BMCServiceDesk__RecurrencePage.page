@@ -1,0 +1,386 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.RecurrenceController" cache="true">
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/RecurrencePage.css" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomViews.css" />
+    <script>
+        var recType, recInterval, recDayOfWeekMask, recDayOfMonth, recInstance, recMonthOfYear, recTimeHrs, recTimeMin, recTimeFrame, dayOfWeekIndex,waitMask, isNewRec, isSavedSuccessfully;
+        var availableInSS='{!template.SelfService_Display_Order__c}';  
+    </script>
+    <apex:form id="recurrenceFormId">
+        <div id="mainDiv">
+        <div class="height280px">
+        <div class="paddingLeft15pxTop20px">
+            <table>
+                <tr>
+                    <td id="recurrenceTypeTD">
+                        <div id="recurrenceTypeDiv">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="top" id="d">
+                        <div class="paddingTop10px">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <apex:outputlabel value="{!$Label.bmcservicedesk__every}"/>
+                                    </td>
+                                    <td class="paddingLeft15px">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <input checked="checked" id="d0" name="recd" title="" type="radio" value="d0" onclick="setRecurrenceValues(this.id);"/>
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <div id="recDailyIntervalDiv"></div>
+                                                    <!-- <input id="di" name="di" onkeypress="document.getElementById('d1').checked=true;" size="3" title="" type="number" value="1" /> -->
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td><apex:outputlabel value="{!$Label.bmcservicedesk__days}"/></td>
+                                </tr>
+                                <tr height="10"/>
+                                <tr>
+                                    <td></td>
+                                    <td class="paddingLeft15px">
+                                        <input id="d1" name="recd" title="" type="radio" value="d1" onclick="setRecurrenceValues(this.id);"/>
+                                        <apex:outputlabel value="{!$Label.bmcservicedesk__weekday}"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </td>
+                    <td id="w" style="display:none;">
+                        <div class="paddingTop10px">
+                                <table >
+                                    <tr>
+                                        <td>
+                                            <apex:outputlabel value="{!$Label.bmcservicedesk__every}"/>
+                                        </td>
+                                        <td colspan="2" class="paddingLeft15px">
+                                             <!--<input  id="wi" name="wi" size="3" title="" type="text" value="1" /> -->
+                                             <table>
+                                                <tr>
+                                                    <td><div id="recWeekIntervalDiv"></div></td>
+                                                    <td class="paddingLeft5px"><apex:outputlabel value="{!$Label.bmcservicedesk__weeks}"/></td>
+                                                </tr>
+                                             </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td valign="top" class="paddingTop10px">
+                                            <apex:outputlabel value="{!$Label.bmcservicedesk__on}"/>
+                                        </td>
+                                        <td class="paddingLeft15px paddingTop10px">
+                                            <input  id="1" name="wd" type="checkbox" class="marginBottom7px" onchange="setWeekDayVal(this);" /><apex:outputlabel styleClass="dayLabelCls" for="1">{!$Label.bmcservicedesk__monday}</apex:outputlabel><br/>
+                                            <input  id="2" name="wd" type="checkbox" class="marginBottom7px" onchange="setWeekDayVal(this);"/><apex:outputlabel styleClass="dayLabelCls" for="2">{!$Label.bmcservicedesk__tuesday}</apex:outputlabel><br/>
+                                            <input  id="3" name="wd" type="checkbox" class="marginBottom7px" onchange="setWeekDayVal(this);"/><apex:outputlabel styleClass="dayLabelCls" for="3">{!$Label.bmcservicedesk__wednesday}</apex:outputlabel><br/>
+                                            <input  id="4" name="wd" type="checkbox" class="marginBottom7px" onchange="setWeekDayVal(this);"/><apex:outputlabel styleClass="dayLabelCls" for="4">{!$Label.bmcservicedesk__thursday}</apex:outputlabel><br/>
+                                            <input  id="5" name="wd" type="checkbox" class="marginBottom7px" onchange="setWeekDayVal(this);"/><apex:outputlabel styleClass="dayLabelCls" for="5">{!$Label.bmcservicedesk__friday}</apex:outputlabel><br/>
+                                        </td>
+                                        <td valign="top" class="paddingLeft65px paddingTop10px">
+                                            <input  id="6" name="wd" type="checkbox" value="1" class="marginBottom7px" onchange="setWeekDayVal(this);"/><apex:outputlabel styleClass="dayLabelCls" for="6">{!$Label.bmcservicedesk__saturday}</apex:outputlabel><br/>
+                                            <input  id="0" name="wd" type="checkbox" value="1" class="marginBottom7px" onchange="setWeekDayVal(this);"/><apex:outputlabel styleClass="dayLabelCls" for="0">{!$Label.bmcservicedesk__sunday}</apex:outputlabel><br/>
+                                        </td>
+                                    </tr>
+                                </table>
+                        </div>
+                    </td>
+                    <td id="m" style="display:none;">
+                        <div class="paddingTop10px">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <apex:outputlabel value="{!$Label.bmcservicedesk__every}"/>
+                                    </td>
+                                    <td class="paddingLeft15px">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <!--<input id="mint" name="mint" onkeypress="document.getElementById('m0').checked=true;" size="3" title="" type="text" value="1" /> -->
+                                                    <table>
+                                                        <tr>
+                                                            <td>
+                                                                <div id="recMonIntervalDiv"></div>
+                                                            </td>
+                                                            <td class="paddingLeft5px">
+                                                                <apex:outputlabel value="{!$Label.bmcservicedesk__months}"/>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="paddingTop10px">
+                                        <apex:outputlabel value="{!$Label.bmcservicedesk__on}"/>
+                                    </td>
+                                    <td class="paddingLeft15px paddingTop10px">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <input checked="checked" id="m0" name="recm" title="" type="radio" value="m0" onclick="setRecurrenceValues(this.id);"/>
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <apex:outputlabel value="{!$Label.bmcservicedesk__day}"/>     
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <!-- <input id="mdom" name="mdom" onchange="document.getElementById('m0').checked=true;" title="" type="text" size="2"/> -->
+                                                    <div id="recMonDayDiv"></div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                    </td>
+                                    <td class="paddingLeft15px paddingTop10px">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <input  id="m1" name="recm" title="" type="radio" value="m1" onclick="setRecurrenceValues(this.id);"/>
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <apex:outputlabel value="{!$Label.bmcservicedesk__the}"/>
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <div id="recMonDayInstance"></div>      
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                     <div id="recMonDayOfWeek"></div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </td>
+                    <td id="y" style="display:none;">
+                        <div class="paddingTop15px">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <apex:outputlabel value="{!$Label.bmcservicedesk__on}"/>
+                                    </td>
+                                    <td class="paddingLeft15px">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <input  checked="checked" id="y0" name="recy" title="" type="radio" value="y0" onclick="setRecurrenceValues(this.id);"/>
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <div id="recYearMonth"></div>       
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <!-- <input id="ydom" name="ydom" onchange="document.getElementById('y0').checked=true;" title="" type="text" size="2"/> -->
+                                                    <div id="recYearMonthDayDiv"></div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                    </td>
+                                    <td class="paddingLeft15px paddingTop10px">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <input  id="y1" name="recy" title="" type="radio" value="y1" onclick="setRecurrenceValues(this.id);"/>
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <apex:outputlabel value="{!$Label.bmcservicedesk__the}"/>
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <div id="recYearDayInstance"></div>     
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <div id="recYearDayOfWeek"></div>
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <apex:outputlabel value="{!$Label.bmcservicedesk__of}"/>
+                                                </td>
+                                                <td class="paddingLeft5px">
+                                                    <div id="recYearDayInstanceMonth"></div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="paddingTop10px">
+                        <table>
+                            <tr>
+                                <td class="width40px">
+                                    <apex:outputlabel value="{!$Label.bmcservicedesk__at}"/>
+                                </td>
+                                <td class="paddingLeft5px">
+                                    <div id="recurrenceTimeHrsDiv"></div>
+                                    <!-- 
+                                    <input size="1" maxlength="2" max="12" min="0" value="8" id="recTimeHrs" type="number" style="text-align:right"/>   
+                                    -->
+                                </td>
+                                <td class="paddingLeft5px"><apex:outputlabel value=":"/></td>                        
+                                <td class="paddingLeft5px">
+                                    <div id="recurrenceTimeMinDiv"></div>
+                                    <!-- <input size="1" maxlength="2" max="59" min="0" value="0" id="recTimeMin" type="number" style="text-align:right"/> -->
+                                </td>
+                                <td class="paddingLeft5px">
+                                    <div id="recurrenceTimeFrameDiv"></div>
+                                </td>
+                            </tr>
+                        </table>    
+                        
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <hr align="center" class="hrCls"/>
+        <div class="paddingLeft15px">
+            <table cellpadding="0" cellspacing="0" border="0" width="400">
+              <tr>
+                  <td>
+                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__RecurrenceStartDate__c.label}" />
+                  </td> 
+                  <td colspan="2">
+                      <apex:inputField value="{!template.BMCServiceDesk__RecurrenceStartDate__c}" id="recStartDateTime" styleClass="width120px" />
+                  </td>
+              </tr>
+              <tr>
+                  <td class="paddingTop10px">
+                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__RecurrenceEndDate__c.label}" />
+                  </td>     
+                  <td class="paddingTop10px">
+                    <table>
+                        <tr>
+                            <td>
+                                <apex:inputField value="{!template.BMCServiceDesk__RecurrenceEndDate__c}" id="recEndtDateTime" styleClass="width120px"/>
+                            </td>
+                            <td style="padding-left:10px;">
+                                <a onclick="calcEndDate();" href="javascript:void(0);">       
+                                    <apex:outputLabel styleClass="cusrsorStyle" value="{!$Label.bmcservicedesk__calculateenddate}"/>                                                                                        
+                                </a>    
+                            </td>
+                            <td>
+                                <button type ="button" id="fieldInfobtn" class="commentsInfoTooltip" onmouseover="showInfoPopup(event);" onmouseout="fieldInfo_out(this);"/>
+                            </td>
+                        </tr>
+                    </table>
+                  </td>
+              </tr>
+            </table>
+        </div>
+        </div>
+        <div class="paddingTop20px">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" class="clsButtonBarTD">
+              <tr>
+                  <td width="10%" class="paddingLeft15px">
+                      <input type="button" value="{!$Label.Save}" onClick="saveBtnHandler(); "  id="saveButtonId"  class="btnCls" style="display : inline;" />
+                  </td>
+                  <td width="13%" id="">
+                      <input type="button" value="{!$Label.Cancel}" onClick="window.parent.closePopupRF();"  id="cancelButtonId"  class="btnCls" style="display:inline" />
+                  </td>
+                  <td width="77%" id="">
+                    <apex:outputpanel id="removeBtnPanel">
+                        <apex:outputpanel rendered="{!template.BMCServiceDesk__HasRecurrence__c}">
+                          <input type="button" value="{!$Label.RemoveRecurrence}" onClick="removeRecurrence();"  id="removeButtonId"  class="btnCls" style="display:inline" />
+                        </apex:outputpanel>
+                      </apex:outputpanel>
+                  </td>
+              </tr>
+            </table>
+        </div>
+    </div>
+    <apex:outputPanel id="apexMessageErrorPanel" >
+         <div id="apexMessageErrorPanelDiv" style="display:none;">
+            <apex:messages />
+        </div>
+     </apex:outputPanel>
+    <apex:actionFunction name="saveRecurrence" action="{!saveRecurrence}" rerender="recurrenceDataPanel,removeBtnPanel,apexMessageErrorPanel" oncomplete="refreshParentOnSave();assignApexErrorMessage();">        
+         <apex:param name="recType" value=""/>
+         <apex:param name="recInterval" value=""/>
+         <apex:param name="recDayOfWeekMask" value=""/>
+         <apex:param name="recDayOfMonth" value=""/>
+         <apex:param name="recInstance" value=""/>
+         <apex:param name="recMonthOfYear" value=""/>
+         <apex:param name="recTimeHrs" value=""/>
+         <apex:param name="recTimeMin" value=""/>
+         <apex:param name="recTimeFrame" value=""/>
+    </apex:actionFunction>
+    <apex:actionRegion >  
+    <apex:actionFunction name="removeTemplateRecurrence" action="{!removeRecurrence}" rerender="recurrenceDataPanel,removeBtnPanel" oncomplete="refreshParentOnRemove();"/>
+   	</apex:actionRegion>   
+    <apex:actionFunction name="calculateRecurrenceEndDate" action="{!calculateRecurrenceEndDate}" rerender="messagePanel,recEndtDateTime,apexMessageErrorPanel" oncomplete="waitMask.hide();assignApexErrorMessage();">        
+         <apex:param name="recType" value=""/>
+         <apex:param name="recInterval" value=""/>
+         <apex:param name="recDayOfWeekMask" value=""/>
+         <apex:param name="recDayOfMonth" value=""/>
+         <apex:param name="recInstance" value=""/>
+         <apex:param name="recMonthOfYear" value=""/>
+         <apex:param name="recTimeHrs" value=""/>
+         <apex:param name="recTimeMin" value=""/>
+         <apex:param name="recTimeFrame" value=""/>
+    </apex:actionFunction>
+        
+    </apex:form>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+    <apex:outputpanel id="recurrenceDataPanel">
+        <script>
+             isNewRec = !{!template.BMCServiceDesk__HasRecurrence__c};
+             recType = '{!JSENCODE(recurrenceType)}';
+             recInterval = '{!template.RecurrenceInterval__c}';
+             recDayOfWeekMask = '{!JSENCODE(template.RecurrenceDayOfWeekMask__c)}';
+             recDayOfMonth = '{!template.RecurrenceDayOfMonth__c}';
+             recInstance = '{!JSENCODE(template.RecurrenceInstance__c)}';
+             recMonthOfYear = '{!JSENCODE(template.RecurrenceMonthOfYear__c)}';  
+             dayOfWeekIndex = '{!dayOfWeekIndex}';
+             recTimeHrs='{!recurrenceHour}';
+             recTimeMin='{!template.RecurrenceMinutes__c}';
+             recTimeFrame='{!timeFrame}';
+             isSavedSuccessfully = {!isSavedSuccessfully};
+             message = '{!JSENCODE(message)}';
+        </script>
+    </apex:outputpanel>
+    <apex:outputpanel id="messagePanel">
+        <script>
+        message = '{!JSENCODE(message)}';
+         if(message != null && message != ''){
+            showMsg();
+         }
+        </script>
+    </apex:outputpanel>
+    <script>
+        if(isNewRec){
+            recType='wd0';
+            recInterval = '1';
+            recTimeHrs='8';
+            recTimeMin='0';
+            recTimeFrame='AM';
+            var todayCheckBoxEle = document.getElementById(dayOfWeekIndex);
+            if(todayCheckBoxEle!=null){
+                todayCheckBoxEle.checked=true;
+            }
+        }
+    </script>
+    <script>
+     var RecTypeJSON = {!RecTypeJSON};
+     var RecInstanceJSON={!RecInstanceJSON};
+     var RecMonthOfYearJSON= {!RecMonthOfYearJSON};
+     var RecDayOfWeekListJSON= {!RecDayOfWeekListJSON};
+     var RecAMPMListJSON={!RecAMPMListJSON};
+     var errorStrForWeeklyRec = '{!JSENCODE($Label.ErrorMessageForWeeklyRecord)}';
+     var calculateEndDateTip = '{!JSENCODE($Label.CalculateEndDateTip)}';
+     var infoIconSrc = '{!$Resource.SDEFStyles}/SDEFbuttons/status-11-information.gif';
+     var errorStrForSS='{!JSENCODE($Label.RecurringTemplateSSError)}';
+    </script>    
+    <script src="{!$Resource.SDEFCommonJS}/RecurrencePage.js"  type="text/javascript" />
+</apex:page>

@@ -1,0 +1,207 @@
+<apex:page sidebar="false" showHeader="false"  controller="BMCServiceDesk.SSLayoutFldCondtionsCtrl" >
+    <c:CommonIncludes isExtJS4="true"/>
+    <c:UserContextComponent />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/RFAdminExt4Common.css"/> 
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SSLayoutFldConditions.css" /> 
+    <apex:outputPanel rendered="{!IF( userLanguage=='iw', true, false )}">
+      <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SSLayoutFldConditionsrtl.css" /> 
+
+    </apex:outputPanel>
+    
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+    
+    <apex:form id="ConditionMainForm" >
+       <table  cellspacing="0" cellpadding="0" border="0" class="tab-main-table" style="display:block;padding-left:15px;padding-right:15px;" id="ConditionPanel">
+           <tr>
+               <td>
+                    <apex:outputPanel id="condsPanel">
+                        <table style =" width: 98.5%; hieght : 98.5%" class="output-panel-toolbar-table"  cellpadding="0" cellspacing="0">
+                            <tr  height="45">
+                                <td width="30%" class="pad-10px-td" title="{!$Label.ToolTipqualificationFieldlist}">
+                                    <div id="extFieldList"></div>
+                                </td>
+                                <td width="15%" class="pad-10px-td" title="{!$Label.ToolTipOperator}">
+                                    <div id="compareOpDiv"></div>
+                                </td>
+                                <td width="30%" class="pad-10px-td" title="{!$Label.ConditionalDisplayToolTip}">
+                                    <table cellpadding="0" cellspacing="0" width="95%" border="0">
+                                        <tr>
+                                            <td style="padding-right:5px;">
+                                                <apex:inputText id="inputTxt" style="display:block;width:100%;"  styleClass="condInputEle"/>
+                                                <input type="text" id="referenceID" value=""  style="display:none;" />
+                                                <apex:inputText id="datetimeinput" styleClass="condInputEle dateHbCls" style="display:none;width:100%;"/>
+                                                <apex:inputText id="inputDate" styleClass="condInputEle dateHbCls" style="display:none;width:100%;"/>
+                                                <apex:inputTextarea id="inputTxtArea" style="display:none;width:100%;" styleClass="clscondTextarea" onkeyup="validateLength('{!$Component.ConditionMainForm.inputTxtArea}',selectedTextAreaLength);"/>
+                                            </td>
+                                            <td>
+                                                <a type="button" id="lookUp" class="d-icon-search" style="display:none;" onClick="opencondLookup();"/>
+                                                <a type="button" id="inputTxtAreaButtonEle" class="TextboxPopupIcon d-icon-align_left" style="display:none" onclick="showTextEditor('{!$Component.ConditionMainForm.inputTxtArea}', selectedLabel, selectedTextAreaLength, '{!$Label.OK}', '{!$Label.Cancel}');" />
+                                                <a id="dateTimePopupImg"  class="CMDB_DatePickerImage d-icon-calendar_clock_o" style="display:none"  onclick="showDateTimePicker();"/>
+                                                <a id="datePopupImg"  class="CMDB_DatePickerImage d-icon-calendar_clock_o" style="display:none" onclick="showDatePicker();"/>
+                                            </td>
+                                            <td>
+                                                <div id="picklistCombo"/>   
+                                            </td>
+                                            <td>
+                                                <div id="booleanCombo"/>        
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td width="17%" id="condButtonTD" style="padding-left: 10px;" title="{!$Label.ToolTipLogOperator}">
+                                    <div id="condLogicalOperatorCombo"></div>
+                                </td>
+                                <td width="8%">
+                                    <a id="addButtonId" title="{!$Label.Add}" onclick="addSLTQData();" class="d-icon-plus_circle_o" Style="cursor: pointer; font-size: 16px; color: #00a79d;"></a> 
+                                    <a onclick="upadateSLTQData();"  id="updateButtonId" disabled="true" title="{!$Label.Update}" class="d-icon-check_circle_o" Style="display:none; cursor: pointer; font-size: 16px; color: #ffbf00;"></a>
+                                    <a onclick="removeSLTQData();"  id="removeButtonId" disabled="true" title="{!$Label.Remove}" class="d-icon-minus_circle_o" Style="cursor: pointer; font-size: 16px; color: #f83200;"></a>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table class="output-panel-toolbar-table" id="cond_grid_table_id"  cellpadding="0" cellspacing="0" border="0">
+                        <tr height="10"><td style="border-top:1px solid #e1e1e1"></td></tr>
+                        <tr>
+                            <td>
+                                <div id="ConditionGridDiv"/>    
+                            </td>
+                        </tr>
+                        <tr height="15"><td></td></tr>
+                        <tr id='AdvancedFilterSec'>
+                            <td colspan="1" >   
+                                <div id="addFilter"   class="clsCmdLink  advLinkCls addClearFilterText" >
+                                    <a onclick="toggleAdd(false);return false" class="d-icon-plus_circle_o" Style="cursor: pointer; font-size: 16px; color: #00a79d;"></a> 
+                                    <a onclick="toggleAdd(false);return false"  href="#!" id="addRow" title="{!JSENCODE($Label.AddAdvancedRuleLogic)}">{!JSENCODE($Label.AddAdvancedRuleLogic)}</a>
+                                </div>
+                                <div id="clearFilter" class="clsCmdLink addClearFilterText" style="display:none">
+                                    <a onclick="toggleClear();return false" class="d-icon-minus_circle_o" Style="cursor: pointer; font-size: 16px; color: #f83200;"></a>
+                                    <a onclick="toggleClear();return false" href="#!" id="ClearAppliedFilter" title="{!JSENCODE($Label.ClearAdvancedRuleLogic)}">{!JSENCODE($Label.ClearAdvancedRuleLogic)}</a>
+                                    <input id="filterLogic" class="filterLogicInputText" type="text" name="filterLogic"  autocomplete="off"/>
+									<div id="exampleText">
+                                        {!$Label.Example}: (1 AND 2) OR 3
+                                    </div>
+                                </div>                                
+                            </td>
+                        </tr>
+                     </table>
+                </td>
+            </tr>
+			<tr height="15"><td></td></tr>
+        </table>
+		 <table width="100%">
+		 	<tr>               
+				<td height="45" class="win-btm-toolbar">
+					<span>
+						<button class="bmc-btn-small" id="cancelButton" onclick="closePopup();" title="{!JSENCODE($Label.Cancel)}" type="button">{!JSENCODE($Label.Cancel)}</button>&nbsp;
+						<button class="bmc-btn-primary bmc-btn-small" id="ApplyBtnId" onclick="okBtnHandler();" title="{!JSENCODE($Label.Ok)}" type="button">{!JSENCODE($Label.Ok)}</button>
+					</span>
+				</td>
+			</tr>
+		 </table>
+    </apex:form>
+    <script>
+     var userLanguage = '{!JSENCODE(userLanguage)}';
+    var moduleName ='Incident__c';
+    var orgNamespace = 'BMCServiceDesk__';
+    var fldData = {!fieldData};
+    var dynamicDispFor = '{!JSENCODE(dynamicDispFor)}';
+    var fldConditions = '{!JSENCODE(fldConditions)}';
+    var labelOperator = "{!JSENCODE(labelOperator)}";
+    var labelLogicalOperator = "{!JSENCODE($Label.LogicalOperator)}";
+    var labelField ="{!JSENCODE(labelField)}";
+    var labelAND='{!JSENCODE($Label.BMCServiceDesk__slm_and)}';
+    var labelOR='{!JSENCODE($Label.BMCServiceDesk__or)}';
+    var labelNONE='{!JSENCODE($Label.BMCServiceDesk__opnone)}';
+    var InputNameLabel= '{!JSENCODE($Label.InputNameLabel)}';
+    var operandValue ="{!JSENCODE($Label.BMCServiceDesk__value)}";
+    var servicetargetOrder ="{!JSENCODE($Label.BMCServiceDesk__servicetargetconditionorder)}";
+    var pleaseWaitLbl = '{!JSENCODE($Label.BMCServiceDesk__pleasewait)}';
+    var fieldNotInFieldSet = '{!JSENCODE($Label.BMCServiceDesk__FieldNotInLayout)}';
+    var invalidNumberErrorLbl = '{!JSENCODE($Label.BMCServiceDesk__TemplateInvalidNumber)}';
+    var invalidEmailErrorLbl = '{!JSENCODE($Label.BMCServiceDesk__TemplateInvalidEmailAddress)}';
+    var invalidPercentErrorLbl = '{!JSENCODE($Label.BMCServiceDesk__TemplateInvalidPercent)}';
+    var invalidPhoneErrorLbl = '{!JSENCODE($Label.BMCServiceDesk__TemplateInvalidPhone)}';
+    var invalidCurrencyErrorLbl = '{!JSENCODE($Label.BMCServiceDesk__TemplateInvalidCurrency)}';
+    var invalidURLErrorLbl = '{!JSENCODE($Label.BMCServiceDesk__invalidURL)}';
+    var DZHE     ='¶ऽӘџ'; //Cyrillic character
+    var EF       ='¶ऽӘф'; //Cyrillic character
+    var old_EF = 'ф';
+    var popUpString ='';
+    var pickListArray = new Array();
+    var pickListComboStore;
+    var  pickListComboBx;
+    var booleanComboStore;
+    var booleanComboBx;
+    var  booleanArray = [['True', 'True'],['False', 'False']];
+    var ConditionOrderIndex =1;
+    var logicalOperator;
+    var isAdvRulePresent ;
+    var strEnableQueueAndUserAssignment ={!isStaffNQueueEnabled}; 
+    var advRuleVal= '{!JSENCODE(advancedRuleLogic)}';
+    var FilterLogicValidation = '{!JSENCODE($Label.filterlogicvalidation)}';
+    var ValidateCriteriaMandatorylbl ='{!JSENCODE($Label.CriteriaMandatory)}';
+    var ValidateLogicalOperatorNotMultiNone ='{!JSENCODE($Label.FulfillmentConditionOperatorMsg)}';
+    var FilterLogicAddCriteriaValidation ='{!JSENCODE($Label.FilterLogicAddCriteriaValidation)}';
+    
+    function getUpdateBtnEle(){
+        return document.getElementById('updateButtonId');
+    }
+    function getAddBtnEle(){
+        return document.getElementById('addButtonId');
+    }
+    function getRemoveBtnEle(){
+        return document.getElementById('removeButtonId');
+    }
+    function getSDFStylesResPath(){
+        return '{!$Resource.SDEFStyles}';
+    }
+    function getInputTxtEle(){
+        return document.getElementById('{!$Component.ConditionMainForm.inputTxt}');
+    }
+    function getInputTextAreaEle(){
+        return document.getElementById('{!$Component.ConditionMainForm.inputTxtArea}');
+    } 
+    function getDateTimeInputEle(){
+        return document.getElementById('{!$Component.ConditionMainForm.datetimeinput}');  
+    }
+    function getDateTimePickerImg(){
+        return document.getElementById('dateTimePopupImg');
+    }
+    function getDateInputEle(){
+        return document.getElementById('{!$Component.ConditionMainForm.inputDate}');  
+    }
+    function getDatePickerImg(){
+        return document.getElementById('datePopupImg');
+    }
+    function getLookupEle(){
+        return document.getElementById('lookUp');
+    }
+    function getLookUpPanelEle(){
+        return document.getElementById('{!$Component.lookUpPanel}');
+    }
+    function showDateTimePicker(){
+        var dateTimeInputId = document.getElementById('{!$Component.ConditionMainForm.datetimeinput}');
+        _datePicker.Show(dateTimeInputId.id);
+    }
+    function showDatePicker(){
+        var dateInputId = document.getElementById('{!$Component.ConditionMainForm.inputDate}');
+        _datePicker.Show(dateInputId.id);
+    }
+    Ext.ns("SSLayoutCondtnsPage");
+    SSLayoutCondtnsPage.Labels = {
+        SelectFieldErrMsg:'{!JSENCODE($Label.BMCServiceDesk__errormsgtemplates)}',
+        SelectCmpOpMsg:'{!JSENCODE($Label.BMCServiceDesk__selectcompopmessage)}',
+        SelectLogOpMsg:'{!JSENCODE($Label.BMCServiceDesk__selectlogicalopmsg)}',
+        EnterValMsg:'{!JSENCODE($Label.BMCServiceDesk__entervaluemsg)}'
+       
+    }
+    </script>
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/SSLayoutFldConditions.js"></script>
+    
+    </apex:page>

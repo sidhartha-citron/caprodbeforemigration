@@ -1,0 +1,127 @@
+﻿<apex:page controller="BMCServiceDesk.AdminSelfServiceController" showHeader="false" standardStylesheets="false" action="{!AdminQuickLinksLoader}" id="pg">
+<style>
+.x-form-text{
+	padding : 3px 3px 1px 3px !important;
+}
+ .x-grid3-header {
+	background-color:#2E7DB3 !important;
+	background-image:none !important;
+}
+</style>
+	<c:CommonIncludes /> 
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSelfService.css"/>
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+	<apex:form id="form">
+		<apex:outPutPanel id="btntoolbar">
+			<div id = "btnToolbar" />
+		</apex:outPutPanel>
+		<div id="helpDiv" class="clshelpDiv"></div>
+		<apex:OutPutPanel id="mainPanel" >			
+               <table class = "bannerMainPanel">                  
+                    <tr>
+                       <td>
+                           <table class="clsInnerTabel">
+                               <tr>
+                                   <td >
+                                       <apex:inputCheckbox id="enableQuickLink" value="{!selfServiceBean.Enable_Quick_Link_Portlet}" onClick="enableDisableButtons();" styleclass="clsCheckBoxLabel"/>
+                                   </td>
+                                   <td >
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__enablequicklink}"/>
+                                    </td>
+                               </tr>
+                           </table>
+                       </td>
+                   </tr>
+                   <tr><td class = "div2pxVspacing"></td></tr>
+                   <tr>
+                        <td >                              
+                               <div id="quickBtnToolbar" ></div>
+                              
+                               <div id="faqCategory-grid"  class="clsIE7TopSpacing"></div>
+                       </td>
+                   </tr>                  
+               </table>                              
+		</apex:OutPutPanel>
+		<c:ValidationComponent errorMsgList="{!JSENCODE(messageString)}" id="validationComponent"></c:ValidationComponent>
+		<apex:outputPanel id="msg">
+	         <script>               
+	              var message = '{!JSENCODE(messageString)}'; 
+	         </script>
+	   </apex:outputPanel>
+	   
+		<apex:actionFunction name="updateObjList" action="{!updateQuickLink}"  rerender="mainPanel,msg,btntoolbar,onReady" oncomplete="waitMsg.hide();showErrorMsg();"> 
+			<apex:param name="savedName" assignTo="{!quickObjList}"  value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="deleteQuickLink" action="{!deleteQuickLink}"  rerender="validationComponent,msg" oncomplete="waitMsg.hide();showErrorMsg();reset();">
+	        <apex:param name="deleteName" assignTo="{!quickLinkId}"  value=""/>
+	    </apex:actionFunction>	                    
+        <apex:actionFunction name="reset" action="{!quickLinksReset}" rerender="mainPanel,msg,btntoolbar,onReady" /> 
+	</apex:form>
+	<apex:outputPanel id="onReady">
+		<script >
+			Ext.onReady(function(){
+				var listData =[{!listData}];
+			    onReadyPanelFunction();
+			    store.loadData(listData);
+			    var numOfrecord=listData.length;
+			    var gridheight = 500;
+			    if(numOfrecord<20)
+			         gridheight = 500;
+			    else
+			         gridheight=numOfrecord*50; 
+			    grid.setHeight(gridheight);
+			});
+		</script>
+	</apex:outputPanel>
+	<script>
+		var NameLabel='{!JSENCODE($Label.Name)}';
+		var saveLabel='{!JSENCODE($Label.save)}';
+		var undoDefaultSettingPageLabel='{!JSENCODE($Label.Reset)}';
+		var quickLinksDeleteConfirmationLabel='{!JSENCODE($Label.RemoveQuickLink)}';
+		var UrlNameLabel='{!JSENCODE($Label.UrlName)}';
+	    var URLLabel='{!JSENCODE($Label.URL)}';
+	    var UrlLinkLabel='{!JSENCODE($Label.UrlLink)}';
+	    var newLabel='{!JSENCODE($Label.new)}';
+	    var deleteLabel='{!JSENCODE($Label.delete)}';
+		var quicklink='{!JSENCODE($Component.pg.form.enableQuickLink)}';
+		var txturlvar='{!JSENCODE($Component.defaultForm.panel.search.txturl)}';
+	    var IconUpLabel='{!JSENCODE($Label.IconUp)}';
+	    var IconDownLabel='{!JSENCODE($Label.IconDown)}';
+	    var resourcesfilesvar='{!$Resource.SDEFStyles}';
+	    var invalidQuickLinkURLLabel='{!JSENCODE($Label.invalidQuickLinkURL)}';
+	    var SSQuickLinkNameInvalidSizeLabel='{!JSENCODE($Label.SSQuickLinkNameInvalidSize)}';
+	    var PE = 'П';// for comma separator
+    	var EF = 'ф'; // for # separator
+    	var invalidQuickLinkURLLabel='{!JSENCODE($Label.InvalidQuickLinkURL)}';
+    	var grid;
+    	var message = '{!JSENCODE(messageString)}'; 
+    	var removeQuickLinkLabel='{!JSENCODE($Label.RemoveQuickLink)}';
+    	var isQLDeletable = {!$ObjectType.QuickLink__c.deletable};
+    	var isQLCreateable = {!$ObjectType.QuickLink__c.createable};
+	    function showErrorMsg(){
+	         if(message!=null && message !=''){                                
+	             Ext.MessageBox.show({                                
+	                 title: '{!JSENCODE($Label.QuickLinkSettings)}',
+	                 msg:message ,
+	                 width:300,
+	                 buttons: Ext.MessageBox.OK
+	             });
+	        }
+	    }
+	   function showMessage(msg){
+	  
+	   		if(msg!=null && msg !=''){                                
+	            Ext.MessageBox.show({                                
+	                title: '{!JSENCODE($Label.QuickLinkSettings)}',
+	                msg:msg ,
+	                width:300,
+	                buttons: Ext.MessageBox.OK
+	            });
+	       }
+	   }
+	   wikiUrl='{!wikiUrl}';
+       parent.addHelpOnPage(document.getElementById('helpDiv'),'SS_quick_links.htm',wikiUrl);
+	</script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminQuickLinks.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+</apex:page>

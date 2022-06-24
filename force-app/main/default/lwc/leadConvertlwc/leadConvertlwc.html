@@ -1,0 +1,92 @@
+<template>
+    <lightning-card>
+        <h1 style="white-space: normal;" class="slds-text-align_center">
+            {convertMessage}
+        </h1>
+        <lightning-layout multiple-rows="true">
+            <lightning-layout-item size="12" padding="around-small">
+                <template if:true={oppId}>
+                    <lightning-icon icon-name="standard:opportunity" size="small">
+                    </lightning-icon>&nbsp;
+                    Opportunity : <a href={oppId} target="_blank">{accOppname}</a>
+                </template>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small">
+                <template if:true={accId}>
+                    <lightning-icon icon-name="standard:account" size="small">
+                    </lightning-icon>&nbsp;
+                    Account : <a href={accId} target="_blank">{accOppname}</a>
+                </template>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small">
+                <template if:true={conId}>
+                    <lightning-icon icon-name="standard:contact" size="small">
+                    </lightning-icon>&nbsp;
+                    Contact : <a href={conId} target="_blank">{conName}</a>
+                </template>
+            </lightning-layout-item>
+        </lightning-layout>
+        <template if:true={isLoaded}>
+            <lightning-spinner alternative-text="Loading" size="large" variant="brand" class="spins">
+            </lightning-spinner>
+        </template>
+        <template if:true={dupeEncountered}>
+            <lightning-layout multiple-rows="true">
+                <lightning-layout-item size="12">
+                    <template if:true={accdata}>
+                        <lightning-icon icon-name="standard:account" size="small">
+                        </lightning-icon> &nbsp; Potential Duplicate Accounts
+                    </template>
+                </lightning-layout-item>
+                <lightning-layout-item size="12">
+                    <template if:true={accdata}>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <template for:each={columns} for:item="col">
+                                        <th key={col.label} scope="col" style="word-wrap: break-word;">
+                                            <span class="slds-truncate">{col.label}</span>
+                                        </th>
+                                    </template>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={accdata} for:item="row" for:index="index">
+                                    <tr key={row.Id} class="slds-m-top_xx-small">
+                                        <td scope="row" data-column="Action" data-id={row.Id}>
+                                            <lightning-input value={index} type="checkbox" name={row.Id}
+                                                onchange={getaccrowid}>
+                                            </lightning-input>
+                                        </td>
+                                        <td scope="row" data-column="Name">
+                                            {row.Name}
+                                        </td>
+                                        <td scope="row" data-column="Shipping Address" style="word-wrap: break-word;">
+                                            {row.Shipping_Address__c}
+                                        </td>
+                                        <td scope="row" data-column="Industry">
+                                            {row.Industry}&nbsp;
+                                        </td>
+                                        <td scope="row" data-column="Phone">
+                                            {row.Phone}
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </template>
+                </lightning-layout-item>
+            </lightning-layout>
+        </template>
+        <lightning-layout multiple-rows="true">
+            <lightning-layout-item size="12" padding="around-small">
+                <template if:true={dupeEncountered}>
+                    <lightning-button onclick={convert} label="Convert" style="float:right"></lightning-button>
+                </template>
+                <template if:false={isflow}>
+                    <lightning-button onclick={back} label="Back To Call Block"></lightning-button>
+                </template>
+            </lightning-layout-item>
+        </lightning-layout>
+    </lightning-card>
+</template>

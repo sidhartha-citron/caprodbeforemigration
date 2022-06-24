@@ -1,0 +1,35 @@
+
+<ng-form name="subFormStaticFields">
+				<div ng-switch="field.Type">
+					<srd-text-question ng-switch-when="textfield" data="field"></srd-text-question>
+					<srd-text-question ng-switch-when="textarea" data="field"></srd-text-question>
+					<srd-text-question ng-switch-when="encryptedstring" data="field"></srd-text-question>
+						<srd-text-question ng-switch-when="email" data="field"></srd-text-question>
+						<srd-text-question ng-switch-when="url" data="field"></srd-text-question>
+					<srd-radio-question ng-switch-when="radiobutton" data="field"></srd-radio-question>
+					<srd-checkbox-question ng-switch-when="checkbox" data="field"></srd-checkbox-question>
+					<srd-number-question ng-switch-when="number" data="field"></srd-number-question>
+					<srd-menu-question ng-switch-when="picklist" data="field"></srd-menu-question>
+					<srd-date-time-question ng-switch-when="date/time" data="field"></srd-date-time-question>
+					<srd-date-question ng-switch-when="date" data="field"></srd-date-question>
+					<srd-reference-question-tree ng-switch-when="lookup" data="field" for-sr="true" ng-if="field.isCategory"></srd-reference-question-tree>
+					<srd-reference-question ng-switch-when="lookup" data="field" ng-if="!(field.isCategory)"></srd-reference-question>					
+					<srd-text-question ng-switch-when="richtextarea" data="field"></srd-text-question> 
+						<span class="srd-question-error_message" ng-show="formSubmitted && (subFormStaticFields.formField.$error.required || subFormStaticFields.radioButtonForm.formField.$error.required)">{{selfServiceLabels.EnterValue}}</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && subFormStaticFields.formField.$error.email">{{selfServiceLabels.InvalidEmailAddress}}</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && subFormStaticFields.formField.$error.maxlength">{{selfServiceLabels.InvalidLength}} ({{selfServiceLabels.Maximum}} {{field.FieldLength}})</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && (subFormStaticFields.formField.$error.positiveValue || subFormStaticFields.formField.$error.number || subFormStaticFields.formField.$error.badInput)">{{selfServiceLabels.InvalidNumber}}</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && subFormStaticFields.formField.$error.url">{{selfServiceLabels.InvalidURL}}</span>				
+						<span class="srd-question-error_message" ng-show="formSubmitted && subFormStaticFields.formField.$error.min">{{selfServiceLabels.range}}({{selfServiceLabels.MinimumValue}} {{field.Validations.MinValue}})</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && subFormStaticFields.formField.$error.max">{{selfServiceLabels.range}}({{selfServiceLabels.MaximumValue}} {{field.Validations.MaxValue}})</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && subFormStaticFields.formField.$error.minmax">{{selfServiceLabels.range}} ({{selfServiceLabels.ExpectedRange}}{{field.Validations.MinValue}}-{{field.Validations.MaxValue}})</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && subFormStaticFields.formField.$error.minlength">{{selfServiceLabels.InvalidLength}} ({{selfServiceLabels.MinimumLength}} {{field.Validations.MinValue}})</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date' && subFormStaticFields.formField.$error.ValidDate">{{selfServiceLabels.InvalidDate}}</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date/time' && subFormStaticFields.formField.$error.ValidDate">{{selfServiceLabels.InvalidDate}}</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date' && !subFormStaticFields.formField.$error.ValidDate && subFormStaticFields.formField.$error.smaller">{{selfServiceLabels.Expected}}{{field.Text}} < {{field.errorMsg}}</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date' && !subFormStaticFields.formField.$error.ValidDate && subFormStaticFields.formField.$error.greater">{{selfServiceLabels.Expected}}{{field.Text}} > {{field.errorMsg}}</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date/time' && !subFormStaticFields.formField.$error.ValidDate && subFormStaticFields.formField.$error.smaller">{{selfServiceLabels.Expected}}{{field.Text}} < {{field.errorMsg}}</span>
+						<span class="srd-question-error_message" ng-show="formSubmitted && field.Type=='date/time' && !subFormStaticFields.formField.$error.ValidDate && subFormStaticFields.formField.$error.greater">{{selfServiceLabels.Expected}}{{field.Text}} > {{field.errorMsg}}</span>		
+						</div>
+						</ng-form>	
+						

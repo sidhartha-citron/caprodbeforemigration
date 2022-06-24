@@ -1,0 +1,182 @@
+<apex:page showHeader="false" sidebar="false" controller="BMCServiceDesk.ConsoleDashboardController" action="{!loadConsoleDashboard}" standardStylesheets="false">
+<link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/consolecomponent.css" type="text/css" />
+<script src="{!$Resource.ExtJS4_1_3}/ext-all.js" type="text/javascript" />
+<script>
+    function createMask(){
+		return new Ext.LoadMask(Ext.getBody(), {msg:"{!JSENCODE($Label.pleasewait)}..."});
+	}
+	var waitMask = createMask();
+	waitMask.show();
+	var DashboardWidgets=[];
+    var QVCount='{!JSENCODE(TEXT(listOfWidgets.size))}',
+	dashboardId = '{!dashboardId}',
+	isdefaultConsoleDB = {!isdefaultConsoleDB},
+	count=0,errorStr,dashboardName,
+	pleasewait = "{!JSENCODE($Label.pleasewait)}...",
+    waitMsgBar = '',
+	qvLimitMsgLabel = '{!JSENCODE($Label.QvLimitErrorMessage)}',
+    savedSuccessLabel = '{!JSENCODE($Label.DashboardSaveSuccessMsg)}',
+    qvLimitOnDashboard={!qvLimitOnDashboard},
+	currentUser='{!JSENCODE($User.Id)}';
+	UnsharedQvs='{!UnsharedQvIds}';
+	DisplayMsg='{!JSENCODE($Label.UnsharedWidget)}';
+	_ServerLabels = {}
+	_ServerLabels.Table = "{!JSENCODE($Label.Table)}";
+	_ServerLabels.ManageDashboard = '{!JSENCODE($Label.ManageDashboard)}'; 
+	_ServerLabels.Chart = "{!JSENCODE($Label.Chart)}";
+	_ServerLabels.refreshMinLabel = '{!JSENCODE($Label.refreshMin)}';
+	_ServerLabels.autoRefreshLabel = '{!JSENCODE($Label.autoRefresh)}';
+	_ServerLabels.intervalMinLabel = '{!JSENCODE($Label.intervalMin)}';
+	_ServerLabels.toolTipAutoRefreshON = '{!JSENCODE($Label.toolTipAutoRefreshON)}';
+	_ServerLabels.toolTipAutoRefreshOFF = '{!JSENCODE($Label.toolTipAutoRefreshOFF)}';
+	_ServerLabels.Apply = '{!JSENCODE($Label.Apply)}';
+	_ServerLabels.RecordsPerPage = "{!JSENCODE($Label.Records_per_page)}";
+	_ServerLabels.MyDashboardTitle = "{!JSENCODE($Label.MyDashboardTitle)}";
+    _ServerLabels.DefaultDashboard= "{!JSENCODE($Label.DefaultDashboard)}";
+	_ServerLabels.Help = "{!JSENCODE($Label.TooltipHelp)}";
+	_ServerLabels.Views = "{!JSENCODE($Label.Views)}";
+	_ServerLabels.AdvancedFilter = "{!JSENCODE($Label.AdvancedFilter)}";
+	_ServerLabels.Refresh = "{!JSENCODE($Label.Refresh)}";
+	
+	var SelectedQVsLabel='{!JSENCODE($Label.SelectedQVForDshboard)}';
+    var QVSpanWidthLabel='{!JSENCODE($Label.QVSpanFullWidth)}';
+	var SDEFStylesPATH = '{!$Resource.SDEFStyles}';
+	var helpResource='',wikiUrl='{!wikiUrl}', userLanguage = '{!userLanguage}',showJapaneseHelp = '{!showJapaneseHelp}';
+	if (userLanguage == 'ja' && showJapaneseHelp.toLowerCase() == 'true'){
+		helpResource = '{!$Resource.StdFormHelp_JA}';
+	}else{
+		helpResource = '{!$Resource.StdFormHelp}';
+	}
+	qvLimitMsgLabel = qvLimitMsgLabel.replace("{0}", qvLimitOnDashboard);
+	
+	
+    function repeatListOfWidgetsPage(){
+        <apex:repeat value="{!listOfWidgets}" var="customWidget">
+             DashboardWidgets.push({
+                widgetId:'{!customWidget.Id}' ,
+                quickview: '{!JSENCODE(customWidget.FKSYSQVQuery__r.name__c)}' ,
+                quickViewId:'{!customWidget.FKSYSQVQuery__c}',
+                order:'{!customWidget.QuickView_Display_Order__c}',
+                isSystem:'{!customWidget.FKSYSQVQuery__r.System__c}' ,
+                isQVOptimized:'{!customWidget.FKSYSQVQuery__r.isQVOptimized__c}' ,
+                isSingleRow:'{!customWidget.isFullWidth__c}',
+                colspan:'1'
+            });
+        </apex:repeat>
+    }
+</script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/ConsoleDashboard.js" />
+<apex:form id="theForm">
+<div id="manageDbPanel" class="rf-main-blade" style="">
+<br/><apex:outputPanel rendered="{!isAdmin}">
+<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__selectdbtitle)}" style="align:left;padding-right:20px" />
+<select id="selectOption" onchange="getSelectedValue(this)">
+  <option value="{!JSENCODE($Label.DefaultDashboard)}">{!JSENCODE($Label.DefaultDashboard)}</option>
+  <option value="{!JSENCODE($Label.MyDashboardTitle)}" selected="selected">{!JSENCODE($Label.MyDashboardTitle)}</option>
+</select>
+</apex:outputPanel>
+<div id="resetLink">
+    <a href="#" onclick="startWaitMsgBar();resetDashboard();"  style="float:right">{!JSENCODE($Label.ResetDashboardLink)}</a>
+</div>
+<div id="qvSelectMsg" class="qvSelectLbl">{!QVSelectionLabel}</div>
+<apex:outputpanel id="qvListPanel">
+<script>
+     function populateSelQVGridStoreArr(){
+         SelQVGridStore.removeAll();
+         SelQVGridStoreArr=[];
+        <apex:repeat value="{!listOfWidgets}" var="customWidget">
+            SelQVGridStoreArr.push({
+            id:'{!customWidget.FKSYSQVQuery__c}',
+            qvname:'{!JSINHTMLENCODE(customWidget.FKSYSQVQuery__r.name__c)}',
+            order:'{!customWidget.QuickView_Display_Order__c}',
+            isfull:{!customWidget.isFullWidth__c}
+            });
+        </apex:repeat>
+        SelQVGridStore.add(SelQVGridStoreArr);
+    }
+</script>
+<div id="mainPanel" class="mainPanelCss">
+   <div id="myQvHeader" class="rf-mng-qv-hd">
+      <label class="rf-blade-lbl">{!JSENCODE($Label.Navigator_MyQuickViews)}</label>
+      <img src="/s.gif" class="panelDownImg" id="myQvImg" onclick="showPanel('myQvPanel', 'myQvImg');"/>	  
+   </div>
+   <div style="height:auto;display: block;max-height:85px;width:100%;padding-top: 5px;" class="rfPanel" id="myQvPanel"> 
+     <table border="0" width="100%">
+	  <apex:repeat value="{!myQvList}" var="myQv">
+        <tr>
+           <td width="20" class="rfPanel-td"> 
+				<apex:outputText value="CRUDFLSCheck# False Positive: Since this is part of Remedyforce functional process which is expected to work outside of FLS and CRUD permission on this field." rendered="false" />
+               <apex:inputCheckbox value="{!myQv.selected}" id="myQvChk"  onClick="getCount(this,'{!myQv.qv.Id}','{!JSINHTMLENCODE(myQv.qv.BMCServiceDesk__name__c)}')"/>
+           </td>
+           <td class="rfPanel-td"> 
+               <label  style="float:left"> {!myQv.qv.name__c}</label>
+           </td>
+        </tr>
+      </apex:repeat>
+     </table>
+   </div>
+  <div id="shareQvHeader" class="rf-mng-qv-hd">
+       <label class="rf-blade-lbl">{!JSENCODE($Label.SharedQuickViews)}</label>
+	   <img src="/s.gif" class="panelDownImg" id="shareQvImg" onclick="showPanel('shareQvPanel', 'shareQvImg');"/>
+  </div>
+  <div style="height:auto;display: block;max-height:85px;width:100%;padding-top: 5px;" class="rfPanel" id="shareQvPanel"> 
+   <table border="0" width="100%">
+    <apex:repeat value="{!shareQvList}" var="shareQv">
+       <tr>
+            <td width="20" class="rfPanel-td"> 
+				<apex:outputText value="CRUDFLSCheck# False Positive: Since this is part of Remedyforce functional process which is expected to work outside of FLS and CRUD permission on this field." rendered="false" />
+                 <apex:inputCheckbox value="{!shareQv.selected}" id="shareQvChk"  onClick="getCount(this,'{!shareQv.qv.Id}','{!JSINHTMLENCODE(shareQv.qv.BMCServiceDesk__name__c)}')"/>
+            </td>
+            <td class="rfPanel-td"> 
+                <label  style="float:left"> {!shareQv.qv.name__c}</label>
+            </td>
+      </tr>
+     </apex:repeat>
+   </table>
+   </div>
+   </div> 
+   </apex:outputpanel>
+   <div  id="selQVid"  style="margin-top:15px"></div> 
+   <div style="margin-top:10px;margin-bottom:10px">
+   <table>
+       <tr><td colspan="2">
+         <button type="button" onclick="startWaitMsgBar();OkBtnHandler()" >{!JSENCODE($Label.Ok)}</button>
+         <button type="button" id="cancle" onclick="hidePanel()">{!JSENCODE($Label.Cancel)}</button>
+         <button type="button" id="apply" onclick="startWaitMsgBar();getDashboardValue();applyBtnHandler();">{!JSENCODE($Label.Apply)}</button>
+       </td></tr>
+	</table>
+   </div>
+</div>
+<apex:outputPanel id="rfErrorPanel"> 
+    <script>
+         errorStr= '{!errorString}';
+    </script>
+</apex:outputPanel>
+<apex:outputPanel id="countPanel">
+	<script>
+	    count  = '{!selectionCount}';
+	</script>
+</apex:outputPanel>
+<apex:outputPanel id="isdefaultConsoleDB">
+	<script>
+	    isdefaultConsoleDB = {!isdefaultConsoleDB};
+	</script>
+</apex:outputPanel>
+<apex:actionFunction name="RemoveWidget" action="{!RemoveUnsharedWidget}" onComplete="window.location.reload();">
+<apex:param name="UnsharedWidget" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="saveQvHandler" action="{!processSelected}" rerender="rfErrorPanel,isdefaultConsoleDB" onComplete="reloadPage();">
+<apex:param name="dashboardName" value=""/>
+<apex:param name="SelQVList" value="" assignTo="{!SelectedQVJSON}"/>
+</apex:actionFunction>
+<apex:actionFunction name="getQuickviews" action="{!getAvailableQV}" rerender="rfErrorPanel,countPanel,qvListPanel" onComplete="populateSelQVGridStoreArr();adjustHeight();stopWaitMsgBar();showMsgPopup();">
+<apex:param name="dashboardName" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="resetDashboard" action="{!resetDashboard}" rerender="countPanel,qvListPanel" onComplete="populateSelQVGridStoreArr();adjustHeight();stopWaitMsgBar();showMsgPopup();">
+<apex:param name="isResetDashboard" value=""/>
+</apex:actionFunction>
+</apex:form>
+<div id="DBToolbar"></div>
+<div id="MyDB"></div>
+</apex:page>

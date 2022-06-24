@@ -1,0 +1,113 @@
+<apex:page controller="BMCServiceDesk.AcDeviceProcessesController" sidebar="false" showHeader="false" standardStylesheets="false">
+<c:AcRestCommon isGridRequired="true"/>
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/ACCMDBActions.css" type="text/css" /> 
+<style>
+    #newValTypeField .x-form-field {
+        height: 22px !important;
+        Font-family: 'Salesforce Sans',Arial,sans-serif;
+        font-size: 12px;
+        color: #333;
+        border-right:none;
+    }
+    .x-boundlist-item {
+        border-left: 3px solid transparent;
+        height: 34px;
+        vertical-align: middle !important;
+        padding-left: 9px !important;
+        line-height: 28px !important;
+        text-align: left !important;
+    }
+    .x-boundlist-selected {
+        background-color: #f2f2f2 !important;
+        border-color: unset;
+        border-width: 0px;
+        border-left: 3px solid transparent;
+    }
+    .x-form-trigger {
+        background: none !important;
+        cursor: default !important;
+        border: 1px solid #d9d9d9 !important;
+        padding-top: 6px;
+        padding-left: 5px !important;
+        border-left:none !important;
+    }
+    
+    #pathValValueField .x-form-item-label, #attributesValueField .x-form-item-label, #contextValueField .x-form-cb-label{
+        font-family: Salesforce sans !important;
+    }
+    #gridId .x-column-header-trigger {
+    	background-image: none !important;
+    	background-color: #e0e3e6 !important;
+    	display: none !important;
+    }
+    #contextValueField .x-form-checkbox {
+    width: 17px !important;
+    height: 17px !important;
+    display: inline-block !important;
+    padding: 0 !important;
+    
+    }
+   	#contextValueField.x-form-cb-checked .x-form-checkbox{
+        background-image: url('{!URLFOR($Resource.SDEFStyles, 'SDEFimages/cmdb_checkbox-active.svg')}') !important;
+    	background-position: 0 !important;
+    }
+    
+</style>
+        <apex:form id="AssetCoreForm">
+            <div id="btnToolbar" width="100%" height="30%"></div></apex:form>
+    
+        <apex:outputPanel id="msgPanel">
+            <apex:pageMessages />
+            <script>
+            msgStr = '{!JSENCODE(msgStr)}';
+            isAuthRequired={!isAuthRequired};
+            </script>
+        </apex:outputPanel>
+         <apex:outputPanel id="gridPanel">
+<script>
+proxyData='{!JSENCODE(proxyData)}';
+proxyData = JSON.parse(proxyData);
+strFields = {!strFields};
+strColumns = {!strColumns};
+var tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+var warning='{!JSENCODE($Label.ACEndProcess_warning)}';
+var ACEmptyparameters='{!JSENCODE($Label.ACEmptyparameters)}';
+var endprocess='{!JSENCODE($Label.ACEndProcess)}';
+var newProcess='{!JSENCODE($Label.ACNewProcess)}';
+var RunProcess='{!JSENCODE($Label.ACRunProcess)}';
+var processPath='{!JSENCODE($Label.ACProcesspath)}';
+var processContext='{!JSENCODE($Label.ACProcesscontext)}';
+var processattributes='{!JSENCODE($Label.ACProcessattributes)}';
+var yes='{!JSENCODE($Label.ExtjsMessageYes)}';
+var no='<div style="height:16px" class="x-btn-default-small-focus">{!$Label.ExtjsMessageNo}</div>';
+var runProcess='{!JSENCODE($Label.Run)}';
+var ErrorTitle='{!JSENCODE($Label.Error)}';
+var Cancel='{!JSENCODE($Label.Cancel)}';
+
+</script></apex:outputPanel>
+         <apex:form >
+  <apex:actionFunction name="updateACSetting" action="{!updateSessionSetting}" oncomplete="return false;"/>
+  <apex:actionFunction name="EndProcess" action="{!EndProcessoperation}" reRender="gridPanel,msgPanel,updateSession" onComplete="fillGrid();stopWaitMask();ShowMessageBox();checkUserAuth();">
+ <apex:param name="pid" value="" assignTo="{!processid}"/>
+ <apex:param name="pname" value="" assignTo="{!processName}"/>
+ </apex:actionFunction>
+   <apex:actionFunction name="NewProcess" action="{!StartNewProcess}" reRender="gridPanel,msgPanel,updateSession" onComplete="fillGrid();stopWaitMask();ShowMessageBox();checkUserAuth();">
+ <apex:param name="path" value="" assignTo="{!path}"/>
+ <apex:param name="context" value="" assignTo="{!context}"/>
+  <apex:param name="attributes" value="" assignTo="{!attributes}"/>
+ </apex:actionFunction>
+ </apex:form>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AcDeviceProcesses.js" />
+<apex:outputPanel id="updateSession">
+    <script>
+        updateSessionInCS={!updateSessionInCS};
+        if(updateSessionInCS)
+        {
+            updateACSetting();
+        }
+    </script>
+    <script>
+        window.parent.stopWaitMsgBar();
+    </script>
+</apex:outputPanel>
+</apex:page>

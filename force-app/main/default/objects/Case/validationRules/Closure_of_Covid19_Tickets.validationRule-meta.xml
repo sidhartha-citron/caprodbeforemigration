@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Closure_of_Covid19_Tickets</fullName>
+    <active>true</active>
+    <description>Reactivation date on order must be set by CS before closing COVID related ticket</description>
+    <errorConditionFormula>AND
+(
+ ISBLANK(Reactivation_Date__c),
+ ISPICKVAL(Status ,&apos;Closed&apos;),
+ ISPICKVAL(Type, &apos;COVID19 – Suspension of Service&apos;),
+ $RecordType.DeveloperName = &apos;Change_Current_Services&apos;,
+ CASESAFEID($User.ProfileId) &lt;&gt; $Setup.Field_Service_Settings__c.System_Administrator_Profile_Id__c
+)</errorConditionFormula>
+    <errorDisplayField>Reactivation_Date__c</errorDisplayField>
+    <errorMessage>Please enter the Reactivation date before closing the ticket.</errorMessage>
+</ValidationRule>

@@ -1,0 +1,1294 @@
+<apex:page id="ManagePage" showHeader="false" Controller="BMCServiceDesk.ManageController" standardStylesheets="false">
+    <c:CommonIncludes />
+    <script>
+        if (typeof(window.parent) != undefined && window.parent != null && typeof(window.parent.wikiUrlCategoryManagePage) != undefined)
+            window.parent.wikiUrlCategoryManagePage = '{!wikiUrlCategoryManagePage}';
+    </script>
+
+    <style>
+        .div5pxHspacing {
+            width: 5px;
+        }
+
+        .x-list-body  em{
+            text-overflow: ellipsis;
+        }
+
+        .tdwidth200px {
+            width: 200px;
+        }
+
+        .tdwidth205px {
+            width: 205px;
+        }
+
+        .tdwidth232px {
+            width: 232px;
+        }
+
+        .typeCombo {
+            padding-top: 5px;
+            width: 100%;
+        }
+
+        .legendCls {
+            font: 11px arial, tahoma, helvetica, sans-serif;
+            font-weight: 600;
+        }
+
+        .legendTDCls {
+            height: 15px;
+        }
+
+        #legendChar{
+            margin-left: 12%;
+            font-size:smaller;
+        }
+
+        .x-layer {
+            width: 210px !important;
+        }
+
+        .x-combo-list {
+            width: 210px !important;
+
+        }
+
+        .x-combo-list-item {
+            *width: 210px !important;
+        }
+
+        .x-combo-selected {
+            *width: 210px !important;
+        }
+
+        .x-combo-list-inner {
+            *width: 210px !important;
+        }
+
+        .rf-btn {
+            background: url(SDEFimages/grey_bg.gif) repeat-x scroll right top #E8E8E9;
+            border-color: #CCCCCC #666666 #666666 #CCCCCC !important;
+            border-image: none;
+            border-radius: 3px;
+            border-style: solid;
+            border-width: 1px;
+            color: #333333;
+            cursor: pointer;
+            display: inline;
+            font: bold 12px Arial, Helvetica, sans-serif;
+            margin: 1px;
+            padding: 2px 5px 17px 5px;
+        }
+
+        #iconRightId, #iconLeftId {
+            margin: 8px !important;
+        }
+
+        .assignAll{
+            padding-left: 13px; 
+            width:90%;
+            padding-bottom: 8px;
+            padding-top: 12px
+        }
+        .leftStoreCls, .rightStoreCls {
+			border: 1px solid #b5b8c8;
+		}
+		.x-fieldset{
+		 	border:none;
+		}
+
+        .x-list-over{
+            width:99.2% !important;
+        }
+		.x-tip-anchor {
+			background-image:none;
+		}
+    </style>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ManagePageItemselector.js" />
+    <apex:outputPanel id="manageRerender">
+        <script>
+            var leftDataArr = new Array();
+            var rightDataArr = new Array();
+            var templeftDataArr = new Array();
+            var temprightDataArr = new Array();
+            var tempTemplateDataArr = new Array();
+            var tempSRDDataArr = new Array();
+            var tempDataArr = new Array();
+            var srdDataArr = new Array();
+            var leftDataStore;
+            var rightDataStore;
+            var tempDataStore;
+            var srdDataStore;
+            var leftParam = '';
+            var rightParam = '';
+            var topReqStoreParam = '';
+            var leftParamLabel = '';
+            var rightParamLabel = '';
+            var paramLabel = '';
+            var SaveBtnHandler = function(button, event) {
+                setParams();
+            };
+            var undoBtnHandler = function(button, event) {
+                undoChanges();
+            };
+            var toMultiSelectObj;
+            var fromMultiSelectObj;
+            var upImg;
+            var dowmImg;
+            var topImg;
+            var bottomImg;
+            var queryParam = '{!JSENCODE($CurrentPage.parameters.manageId)}';
+            var paramId = '{!JSENCODE($CurrentPage.parameters.paramId)}';
+            var defaultStatusesStr = '{!JSENCODE(defaultStatuses)}'
+            var defaultStatuses;
+            if(defaultStatusesStr){
+                  defaultStatuses = JSON.parse('{!JSENCODE(defaultStatuses)}');    
+            }            
+            var templateLabel = 'Template';
+            var srdLabel = 'SRD';
+            var type = templateLabel;
+            var prefix = '&#149 ';
+            var statusPrefix = '\u2022';
+            var spaceChar = '&nbsp;&nbsp;';
+            var SelfServiceId = 'SelfServiceID';
+            var RFChatId = 'RFChatID';
+            var parentCategoryStore;
+            var SelfServiceValue = '{!JSENCODE($Label.Navigator_SelfService)}';
+            var RFChatValue = '{!JSENCODE($Label.Chat_Header)}';
+            var selectedCategory = '{!JSENCODE(selectedCategoryValue)}';
+            var Loading = '{!JSENCODE($Label.SSLoading)}...';
+            var multiLayoutEnabled = '{!IF(multiLayoutEnabled, true, false)}';
+            var storeHeight = multiLayoutEnabled.toUpperCase() != 'TRUE' ? 500 : 340;
+            var multiselectHeight = multiLayoutEnabled.toUpperCase() != 'TRUE' ? 510 : 345;
+            var allCategoiesLabel = '-- '+'{!JSENCODE($Label.AllCategories)}'+' --';
+            var selectedParentId = '{!JSENCODE(parentId)}';
+            var saveMessageTitle = multiLayoutEnabled.toUpperCase() != 'TRUE' ? '{!JSENCODE($Label.Navigator_SelfServiceSettings)}' : '{!JSENCODE($Label.consoleAdminConsoleLayout)}';
+            var iconLeftDisabled = 'b_darrow_L_disable_custom.gif';
+            var iconLeft = 'b_darrow_L_new.gif';
+            var path = '{!$Resource.SDEFStyles}/SDEFbuttons/';
+            Ext.onReady(function() {
+
+                Ext.QuickTips.init();
+
+                var SamplePanel = Ext.extend(Ext.Panel, {
+                    renderTo: 'btnToolbar',
+                    defaults: {
+                        bodyStyle: 'border:0px;padding:0px;margin:0px;zoom:0px;'
+                    }
+                });
+                new SamplePanel({
+                    title: '',
+                    cls: 'toolSpCls',
+                    bodyStyle: 'border:0px;padding:0px;margin:0px;zoom:0px;',
+                    tbar: [{
+                        scale: 'medium',
+                        iconCls: 'bmcSave',
+                        tooltipType: 'title',
+                        tooltip: '{!JSENCODE($Label.save)}',
+                        id: 'saveId',
+                        listeners: {
+                            mouseover: function() {
+                                this.setIconClass('bmcSaveOn');
+                            },
+                            mouseout: function() {
+                                this.setIconClass('bmcSave');
+                            }
+                        },
+                        handler: SaveBtnHandler
+                    }, ' ', {
+                        scale: 'medium',
+                        iconCls: 'bmcRefresh',
+                        tooltipType: 'title',
+                        tooltip: '{!JSENCODE($Label.Reset)}',
+                        id: 'undoId',
+                        listeners: {
+                            mouseover: function() {
+                                this.setIconClass('bmcRefresh');
+                            },
+                            mouseout: function() {
+                                this.setIconClass('bmcRefresh');
+                            }
+                        },
+                        handler: undoBtnHandler
+                    }]
+
+                });
+
+                // Category Combo
+                var store = new Ext.data.ArrayStore({
+                    fields: ['id', 'label'],
+                    idIndex: 0,
+                    data: [
+                        [SelfServiceId, SelfServiceValue],
+                        [RFChatId, RFChatValue]
+                    ]
+                });
+
+
+                var label = '';
+                if (selectedCategory == SelfServiceId) {
+                    label = SelfServiceValue;
+                } else if (selectedCategory == RFChatId) {
+                    label = RFChatValue;
+                }
+                var combo;
+                if (multiLayoutEnabled.toUpperCase() != 'TRUE') {
+                    combo = new Ext.form.ComboBox({
+                        store: store,
+                        displayField: 'label',
+                        style: 'font: 11px arial,tahoma,helvetica,sans-serif',
+                        emptyClass: 'color: #004376',
+                        typeAhead: false,
+                        mode: 'local',
+                        forceSelection: true,
+                        triggerAction: 'all',
+                        emptyText: label,
+                        selectOnFocus: true,
+                        renderTo: 'typeCategoryDiv',
+                        readOnly: true,
+                        editable: false,
+                        loading: true,
+                        valueField: 'id',
+                        width: 212,
+                        displayField: 'label',
+                        id: 'categoryCombo',
+                        listeners: {
+                            select: function(combo, record, index) {
+                                showLoadingMask();
+                                selectedCategory = record.get(combo.valueField);
+                                //Calling the controller to prepare the dataSource
+                                setSelectedCategory(selectedCategory);
+                            }
+                        }
+                    });
+                }
+
+
+                //  Code MultiSelect Panel
+                var lsname, lslabel;
+                var leftStoreVal = '{!JSENCODE(leftStore)}';
+                var leftStoreLabelVal = '{!JSENCODE(leftStoreLabel)}';
+                var rightStoreVal = '{!JSENCODE(rightStore)}';
+                var rightStoreLabelVal = '{!JSENCODE(rightStoreLabel)}';
+                var typeSeparatorVal = '{!typeSeparator}';
+                var SeparatorVal = '{!Separator}';
+                var rightStoreTypeVal = '{!rightStoreType}';
+                var parentCategoryData = '{!JSENCODE(parentCategoryData)}';
+                if (multiLayoutEnabled.toUpperCase() == 'TRUE' && queryParam.toLowerCase() == 'categories') {
+                    parentCategoryStore = new Ext.data.JsonStore({
+                        id: 'CategoryStore',
+                        fields: ['id', 'label'],
+                        proxy: new Ext.data.MemoryProxy(parentCategoryData),
+                        sortInfo: {
+                            field: 'label',
+                            direction: 'ASC'
+                        }
+                    });
+                    parentCategoryStore.loadData(Ext.decode(parentCategoryData));
+
+                    var parentCategoriesCombo = new Ext.form.ComboBox({
+                        renderTo: 'filterInput',
+                        store: parentCategoryStore,
+                        displayField: 'label',
+                        id: 'parentCategoriesCombo',
+                        style: 'font: 11px arial,tahoma,helvetica,sans-serif',
+                        emptyClass: 'color: #004376',
+                        typeAhead: true,
+                        width: 212,
+                        mode: 'local',
+                        triggerAction: 'all',
+                        valueField: 'id',
+                        readOnly: true,
+                        forceSelection: true,
+                        emptyText: 'Categories',
+                        selectOnFocus: true,
+                        editable: false,
+                        loading: true,
+                        defaultValue: allCategoiesLabel,
+                        listeners: {
+                            afterRender: function() {
+                                this.setValue(this.defaultValue);
+                            },
+                            select: function(combo, record, index) {
+                                selectedParentId = record.get(combo.valueField);
+                                showLoadingMask();
+                                parentCategoriesCombo.setValue(Ext.util.Format.htmlDecode(parentCategoriesCombo.getRawValue()));
+                                getChildCategory(selectedParentId+'{!Separator }'+Ext.util.Format.htmlDecode(record.get(combo.displayField)));
+                            }
+                        }
+                    });
+                }
+                if (selectedParentId) {
+                    var index = Ext.StoreMgr.lookup("CategoryStore").findExact('id',selectedParentId);
+                    var rec = Ext.StoreMgr.lookup("CategoryStore").getAt(index);
+                    parentCategoriesCombo.setValue(Ext.util.Format.htmlDecode(rec.data.label));
+
+                }
+
+
+                if (queryParam.toLowerCase() == 'top requests' && leftStoreVal != '') {
+                    lsname = leftStoreVal.split(typeSeparatorVal)[1].split(SeparatorVal);
+                    lslabel = leftStoreLabelVal.split(typeSeparatorVal)[1].split(SeparatorVal);
+                    for (i = 0; i < lsname.length; i++) {
+                        if (queryParam.toLowerCase() == 'top requests' && lsname[i] != '') {
+                            tempSRDDataArr[i] = new Array(lsname[i], lslabel[i], srdLabel);
+                            srdDataArr[i] = new Array(lsname[i], Ext.util.Format.ellipsis(tempSRDDataArr[i][1], 40), srdLabel);
+                        }
+                    }
+                    if (type == templateLabel) {
+                        lsname = leftStoreVal.split(typeSeparatorVal)[0].split(SeparatorVal);
+                        lslabel = leftStoreLabelVal.split(typeSeparatorVal)[0].split(SeparatorVal);
+                    }
+                } else {
+                    lsname = leftStoreVal.split(SeparatorVal);
+                    lslabel = leftStoreLabelVal.split(SeparatorVal);
+                }
+                var fieldList = new Array();
+                var i = 0;
+                var rsname = rightStoreVal.split(SeparatorVal);
+                var rslabel = rightStoreLabelVal.split(SeparatorVal);
+                if (queryParam.toLowerCase() == 'top requests')
+                    var rstype = rightStoreTypeVal.split(SeparatorVal);
+                if (lsname[0] != '') {
+                    for (i = 0; i < lsname.length; i++) {
+                        templeftDataArr[i] = new Array(3);
+                        templeftDataArr[i][0] = lsname[i];
+                        leftDataArr[i] = new Array(3);
+                        leftDataArr[i][0] = lsname[i];
+                        templeftDataArr[i][1] = lslabel[i];
+                        var decodedText = Ext.util.Format.htmlDecode(templeftDataArr[i][1]).match(/.{1,37}/g)[0];
+                        leftDataArr[i][1] = Ext.util.Format.ellipsis(templeftDataArr[i][1], Ext.util.Format.htmlEncode(decodedText).length + 3);
+                        if (queryParam.toLowerCase() == 'top requests') {
+                            if (type == templateLabel) {
+                                tempDataArr[i] = new Array(lsname[i], Ext.util.Format.ellipsis(templeftDataArr[i][1], 40), templateLabel);
+                                leftDataArr[i][2] = templateLabel;
+                                tempTemplateDataArr[i] = new Array(lsname[i], lslabel[i], templateLabel);
+                            }
+                        }
+                    }
+                }
+                if (rsname[0] != '') {
+                    for (i = 0; i < rsname.length; i++) {
+                        temprightDataArr[i] = new Array(3);
+                        temprightDataArr[i][0] = rsname[i];
+                        rightDataArr[i] = new Array(3);
+                        rightDataArr[i][0] = rsname[i];
+                        temprightDataArr[i][1] = rslabel[i];
+                        var decodedText = Ext.util.Format.htmlDecode(temprightDataArr[i][1]).match(/.{1,37}/g)[0];
+                        rightDataArr[i][1] = Ext.util.Format.ellipsis(temprightDataArr[i][1], Ext.util.Format.htmlEncode(decodedText).length + 3);
+                        if (queryParam.toLowerCase() == 'top requests') {
+                            rightDataArr[i][2] = rstype[i];
+                            if (rstype[i] == templateLabel)
+                                rightDataArr[i][1] = Ext.util.Format.ellipsis(prefix + temprightDataArr[i][1], 40 + prefix.length);
+                        }else if(queryParam.toLowerCase() == 'status') {
+                            if(defaultStatuses[rsname[i]]){
+                                rightDataArr[i][1] = Ext.util.Format.ellipsis(statusPrefix + '&nbsp;' + temprightDataArr[i][1], 40 + statusPrefix.length + '&nbsp;'.length);
+                            }else{
+                                rightDataArr[i][1] = Ext.util.Format.ellipsis(spaceChar + temprightDataArr[i][1], 40 + spaceChar.length);
+                            }
+                        }
+                    }
+                }
+
+                leftDataStore = ds = new Ext.data.ArrayStore({
+
+                    data: leftDataArr,
+                    fields: ['value', 'text', 'type']
+                });
+
+                rightDataStore = ds = new Ext.data.ArrayStore({
+
+                    data: rightDataArr,
+                    fields: ['value', 'text', 'type']
+                });
+                if (Ext.isIE || Ext.isSafari || Ext.isChrome) {
+                    if (queryParam == 'Categories' || queryParam == 'Templates' || queryParam == 'Status') {
+                        upImg = '_.GIF ';
+                        dowmImg = '_.GIF';
+                        topImg = '_.GIF';
+                        bottomImg = '_.GIF';
+                    } else if (queryParam.toLowerCase() == 'top requests') {
+                        upImg = '{!upImage}';
+                        dowmImg = '{!downImage}';
+                        topImg = '{!topImage}';
+                        bottomImg = '{!bottomImage}';
+                    } else {
+                        upImg = '{!upImage}';
+                        dowmImg = '{!downImage}';
+                        topImg = '_.GIF';
+                        bottomImg = '_.GIF';
+                    }
+                } else if (queryParam.toLowerCase() == 'top requests') {
+                    upImg = '{!upImage}';
+                    dowmImg = '{!downImage}';
+                    topImg = '{!topImage}';
+                    bottomImg = '{!bottomImage}';
+                } else if (queryParam == 'Categories' || queryParam == 'Templates') {
+                    upImg = '_.GIF';
+                    dowmImg = '_.GIF';
+                    topImg = '_.GIF';
+                    bottomImg = '_.GIF';
+                } else {
+                    upImg = '{!upImage}';
+                    dowmImg = '{!downImage}';
+                    topImg = '_.GIF';
+                    bottomImg = '_.GIF';
+                }
+
+                multiSelectPanel = new Ext.Panel({
+                    id: 'multiSelectForm',
+                    title: '',
+                    autoWidth: true,
+                    layout: 'fit',
+                    height: multiselectHeight,
+                    //drawUpIcon:true,
+                    //drawDownIcon:true,
+                    drawLeftIcon: true,
+                    drawRightIcon: true,
+                    drawTopIcon: true,
+                    drawBotIcon: true,
+                    renderTo: 'multiSelectDiv',
+                    //bodyStyle: 'padding:30px;',
+                    border: false,
+                    cls: 'fontCls',
+                    items: [{
+                        id: 'abc',
+                        xtype: 'itemselector',
+                        name: 'itemselector',
+                        fieldLabel: '',
+                        drawTopIcon: true,
+                        drawBotIcon: true,
+                        iconUp: upImg,
+                        iconDown: dowmImg,
+                        iconLeft: 'b_darrow_L_new.gif',
+                        iconRight: 'b_darrow_R_new.gif',
+                        iconTop: topImg,
+                        iconBottom: bottomImg,
+                        imagePath: path,
+                        multiselects: [{
+                            id: 'leftStore',
+                            cls: 'leftStoreCls',
+                            width: 215,
+                            height: storeHeight,
+                            draggable: false,
+                            droppable: false,
+                            store: leftDataStore,
+                            displayField: 'text',
+                            valueField: 'value',
+                            legend: false,
+                            listeners: {
+                                render: function(multi) {
+                                    new Ext.ToolTip({
+                                        target: multi.el,
+                                        anchor: 'right',
+                                        renderTo: document.body,
+                                        delegate: 'dl',
+                                        trackMouse: true,
+                                        listeners: {
+                                            beforeshow: function(tip) {
+                                                var rec = multi.view.getRecord(tip.triggerElement);
+                                                if (rec != null) 
+                                                    RemedyForceHTMLProcessor.setText(tip.body.dom, htmlDecoder(getTextFromArr(rec.get('value'))));
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+
+                        }, {
+                            id: 'rightStore',
+                            cls: 'rightStoreCls',
+                            width: 215,
+                            height: storeHeight,
+                            draggable: false,
+                            droppable: false,
+                            drawTopIcon: true,
+                            drawBotIcon: true,
+                            store: rightDataStore,
+                            displayField: 'text',
+                            valueField: 'value',
+                            legend: false,
+                            listeners: {
+                                render: function(multi) {
+                                    new Ext.ToolTip({
+                                        target: multi.el,
+                                        anchor: 'left',
+                                        renderTo: document.body,
+                                        delegate: 'dl',
+                                        trackMouse: true,
+                                        listeners: {
+                                            beforeshow: function(tip) {
+                                                var rec = multi.view.getRecord(tip.triggerElement);
+                                                if (rec != null)
+                                                    RemedyForceHTMLProcessor.setText(tip.body.dom, htmlDecoder(getTextFromArr(rec.get('value'))));
+                                            }
+                                        }
+                                    });
+                                },change : function(multi) {
+                                    if(queryParam.toLowerCase() != 'status')
+                                        return false;                                    
+                                    var isNormalStatusSelected = false;
+                                    var selectedVal = multi.getRawValue();                                                                                                            
+                                    if(selectedVal.length > 0){
+                                        for(var i=0; selectedVal.length>i ;i++){
+                                            var statusId = selectedVal[i];
+                                            if(!defaultStatuses[statusId]){
+                                                isNormalStatusSelected = true;                                                
+                                			}
+                            			}
+                                    }                                    
+                                    if(isNormalStatusSelected){
+                                        var enabledImagePath = path+iconLeft;
+                                        document.getElementById("iconLeftId").setAttribute("src",enabledImagePath);               
+                                    }else{                                        
+                                        var disableImagePath = path+iconLeftDisabled;            
+                                        document.getElementById('iconLeftId').setAttribute("src",disableImagePath);              
+                                    }
+                                },                                
+                            }
+                        }]
+
+                    }]
+
+
+                });
+                if (queryParam.toLowerCase() == 'top requests') {
+                    populateRightArray();
+                }
+                if (Ext.isIE) {
+                    toMultiSelectObj = Ext.getCmp('abc').fromMultiselect;
+                    fromMultiSelectObj = Ext.getCmp('abc').toMultiselect;
+                } else {
+                    toMultiSelectObj = Ext.getCmp('abc').toMultiselect;
+                    fromMultiSelectObj = Ext.getCmp('abc').fromMultiselect;
+                }
+
+
+                // callig when the clicked on addIcon to move the records from left to right            
+                Ext.getCmp('multiSelectForm').items.get(0).addIcon.on('click', function() {
+                    showLoadingMask();
+                    selectionsArray = toMultiSelectObj.view.getSelectedIndexes();
+                    var param = '';
+                    var i = 0;
+                    while (selectionsArray.length > i) {
+                        record = toMultiSelectObj.view.store.getAt(selectionsArray[i]);
+
+                        //alert('record is -->' + record.get('text'));
+                        param = param + record.get('value');
+                        if (i < selectionsArray.length - 1) {
+                            param = param + '{!Separator }';
+                        }
+                        i++;
+                    }
+                    /*this.fromMultiselect = new Ext.ux.form.MultiSelect(Ext.applyIf(this.multiselects[0], msConfig[0]));
+                    var selectionsArray = this.fromMultiselect.view.getSelectedIndexes();
+                    var i=0;
+                    while(selectionsArray.length>i){
+                     record = this.fromMultiselect.view.store.getAt(selectionsArray[i]);
+                        //alert('record is -->' + record);
+                    i++;
+                    }
+                    */
+                    //var queryParam = '{!JSENCODE($CurrentPage.parameters.manageId)}';
+                    if (queryParam.toLowerCase() == 'faqs') {
+                        //alert(param);
+                        selectFaqCats(param);
+                    }
+                    if (queryParam.toLowerCase() == 'templates' || queryParam.toLowerCase() == 'status') {
+                        rightParam = fetchData(rightDataStore);
+                        hideLoadingMask();
+                    } else if (queryParam.toLowerCase() == 'categories') {
+                        rightParam = fetchData(rightDataStore);
+                        //alert('final param str is : ' + param);
+                        searchParentRightCat(param);
+                    }
+                }, multiSelectPanel);
+
+                // callig when the clicked on removeIcon to move the records from right to left
+                Ext.getCmp('multiSelectForm').items.get(0).removeIcon.on('click', function() {
+                    showLoadingMask();
+                    var selectionsArray = fromMultiSelectObj.view.getSelectedIndexes();
+                    var array = selectionsArray.length;
+                    var param = '';
+                    var paramLabel = '';
+                    var i = 0;
+                    while (selectionsArray.length > i) {
+                        record = fromMultiSelectObj.view.store.getAt(selectionsArray[i]);
+
+                        //alert('record is -->' + record.get('text'));
+                        param = param + record.get('value');
+                        paramLabel = paramLabel + getTextFromArr(record.get('value'));
+                        if (i < array - 1) {
+                            param = param + '{!Separator }';
+                            paramLabel = paramLabel + '{!Separator }';
+                        }
+                        i++;
+                    }
+                    /*this.fromMultiselect = new Ext.ux.form.MultiSelect(Ext.applyIf(this.multiselects[0], msConfig[0]));
+                    var selectionsArray = this.fromMultiselect.view.getSelectedIndexes();
+                    var i=0;
+                    while(selectionsArray.length>i){
+                     record = this.fromMultiselect.view.store.getAt(selectionsArray[i]);
+                        //alert('record is -->' + record);
+                    i++;
+                    }
+                    */
+
+                    //var queryParam = '{!JSENCODE($CurrentPage.parameters.manageId)}';
+                    if (queryParam.toLowerCase() == 'templates' || queryParam.toLowerCase() == 'status') {
+                        hideLoadingMask();
+                    } else if (queryParam.toLowerCase() == 'categories') {
+                        //leftParam= fetchData(leftDataStore);
+                        searchParentLeftCat(param);
+                    } else if (queryParam.toLowerCase() == 'faqs') {
+                        rightParamLabel = fetchDataLabel(rightDataStore);
+                        leftParamLabel = fetchDataLabel(leftDataStore);
+                        rightParam = fetchData(rightDataStore);
+                        leftParam = fetchData(leftDataStore);
+                        if (Ext.isIE && param != '') {
+                            addRemoveSelectedItemforIE(param, paramLabel);
+                        }
+                        upadteStores(leftParam, rightParam, leftParamLabel, rightParamLabel);
+                    } else if (queryParam.toLowerCase() == 'top requests') {
+                        rightParam = fetchData(rightDataStore);
+                        leftParam = fetchData(leftDataStore);
+                    }
+                }, multiSelectPanel);
+
+                // calling when the double clicked on left store
+                Ext.getCmp('abc').fromMultiselect.on('dblclick', function() {
+                    showLoadingMask();
+                    //alert('hi moving a record from left to right');
+                    var selectionsArray = Ext.getCmp('abc').toMultiselect.view.getSelectedIndexes();
+                    var array = selectionsArray.length;
+                    var param = '';
+                    var i = 0;
+                    while (selectionsArray.length > i) {
+                        record = Ext.getCmp('abc').toMultiselect.view.store.getAt(selectionsArray[i]);
+
+                        //alert('record is -->' + record.get('text'));
+                        param = param + record.get('value');
+                        if (i < array - 1) {
+                            param = param + '{!Separator }';
+                        }
+                        i++;
+                    }
+                    /*this.fromMultiselect = new Ext.ux.form.MultiSelect(Ext.applyIf(this.multiselects[0], msConfig[0]));
+                    var selectionsArray = this.fromMultiselect.view.getSelectedIndexes();
+                    var i=0;
+                    while(selectionsArray.length>i){
+                     record = this.fromMultiselect.view.store.getAt(selectionsArray[i]);
+                        //alert('record is -->' + record);
+                    i++;
+                    }
+                    */
+                    //var queryParam = '{!JSENCODE($CurrentPage.parameters.manageId)}';
+                    if (queryParam.toLowerCase() == 'faqs') {
+                        selectFaqCats(param);
+                    }
+                    if (queryParam.toLowerCase() == 'templates' || queryParam.toLowerCase() == 'status') {
+                        rightParam = fetchData(rightDataStore);
+                        hideLoadingMask();
+                    } else if (queryParam.toLowerCase() == 'categories') {
+                        rightParam = fetchData(rightDataStore);
+                        //alert('final param str is : ' + param);
+                        searchParentRightCat(param);
+                    }
+
+                }, multiSelectPanel);
+
+                // calling when the double clicked on right store
+                Ext.getCmp('abc').toMultiselect.on('dblclick', function() {
+                    showLoadingMask();
+                    //alert('hi moving a record from right to left');
+                    var selectionsArray = Ext.getCmp('abc').fromMultiselect.view.getSelectedIndexes();
+                    var array = selectionsArray.length;
+                    var param = '';
+                    var i = 0;
+                    while (selectionsArray.length > i) {
+                        record = Ext.getCmp('abc').fromMultiselect.view.store.getAt(selectionsArray[i]);
+
+                        // alert('record is -->' + record.get('text'));
+                        param = param + record.get('value');
+                        if (i < selectionsArray.length - 1) {
+                            param = param + '{!Separator }';
+                        }
+                        i++;
+                    }
+                    /*this.fromMultiselect = new Ext.ux.form.MultiSelect(Ext.applyIf(this.multiselects[0], msConfig[0]));
+                    var selectionsArray = this.fromMultiselect.view.getSelectedIndexes();
+                    var i=0;
+                    while(selectionsArray.length>i){
+                     record = this.fromMultiselect.view.store.getAt(selectionsArray[i]);
+                       // alert('record is -->' + record);
+                    i++;
+                    }
+                    */
+                    //var queryParam = '{!JSENCODE($CurrentPage.parameters.manageId)}';
+                    if (queryParam.toLowerCase() == 'templates' || queryParam.toLowerCase() == 'status') {
+                        rightParam = fetchData(rightDataStore);
+                        hideLoadingMask();
+                    } else if (queryParam.toLowerCase() == 'categories') {
+                        rightParam = fetchData(rightDataStore);
+                        searchParentLeftCat(param);
+                    } else if (queryParam.toLowerCase() == 'faqs') {
+                        rightParamLabel = fetchDataLabel(rightDataStore);
+                        leftParamLabel = fetchDataLabel(leftDataStore);
+                        rightParam = fetchData(rightDataStore);
+                        leftParam = fetchData(leftDataStore);
+                        upadteStores(leftParam, rightParam, leftParamLabel, rightParamLabel);
+                    }
+
+                }, multiSelectPanel);
+                //this.removeIcon.on('click', this.toFrom, this);
+                if (multiLayoutEnabled.toUpperCase() == 'TRUE') {
+                    onAssignAllChanged();
+                }
+            });
+
+            function onAssignAllChanged() {
+                var value = document.getElementById('{!$Component.ManageRequestForm.cbAssignAll}').checked;
+                document.getElementById('multiSelectDiv').style.width = '468px';
+                Ext.getCmp('multiSelectForm').setDisabled(value);
+                if(Ext.getCmp('parentCategoriesCombo'))
+                    Ext.getCmp('parentCategoriesCombo').setDisabled(value);
+                assignAll = value;
+            }
+        </script>
+        <apex:outputPanel id="savepanel">
+            <script>
+                function saveConfirmation() {
+                    if (queryParam.toLowerCase() != 'top requests' && !multiLayoutEnabled) {
+                        window.parent.refreshList();
+                    }
+                    var msg = '{!JSENCODE($Label.SavedSuccessfully)}';
+                    if ('{!saveStatus}' == 'false') {
+                        msg = '{!JSENCODE(errorMessage)}';
+                        icon = Ext.MessageBox.ERROR;
+                    }
+                    Ext.Msg.show({
+                        cls: 'messagePopup',
+                        title: saveMessageTitle,
+                        msg: msg,
+                        buttons: Ext.Msg.OK,
+                        width: 300,
+                        frame: false
+                    });
+
+                }
+            </script>
+        </apex:outputPanel>
+        <script>
+            function showErrorMsg() {
+                if ('{!existCat}' == 'false') {
+                    var msg = '{!JSENCODE(errorMessage)}';
+                    var msgIcon = Ext.MessageBox.WARNING;
+                    Ext.Msg.show({
+                        cls: 'messagePopup',
+                        title: saveMessageTitle,
+                        msg: msg,
+                        buttons: Ext.Msg.OK,
+                        width: 400,
+                        frame: false,
+                        icon: msgIcon
+                    });
+                }
+            }
+
+            function addRemoveSelectedItemforIE(param, paramLabel) {
+
+                if (leftParam != null && leftParam != '') {
+                    leftParamLabel = leftParamLabel + '{!Separator }' + paramLabel;
+                    leftParam = leftParam + '{!Separator }' + param;
+                } else {
+                    leftParamLabel = paramLabel;
+                    leftParam = param;
+                }
+                var rightIdArr = param.split('{!Separator }');
+                var rightTextArr = paramLabel.split('{!Separator }');
+                var i = 0;
+                for (i = 0; i < rightIdArr.length; i++) {
+                    if (rightParam.indexOf('{!Separator }' + rightIdArr[i] + '{!Separator }') != -1) { // if id is at the middle anywhere
+                        rightParam = rightParam.replace('{!Separator }' + rightIdArr[i] + '{!Separator }', '{!Separator }');
+                        rightParamLabel = rightParamLabel.replace('{!Separator }' + rightTextArr[i] + '{!Separator }', '{!Separator }');
+                    } else if (rightParam.indexOf(rightIdArr[i] + '{!Separator }') != -1) { // if id is at 1st position 
+                        rightParam = rightParam.substring((rightIdArr[i] + '{!Separator }').length);
+                        rightParamLabel = rightParamLabel.substring((rightTextArr[i] + '{!Separator }').length);
+                    } else if (rightParam.indexOf('{!Separator }' + rightIdArr[i]) != -1) { // if id is at last position and not in the middle anywhere
+                        rightParam = rightParam.substring(0, rightParam.length - ('{!Separator }' + rightIdArr[i]).length);
+                        rightParamLabel = rightParamLabel.substring(0, rightParamLabel.length - ('{!Separator }' + rightTextArr[i]).length);
+                    } else if (rightParam.indexOf(rightIdArr[i]) != -1) { // if single id is present      
+                        rightParam = rightParam.replace(rightIdArr[i], '');
+                        rightParamLabel = rightParamLabel.replace(rightTextArr[i], '');
+                    }
+
+                }
+            }
+
+            function fetchData(dataStore) {
+                var i = 0;
+                var array = dataStore.data;
+                var param = '';
+                for (i = 0; i < array.length; i++) {
+                    param = param + dataStore.getAt(i).get('value');
+                    if (i < array.length - 1) {
+                        param = param + '{!Separator }';
+                    }
+                }
+                return param;
+            }
+
+            function fetchDataLabel(dataStore) {
+                var i = 0;
+                var array = dataStore.data;
+                var param = '';
+                for (i = 0; i < array.length; i++) {
+                    param = param + getTextFromArr(dataStore.getAt(i).get('value'));
+                    if (i < array.length - 1) {
+                        param = param + '{!Separator }';
+                    }
+                }
+                return param;
+            }
+
+            function setParams() {
+                leftParam = fetchData(leftDataStore);
+                rightParam = fetchData(rightDataStore);
+                if (queryParam.toLowerCase() == 'top requests')
+                    topReqStoreParam = fetchTopReqData();
+				
+                if(multiLayoutEnabled.toLowerCase() == 'true'){
+					saveSettings(leftParam, rightParam, topReqStoreParam, assignAll);
+                }else{
+	                saveSettings(leftParam, rightParam, topReqStoreParam);
+                }
+            }
+
+            function fetchTopReqData() {
+                //this creates left store for Top Requests
+                var param = '';
+                for (i = 0; i < tempDataArr.length; i++) {
+                    param = param + tempDataArr[i][0];
+                    if (i < tempDataArr.length) {
+                        param = param + '{!Separator }';
+                    }
+                }
+                for (i = 0; i < srdDataArr.length; i++) {
+                    param = param + srdDataArr[i][0];
+                    if (i < srdDataArr.length - 1) {
+                        param = param + '{!Separator }';
+                    }
+                }
+                return param;
+            }
+
+            function getTextFromArr(valueStr) {
+                i = 0;
+                for (i = 0; i < templeftDataArr.length; i++) {
+                    if (templeftDataArr[i][0] == valueStr) {
+                        return templeftDataArr[i][1];
+                    }
+                }
+
+                i = 0;
+                for (i = 0; i < temprightDataArr.length; i++) {
+                    if (temprightDataArr[i][0] == valueStr) {
+                        return temprightDataArr[i][1];
+                    }
+                }
+
+                return null;
+            }
+
+            function populateRightArray() {
+                for (i = 0; i < rightDataArr.length; i++) {
+                    rightDataArr[i][1] = Ext.util.Format.ellipsis(temprightDataArr[i][1], 40);
+                }
+            }
+
+            function addToRightDataStore(record) {
+                var cnt = rightDataArr.length;
+                temprightDataArr[cnt] = new Array(record.get('value'), getTextFromArr(record.get('value')), record.get('type'));
+                rightDataArr[cnt] = new Array(record.get('value'), Ext.util.Format.ellipsis(temprightDataArr[cnt][1], 40), record.get('type'));
+                if (record.get('type') == templateLabel) {
+                    for (i = 0; i < tempDataArr.length; i++) {
+                        if (tempDataArr[i][0] == record.get('value')) {
+                            tempDataArr.splice(i, 1);
+                            tempTemplateDataArr.splice(i, 1);
+                        }
+                    }
+                } else if (record.get('type') == srdLabel) {
+                    for (i = 0; i < srdDataArr.length; i++) {
+                        if (srdDataArr[i][0] == record.get('value')) {
+                            srdDataArr.splice(i, 1);
+                            tempSRDDataArr.splice(i, 1);
+                        }
+                    }
+                }
+            }
+
+            function addToLeftDataStore(record) {
+                if (record.get('type') == templateLabel) {
+                    var cnt = tempDataArr.length;
+                    tempTemplateDataArr[cnt] = new Array(record.get('value'), getTextFromArr(record.get('value')), record.get('type'));
+                    tempDataArr[cnt] = new Array(record.get('value'), Ext.util.Format.ellipsis(tempTemplateDataArr[cnt][1], 40), record.get('type'));
+                    templeftDataArr = tempTemplateDataArr;
+                } else if (record.get('type') == srdLabel) {
+                    var cnt = srdDataArr.length;
+                    tempSRDDataArr[cnt] = new Array(record.get('value'), getTextFromArr(record.get('value')), record.get('type'));
+                    srdDataArr[cnt] = new Array(record.get('value'), Ext.util.Format.ellipsis(tempSRDDataArr[cnt][1], 40), record.get('type'));
+                    templeftDataArr = tempSRDDataArr;
+                }
+                for (i = 0; i < rightDataArr.length; i++) {
+                    if (rightDataArr[i][0] == record.get('value')) {
+                        rightDataArr.splice(i, 1);
+                        temprightDataArr.splice(i, 1);
+                    }
+                }
+            }
+
+            function refreshDataStore(recordType) {
+                if (recordType == templateLabel) {
+                    leftDataStore.loadData(tempDataArr);
+                    templeftDataArr = tempTemplateDataArr;
+                } else if (recordType == srdLabel) {
+                    leftDataStore.loadData(srdDataArr);
+                    templeftDataArr = tempSRDDataArr;
+                }
+            }
+        </script>
+
+    </apex:outputPanel>
+
+    <apex:form id="ManageRequestForm">
+        <apex:outputPanel id="fID">
+            <table class="clsMainTable" cellspacing="0" cellpadding="0" border="0" style="{!IF(multiLayoutEnabled,'border: none !important;','border: solid 1px #adb9c0;')};">
+
+                <tr class="clsRowGreyBg">
+                    <td colspan="3">
+                        <div id="btnToolbar"></div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="clsInputBoldLabelTableFirstRowTD" colspan="3">
+
+                        <apex:outputPanel rendered="{!if(multiLayoutEnabled,true,false)}">
+                            <div class="assignAll">
+                                <span>
+                                    <apex:inputCheckbox id="cbAssignAll" styleClass="clsInputCheckBox" title="" onclick="onAssignAllChanged();" value="{!assignAll}" />
+                                </span>
+                                <span>
+                                    <apex:outputLabel rendered="{!If(manageId=='Categories', true, false)}" value="{!JSENCODE($Label.bmcservicedesk__assignallcategoriestolayout)}" />
+                                </span>
+                                <span>
+                                    <apex:outputLabel rendered="{!If(manageId=='Templates', true, false)}" value="{!$Label.bmcservicedesk__assignalltemplatestolayout}" />
+                                </span>
+                                <span>
+                                    <apex:outputLabel rendered="{!If(manageId=='Status', true, false)}" value="{!$Label.bmcservicedesk__assignallstatustolayout}" />
+                                </span>
+                            </div>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!if(manageId=='Categories' && NOT(multiLayoutEnabled),true,false)}">
+                            <table>
+                                <tr>
+                                    <td style="width:80px;">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__categoriesfor}" />
+                                    </td>
+                                    <td colspan="3">
+                                        <div class="div5pxVspacing" />
+                                    </td>
+
+                                    <td class="tdwidth200px">
+                                        <div id="typeCategoryDiv"></div>
+                                    </td>
+                                    <td style="width:40px;">
+                                    </td>
+                                </tr>
+                            </table>
+                            <table>
+                                <tr>
+                                    <td colspan="3">
+                                        <div class="div5pxVspacing" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">
+                                        <div class="div5pxVspacing" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">
+                                        <div class="div5pxVspacing" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!if(AND(manageId=='Categories' , selectedCategoryValue=='SelfServiceID'),true,false)}">
+                            <table>
+                                <tr>
+                                    <td class="tdwidth200px">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__availablecategories}" />
+                                    </td>
+                                    <td style="width:40px;">
+                                    </td>
+                                    <td class="tdwidth200px">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__selectedsscategories}" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!if(AND(manageId=='Categories' , selectedCategoryValue=='ConsoleLayout'),true,false)}">
+                            <table style="padding-left:13px">
+                                <tr>
+                                    <td style="vertical-align: top;">
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__categoryfilter)}" />
+                                        <div id="filterInput" style="padding-bottom: 20px;padding-top: 7px;"> </div>
+                                    </td>
+                                    
+                                </tr>
+
+                                <tr>
+                                    <td class="tdwidth205px">
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__availablecategories)}" />
+                                    </td>
+                                    <td style="width:34px;">
+                                    </td>
+                                    <td class="tdwidth232px">
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__selectedcategory)}" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!if(AND(manageId=='Templates' , selectedCategoryValue=='ConsoleLayout'),true,false)}">
+                            <table style="padding-left:13px">
+                                <tr>
+                                    <td class="tdwidth205px">
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__availabletemplates)}" />
+                                    </td>
+                                    <td style="width:40px;">
+                                    </td>
+                                    <td class="tdwidth232px">
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__selectedtemplates)}" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!if(AND(manageId=='Status' , selectedCategoryValue=='ConsoleLayout'),true,false)}">
+                            <table style="padding-left:13px">
+                                <tr>
+                                    <td class="tdwidth205px">
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__available_status_values)}" />
+                                    </td>
+                                    <td style="width:40px;">
+                                    </td>
+                                    <td class="tdwidth232px">
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__selected_status_values)}" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!if(AND(manageId=='Categories' , selectedCategoryValue=='RFChatID'),true,false)}">
+                            <table>
+                                <tr>
+                                    <td class="tdwidth200px">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__availablecategories}" />
+                                        <img src="{!$Resource.SDEFStyles}/SDEFicons/url.png" style="margin-left:4px;" title="{!$Label.AvailableChatCategoriesHelpText}" />
+                                    </td>
+                                    <td style="width:40px;">
+                                    </td>
+                                    <td class="tdwidth200px">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__selectedchatcategories}" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!if(manageId=='Top Requests',true,false)}">
+                            <table>
+                                <tr>
+                                    <td class="tdwidth200px">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__availabletoprequests}" />
+                                    </td>
+                                    <td style="width:25px;" />
+                                    <td class="tdwidth200px">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__selectedtoprequests}" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="5pxVspacing" />
+                                        <div id="typeComboDiv" class="typeCombo" />
+                                        <apex:outputPanel >
+                                            <style>
+                                                .clsInputBoldLabelTableFirstRowTD {
+                                                    padding-left: 0
+                                                }
+                                            </style>
+                                            <script>
+                                                // array store for selecting type in top requests
+                                                var typeStore = new Ext.data.ArrayStore({
+                                                    fields: ['id', 'label'],
+                                                    data: [
+                                                        [templateLabel, '{!JSENCODE($Label.IncidentTemplates)}'],
+                                                        [srdLabel, '{!JSENCODE($ObjectType.SRM_RequestDefinition__c.LabelPlural)}']
+                                                    ]
+                                                });
+                                                var TypeCombo = new Ext.form.ComboBox({
+                                                    renderTo: 'typeComboDiv',
+                                                    store: typeStore,
+                                                    displayField: 'label',
+                                                    id: 'typeCombo',
+                                                    style: 'font: 11px arial,tahoma,helvetica,sans-serif',
+                                                    emptyClass: 'color: #004376',
+                                                    typeAhead: true,
+                                                    width: 212,
+                                                    mode: 'local',
+                                                    triggerAction: 'all',
+                                                    valueField: 'id',
+                                                    readOnly: true,
+                                                    forceSelection: true,
+                                                    emptyText: '{!JSENCODE($Label.IncidentTemplates)}',
+                                                    selectOnFocus: true,
+                                                    editable: false,
+                                                    listeners: {
+                                                        select: function(combo, record, index) {
+                                                            selectedvalue = record.get(combo.valueField);
+                                                            type = selectedvalue;
+                                                            refreshDataStore(selectedvalue);
+                                                        }
+                                                    }
+                                                });
+                                            </script>
+                                        </apex:outputPanel>
+                                    </td>
+                                    <td style="width:25px;" />
+                                    <td class="tdwidth200px" />
+                                </tr>
+                            </table>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!if(manageId=='FAQs',true,false)}">
+                            <table>
+                                <tr>
+                                    <td class="tdwidth200px">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__availablefaqs}" />
+                                    </td>
+                                    <td style="width:40px;">
+                                    </td>
+                                    <td class="tdwidth200px">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__selectedfaqs}" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+
+                </tr>
+                <tr>
+                    <td style="width:5px;">
+                    </td>
+                    <td colspan="2">
+                        <div id="multiSelectDiv" style="{!IF(multiLayoutEnabled,'padding-left: 20px','')};"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <apex:outputPanel rendered="{!if(manageId=='Top Requests',true,false)}">
+                            <table>
+                                <tr>
+                                    <td class="tdwidth200px" />
+                                    <td style="width:45px;" />
+                                    <td class="tdwidth200px">
+                                        <apex:outputLabel id="legendTopRequest" value="{!$Label.bmcservicedesk__incidenttemplates}" styleClass="legendCls" />
+                                        <script>
+                                            window.onDomReady = showLegend();
+
+                                            function showLegend() {
+                                                var legendTxt = RemedyForceHTMLProcessor.getText(document.getElementById("ManagePage:ManageRequestForm:legendTopRequest"));
+                                                RemedyForceHTMLProcessor.setText(document.getElementById("ManagePage:ManageRequestForm:legendTopRequest"), prefix + legendTxt);
+                                            }
+                                        </script>
+                                    </td>
+                                </tr>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                </tr>               
+            </table>
+        </apex:outputPanel>
+		<apex:outputPanel rendered="{!if(manageId=='Status',true,false)}">
+			<table>
+				<tr>
+					<td class="tdwidth200px" />
+					<td style="width:45px;" />
+					<td class="tdwidth200px">
+						<label id="legendChar"></label>
+						<apex:outputLabel id="legendStatus" value="{!$Label.bmcservicedesk__defaultstatus}" styleClass="legendCls" />
+						<script>
+							window.onDomReady = showLegend();
+
+							function showLegend() {                                                
+								 RemedyForceHTMLProcessor.setText(document.getElementById("legendChar"), statusPrefix);
+							}
+						</script>
+					</td>
+				</tr>
+			</table>
+		</apex:outputPanel>
+        <apex:actionFunction action="{!setSelectedCategory}" name="setSelectedCategory" rerender="manageRerender,fID" onComplete="hideLoadingMask();">
+            <apex:param name="selectedCategory" assignTo="{!selectedCategoryValue}" value="" />
+        </apex:actionFunction>
+
+        <apex:actionFunction action="{!searchParentRightCat}" name="searchParentRightCat" rerender="manageRerender,fID" onComplete="hideLoadingMask();">
+            <apex:param name="leftParam" assignTo="{!idList}" value="" />
+
+        </apex:actionFunction>
+
+        <apex:actionFunction action="{!searchParentLeftCat}" name="searchParentLeftCat" rerender="manageRerender,fID" onComplete="hideLoadingMask();">
+            <apex:param name="leftParam" assignTo="{!idList}" value="" />
+
+        </apex:actionFunction>
+        <apex:actionFunction action="{!selectFaqCats}" name="selectFaqCats" rerender="manageRerender,fID" onComplete="showErrorMsg();">
+            <apex:param name="leftParam" assignTo="{!idList}" value="" />
+        </apex:actionFunction>
+
+        <apex:actionFunction name="upadteStores" rerender="manageRerender,fID" onComplete="hideLoadingMask();">
+            <apex:param name="leftParam" assignTo="{!leftStore}" value="" />
+            <apex:param name="rightParam" assignTo="{!rightStore}" value="" />
+            <apex:param name="leftParamLabel" assignTo="{!leftStoreLabel}" value="" />
+            <apex:param name="rightParamLabel" assignTo="{!rightStoreLabel}" value="" />
+            <apex:param name="rightParamType" assignTo="{!rightStoreType}" value="" />
+        </apex:actionFunction>
+
+        <apex:actionFunction action="{!save}" name="saveSettings" rerender="savepanel" onComplete="saveConfirmation();">
+            <apex:param name="leftParam" assignTo="{!leftStore}" value="" />
+            <apex:param name="rightParam" assignTo="{!rightStore}" value="" />
+            <apex:param name="topReqStoreParam" assignTo="{!topRequestLeftStore}" value="" />
+            <apex:param name="assignAll" assignTo="{!assignAll}" value="" />
+        </apex:actionFunction>
+
+        <apex:actionFunction action="{!reset}" name="undoChanges" rerender="manageRerender,fID" />
+
+        <apex:actionFunction action="{!getChildCategory}" name="getChildCategory" rerender="manageRerender,fID" onComplete="hideLoadingMask();">
+            <apex:param name="parentId" assignTo="{!parentId}" value="" />
+        </apex:actionFunction>
+
+    </apex:form>
+    <script>
+        var waitMask = '';
+
+        function showLoadingMask() {
+            waitMask = new Ext.LoadMask(Ext.getBody(), {
+                msg: Loading
+            });
+            if (waitMask != null && waitMask != '' && typeof(waitMask) != 'undefined')
+                waitMask.show();
+        }
+
+        function hideLoadingMask() {
+            if (waitMask != null && waitMask != '' && typeof(waitMask) != 'undefined')
+                waitMask.hide();
+        }
+    </script>
+</apex:page>

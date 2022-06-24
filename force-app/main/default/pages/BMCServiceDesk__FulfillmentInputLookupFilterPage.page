@@ -1,0 +1,577 @@
+<apex:page sidebar="false" showHeader="false" controller="BMCServiceDesk.FulfillmentInputLookupFilterController" standardStylesheets="false">
+
+  <apex:slds />
+  <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+  <link rel="stylesheet" type="text/css"  href="{!$Resource.SDEFStyles}/AdminHome.css" />
+  <apex:stylesheet value="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'RFAdminExt4Common.css')}" />
+  <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" />
+  <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css"/>
+  <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+  <style>
+	.RFAdminWindow .x-window-header {
+		background-color: white !important;
+		border: none !important;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2) !important;
+        height:30px;
+    }
+    .x-tool-rfclose {
+		background: url("{!URLFOR($Resource.SDEFStyles, 'SDEFbuttons/win-close-gray-icon.svg')}") !important;
+	}
+    body, .x-body, label{
+        font-family: "Salesforce Sans",Arial,sans-serif;
+    }
+    .x-panel, .x-plain {
+        overflow: unset !important;
+    }
+    .x-form-trigger-wrap{
+		border: 1px solid #c9c9c9;
+		border-radius: 2px;
+		background-color: transparent;
+		width: 100% !important;
+		height: 25px;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+    }
+    .x-boundlist-list,.x-boundlist{
+		border: none !important;
+    }
+    .x-boundlist-item{
+		background-color: white !important;
+		padding-left: 8px !important;
+		padding-top: 5px !important;
+		padding-bottom: 5px !important;
+		margin: 0 !important;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+	}
+    .x-boundlist-item-over,.x-boundlist-selected{
+		border: 1px solid #dddbda !important;
+		background-color:#dddbda !important;
+
+	}
+	.x-form-text,
+	.x-form-field{
+		border: none !important;
+		background-color: transparent !important;
+		background-image: none !important;
+		height: 28px !important;
+		font-size: 12px !important;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+    }
+	.x-form-arrow-trigger{
+		background: url({!$Resource.SDEFStyles}/SDEFicons/arrow-down.png) no-repeat 0px 8px !important;
+		border: none !important;
+	}
+	.x-grid-cell-inner{
+		font-size: 12px !important;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+	}
+	.x-grid-cell{
+		height: 100% !important;
+		padding-top: 5px !important;
+		padding-bottom: 5px !important;
+	}
+	.x-column-header-first{
+		border-left: 1px solid #c5c5c5 !important;
+	}
+	.x-column-header-text{
+		font-size: 13px !important;
+	}
+	.x-column-header-over{
+		background-image: none !important;
+		background-color: #BDBDBD !important;
+		border: 1px solid #BDBDBD !important;
+	}
+	.x-column-header-trigger{
+		background-image: none !important;
+	}
+    
+    .labelstyler {
+        font-size: 12px !important;
+        color: #333 !important;
+        display: inline-block;
+        margin-bottom: 2px;
+        font-weight: 600;
+        font-family: "Salesforce Sans",Arial,sans-serif !important;
+    }
+    .clsPanelCheckBoxLabel {
+        *padding-left: 0px;
+        font-weight: normal !important;
+        font-family: "Salesforce Sans",Arial,sans-serif !important;
+    }
+    .x-form-arrow-trigger{
+		background: url({!$Resource.SDEFStyles}/SDEFicons/arrow-down.png) no-repeat 0px 8px !important;
+		border: none !important;
+	}
+	.x-grid-cell-inner{
+		font-size: 12px !important;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+	}
+	.x-grid-cell{
+		height: 100% !important;
+		padding-top: 5px !important;
+		padding-bottom: 5px !important;
+    }
+    .x-column-header{
+        background-image: none !important;
+    }
+	.x-column-header-first{
+		border-left: 1px solid #c5c5c5 !important;
+	}
+	.x-column-header-text{
+		font-size: 13px !important;
+	}
+	.x-column-header-over{
+		background-image: none !important;
+		background-color: #BDBDBD !important;
+		border: 1px solid #BDBDBD !important;
+	}
+	.x-column-header-trigger{
+		background-image: none !important;
+	}
+    .filterOptions{
+        height: 60px;
+        padding-left: 10px;
+    }
+    .horizontalLineClass{
+        border-bottom: 1px solid #c9c9c9;
+        width:97%;
+    }
+    .inputBox{
+		border: 1px solid #c9c9c9 !important;
+		border-radius: 2px;
+		height: 30px;
+		color: #000000;
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+		font-size: 12px;
+		margin: 0;
+		padding: 2px 2px 2px 5px;
+		vertical-align: top;
+		width: 86%;
+	}
+	.inputAreaBox{
+		font-family: "Salesforce Sans",Arial,sans-serif !important;
+		font-size: 11px;
+		height: 40px;
+		overflow: auto;
+		width: 86%;
+		border: 1px solid #c9c9c9;
+        border-radius: 2px;
+        vertical-align: top;
+    }
+    .transformIcon{
+		transform: scale(1.5);
+    }
+    .lookupIcon{
+		background-image: url({!$Resource.SDEFStyles}/SDEFicons/search-icon.svg) !important;
+		background-repeat: no-repeat !important;
+		background-color: white !important;
+		border: none !important;
+		vertical-align: top;
+		width: 12px !important;
+		height: 15px !important;
+		margin-top: 8px;
+		padding: 0px;
+		transform: scale(1.4);
+    }
+    .filterTypeClass{
+        width: 310px !important;
+        height: 25px;
+        padding-left: 5px;
+        border: 1px solid #c9c9c9;
+        font-family: "Salesforce Sans",Arial,sans-serif !important;
+    }
+    .textLabel{
+        font-family: "Salesforce Sans",Arial,sans-serif;
+        font-size: 12px;
+        padding-left: 10px;
+    }
+    #criteriaGrid .x-grid-view{
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+    .rf-gray-border{
+        background-color: white;
+        width: 99.9% !important;
+    }
+    .bmc-message-header-default {
+		background-color: white !important;
+		color: black !important;
+		padding: 5px;
+	}
+  </style>
+  <apex:form id="RDLookupFilterform" style="display:none;">
+    <apex:actionFunction action="{!getPicklistValues}" name="getPicklistValues" rerender="picklistPanel" oncomplete="setPickListOptions();hideWaitbox();">
+            <apex:param name="filterId" assignTo="{!picklistAPIName}" value=""/>
+    </apex:actionFunction>
+     <apex:actionFunction action="{!save}" name="save" rerender="fieldsPanel,filterTypeId,InactiveId,InactiveChkId,filterLogicId" onComplete="hideWaitbox();afterSave();reloadCriteriaGrid();showExtMsg();setCancelFlagAfterSave();setCriteriaID();">
+     	<apex:param name="saveAsNew" value=""/>
+    </apex:actionFunction>
+    <!-- Criteria grid data -->
+    <apex:inputHidden id="CriteriaGridStrId"  value="{!CriteriaGridStr}"/>
+
+        <apex:inputHidden id="ciFilterSelectList" value="{!ciFilterVal}" />
+
+    <!-- End of Criteria grid data -->
+  <table width="99.9%"  class="rf-gray-border" border="0" cellspacing="0" cellpadding="0" style="border:none;">
+          <tr>
+                <td colspan="4">
+              <div style="{!IF(fulfillmentCriteria != 'true','height:15px', 'height:10px')}"></div>
+           </td>
+          </tr>
+          <tr style="{!IF(fulfillmentCriteria != 'true','', 'display:none')}">
+           <td>   
+                <apex:outputLabel value="{!$Label.bmcservicedesk__filtername}" styleClass="textLabel"/>
+            </td>
+           <td>   
+                <apex:inputField value="{!filterObj.Name}" id="filterNameId" style="width: 310px; " onchange="isDataChanged();" styleClass="inputBox slds-input"/>
+           </td>
+            <td>
+                <div class="slds-checkbox textLabel">
+                    <apex:inputCheckbox value="{!filterObj.BMCServiceDesk__Inactive__c}" id="InactiveId" onchange="isDataChanged();" />
+                    <label class="slds-checkbox__label" for="{!$Component.RDLookupFilterform.InactiveId}">
+                      <span class="slds-checkbox_faux"></span>
+                      <span class="slds-form-element__label">{!$Label.Inactive}</span>
+                    </label>
+                </div>
+            </td>          
+         </tr>
+         <tr style="{!IF(fulfillmentCriteria != 'true','display:none', '')}">
+            <td style="float:right;width:100px"> 
+                <apex:inputCheckbox value="{!filterObj.BMCServiceDesk__Inactive__c}" id="InactiveChkId" style="margin-left:5px" onchange="isDataChanged();" rendered="{!(fulfillmentCriteria=='true')}"/> 
+                <apex:outputLabel value="{!$Label.bmcservicedesk__inactive}" styleClass="textLabel" style=" vertical-align: bottom; padding-right: 10px;"/>
+            </td>
+         </tr>
+         <tr class="rf-criteria-form-td" style="{!IF(fulfillmentCriteria != 'true','', 'display:none')}">
+             <td>
+                <apex:outputLabel value="{!($ObjectType.BMCServiceDesk__LookupFilter__c.fields.BMCServiceDesk__FilterType__c.label)}"  styleClass="textLabel" />
+            </td>
+            <td>
+                 <apex:inputField value="{!filterObj.BMCServiceDesk__FilterType__c}" id="filterTypeId" onchange="isDataChanged();" styleClass="filterTypeClass slds-input"/>
+                </td>
+                <td>
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__cmdbsrdfilterlabel}" styleClass="textLabel" style="{!IF(showCIFilterSection ==true,'', 'display:none')}"  />
+                </td>
+                <td>
+         
+
+   
+                    <div style="width: 250px;">
+
+                        <div id="ciFilterInputField" style="{!IF(showCIFilterSection ==true,'', 'display:none')}" ></div></div>
+                </td>
+         </tr>
+             <tr>
+                <td colspan="4">
+                <table width="100%" cellspacing="0" cellpadding="0">
+                    <tr align="center">
+                        <td colspan="8" style="{!IF(fulfillmentCriteria != 'true','','display:none')}">
+                            <div class="horizontalLineClass" style="margin:5px 10px 0px 10px;"></div>
+                        </td>
+                    </tr>
+                    <tr class="filterOptions">
+                        <td style="padding-left:10px;" >
+                            <div id="lookupFieldCombo"/>
+                        </td>
+                        <td >
+                            <div id="compareOpDiv" style="padding-right: 15px;"/>
+                        </td>
+                        <td style="{!IF(fulfillmentCriteria == 'true','', 'display:none')}">
+                            <div id="fieldValueCombo"/>
+                        </td>
+                         <td>
+							<div style="{!IF(fulfillmentCriteria == 'true','', 'display:none')};padding-left:5px;" id="selectFieldCombo"/>
+                            <apex:inputText id="inputTxt" style="{!IF(fulfillmentCriteria != 'true','width:86% !important', 'display:none')}"  styleClass="inputBox"/ >
+                            <input type="text" id="referenceID" value="" class="inputBox" style="display:none;" />
+                            <apex:inputText id="datetimeinput" styleClass="inputBox" style="display:none; width:86% !important;"/>
+                            <apex:inputText id="inputDate" styleClass="inputBox" style="display:none; width:86% !important;"/>
+                            <apex:inputTextarea id="inputTxtArea" style="display:none;" styleClass="inputAreaBox" onkeyup=""/>
+                        
+                            <input type="button" id="lookUp" class="lookupIcon" style="display:none; margin-left: 7px; margin-top: 9px;" onClick="openQualLookup();"/>
+                            <span type="button" id="inputTxtAreaButtonEle" class="d-icon-align_left transformIcon" style="display:none; padding-left:10px;padding-top: 10px;" onclick="window.parent.showTextEditor(null, selectedLabel, selectedTextAreaLength, '{!JSENCODE($Label.OK)}', '{!JSENCODE($Label.Cancel)}', null, null, null, getInputTextAreaEle());" />
+                            <span id="dateTimePopupImg" type="button" class="d-icon-calendar_clock_o transformIcon" style="display:none; padding-left:10px; padding-top: 8px;" onclick="showDateTimePicker();"></span>
+                            <span id="datePopupImg" type="button" class="d-icon-calendar transformIcon" style="display:none; padding-left:10px; padding-top: 8px;" onclick="showDatePicker();"></span>
+                        </td>
+                        <td>
+                            <div id="picklistCombo"/>   
+                            <div id="booleanCombo"/>        
+                        </td>
+                        <td width="5%" align="right" style="padding-right:15px">
+                        	<table>
+                        		<tr>
+                        			<td style="padding-right: 8px"><button type="button" id="AddBtnId" class="slds-button slds-button_neutral" onClick="addUpdateCriteriaGrid();" style="margin-left:15px;">{!JSENCODE($Label.Add)}</button></td>
+                        			<td><button type="button" id="UpdateBtnId" class="slds-button slds-button_neutral" style="display:none;" onClick="upadateCriteriaGrid();">{!JSENCODE($Label.Update)}</button></td>
+                        			<td><button type="button" id="DelCriteriaBtnId"   disabled="disabled" class="slds-button slds-button_neutral" onClick="deleteFromCriteriaGrid();">{!JSENCODE($Label.Delete)}</button></td>
+                        		</tr>
+                        	</table>
+                        </td>
+                    </tr>
+                    <tr align="center">
+                        <td colspan="8">
+                            <div class="horizontalLineClass" style="margin:0px 10px 15px 10px;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan ="{!IF(fulfillmentCriteria == 'true', 8, 7)}"> 
+                            <div style="width:100%; padding-left:10px; padding-right:10px;">
+                                <div id="criteriaGrid" />
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+           </tr>
+                     <tr>
+           <td colspan="4"  style="background-color: #f5f5f5;" align="center"> 
+               <table width="97%" style="height: 60px;padding-left:10px;">
+                    <tr>
+                        <td>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__LookupFilter__c.fields.BMCServiceDesk__FilterLogic__c.label}" for="" style="padding-left:10px; padding-right:10px;"/>
+                                        </td>
+                                        <td>
+                                            <apex:inputField id="filterLogicId" value="{!filterObj.BMCServiceDesk__FilterLogic__c}" styleClass="inputBox slds-input" style="width:275px; height:25px;" />
+                                        </td>
+                                        <td>
+                                            <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__filterlogicexample)}" for="" style="padding-left:10px;"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td style="text-align:right;padding-right:10px;padding-left: 135px;">
+                            <button id="CancelBtnId" type="button" class="slds-button slds-button_neutral" onClick="callCancel();">{!JSENCODE($Label.Cancel)}</button>
+                            <button id="SaveBtnId" type="button" disabled="true" class="slds-button slds-button_brand" onClick="callSave();">{!JSENCODE($Label.Save)}</button> 
+                        </td>
+                    </tr>
+               </table>
+           </td>
+       </tr>
+  </table>
+  </apex:form>
+   <apex:outputpanel id="fieldsPanel">
+    <script>
+    var fieldStr = {!fieldStr},
+    	CriteriaGridData=JSON.parse('{!JSENCODE(LookupCriteriaGridData)}'),
+    	filterObjName = '{!JSENCODE(filterObj.Name)}',
+    	filterObjId = '{!filterObj.id}',
+    	msgStr = '{!JSENCODE(MsgStr)}',
+    	isLkfUsed = {!isLkfUsed};
+    	  var ciFilterValStr='{!JSENCODE(ciFilterVal)}';
+                var ciFilterValArr=ciFilterValStr.split(",");
+	var QueryCondition = '{!JSENCODE(QueryCondition)}';
+	var ConsolefieldStr = {!ConsolefieldStr};
+   </script>
+ </apex:outputpanel>
+ <apex:outputpanel id="picklistPanel">
+<script>
+  var picklistStr = '{!picklistValuesStr}';
+</script>
+ </apex:outputpanel>
+  <script>
+     
+  Ext.ns("LookupFilter");
+     LookupFilter.Labels = {
+        labelField : '{!JSENCODE($Label.CIExpField)}',
+        labelValue : '{!JSENCODE($Label.Value)}',
+        DeleteConfirmMessage : '{!JSENCODE($Label.DeleteConfirmMessage)}',
+        Delete : '{!JSENCODE($Label.Delete)}',
+        Console: '{!JSENCODE($ObjectType.LookupFilter__c.fields.Console__c.label)}',
+        FilterFor: '{!JSENCODE($ObjectType.LookupFilter__c.fields.FilterFor__c.label)}',
+        FilterType: '{!JSENCODE($ObjectType.LookupFilter__c.fields.FilterType__c.label)}',
+        Inactive: '{!JSENCODE($Label.Inactive)}',
+        Criterion : "{!JSENCODE($Label.Criterion)}",
+        FieldName:'{!JSENCODE($Label.FieldName)}',
+        Operator : "{!JSENCODE($Label.Operator)}",
+        operandValue : "{!JSENCODE($Label.Value)}",
+        SelectFieldErrMsg:'{!JSENCODE($Label.ErrorMsgTemplateS)}',
+        SelectCompOpMessage:'{!JSENCODE($Label.SelectCompOpMessage)}',
+        EnterValMsg:'{!JSENCODE($Label.EnterValueMsg)}',
+        FilterLogicValidation:'{!JSENCODE($Label.FilterLogicValidation)}',
+        FilterExists:'{!JSENCODE($Label.FilterExists)}',
+        PleaseWait:'{!JSENCODE($Label.PleaseWait)}',
+        cancelConfirm : '{!JSENCODE($Label.AdminLookupFilterCancel)}',
+        FilterLogicLimitExceeded: '{!JSENCODE($Label.ProjectedServiceOutageTextAreaOverflow)}',
+        CompatibleErrorMsg: '{!JSENCODE($Label.CompatibleErrorMsg)}',
+        Cancel: '{!JSENCODE($Label.Cancel)}',
+        EditFilter:'{!JSENCODE($Label.EditFilter)}',
+        NewFilter:'{!JSENCODE($Label.NewFilter)}',      
+        FilterLogicAddCriteriaValidation: '{!JSENCODE($Label.FilterLogicAddCriteriaValidation)}',
+        FilterLogicDeleteCriteriaValidation: '{!JSENCODE($Label.FilterLogicDeleteCriteriaValidation)}',
+        FilterLogicModifyCriteriaValidation: '{!JSENCODE($Label.FilterLogicModifyCriteriaValidation)}',
+        labelTrue: '{!JSENCODE($Label.True)}',
+        labelFalse: '{!JSENCODE($Label.False)}',
+        filtername: '{!JSENCODE(filterObj.Name)}',
+        saveAs: '{!JSENCODE($Label.saveAs)}',
+        createNewfilterOption: '{!JSENCODE($Label.createNewfilterOption)}',
+        changeFilterOption: '{!JSENCODE($Label.changeFilterOption)}',
+        CloseWindowLabel: '{!JSENCODE($Label.CloseWindowLabel)}',
+		LabelEdit: '{!JSENCODE($Label.CMDBEdit)}',
+        filterNameRequired: '{!JSENCODE($Label.filterNameRequired)}',
+		lblInvalidCondition: '{!JSENCODE($Label.invalidCondition)}',
+        lblErrorMsgEncryptedFldInCondition: '{!JSENCODE($Label.errorMsgEncryptedFldInCondition)}',
+        lblQVEncryptionError: '{!JSENCODE($Label.QVEncryptionError)}'
+        }
+   var compStore = new Object(),
+	   labelOperator = '{!JSENCODE(labelOperator)}',
+	   LKfilterId = '{!JSENCODE($CurrentPage.parameters.LKfilterId)}',
+	   LookupObj = '{!JSENCODE($CurrentPage.parameters.LookupObj)}',
+	   EF = 'ф',
+	   DZHE ='џ', //Cyrillic character
+	   nonPrint = '¬',
+	   PE = 'П',
+     PE_NEW = String.fromCharCode(182) + String.fromCharCode(2365) + String.fromCharCode(1240) +String.fromCharCode(1055),
+
+	   ExtjsMessageOK = '{!JSENCODE($Label.Ok)}', 
+	   Cancel = '{!JSENCODE($Label.Cancel)}',
+	   SavedSuccessfully = '{!JSENCODE($Label.SavedSuccessfully)}';
+         var SDEDateFormat = '{!userDateFormat}';
+		 var fulfillmentCriteria = '{!JSENCODE(fulfillmentCriteria)}';
+		 var formId = '{!$Component.RDLookupFilterform}';
+		 var BEObjLabel = '{!JSENCODE($ObjectType.BMC_BaseElement__c.Label)}';
+		 
+        var clientAccount='{!JSENCODE($Label.clientsaccount)}';
+        var clientAccountToolTip='{!JSENCODE($Label.cmdbss3filterclientsaccounttooltip)}';
+        var allCI='{!JSENCODE($Label.all)}';
+        var allCIToolTip='{!JSENCODE($Label.cmdbss3filteralltooltip)}';
+        var clientCI='{!JSENCODE($Label.clientwindowheadersearchpage)}';
+        var clientCIToolTip='{!JSENCODE($Label.cmdbss3filterclienttooltip)}';
+
+   function setPopUpValue(selectedLookUpID , selectedLookUpName){
+        getInputTxtEle().value = selectedLookUpName;
+        document.getElementById('referenceID').value = selectedLookUpID;  
+   }
+
+   function getInputTxtEle(){
+    return document.getElementById('{!$Component.RDLookupFilterform.inputTxt}');
+   }
+   function getInputTextAreaEle(){
+    return document.getElementById('{!$Component.RDLookupFilterform.inputTxtArea}');
+   } 
+   function getDateTimeInputEle(){
+    return document.getElementById('{!$Component.RDLookupFilterform.datetimeinput}');  
+   }
+   function getDateTimePickerImg(){
+    return document.getElementById('dateTimePopupImg');
+   }
+   function getDateInputEle(){
+    return document.getElementById('{!$Component.RDLookupFilterform.inputDate}');  
+   }
+   function getDatePickerImg(){
+    return document.getElementById('datePopupImg');
+   }
+   function getLookupEle(){
+    return document.getElementById('lookUp');
+   }
+   function getLookUpPanelEle(){
+    return document.getElementById('{!$Component.lookUpPanel}');
+   }
+   function getCriteriaGridStrEle(){
+    return document.getElementById('{!$Component.RDLookupFilterform.CriteriaGridStrId}');
+   }
+
+        function getCIFilterSelectEle() {
+            return document.getElementById('{!$Component.RDLookupFilterform.ciFilterSelectList}');
+        }
+
+   function getFilterLogicObj(){
+        return document.getElementById('{!$Component.RDLookupFilterform.filterLogicId}');  
+   }
+   function getFilterNameEle(){
+        return document.getElementById('{!$Component.RDLookupFilterform.filterNameId}');  
+   }
+    
+   function showDateTimePicker(){
+    var dateTimeInputId = document.getElementById('{!$Component.RDLookupFilterform.datetimeinput}');
+    _datePicker.Show(dateTimeInputId);
+   }
+   function showDatePicker(){
+    var dateInputId = document.getElementById('{!$Component.RDLookupFilterform.inputDate}');
+    _datePicker.Show(dateInputId);
+   } 
+    function getFilterTypeObj(){
+      return document.getElementById('{!$Component.RDLookupFilterform.filterTypeId}');
+   }
+   
+        function toggleComboBoxCheckbox(id){
+            var prompQuestion = document.querySelectorAll('#'+ id);
+            if(prompQuestion && prompQuestion !=[]){
+                for(i=0 ;i< prompQuestion.length;i++){
+                    if(prompQuestion[i].checked){
+                        prompQuestion[i].checked = false;
+                    }else{
+                        prompQuestion[i].checked = true;
+                    }
+                }
+            }
+        }
+
+        function checkUncheckCIFilter(id, input, val){
+            var  comboBox= Ext.getCmp('ciFilter');
+            comboBox.reset();
+            var values=[];
+            if(id=='allCI'){
+                if(val){
+                    document.getElementById('clientCI').checked=false;
+                    document.getElementById('clientAccount').checked=false; 
+                    values.push('allCI');                    
+                } 
+                else{
+                    document.getElementById('clientCI').checked=true;                   
+                    values.push('clientCI');
+                }
+            }
+
+            if(id=='clientAccount' || id=='clientCI'){
+                if(val){
+                    document.getElementById('allCI').checked=false;
+                    if(document.getElementById('clientCI').checked && document.getElementById('clientAccount').checked){                        
+                        values.push('clientAccount');
+                        values.push('clientCI');
+                    }       
+                    else{
+                        values.push(id);
+                    }    
+                }
+                else if(!document.getElementById('clientCI').checked && !document.getElementById('clientAccount').checked){
+                    document.getElementById('allCI').checked=true;                      
+                    values.push('allCI');
+                    
+                }
+            }
+            comboBox.setValue(values);
+
+        }
+
+        function loadCIFilterDefaultValues(val){
+            if(ciFilterValStr.indexOf(val)==-1){
+                return '';
+            }            
+            return 'Checked';
+        }
+
+         
+  </script>
+  <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/FulfillmentInputLookupFilterPage.js"></script>
+  <apex:outputpanel id="sldsAlert">
+	<c:RFMessagingComponent />
+  </apex:outputpanel>
+  <!-- Toast Start -->
+<div id="rfToastPopop" style="display:none;">
+    <div class="demo-only slds-modal slds-fade-in-open slds-modal--medium" style="height:4rem">
+        <div class="slds-notify_container slds-is-relative">
+          <div class="slds-notify slds-notify_toast slds-theme_error" role="status" id="themeToastPopup">
+            <span class="slds-assistive-text" id="headerToast"></span>
+            <span id="themeIconPopup" class="slds-icon_container slds-icon-utility-success slds-m-right_small slds-no-flex slds-align-top">
+            </span>
+            <div class="slds-notify__content">
+              <h2 class="slds-text-heading_small " id="mainContentToastPopup"></h2>
+            </div>
+            <button class="slds-button slds-modal__close slds-button--icon-inverse closeIcon" title="{!$Label.Close}" onclick="rfPopUpClose('rfToastPopop');" id="closeButtonToast"></button>
+          </div>
+        </div>
+    </div>
+</div>
+<!-- Toast End -->
+</apex:page>

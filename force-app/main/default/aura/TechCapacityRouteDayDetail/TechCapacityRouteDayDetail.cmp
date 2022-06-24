@@ -1,0 +1,173 @@
+<!--
+- @FileName: TechCapacityRouteDayDetail
+- @Description: Details for a particular day on the TechCapacityRouteView
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       10/31/2019      Created
+*************************************************************  
+-->
+
+<aura:component description="TechCapacityRouteDayDetail">
+    <aura:attribute name="technician" type="Map" />
+    <aura:attribute name="day" type="Map" />
+    <aura:attribute name="accounts" type="List" />
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+
+    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading" aria-modal="true" aria-describedby="modal-content" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container citron-modal">
+            <header class="slds-modal__header">
+                <lightning:buttonIcon iconName="utility:close"
+                                      alternativeText="Close"
+                                      class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                      title="Close"
+                                      onclick="{!c.closeModal}" />
+
+                <div class="slds-grid slds-grid_align-center">
+                    <h1 id="modal-heading" class="slds-modal__title slds-hyphenate slds-m-right_medium">
+                        {!v.technician.tech.Name}
+                    </h1>
+                    <div class="slds-m-left_medium">
+                        <h2 class="slds-text-heading_medium">{!v.day.dayName}&#44;&nbsp;{!v.day.month}&nbsp;{!v.day.num}</h2>
+                    </div>
+                </div>
+            </header>
+            <div class="slds-modal__content slds-scrollable_y slds-p-around_medium" id="modal-content">
+                <aura:iteration items="{!v.accounts}" var="account" >
+                    <div class="slds-m-bottom_medium">
+                        <table class="slds-table slds-table_cell-buffer">
+                            <colgroup>
+                                <col width="40%" />
+                                <col width="30%" />
+                                <col width="20%" />
+                                <col width="10%" />
+                            </colgroup>
+                            <thead>
+                            <tr class="slds-text-title_caps">
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Account">{!$Label.c.Account_Label}</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Product">{!$Label.c.Product}</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Schedule">{!$Label.c.Schedule}</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Quantity">{!$Label.c.Product_Quantity}</div>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <aura:iteration items="{!account.assets}" var="asset" indexVar="index">
+                                <tr>
+                                    <aura:if isTrue="{!index == 0}">
+                                        <td rowspan="{!account.assets.length}">
+                                            <table>
+                                                <colgroup>
+                                                    <col width="30%" />
+                                                    <col width="70%" />
+                                                </colgroup>
+                                                <tr>
+                                                    <td><div class="slds-truncate" title="Name">{!$Label.c.Name}</div></td>
+                                                    <td>
+                                                        <div class="slds-truncate"
+                                                             title="{!account.acc.Name + ' - ' + account.acc.AccPac_Account__c}" >
+                                                            <lightning:button variant="base"
+                                                                              label="{!account.acc.Name + ' - ' + account.acc.AccPac_Account__c}"
+                                                                              value="{!account.acc.Id}"
+                                                                              onclick="{!c.navigateToRecord}" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><div class="slds-truncate" title="Address">{!$Label.c.Address}</div></td>
+                                                    <td>
+                                                        <div class="slds-truncate"
+                                                             title="{!account.acc.ShippingStreet + ' ' + account.acc.ShippingCity + ' ' + account.acc.ShippingPostalCode}">
+                                                            <aura:if isTrue="{!account.acc.ShippingStreet != ''}">
+                                                                {!account.acc.ShippingStreet}<br/>
+                                                            </aura:if>
+                                                            <aura:if isTrue="{!account.acc.ShippingStreet != ''}">
+                                                                {!account.acc.ShippingCity}<br/>
+                                                            </aura:if>
+                                                            <aura:if isTrue="{!account.acc.ShippingStreet != ''}">
+                                                                {!account.acc.ShippingPostalCode}
+                                                            </aura:if>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><div class="slds-truncate" title="{!$Label.c.Tier}">{!$Label.c.Tier}</div></td>
+                                                    <td>
+                                                        <div class="slds-truncate" title="{!account.acc.Customer_Tiers__c}">
+                                                            {!account.acc.Customer_Tiers__c}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><div class="slds-truncate" title="{!$Label.c.Duration}">{!$Label.c.Duration}</div></td>
+                                                    <td>
+                                                        <div class="slds-truncate" title="{!account.duration + ' min'}" >
+                                                            {!account.duration + ' min'}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><div class="slds-truncate" title="{!$Label.c.Adjustments}">{!$Label.c.Adjustments}</div></td>
+                                                    <td>
+                                                        <div class="slds-truncate" title="{!account.adjustments + ' min'}" >
+                                                            {!account.adjustments + ' min'}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><div class="slds-truncate" title="{!$Label.c.Assets}">{!$Label.c.Assets}</div></td>
+                                                    <td>
+                                                        <div class="slds-truncate" title="{!account.assetCount + ' asset(s)'}" >
+                                                            {!account.assetCount + ' asset(s)'}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><div class="slds-truncate" title="{!$Label.c.Hours}">{!$Label.c.Hours}</div></td>
+                                                    <td>
+                                                        <div class="slds-truncate" title="{!account.operatingHours}" >
+                                                            <lightning:button variant="base"
+                                                                              label="{!account.operatingHours}"
+                                                                              value="{!account.operatingHoursId}"
+                                                                              onclick="{!c.navigateToRecord}" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </aura:if>
+                                    <td>
+                                        <div class="slds-truncate" title="{!asset.item.Product_Name__c}">
+                                            {!asset.item.Product_Name__c}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate" title="{!asset.schedule}">
+                                            {!asset.schedule}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate" title="{!asset.item.Quantity}">
+                                            {!asset.item.Quantity}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </aura:iteration>
+                            </tbody>
+                        </table>
+                    </div>
+                </aura:iteration>
+            </div>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</aura:component>

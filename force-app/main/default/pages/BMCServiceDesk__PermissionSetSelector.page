@@ -1,0 +1,53 @@
+<apex:page standardStylesheets="false" showHeader="false" controller="BMCServiceDesk.PermissionSetSelectorController">
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/PermissionSetSelector.css" />
+    <apex:form id="permissionSetSelectorForm">
+        <apex:inputHidden value="{!availableStore}" id="hiddenAvailableStore" />
+        <apex:inputHidden value="{!selectedStore}" id="hiddenSelectedStore" />
+
+        <apex:actionFunction action="{!save}" name="save" oncomplete="showMessage('{!apexMessage}'); " rerender="hiddenAvailableStore, hiddenSelectedStore">
+            <apex:param name="selectedPermissions" assignTo="{!selectedPermissions}" value="" />
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!searchPermissionSet}" name="searchPermissionSet" oncomplete="reloadItemSelector();" rerender="hiddenAvailableStore, hiddenSelectedStore">
+        	<apex:param name="selectedPermissions" assignTo="{!selectedPermissions}" value="" />
+            <apex:param name="searchPermissions" assignTo="{!searchPermissions}" value="" />
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!resetSearch}" name="resetSearch" oncomplete="reloadItemSelector();" rerender="hiddenAvailableStore, hiddenSelectedStore"/>
+    </apex:form>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js" />
+    <script>
+        var dataStore;
+        var hiddenSelectedStore;
+        var itemSel;
+        var labelSrch = '{!JSENCODE($Label.search)}';
+        var labelRefresh = '{!JSENCODE($Label.Reset)}';
+        var availablePermissionLabel = '{!JSENCODE($Label.AvailablePermissionSets)}';
+        var selectedPermissionLabel = '{!JSENCODE($Label.SelectedPermissionSets)}';
+        var selectedValuesTobeSaved;
+        var savedSuccessfullyLabel = '{!JSENCODE($Label.SavedSuccessfully)}';
+        var tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";
+        var spchar = 'ПП';
+        var Oklbl = '{!JSENCODE($Label.Ok)}';
+        var applylbl = '{!JSENCODE($Label.Apply)}';
+        var cancellbl = '{!JSENCODE($Label.Cancel)}'; 
+        
+        function setSelectedData() {
+            if (document.getElementById("{!$Component.permissionSetSelectorForm.hiddenSelectedStore}") != null) {
+                hiddenSelectedStore = document.getElementById("{!$Component.permissionSetSelectorForm.hiddenSelectedStore}").value;
+            }
+        }
+        
+		function setAvailableData() {
+		    if (document.getElementById("{!$Component.permissionSetSelectorForm.hiddenAvailableStore}") != null) {
+		        var hiddenAvailableStore = document.getElementById("{!$Component.permissionSetSelectorForm.hiddenAvailableStore}").value;
+		        eval(hiddenAvailableStore);
+		        dataStore.loadData(availablePermissionSetList);
+		    }
+		}
+    </script>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/PermissionSetSelector.js"/>
+    <div id="itemselector"/>
+    <div id="button_Bar" />
+</apex:page>

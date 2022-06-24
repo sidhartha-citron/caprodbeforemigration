@@ -1,0 +1,36 @@
+<apex:page standardController="BMCServiceDesk__Incident__c" extensions="BMCServiceDesk.IncidentExtension" id="thePage" action="{!doAction}" showHeader="false" standardStylesheets="false">
+<head>
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/NavigatorStyleSheet.css"/>
+</head>
+
+
+<script>
+ var incidentId = '{!JSENCODE(incident.Id)}';
+ var clientId = '{!JSENCODE(incident.FKClient__c)}';
+ var selectedCatId = '{!JSENCODE(incident.FKCategory__c)}';
+ var status='{!incident.state__c}';
+</script>
+    <apex:form target="_parent">    
+        <c:StdLayoutStageProgression ObjectNameVal="Incident__c" status="{!current_status}" ShowServiceTargetsIcon="true" ServiceTargetStatus="{!ServiceTargetStatus}" rendered="{!IF($CurrentPage.parameters.messageString=='',true,false)}"  />        
+        <apex:actionFunction name="refreshIncident" action="{!refreshIncident}" />
+        <apex:actionFunction name="saveIncidentWithRequestDtl" action="{!saveIncidentWithRequestDtl}" onComplete="openDueDatepopUp();refreshIncident();">
+            <apex:param assignTo="{!savedIdTest}" name="savedID" value=""/>
+        </apex:actionFunction>        
+        <apex:actionFunction name="removeRequestDetailFromIncident" action="{!removeRequestDetailFromIncident}" onComplete="openDueDatepopUp();refreshIncident();">
+        </apex:actionFunction>  
+    </apex:form>   
+    <apex:outputpanel rendered="{!IF($CurrentPage.parameters.messageString=='',false,true)}"  >
+    <script>
+         alert('{!JSENCODE($CurrentPage.parameters.messageString)}');
+         refreshIncident();
+    </script>
+    </apex:outputPanel>
+    <script>
+    
+    	var errorMsg = '{!JSENCODE(messageString)}';
+    	if (errorMsg.length > 0) {
+	    	alert(errorMsg);
+	    	refreshIncident();
+    	}
+    </script>              
+</apex:page>

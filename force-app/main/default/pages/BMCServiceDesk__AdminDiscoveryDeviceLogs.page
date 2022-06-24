@@ -1,0 +1,201 @@
+<apex:page controller="BMCServiceDesk.AdminDiscoveryDeviceLogsController" showHeader="false" sidebar="false"  standardStylesheets="false">
+ <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+<link rel="stylesheet" href="{!URLFOR($Resource.DeepView, '/DPLFramework/css/bmc-all.css')}"/>
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/AdminCMDBDiscoveryProvision.css" type="text/css" />
+<body onload="doOnLoadActivity()" class="deviceLogsBody" dir="{!IF(userLanguage == 'iw','rtl','ltr')}">
+<c:RFMessagingComponent />
+<div id="ScannedDevicesStatus" >
+</div>
+<div id="LogSection" ></div>
+ 
+<apex:form >
+	<apex:actionFunction action="{!getScannedDeviceList}" name="getScannedDevice" rerender="updateGridPannel" onComplete="AddRecordsToGrid();">
+	<apex:param assignTo="{!offset}" name="offset" value=""/>
+		<apex:param assignTo="{!orderBy}" name="orderBy" value=""/>
+		<apex:param assignTo="{!isAscending}" name="isAscending" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction action="{!getScannedDeviceList}" name="getScannedDeviceForSorting" rerender="updateGridPannel" onComplete="AddRecordsToGridAfterSorting();">
+		<apex:param assignTo="{!offset}" name="offset" value=""/>
+		<apex:param assignTo="{!orderBy}" name="orderBy" value=""/>
+		<apex:param assignTo="{!isAscending}" name="isAscending" value=""/>
+    </apex:actionFunction>
+    
+    <apex:actionFunction action="{!getScannedDeviceLog}" name="getScannedDeviceLog" rerender="updateLogPannel" onComplete="insertLogData();">
+    <apex:param name="IPAddress" value="" assignTo="{!IPAddress}" />
+    <apex:param name="executionStart" value="" assignTo="{!executionStart}" />
+    <apex:param name="executionStop" value="" assignTo="{!executionStop}" />
+    </apex:actionFunction>
+
+</apex:form>
+ <apex:outputPanel id="updateLogPannel"> 
+		<script>
+		var userLanguage = '{!JSENCODE(userLanguage)}';
+		var scannedDeviceLog = '{!JSENCODE(scannedDeviceLog)}';
+		var executionStop = '{!JSENCODE(executionStop)}';
+		var executionStart = '{!JSENCODE(executionStart)}';
+		</script>
+	</apex:outputPanel>
+	
+	
+	<apex:outputPanel id="updateGridPannel"> 
+		<script>
+		proxyData = {!scannedDeviceList};
+		var offset = {!offset};
+		var orderBy = '{!JSENCODE(orderBy)}';
+		var isByAscending = {!isAscending}; 
+		var exceptionErrMsg = '{!exceptionMsg}';
+		var errMsgHeader = '{!$Label.ScanDetails}';
+		
+		</script>
+	</apex:outputPanel>
+	
+    
+</body>
+<script>
+	var isAscendingTemp = false;
+	var lastColumnData;
+	var ServerSideSorting = function(ct, column, direction, eOpts){
+		if(!isFirstLoading){
+			offset = 0;
+			gridPreviosCount = 0;
+			var gridStroreVar = Ext.getCmp("grid").getStore();
+			gridStroreVar.removeAll();
+			showLoadingMask();
+			if(typeof(lastColumnData) != 'undefined'){
+				if(lastColumnData != column.dataIndex){isAscendingTemp = false; lastColumnData = column.dataIndex;}
+			}else{
+				lastColumnData = column.dataIndex;
+			}
+			if(isAscendingTemp){
+				isAscendingTemp = isAscending = false;
+			}else{ 
+				isAscendingTemp = isAscending = true;
+			}
+			orderBy = column.dataIndex;
+			getScannedDeviceForSorting(column,column.dataIndex,isAscending);
+		}else{
+			isFirstLoading = false;
+		}
+	}
+	var currentScrollPos = 0
+	var totalScannedDevices = {!totalScannedDevices};
+	var proxyData = {!scannedDeviceList};
+	var strColumns = {!strColumns};
+	var strFields =  '["name", "ipAddress","osName","status","detail"]';
+    var ACScannedDevices = '{!JSENCODE($Label.ACScannedDevices)}';
+    var doubleClickRowToViewLog = '{!JSENCODE($Label.doubleClickRowToViewLog)}';
+    var Status = '{!JSENCODE($Label.Status)}';
+    var done = '{!JSENCODE($Label.Done)}';
+    var doneCount = '{!doneCount}';
+    var ACUnreachable = '{!JSENCODE($Label.ACUnreachable)}'; 
+    var unreachableCount = '{!unreachableCount}';
+    var initialCount = '{!initialCount}';
+    var inProgressCount = '{!inProgressCount}';
+    var resPath = '{!$Resource.SDEFStyles}';
+    var ScanStart = '{!JSENCODE($Label.ACScanStart)}';
+    var ACScanEnd = '{!JSENCODE($Label.ACScanEnd)}';
+    var MACAddress = '{!JSENCODE($Label.MACAddress)}';
+    var ScanLogsFor = '{!JSENCODE($Label.ACScanLogsFor)}';
+	var Done = '{!JSENCODE($Label.Done)}';
+	var gridPreviosCount = 0;
+	var scanStatus = '{!JSENCODE($CurrentPage.parameters.scanStatus)}';
+	var PleaseWait = '{!JSENCODE($Label.PleaseWait)}';
+	var InProgress = '{!JSENCODE($Label.InProgress)}';
+	var Initial = '{!JSENCODE($Label.Initial)}';
+	var Unknown =  '{!JSENCODE($Label.Unknown)}'; 
+	
+	function IsIE10OrOlderVersion() {
+  		var ua = window.navigator.userAgent;
+  		var msie = ua.indexOf('MSIE ');
+  		if (msie > 0) {
+    		// IE 10 or older => return version number
+    		return true;
+  		}
+  
+  		//for IE 11
+  		if(ua.indexOf("Trident/7.0") > 0)
+      		return false;
+
+  		//for IE Edge and other browsers
+  		return false;
+	}
+	
+	
+	function addImage(data, metadata, record, rowIndex, columnIndex, store){
+	var icon,image;
+	switch (data) {
+	
+		case '0':
+			icon="";
+		break;
+	
+		case '1':
+			if(IsIE10OrOlderVersion()){
+				icon=('<div class="protocolStatusInprocess" />'); //Partial
+			}else{
+				icon=('<span class="__icon-circle_75_o" style="margin-left:35%;color:#FF6600;font-size:15px;">  </span>'); //Partial
+			}
+		break;
+		
+		case '2':
+			if(IsIE10OrOlderVersion()){
+				icon=('<div class="protocolStatusPass" />'); //pass
+			}else{
+				icon=('<span class="__icon-check_circle_o" style="margin-left:35%;color:green;font-size:15px;">  </span>'); //pass
+			}
+		break;
+		
+		case '3':
+			if(IsIE10OrOlderVersion()){
+				icon=('<div class="protocolStatusFail" />'); //fail
+			}else{
+				icon=('<span class="__icon-cross_circle" style="margin-left:35%;color:#cc0000;font-size:15px;">  </span>'); //Fail
+			}
+		break;
+		
+	}
+	return icon;
+}
+
+function showStatus(data, metadata, record, rowIndex, columnIndex, store)
+{
+	var strStatus = ACUnreachable;
+	if(data == '_STATUS_OK_')
+		strStatus = Done; 
+	else if(data == 'InProgress')
+		strStatus = InProgress;
+	else if(data == 'Initial')
+		strStatus = Initial;
+	
+	if(data == 'Unreachable')
+	{
+		if(IsIE10OrOlderVersion()){
+			return  '<span>'+ strStatus + '</span> <div class="scanStatus"  style="MARGIN-RIGHT: 15%"/> ';
+		}else{
+			return  '<span><span>'+ strStatus + '</span> &nbsp;&nbsp;&nbsp;&nbsp; <span class="__icon-left-exclamation_bubble_o" style="color:red;"></span></span> ';
+		}
+	}
+	else
+		return strStatus;
+	
+}
+
+function showOS(data, metadata, record, rowIndex, columnIndex, store)
+{
+	if(data == '_MISC_UNKNOWN_')
+		return Unknown;
+	else
+		return data;	
+}
+
+	function getRowNumber(value, metaData, record, rowIndex, colIndex, store)    
+    {
+    	 //Start with 1
+         return rowIndex + 1;     
+    }
+
+</script>
+<script src="{!$Resource.ExtJS4_1_3}/ext-all.js"  type="text/javascript"/>
+<script src="{!$Resource.SDEFCommonJS}/AdminDiscoveryDeviceLogs.js"  type="text/javascript"/>
+
+</apex:page>

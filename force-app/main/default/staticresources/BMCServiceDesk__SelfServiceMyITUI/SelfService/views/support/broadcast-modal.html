@@ -1,0 +1,89 @@
+<div class="modal-header Branding-Title_bar-background_color Branding-Title_bar-broadcast_text_color support-modal-header">
+	<div style="float:left;width:97%;">
+		<div class="back-btn-container-default" ng-class="{'back-btn-container' : isBackEnable}">
+			<a class="back-btn-broadcast" ng-click="cancel()" ng-show="isBackEnable">
+				<span class="d-icon-angle_left" />
+				<span>
+					{{$root.selfServiceLabels.back}}</span>
+			</a>
+		</div>
+		<h1 class="modal-header__title broadcast-model-title" id="broadcast-model-title">
+			{{$root.selfServiceLabels.Broadcasts}}
+		</h1>
+	</div>
+	<div aria-button aria-label="{{ $root.selfServiceLabels.cancel }}" class="search-remove-btn search-remove-btn-dpl" ng-click="cancel()" >
+		<span class="d-icon-cross" />
+	</div>
+	<span id="loadingSpinner" aria-live="polite" class="screen_reader-only"></span>
+</div>
+<loading-spinner centered="true" if="broadcastDetailServiceCtrl.dataLoading"></loading-spinner>
+<div class="modal-body support-modal-body" style="min-height:400px;">
+	<div aria-live="polite" aria-atomic="true" class="upper-container" style="min-height: 310px;">
+		<loading-spinner inline="true" overlay="true" wide="true" if="broadcastDetailServiceCtrl.upperContainerLoading && !broadcastDetailServiceCtrl.dataLoading" style="height: 310px;"></loading-spinner>
+		<div ng-show="!broadcastDetailServiceCtrl.dataLoading"> 
+			<div class="broadcast-value">
+				<label ng-bind="selectedBroadcast.Name" class="broadacast-title" ng-attr-title="{{selectedBroadcast.Name}}" role="none"></label>
+			</div>
+			<div class="broadcast-value">
+				<label role="none">
+					{{$root.selfServiceLabels.Broadcasted}}:</label>
+				<label ng-bind="selectedBroadcast.postDate__c" role="none"></label>
+			</div>
+		</div>
+		<div ng-show="!broadcastDetailServiceCtrl.dataLoading">
+			<div class="broadcast-message-block">
+				<label ng-bind="selectedBroadcast.broadcastMessage__c" role="none"></label>
+			</div>
+		</div>
+	</div>
+	<hr class="broadcast-hr">
+	<div class="lower-container" ng-show="!broadcastDetailServiceCtrl.dataLoading">
+		<div class="container-table">
+			<div class="container-table-row">
+				<div class="container-table-cell">
+					<div class="table-responsive">
+						<table class="table broadcast-table">
+							<thead>
+								<tr>
+									<th class="broadcast-priority-col">{{headerInfo.Priority_ID__c}}</th>
+									<th class="broadcast-message-col">{{headerInfo.broadcastMessage__c}}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td class="inner-table-col">
+										<div class="inner-table-container scrollbar scrollbar-primary" id="inner-table-container">
+											<table class="inner-table" tabindex="0">
+												<tr ng-repeat="broadcast in allBroadcastsData" ng-click="openSelectedBroadcast(broadcast.id,false)" ng-class="{'selected-broadcast': broadcast.id == selectedBroadcast.id}">
+													<td class="broadcast-priority-col" aria-label="{{headerInfo.Priority_ID__c}}">
+														
+														<label ng-class="setBrdPriorityClass(broadcast.Priority_ID__c)">
+														<span ng-show="!checkBrdPriority(broadcast.Priority_ID__c)">5+</span>
+														<span ng-show="checkBrdPriority(broadcast.Priority_ID__c)">
+														{{broadcast.Priority_ID__c}}</span>
+														
+														</label>
+													</td>
+													<td class="broadcast-message-col" aria-label="{{headerInfo.broadcastMessage__c}}">
+														<label ng-bind="broadcast.broadcastMessage__c"></label>
+													</td>
+												</tr>
+											</table>
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal-footer">
+	<div class="modal-footer__btn-container broadcast-model-footer">
+		<button type="button" class="btn Branding-Right_Panel-button_outline" ng-click="cancel()">
+			{{$root.selfServiceLabels.cancel}}
+		</button>
+	</div>
+</div>

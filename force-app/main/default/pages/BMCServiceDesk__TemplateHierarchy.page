@@ -1,0 +1,189 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.TemplateHierarchyController" standardStylesheets="false">
+<c:CommonIncludes />
+
+<!--  <script type="text/javascript" src="{!$Resource.ExtJS}/ext-all-debug.js"></script> -->
+
+  
+ <apex:outputPanel id="dataPanel">
+ </apex:outputPanel>
+     
+  <script>
+    var templateName;               
+     var templateId;
+     var errormsg;
+              
+    var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';   
+    function closeWindow(){
+         window.parent.refreshList();
+         window.parent.closeTab(wid);
+    }
+    function disableHiButtons(){
+		document.getElementById('upButtonId').disabled = true;
+ 		document.getElementById('downButtonId').disabled = true;
+   	}
+   	function enableHiButtons(){   		
+   		document.getElementById('upButtonId').disabled = false;
+   		document.getElementById('downButtonId').disabled = false;   		
+   	}
+   	function scrollUp() {
+	  var selEle = document.getElementById('{!$Component.hierarchyForm.existingTemplate}');
+	  for(i = 0; i < selEle.options.length; i++) {
+	    if(selEle.options[i].selected == true) {
+	      if(i != 0) {
+	        var temp = new Option(selEle.options[i-1].text,selEle.options[i-1].value);
+	        var temp2 = new Option(selEle.options[i].text,selEle.options[i].value);
+	        selEle.options[i-1] = temp2;
+	        selEle.options[i-1].selected = true;
+	        selEle.options[i] = temp;
+	      }
+	    }
+	  }
+	  updateList();	  
+	}
+	function scrollDown() {
+	  var selEle = document.getElementById('{!$Component.hierarchyForm.existingTemplate}');
+	  for(i = (selEle.options.length - 1); i >= 0; i--) {
+	    if(selEle.options[i].selected == true) {
+	      if(i != (selEle.options.length - 1)) {
+	        var temp = new Option(selEle.options[i+1].text,selEle.options[i+1].value);
+	        var temp2 = new Option(selEle.options[i].text,selEle.options[i].value);
+	        selEle.options[i+1] = temp2;
+	        selEle.options[i+1].selected = true;
+	        selEle.options[i] = temp;
+	      }
+	    }
+	  }	  
+	  updateList();
+	}
+	function updateList() {
+	  var selEle = document.getElementById('{!$Component.hierarchyForm.existingTemplate}');
+	  var textBox = document.getElementById('optionOrder');
+	  textBox.value = '';
+	  for(i = 0; i < selEle.options.length; i++) {
+	    if (i == 0) {
+	      textBox.value += selEle.options[i].value;
+	    } else {
+	      textBox.value += ',' + selEle.options[i].value;
+	    }
+	  }
+	}
+	Ext.onReady(function(){
+    
+        Ext.QuickTips.init();
+        
+        // This function renders a block of buttons
+        var SaveBtnHandler = function(button,event) {
+        var optOrder = document.getElementById('optionOrder').value;                
+        SaveUHierarchy(optOrder);  };
+        var NextBtnHandler = function (button,event) { };
+        var PreviuosBtnHandler = function (button,event) {};
+        
+        var SamplePanel = Ext.extend(Ext.Panel, {
+
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                tooltipType:'title',
+                tooltip: '{!JSENCODE($Label.save)}',
+                iconCls: 'bmcSave', 
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },              
+                handler:SaveBtnHandler
+            }]
+        });
+        disableHiButtons();
+    });
+    window.parent.changePopUpTitle('{!JSENCODE($Label.TemplateDisplayOrder)}');
+    
+  </script>     
+  <apex:outputPanel id="dummy" ></apex:outputPanel>               
+    <apex:outputPanel id="formPanel" > <!-- Page body in this panel -->
+       <apex:form id="hierarchyForm">
+       		  <apex:actionFunction name="populateFields" action="{!clearList}" reRender="existingTemplate"/>
+              <apex:actionFunction name="SaveUHierarchy" action="{!SaveUHierarchy}" onComplete="window.close();window.parent.closePopup();">
+              	<apex:param assignTo="{!optionOrder}" name="optOrder" value=""/>
+              </apex:actionFunction>
+               <div id="capsule" class="CapsuleDiv1" style="height: 100%;">
+                    <table class="clsMainTableTemplate" cellspacing="0" cellpadding="0">
+                        <tr class="clsRowGreyBg">
+                            <td >
+                                <div id="btnToolbar"></div>
+                            </td>
+                        </tr>  
+                        <tr>
+                          <td >
+                            <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr >
+                                    <td class="clsTopAlignment75">
+                                        
+                                       <table class="clsTable" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td><div class="TD15pxHeightCls"/></td><td></td>
+                                            </tr>
+                                            <tr>
+                                             <td>
+                                             	<table>
+                                             		<tr>
+														<td class="clsInputLabelTD" style="white-space:normal;padding-right:5px;width:50%;"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__SYSTemplate__c.fields.BMCServiceDesk__templateFor__c.label}"/>
+                                                    	<span class="clsRequiredBlack">*</span>
+                                                		</td>
+                                                 		<td title="{!$Label.TooltipTemplateDisplayOrderTemplateFor}" class="clsInputTextBoxTD">
+                                                  			<apex:selectList value="{!template.BMCServiceDesk__templateFor__c}" id="templateForID" size="1" styleClass="clsTemplateSelectList" onchange="populateFields();">
+                                                    			<apex:selectOptions value="{!templateForItems}"/>                                                 	
+                                                   			</apex:selectList>
+                                               			</td>                                             		
+                                             		</tr>
+                                             	</table>
+                                             </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsSelectOption">
+                                                	<input type="hidden" id="optionOrder"/>                                                
+                                                    <apex:selectList title="{!$Label.bmcservicedesk__tooltiptemplatedisplayordertemplatelist}" styleclass="clsHierarchySelectOption" value="{!templateHierarchy}" size="10" id="existingTemplate" onclick="enableHiButtons();" style="width: 310px;padding-right: 0px;">
+                                                             <apex:selectOptions value="{!templateHierarchyFields}" ></apex:selectOptions>                                                             
+                                                     </apex:selectList>                                                      
+                                                 </td>
+                                             <td>
+					                             <table>
+					                            <tr>
+					                                <td class="clsSelectOptionButton">
+					                                <input type="button"  id="upButtonId" class="bmcButtonArrowUp" title="{!$Label.Up}" onclick="scrollUp();"/>
+					                                </td>
+					                            </tr>
+					                            <tr>
+					                                <td>
+					                                    <div />
+					                                </td>
+					                            </tr>
+					                            <tr>
+					                                <td  class="clsSelectOptionButton">
+					                                <input type="button"  id="downButtonId" class="bmcButtonArrowDown" title="{!$Label.Down}" onclick="scrollDown();"/>
+					                                </td>
+					                            </tr>                                           
+					                           </table>
+					                       </td> 
+                                         </tr>                                                                             
+                                        </table>
+                                    </td>
+                                </tr>
+                             </table>
+                         </td>
+                       </tr> 
+                  </table>
+            </div>    
+        </apex:form>
+    </apex:outputPanel>      
+
+</apex:page>

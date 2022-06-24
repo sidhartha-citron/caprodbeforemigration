@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebLink xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Auto_Create_PDF</fullName>
+    <availability>online</availability>
+    <description>Used is Salesforce Classic</description>
+    <displayType>button</displayType>
+    <linkType>javascript</linkType>
+    <masterLabel>Auto Create PDF</masterLabel>
+    <openType>onClickJavaScript</openType>
+    <protected>false</protected>
+    <url>if ({!$Setup.Quote_Settings__c.Check_Contact_Email__c} &amp;&amp; {!ISBLANK(Quote.Contact_Email_Address__c)}) {
+alert(&apos;Quote cannot be generated. Contact record does not have an email address.&apos;); 
+ } else {
+var templateID = (&apos;{!Quote.Language_Preference__c}&apos;===&apos;French&apos; ? (&apos;{!Quote.Quote_With_Annual_Totals__c}&apos; ? &apos;{!$Setup.Quote_Settings__c.F_Services_Template__c}&apos; : &apos;{!$Setup.Quote_Settings__c.F_Products_Template__c}&apos;) : (&apos;{!Quote.Quote_With_Annual_Totals__c}&apos; ? &apos;{!$Setup.Quote_Settings__c.E_Services_Template__c}&apos; : &apos;{!$Setup.Quote_Settings__c.E_Products_Template__c}&apos;));
+var fileName = &apos;{!Quote.Account_Name__c}%20-&apos;+&apos;%20{!URLENCODE(Quote.Opportunity_Line_of_Business__c)}%20Proposal%20-&apos;+&apos;%20{!YEAR(DATEVALUE(NOW()))}-{!LPAD(TEXT(MONTH(DATEVALUE(NOW()))),2,&apos;0&apos;)}-&apos;+&apos;{!LPAD(TEXT(DAY(DATEVALUE(NOW()))),2,&apos;0&apos;)}&apos;;
+window.open(&apos;/apex/APXTConga4__Conga_Composer?id={!Quote.Id}&amp;TemplateId=&apos; + templateID + &apos;&amp;FP0=1&amp;DefaultPDF=1&amp;DS7=5&amp;OFN=&apos; + fileName);
+}</url>
+</WebLink>

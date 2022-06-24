@@ -1,0 +1,187 @@
+<apex:page showHeader="false" standardStylesheets="false" controller="BMCServiceDesk.ACDeviceRegistrycontroller" title="Registry">
+<head>
+    <style>
+    .vAlignTop{
+        vertical-align:top;
+    }
+    .x-tree-panel{
+        margin: 0px;
+    } 
+    .width80{
+        width: 80%;
+    }
+    .width20{
+        width: 20%;
+    }
+    .width100{
+        width: 100%;
+    }
+    .errorCls{
+        color:red !important;
+    }
+    .errorIconCls{
+        display:none !important;
+    }
+        #regTreePanel .x-panel-header {
+        background-image:none !important;
+        background-color:#414042 !important;
+        border:none !important;
+        }
+        #regTreePanel .x-panel-header .x-panel-header-text-default {
+        font-size: 12px !important;
+        font-family: Salesforce sans !important;
+        color: white !important;
+        } 
+        #regTreePanel .x-grid-header-ct{
+        border-top:3px solid #f86e00 !important;
+        }
+        #newValTypeField .x-form-field {
+        	height: 22px !important;
+            Font-family: 'Salesforce Sans',Arial,sans-serif;
+            font-size: 12px;
+            color: #333;
+        	border-right:none;
+        }
+        .x-boundlist-item {
+            border-left: 3px solid transparent;
+            height: 34px;
+            vertical-align: middle !important;
+            padding-left: 9px !important;
+            line-height: 28px !important;
+            text-align: left !important;
+        }
+        .x-boundlist-selected {
+            background-color: #f2f2f2 !important;
+            border-color: unset;
+            border-width: 0px;
+            border-left: 3px solid transparent;
+        }
+        .x-form-trigger {
+            background: none !important;
+            cursor: default !important;
+            border: 1px solid #d9d9d9 !important;
+            padding-top: 6px;
+            padding-left: 5px !important;
+        	border-left:none !important;
+        }
+        #newKeyForm .x-form-item-label, #newValForm .x-form-item-label {
+        	font-family: Salesforce sans !important;
+        }
+	</style>
+</head>
+    <c:AcRestCommon isGridRequired="true"/>
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/ACCMDBActions.css" type="text/css" /> 
+    <body>
+        <apex:form >
+        
+        <apex:actionFunction name="getRegKeyValues" action="{!getRegValues}" oncomplete="stopWaitMask();fillGrid();checkUserAuth();" reRender="errorCodeDataPanel,registryDataPanel,updateSession">
+            <apex:param name="keyPath" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction name="createNewRegKey" action="{!createNewRegKey}" oncomplete="stopWaitMask();checkUserAuth();" reRender="errorCodeDataPanel,afterNewKey,updateSession">
+            <apex:param name="keyPath" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction name="deleteRegKey" action="{!deleteRegKey}" oncomplete="stopWaitMask();checkUserAuth();" reRender="errorCodeDataPanel,afterDeleteKey,updateSession">
+            <apex:param name="keyPath" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction name="deleteRegVal" action="{!deleteRegValue}" oncomplete="stopWaitMask();checkUserAuth();" reRender="errorCodeDataPanel,afterDeleteVal,updateSession">
+            <apex:param name="keyPath" value=""/>
+            <apex:param name="valueName" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction name="createNewRegVal" action="{!createNewRegVal}" oncomplete="stopWaitMask();checkUserAuth();" reRender="errorCodeDataPanel,afterNewVal,updateSession">
+            <apex:param name="keyPath" value=""/>
+            <apex:param name="valueName" value=""/>
+            <apex:param name="valueType" value=""/>
+            <apex:param name="value" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction name="updateACSetting" action="{!updateSessionSetting}" reRender=""/>
+        
+        <apex:outputpanel id="registryDataPanel">
+            <script>
+                proxyData = {!valuesJSON};
+            </script>
+        </apex:outputpanel>
+        <apex:outputpanel id="errorCodeDataPanel">
+        <script>
+            errorCode = '{!JSENCODE(errorCode)}';
+            msgStr = '{!JSENCODE(msgStr)}';
+            isAuthRequired={!isAuthRequired};
+            if(errorCode != '0' && (errorCode =='1' || msgStr != '')){
+                showMsgWithParam(msgStr);
+            }
+        </script>   
+        </apex:outputpanel>
+        <apex:outputPanel id="updateSession">
+            <script>
+                updateSessionInCS={!updateSession};
+                if(updateSessionInCS)
+                {
+                    updateACSetting();
+                }
+            </script>
+        </apex:outputPanel>
+        <apex:outputpanel id="afterNewKey">
+            <script>
+                if(errorCode=='0'){
+                    refreshSelectedNode();
+                }
+            </script>
+        </apex:outputpanel>
+        <apex:outputpanel id="afterDeleteVal">
+            <script>
+                if(errorCode=='0'){
+                    removeRegVal();
+                }
+            </script>
+        </apex:outputpanel>
+        <apex:outputpanel id="afterDeleteKey">
+            <script>
+                if(errorCode=='0'){
+                    removeRegKeyNode();
+                }
+            </script>
+        </apex:outputpanel>
+        <apex:outputpanel id="afterNewVal">
+            <script>
+                if(errorCode=='0'){
+                    addregValInGrid();
+                }
+            </script>
+        </apex:outputpanel>
+        </apex:form>
+        <script>
+                var page_ACDeviceRegistryJSON = '{!$Page.ACDeviceRegistryJSON}', 
+                    nameLbl = '{!JSENCODE($Label.Name)}',
+                    typeLbl='{!JSENCODE($Label.Type)}',
+                    dataLbl='{!JSENCODE($Label.RegData)}',
+                    compLbl='{!JSENCODE($Label.Computer)}',
+                    assemblyId = '{!JSENCODE($CurrentPage.parameters.assemblyId)}',
+                    ACSelectNodeMsg='{!JSENCODE($Label.ACSelectNodeMsg)}',
+                    ACRegistryKeyName='{!JSENCODE($Label.ACRegistryKeyName)}',
+                    ACRegistryValueName='{!JSENCODE($Label.ACRegistryValueName)}',
+                    Type='{!JSENCODE($Label.Type)}',
+                    ExtjsMessageOK='{!JSENCODE($Label.Ok)}',
+                    Cancel='{!JSENCODE($Label.Cancel)}',
+                    ACRegistryNewKey='{!JSENCODE($Label.ACRegistryNewKey)}',
+                    ACRegistryNewValue='{!JSENCODE($Label.ACRegistryNewValue)}',
+                    ACDeleteRegistryKey='{!JSENCODE($Label.ACDeleteRegistryKey)}',
+                    ACDeleteKeyConfirmationMsg='{!JSENCODE($Label.ACDeleteKeyConfirmationMsg)}', 
+                    ACRegistryEditValue='{!JSENCODE($Label.ACRegistryEditValue)}',
+                    ACDeleteRegistryValue='{!JSENCODE($Label.ACDeleteRegistryValue)}',
+                    ACSelectValueMsg='{!JSENCODE($Label.ACSelectValueMsg)}',
+                    ACSelectValueToEditMsg='{!JSENCODE($Label.ACSelectValueToEditMsg)}',
+                    ACDeleteValueConfirmationMsg='{!JSENCODE($Label.ACDeleteValueConfirmationMsg)}',
+                    ACRegistry='{!JSENCODE($Label.ACRegistry)}',
+                    ACEmptyparameters='{!JSENCODE($Label.ACEmptyparameters)}',
+                    DefaultRegName='{!JSENCODE($Label.DefaultRegName)}',
+                    EditDelRegValNotAllowed='{!JSENCODE($Label.EditDelRegValNotAllowed)}';
+                    ErrorTitle='{!JSENCODE($Label.Error)}';
+					InvalidValue='{!JSENCODE($Label.ACInvalidValueError)}';
+        </script>
+        <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AcDeviceRegistry.js" />
+        </body>
+</apex:page>

@@ -1,0 +1,697 @@
+<apex:page controller="BMCServiceDesk.QVWizardController" showHeader="false" standardStylesheets="false">
+<c:CommonIncludes />  
+<link rel="stylesheet" href="{!$Resource.SDEFCommonJS}/vendor/fullcalendar.css"/>
+<script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/jquery/jquery.min.js"></script>
+<script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/jquery-ui.min.js')}"/>
+      
+<style>
+	.clsMainTableQV{
+		*height:565px;
+	}
+	
+	.fc .fc-grid th {
+font-family:Tahoma,MS Sans Serif;
+}
+
+.fc-header-title {
+font-family:Tahoma,MS Sans Serif;
+padding-left:25px;
+*padding-left:110px;
+padding-right:20px;
+font-size:1em;
+}
+.fc-grid .fc-event-time {
+font-family:Tahoma,MS Sans Serif;
+}
+.fc-grid .fc-day-number {
+font-family:Tahoma,MS Sans Serif;
+}
+
+.fc-header .fc-state-default, .fc-header .fc-state-default a {
+margin-bottom:2px;
+margin-top:2px;
+}
+
+.fc-header .fc-state-default span {
+height:12px;
+width:12px;
+}
+
+
+.fc-header .fc-state-default span {
+border:none;
+background-color:#3193D0;
+padding-top:0;
+}
+
+.fc-header .fc-state-default, .fc-header .fc-state-default a {
+border:none;
+}
+.fc-header .fc-state-default, .fc-header .fc-state-default a {
+color:white;
+padding-bottom:1px;
+}
+
+	//DO NOT REMOVE. Following styles have to be on this page itself.
+    #monthview {
+		border:1px solid grey;
+	}
+	#weekview {
+		border:1px solid grey;
+	}
+	#dayview {
+		border:1px solid grey;
+	}
+	 .displayFeildList{
+      font-family: Tahoma, MS Sans Serif;
+       font-size: 11px;
+    }
+	
+	//END - DO NOT REMOVE.
+	
+	
+	
+</style>
+<script type='text/javascript'>
+    var MonthJanuary='{!JSENCODE($Label.MonthJanuary)}';
+         var MonthFebruary='{!JSENCODE($Label.MonthFebruary)}';
+         var MonthMarch='{!JSENCODE($Label.MonthMarch)}';
+         var MonthApril='{!JSENCODE($Label.MonthApril)}';
+         var MonthMay='{!JSENCODE($Label.May)}';
+         var MonthJune='{!JSENCODE($Label.MonthJune)}';
+         var MonthJuly='{!JSENCODE($Label.MonthJuly)}';
+         var MonthAugust='{!JSENCODE($Label.MonthAugust)}';
+         var MonthSeptember='{!JSENCODE($Label.MonthSeptember)}';
+         var MonthOctober='{!JSENCODE($Label.MonthOctober)}';
+         var MonthNovember='{!JSENCODE($Label.MonthNovember)}';
+         var MonthDecember='{!JSENCODE($Label.MonthDecember)}';
+         
+         var MonthJan='{!JSENCODE($Label.Jan)}';
+         var MonthFeb='{!JSENCODE($Label.Feb)}';
+         var MonthMar='{!JSENCODE($Label.Mar)}';
+         var MonthApr='{!JSENCODE($Label.Apr)}';
+         var MonthJun='{!JSENCODE($Label.Jun)}';
+         var MonthJul='{!JSENCODE($Label.Jul)}';
+         var MonthAug='{!JSENCODE($Label.Aug)}';
+         var MonthSep='{!JSENCODE($Label.Sep)}';
+         var MonthOct='{!JSENCODE($Label.Oct)}';
+         var MonthNov='{!JSENCODE($Label.Nov)}';
+         var MonthDec='{!JSENCODE($Label.Dec)}';
+         
+         
+       
+         var WeekdayMon='{!JSENCODE($Label.WeekdayMon)}';
+         var WeekdayTue='{!JSENCODE($Label.WeekdayTue)}';
+         var WeekdayWed='{!JSENCODE($Label.WeekdayWed)}';
+         var WeekdayThu='{!JSENCODE($Label.WeekdayThu)}';
+         var WeekdayFri='{!JSENCODE($Label.WeekdayFri)}';
+         var WeekdaySat='{!JSENCODE($Label.WeekdaySat)}';
+         var WeekdaySun='{!JSENCODE($Label.WeekdaySun)}'; 
+      
+            
+         var WeekdayMonday='{!JSENCODE($Label.Monday)}';
+         var WeekdayTuesday='{!JSENCODE($Label.Tuesday)}';
+         var WeekdayWednesday='{!JSENCODE($Label.Wednesday)}';
+         var WeekdayThursday='{!JSENCODE($Label.Thursday)}';
+         var WeekdayFriday='{!JSENCODE($Label.Friday)}';
+         var WeekdaySaturday='{!JSENCODE($Label.Saturday)}';
+         var WeekdaySunday='{!JSENCODE($Label.Sunday)}';
+	$(document).ready(function() {
+
+		var date = new Date();
+		var d = date.getDate();
+		var m = date.getMonth();
+		var y = date.getFullYear();
+
+		$('#monthview').fullCalendar({
+			defaultView: 'month',
+			header: {
+				left: '',
+				center: 'prev,title,next',
+				right: ''
+			},
+			editable: false,
+			events: [
+				{
+					title: 'Lunch',
+					start: new Date(y, m, d, 12, 0),
+					end: new Date(y, m, d, 14, 0),
+					allDay: false,
+					className: 'event99CCFF'
+				},
+				{
+					title: 'Birthday Party',
+					start: new Date(y, m, d+1, 19, 0),
+					end: new Date(y, m, d+1, 22, 30),
+					allDay: false,
+					className: 'eventCCCCCC'
+				},
+				{
+					title: 'Inc 202',
+					start: new Date(y, m, d+2, 19, 0),
+					end: new Date(y, m, d+2, 22, 30),
+					allDay: false,
+					className: 'eventFF9900'
+				}
+			]
+		});
+
+		$('#weekview').fullCalendar({
+					defaultView: 'basicWeek',
+					header: {
+						left: '',
+						center: 'prev,title,next',
+						right: ''
+					},
+					editable: false,
+					events: [
+				{
+					title: 'Lunch',
+					start: new Date(y, m, d, 12, 0),
+					end: new Date(y, m, d, 14, 0),
+					allDay: false,
+					className: 'event99CCFF'
+				},
+				{
+					title: 'Birthday Party',
+					start: new Date(y, m, d+1, 19, 0),
+					end: new Date(y, m, d+1, 22, 30),
+					allDay: false,
+					className: 'eventCCCCCC'
+				},
+				{
+					title: 'Inc 202',
+					start: new Date(y, m, d+2, 19, 0),
+					end: new Date(y, m, d+2, 22, 30),
+					allDay: false,
+					className: 'eventFF9900'
+				}
+			]
+		});
+		$('#dayview').fullCalendar({
+					defaultView: 'basicDay',
+					header: {
+						left: '',
+						center: 'prev,title,next',
+						right: ''
+					},
+					editable: false,
+					events: [
+				{
+					title: 'Lunch',
+					start: new Date(y, m, d, 12, 0),
+					end: new Date(y, m, d, 14, 0),
+					allDay: false,
+					className: 'event99CCFF'
+				},
+				{
+					title: 'Birthday Party',
+					start: new Date(y, m, d+1, 19, 0),
+					end: new Date(y, m, d+1, 22, 30),
+					allDay: false,
+					className: 'eventCCCCCC'
+				},
+				{
+					title: 'Inc 202',
+					start: new Date(y, m, d+2, 19, 0),
+					end: new Date(y, m, d+2, 22, 30),
+					allDay: false,
+					className: 'eventFF9900'
+				}
+			]
+		});
+
+	});
+</script>
+<script type='text/javascript' src='{!$Resource.SDEFCommonJS}/vendor/fullcalendar.min.js'></script>
+ <apex:outputPanel id="valueSetterpanel">
+   <script>
+        //function addQuery(){
+           var queryId = '{!JSENCODE(addedQueryId)}';
+		   var queryName=  '{!JSENCODE(addedQueryName)}';
+           	if(queryId!="" && queryName!=""){ 
+                window.parent.addQuery(queryId, queryName);
+		   	}else if(queryName!=""){
+				window.parent.parent.editTreeForQuery();
+ 		   	}
+        //}
+    </script>
+ </apex:outputPanel>
+<script>
+function showdiv(id){
+	document.getElementById(id).style.display = 'block';
+}
+function hidediv(id){
+	document.getElementById(id).style.display = 'none';
+}
+
+function showView(index){
+	if(index == 0){
+		showdiv("monthview");
+		hidediv("weekview");
+		hidediv("dayview");
+		setCalView(index,'Month');
+	}
+	if(index == 1){
+		showdiv("weekview");
+		hidediv("monthview");
+		hidediv("dayview");
+		setCalView(index,'Week');
+	}
+	if(index == 2){
+		showdiv("dayview");
+		hidediv("monthview");
+		hidediv("weekview");
+		setCalView(index,'Day');
+	}
+	
+}
+function showDisplayLabelandColor(id){
+  if(document.getElementById("colorpickerdiv"+id).style.display=='block'){
+  		document.getElementById("colorpickerdiv"+id).style.display = 'none';
+		document.getElementById("arrowdown"+id).style.display = 'none';
+		document.getElementById("arrowright"+id).style.display = 'block';
+  }else{
+  		document.getElementById("colorpickerdiv"+id).style.display = 'block';
+		document.getElementById("arrowdown"+id).style.display = 'block';
+		document.getElementById("arrowright"+id).style.display = 'none';
+  }
+
+}
+
+function showHideColorPicker(id){
+    var divChildNodesArray = document.getElementById("chk"+id).childNodes;
+	if(divChildNodesArray[0].checked){
+		document.getElementById("colorpickerdiv"+id).style.display = 'block';
+		document.getElementById("arrowdown"+id).style.display = 'block';
+		document.getElementById("arrowright"+id).style.display = 'none';
+	}else{
+		document.getElementById("colorpickerdiv"+id).style.display = 'none';
+		document.getElementById("arrowdown"+id).style.display = 'none';
+		document.getElementById("arrowright"+id).style.display = 'block';
+	}
+}
+function showHideColorTable(id){
+	if(document.getElementById("colortable"+id).style.display == 'block'){
+		document.getElementById("colortable"+id).style.display = 'none';
+	}else{
+		document.getElementById("colortable"+id).style.display = 'block';
+	}
+}
+function setColor(id, color){
+	document.getElementById("color"+id).style.backgroundColor = color;
+	//document.getElementById("colorcode"+id).value = color;
+	document.getElementById("colortable"+id).style.display = 'none';
+	setColorCode(color,id);
+}
+function initBtn() {
+ 
+ document.getElementById('previousBTN').disabled=false;
+
+}
+</script>
+<script>
+Ext.onReady(function(){
+	showView({!calendarViewIndex});
+
+	var store = new Ext.data.SimpleStore({
+	        fields: ['value', 'name'],
+	        data : [['Month','{!JSENCODE($Label.Month)}'],['Week','{!JSENCODE($Label.Week)}'],['Day','{!JSENCODE($Label.Day)}']]
+	    });
+	var combo = new Ext.form.ComboBox({
+	        store: store,
+	        width: 150,
+	        displayField:'name',
+	        renderTo: 'calendarview',
+	        valueField:'value',
+	        typeAhead: true,
+	        mode: 'local',
+	        forceSelection:true,
+	        triggerAction: 'all',
+	        selectOnFocus:true,
+	        value: '{!JSENCODE(calendarViewName)}',
+	        cls: 'fontCls',
+        	//triggerClass : Ext.isIE7 ? 'qvCmbTriggerClsIE' : 'qvCmbTriggerCls',
+	        listeners:{
+	            'select': function(combo, record, index) {
+	            		showView(index);
+	             }
+	        }
+	
+	    });
+
+initBtn();
+});
+</script>
+	<apex:outputPanel id="errorId">
+		<script>
+			errormsg = '{!JSENCODE(messageString)}';               
+	   	</script>
+	</apex:outputPanel>
+<apex:outputPanel id="dummyPanel"/>
+<div id="capsule" class="CapsuleDiv1" style="height:100%">
+  <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form >
+            	<apex:actionFunction name="setColorCode" action="{!setColorCode}" rerender="dummyPanel">
+                	<apex:param name="colorCode" assignTo="{!colorCode}" value=""/>
+                	<apex:param name="fieldInfoId" assignTo="{!fieldInfoId}" value=""/>
+                </apex:actionFunction>
+                <apex:actionFunction name="setCalView" rerender="dummyPanel">
+                	<apex:param name="index" assignTo="{!calendarViewIndex}" value=""/>
+                	<apex:param name="name" assignTo="{!calendarViewName}" value=""/>
+                </apex:actionFunction>
+                 <apex:actionFunction name="stepChartview" action="{!stepChartview}"/>
+                
+                  <table cellpadding="0" cellspacing="0" class="clsMainTableQV">
+                  <tBody>
+                    <tr align="center" >
+                       <td align="center" style="background-color:#eff3f5;" colspan="3">
+                        <!-- Progress bar image -->
+                           <table class="clsBrProgressBar" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td height="15px" colspan="20"></td>
+                                </tr>
+                                <tr>
+                                    <td class="qvStyle15perWidth"></td>
+                                    <td class="qvStyle45Width"></td>
+                                    <apex:repeat value="{!lstIntro}" var="string">
+                                        <td class="QVStage1">
+                                            <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                        </td>
+                                        <td class="QVStage2"></td>
+                                        <td class="QVStage2"></td>
+                                    </apex:repeat>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Current.gif"/>
+                                    </td>
+                                    <td class="qvStyle45Width"></td>
+                                    <td class="qvStyle15perWidth"></td>
+                                </tr>
+                                <tr>
+                                    <td height="10px" colspan="20"></td>
+                                </tr>
+                                <tr>
+                                    <td class="qvStyle15perWidth"></td>
+                                    <apex:repeat value="{!lstIntro}" var="string">
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarIntro}</td>
+                                    </apex:repeat>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.General}</td>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarQuery}</td>
+                                    <td colspan="3" class="statusTxt" align="center" >{!$Label.QVWizPrgBarTable}</td>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarChart}</td>
+                                    <td colspan="3" class="currentStatusTxt" align="center">{!$Label.QVWizPrgBarCalendar}</td>
+                                    <td class="qvStyle15perWidth"></td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+                     
+                    <tr style="vertical-align: top;" height="100%">
+                      <td class="qvwidth15px" ></td>
+                      <td class="topAlignTD" height="100%" valign="top">   
+                        <table class="clsBrTable" cellpadding="0" cellspacing="0" width="100%" style="height:100%" border="1">
+                          <tbody valign="top">   
+                            <tr valign="middle">
+                              <td class="QVInfoTitle"><apex:outputLabel value="{!$Label.bmcservicedesk__editcalendarview}"/></td>
+                            </tr>
+                            
+                            <!-- Put the page contents inside the following TR -->
+                            <tr>
+                              <td>
+									<table align="left" width="100%" cellpadding="0" cellspacing="0" height="100%">
+										<tr>
+           									<td><div class="div15pxVspacing"/></td>
+      									</tr>
+										<tr>
+											<td class="qvwidth15px"></td>
+											<td>
+												<table width="100%" cellpadding="0" cellspacing="0" height="100%">
+													<tr>
+														
+														<td colspan="2">
+															<div class="qvinformationBar">
+                                          						 <apex:outputLabel value="{!$Label.bmcservicedesk__qvcalendarinfo}" id="qvCalenderInfo"/>        
+                                    						</div>
+														</td>
+													</tr>
+													<tr>
+			          									<td><div class="div15pxVspacing"/></td>
+			     									</tr>
+													<tr>
+	                 									<td align="left" valign="top" width="50%">
+	                 										<table width="100%" cellpadding="0" cellspacing="0">
+	                 											<tr>
+	                 												<td class="qvClsInputLabelTD">
+	                 														<apex:outputLabel value="{!$Label.bmcservicedesk__calendarformat}" id="calenderFormat"/>
+	                 												</td>
+	                 												<td>
+	                 													<div id="calendarview" title="{!$Label.TooltipQuickViewsWizardCalendarFormat}" ></div>
+	                 												</td>
+	                 											</tr>
+	                 										</table>
+	                 									</td>
+	                 									<td align="left" valign="top" width="50%">
+	                 										<div class="clsBoldInputLabelTD">
+	                 											<apex:outputLabel value="{!$Label.bmcservicedesk__calendarsample}" id="calenderSample"/>
+	                 										</div>
+	                 									</td>
+	                 								</tr>
+													<tr>
+														<td align="left" valign="top" width="50%">
+															<table cellspacing="0" cellpadding="0">
+																<tr>
+	                      											<td><div class="div15pxVspacing"/></td>
+	                 											</tr>
+	                 											<tr>
+	                 												<td>
+	                 													<table cellspacing="0" cellpadding="0">
+	                 														<tr>
+	                 															<td>
+				                 													<div class="clsBoldInputLabelTD">
+				                 														<apex:outputLabel value="{!$Label.bmcservicedesk__calendarfieldtodisplay}"  title="{!$Label.bmcservicedesk__tooltipquickviewswizardfieldstodisplay}" id="calenderFields" />
+				                 													</div>
+				                 												</td>
+				                 											</tr>
+				                 											<tr>
+				                 												<td>
+				                 													<table cellspacing="0" cellpadding="0" style="table-layout:fixed" width="312">
+				                 														<col width="15"/>
+ 																						<col width="25"/>
+ 																						<col width="272"/>
+				                 														<apex:repeat value="{!dateFields}" var="dateField" id="dateFieldList">
+					                 														<tr>
+							                 													<td align="left" valign="middle">
+							                 														<div id="arrowdown{!dateField.objectFieldName}" style="display: none;">
+						                 																<img src="{!$Resource.SDEFStyles}/SDEFimages/arrow_down_menu.gif"/>
+						                 															</div>
+							                 													
+							                 														<div id="arrowright{!dateField.objectFieldName}" style="display: block;">
+						                 																<img src="{!$Resource.SDEFStyles}/SDEFimages/arrow_right_blue.gif"/>
+						                 															</div>
+							                 													</td>
+							                 													<td class="qvClsInputLabelTD" align="left" valign="middle">
+							                 														<div id="chk{!dateField.objectFieldName}" >
+																									<apex:outputText value="CRUDFLSCheck# False Positive: Since this is part of Remedyforce functional process which is expected to work outside of FLS and CRUD permission on this field." rendered="false" />
+							                 														<apex:inputcheckbox value="{!dateField.isChecked}" id="checkBox" onclick="javascript:showHideColorPicker('{!dateField.objectFieldName}')"/>
+							                 														</div>
+							                 													</td>
+							                 													<apex:outputText value="CRUDFLSCHECK# Both CRUD & FLS check are not required (SYSQVFieldInfo__c is a metadata object)" rendered="false"/> 
+							                 													<td class="qvClsInputLabelTD" align="left" valign="middle" onclick="javascript:showDisplayLabelandColor('{!dateField.objectFieldName}')"><apex:outputText id="objFieldLabel" value="{!dateField.objectFieldLabel}" /></td>
+																							
+																							<tr>
+																								<td align="left"></td>
+																								<td align="left" colspan="2">
+								                 													<div id="colorpickerdiv{!dateField.objectFieldName}" style="display: none">
+																										<table cellspacing="0" cellpadding="0" width="100%">
+																											<tr height="25px">
+																												<td class="qvClsInputLabelTD" valign="middle">
+																													<!-- <apex:outputLabel value="Display Field"/>-->
+																													<apex:outputLabel value="{!$Label.bmcservicedesk__calendarfielddisplay}" id="CalendarFieldDisplay"/>
+																												</td>
+																												<td valign="middle">
+																													<div id="displayField{!dateField.objectFieldName}" title="{!$Label.bmcservicedesk__tooltipquickviewswizarddisplayfield}" >
+																														<apex:selectlist value="{!dateField.displayField}" title="{!$Label.bmcservicedesk__tooltipquickviewswizarddisplayfield}" size="1" styleClass="displayFeildList" >
+																											            	<apex:selectOptions value="{!dateField.displayOptions}"/>
+																												        </apex:selectList>
+																												        <!-- <div id="displayFields"/>-->
+																													</div>
+																												</td>
+																											</tr>
+																											<tr>
+																												<td align="left" class="qvClsInputLabelTD" valign="middle">
+																													<apex:outputLabel value="{!$Label.bmcservicedesk__calendardisplayfldcolor}" id="colorLabel"/>
+																												</td>
+																												<td>
+																													<table cellspacing="0" cellpadding="0" width="100%">
+																														<tr>
+																															<td>
+																																<table cellspacing="0" cellpadding="0" title="{!$Label.TooltipQuickViewsWizardColor}" ><tr height="19px">
+																																	<td width="19px" valign="middle">
+																																		<input type="text" size="1" id="color{!dateField.objectFieldName}" style="background-color:{!dateField.colorcode};width:25px"/>
+																																		<!-- <input type="hidden" value="{!dateField.colorcode}" id="colorcode{!dateField.objectFieldName}"/> -->
+																																	</td>
+																																	<td valign="middle"><img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_pick.gif" onClick="showHideColorTable('{!dateField.objectFieldName}')" height="19px" width="19px"/></td>
+																																</tr></table>
+																															</td>
+																														</tr>
+																														<tr>
+																															<td>
+																																<div id="colortable{!dateField.objectFieldName}"   style="display: none">
+																																	<table cellspacing="5px" border="1" cellpadding="0">
+																																		<tr height="14px">
+																																			<td width="21px" bgcolor="#FF0000"><a href="#" onclick="setColor('{!dateField.objectFieldName}','#FF0000')" style="text-decoration:none">&nbsp;&nbsp;&nbsp;<font color="#FFFFFF">T</font>&nbsp;&nbsp;&nbsp;</a></td>
+																																			<td width="21px" bgcolor="#FF9900"><a href="#" onclick="setColor('{!dateField.objectFieldName}','#FF9900')" style="text-decoration:none">&nbsp;&nbsp;&nbsp;T&nbsp;&nbsp;&nbsp;</a></td>
+																																			<td width="21px" bgcolor="#FFCC33"><a href="#" onclick="setColor('{!dateField.objectFieldName}','#FFCC33')" style="text-decoration:none">&nbsp;&nbsp;&nbsp;T&nbsp;&nbsp;&nbsp;</a></td>
+																																			<td width="21px" bgcolor="#FFFF00"><a href="#" onclick="setColor('{!dateField.objectFieldName}','#FFFF00')" style="text-decoration:none">&nbsp;&nbsp;&nbsp;T&nbsp;&nbsp;&nbsp;</a></td>
+																																			<td width="21px" bgcolor="#33CC00"><a href="#" onclick="setColor('{!dateField.objectFieldName}','#33CC00')" style="text-decoration:none">&nbsp;&nbsp;&nbsp;<font color="#FFFFFF">T</font>&nbsp;&nbsp;&nbsp;</a></td>																		
+																																		</tr>
+																																		<tr height="14px">
+																																			<td width="21px" bgcolor="#3366CC"><a href="#" onclick="setColor('{!dateField.objectFieldName}','#3366CC')" style="text-decoration:none">&nbsp;&nbsp;&nbsp;<font color="#FFFFFF">T</font>&nbsp;&nbsp;&nbsp;</a></td>
+																																			<td width="21px" bgcolor="#99CCFF"><a href="#" onclick="setColor('{!dateField.objectFieldName}','#99CCFF')" style="text-decoration:none">&nbsp;&nbsp;&nbsp;T&nbsp;&nbsp;&nbsp;</a></td>
+																																			<td width="21px" bgcolor="#CCCCCC"><a href="#" onclick="setColor('{!dateField.objectFieldName}','#CCCCCC')" style="text-decoration:none">&nbsp;&nbsp;&nbsp;T&nbsp;&nbsp;&nbsp;</a></td>
+																																			<td width="21px" bgcolor="#999999"><a href="#" onclick="setColor('{!dateField.objectFieldName}','#999999')" style="text-decoration:none">&nbsp;&nbsp;&nbsp;T&nbsp;&nbsp;&nbsp;</a></td>
+																																			<td width="21px" bgcolor="#FFFFFF"><a href="#" onclick="setColor('{!dateField.objectFieldName}','#FFFFFF')" style="text-decoration:none">&nbsp;&nbsp;&nbsp;T&nbsp;&nbsp;&nbsp;</a></td>																		
+																																		</tr>
+																																	</table>
+																																</div>																																
+																															</td>
+																														</tr>
+																													</table>
+																												</td>
+																											</tr>
+																										</table>
+																									</div>
+																								</td>
+																							</tr>
+				                 														</tr></apex:repeat>
+																				    </table>
+																			    </td>
+																		   </tr>
+																		</table>
+																	</td>
+																</tr>
+															</table>
+														</td>
+														<td align="right" valign="top" width="50%">
+															<table class="QVCalendarOuterTable" cellspacing="15px" style="table-layout:fixed;height:300px">
+																
+																<tr>
+																	<td>
+																		<div id='monthview'></div>
+																		<div id='weekview'></div>
+																		<div id='dayview'></div>
+																	</td>
+																</tr>
+															</table>
+														</td>
+													</tr>
+												</table>
+											</td>
+											<td class="qvwidth15px"></td>
+										</tr>
+										<tr>
+           									<td><div class="div15pxVspacing"/></td>
+      									</tr>
+									</table>
+                                </td>
+                            </tr>
+                            <!-- Page contents end here -->
+                            
+                            
+                            <tr style="background-color:#dee0e0;height:35px; width:100%;" >
+                              <td align="right" valign="middle">
+                                <table >
+                                    <tr>
+                                        <td><script>
+                                          var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+										     function closeWindow(){
+										  
+										                window.parent.closeTab(wid);
+										        }
+					function shSaved(){
+					                        var msgToDisplay=errormsg; 
+					                        if(errormsg.indexOf('Saved Successfully')==0){
+					                          msgToDisplay ='{!JSENCODE($Label.saveSuccessfullyQVWizCalendarviewPage)}';
+					                        }  else if(errormsg.indexOf('Record Deleted')==0){
+					                          msgToDisplay='{!JSENCODE($Label.QuickViewDeleted)}';
+					                        }
+                                            Ext.MessageBox.show({title: '{!JSENCODE($Label.Information)}', msg:msgToDisplay,
+                                                buttons: Ext.MessageBox.OK,
+                                                icon: Ext.MessageBox.INFO, fn: clsWin
+                                            });
+                                            
+                                        }
+                                      
+                                        function clsWin(){ 
+                                      	  waitbox(1);	
+                                        	var queryId = '{!JSENCODE(addedQueryId)}';
+								            var queryName=  '{!JSENCODE(addedQueryName)}';
+								            if(queryId!="" && queryName!=""){ 
+                								window.parent.addQuery(queryId, queryName);
+                							}else if(queryName!=""){
+                								window.parent.parent.editTreeForQuery();
+                							}
+                							
+                							window.parent.parent.setDoRefresh(true);
+                							if(errormsg.indexOf('Saved Successfully')==0)
+                                        	window.parent.closeTabsByCount();
+                                        	
+                                        }
+                                         function waitbox(timeout){ 
+										    if(timeout > 0) {
+										    waitMsg.hide();
+										    }
+										    else{
+										    waitMsg = new Ext.Window({ 
+										        height: 100,width: 200,resizable: false, closable: false, header: false,frame: false, modal: true,shadow: false, baseCls: 'waitboxCls', 
+												items : [{ xtype:'panel',height:100, width:200, border: false,bodyStyle:'background-color:transparent;border:none;', html: '<div align="center"><img src="' +  tabOutImg +  '"/></div>' }] 
+										    }); 
+										    waitMsg.show();
+										    }
+										}
+                                        </script>
+                                            <!--apex:commandButton value="{!$Label.Previous}" id="previousBTN" Action="{!stepChartview}" styleClass="bgBtnGrey"/-->
+                                            <input type="button" disabled="true" value="{!$Label.Previous}" id="previousBTN" onclick="stepChartview();" Class="QvBtnGrey"/>
+                                             <apex:commandButton id="saveButton" value="{!$Label.bmcservicedesk__save}" Action="{!saveQuickView}" onclick="waitbox(0);" oncomplete="shSaved();" styleClass="{! IF(qvQry.System__c ,'QvBtnGreyDisabled','QvBtnGrey')}" reRender="valueSetterpanel,errorId,validationComponent" disabled="{!qvQry.BMCServiceDesk__System__c}"/>    </td>
+                                        <td class="qvwidth5px"></td>
+                                    </tr>
+                                </table>
+                               </td>
+                            </tr>
+                          </tbody>  
+                        </table>
+                      </td>
+                      <td class="qvwidth15px" ></td>
+                 </tr>
+                 <tr>
+                        <td colspan="3"><div class="div15pxVspacing"/></td>
+                 </tr>
+               </tBody>
+              </table>  
+               <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+           </apex:form>
+       </apex:outputPanel>
+</div>  
+</apex:page>

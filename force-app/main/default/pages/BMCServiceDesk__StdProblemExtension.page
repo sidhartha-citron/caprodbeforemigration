@@ -1,0 +1,22 @@
+<apex:page standardController="BMCServiceDesk__Problem__c" id="thePage" action="{!doAction}" extensions="BMCServiceDesk.StdProblemExtensionController" showHeader="false" standardStylesheets="false">
+<head>
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/NavigatorStyleSheet.css"/>
+</head>
+<apex:form target="_parent">
+    <c:StdLayoutStageProgression ObjectNameVal="Problem__c" status="{!current_status}" ShowServiceTargetsIcon="true" ServiceTargetStatus="{!ServiceTargetStatus}" rendered="{!IF($CurrentPage.parameters.messageString=='',true,false)}"/>
+    <apex:actionFunction name="refreshProblem" action="{!refreshProblem}" />
+</apex:form>
+  <apex:outputPanel rendered="{!IF($CurrentPage.parameters.messageString=='',false,true)}" >
+  <script>
+     alert('{!JSENCODE($CurrentPage.parameters.messageString)}');
+         refreshProblem();
+   </script>
+   </apex:outputPanel>
+<script>
+    var errorMsg = '{!JSENCODE(messageString)}';
+   	if (errorMsg.length > 0) {
+    	alert(errorMsg);
+    	refreshProblem();
+   	}
+</script> 
+</apex:page>

@@ -1,0 +1,35 @@
+<apex:page Controller="BMCServiceDesk.AttachmentController" sidebar="false" showHeader="false" standardStylesheets="false">
+  <apex:message styleClass="locationError" />
+  <apex:form >
+
+   <apex:panelGrid columns="2">
+    <b> Select the file:</b><apex:inputFile fileName="{!attach.name}" fileSize="225000" value="{!attach.body}"  id="fileControl"/>
+    
+
+        <apex:commandButton id="save" value="{!$Label.bmcservicedesk__attachfileattachmentpage}"  action="{!attachFile}" />
+
+        <apex:commandButton id="done" value="{!$Label.bmcservicedesk__done}" onmousedown="window.parent.refreshDocs();" onmouseup="window.parent.closePopup();"/>
+
+        </apex:panelGrid>
+        
+         <apex:dataTable id="tableID" border="1" var="noteList" value="{!notesAndAttachList}" cellpadding="2" rendered="{!IF(notesAndAttachList.size> 0,true,false)}">
+
+           <apex:column >
+               <apex:facet name="header">Name</apex:facet>
+               <apex:outputText value="{!noteList.name}"/>
+           </apex:column>
+           <apex:column >
+               <apex:facet name="header">Created Date</apex:facet>
+               <apex:outputText value="{!noteList.CreatedDate}"/>
+           </apex:column>
+           <apex:column >
+               <apex:facet name="header">Created By</apex:facet>
+               <apex:outputText value="{!noteList.CreatedBy.Name}"/>
+           </apex:column>
+      </apex:dataTable>
+      
+      <apex:actionFunction name="callit" rerender="validationComponent"/>
+
+</apex:form>
+
+</apex:page>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Parent_Must_Have_Same_Account_Number</fullName>
+    <active>true</active>
+    <description>When reparenting a Ship to Location for any reason, the AccPac numbers must be the same.</description>
+    <errorConditionFormula>/*!ISNULL(ParentId) &amp;&amp; !ISBLANK(Parent.AccPac_Account__c)  &amp;&amp; !ISBLANK(AccPac_Account__c ) &amp;&amp;  Parent.AccPac_Account__c != LEFT(AccPac_Account__c, 6) */
+
+!ISNULL(ParentId) &amp;&amp; !ISBLANK(Parent.AccPac_Account__c)  &amp;&amp; !ISBLANK(AccPac_Account__c ) &amp;&amp;  LEFT(Parent.AccPac_Account__c,6) != LEFT(AccPac_Account__c, 6)</errorConditionFormula>
+    <errorMessage>The &quot;AccPac Account #&quot; on the Parent Account must be the same as the first 6 digits for the current Account.</errorMessage>
+</ValidationRule>

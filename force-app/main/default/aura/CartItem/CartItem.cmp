@@ -1,0 +1,45 @@
+<aura:component >
+    <aura:attribute name="selectedProd" type="ProductCatalog.CartItem"/>
+    <aura:attribute name="frequencyOptions" type="ProductCatalog.FrequencySelectOption[]"/>
+    
+    <aura:registerEvent name="clearProd" type="c:catalogItemEvent"/>
+    <aura:registerEvent name="changeQty" type="c:catalogItemEvent"/>
+    
+    <lightning:card class="slds-p-vertical--small slds-m-top--xxx-small">
+        <aura:set attribute="title">
+            <div class="slds-tile slds-tile--board">
+                <div class="slds-media__figure slds-float--left">
+                    <span class="slds-p-around--xx-small slds-m-top--xx-small slds-m-bottom--xx-small" style="color:#72bd42;">
+                        <span class="slds-text-title" style="color:#72bd42;">{!v.selectedProd.name}</span>
+                    </span>
+                </div>
+            </div>
+        </aura:set>
+        <aura:set attribute="actions">
+            <div class="slds-media__figure slds-float--right slds-m-top--xx-small">
+                <lightning:buttonIcon iconName="utility:close" variant="border-filled" onclick="{!c.clearItem}" value="{!v.selectedProd.item}" alternativeText="removeItem" size="x-small"/>
+            </div>
+        </aura:set>
+        
+        <div class="slds-text-title_caps slds-media__figure slds-p-horizontal--small slds-float--left prodSmallerText">
+            <!--<span class="">Qty: {!v.selectedProd.item.Quantity}</span>-->
+            <span class="">{!$Label.c.Product_Quantity + ': '}<ui:inputNumber value="{!v.selectedProd.item.Quantity}" class="qtyNarrow" aura:id="qty" change="{!c.changeQty}"/></span>
+        </div>
+
+        
+        <div class="prodSmallerText">
+            <p class="slds-p-horizontal--small slds-p-bottom_medium">
+                <div class="slds-text-title_caps slds-media__figure slds-float--left">
+                    <span class="">{!$Label.c.Product_Frequency + ': '}{!v.selectedProd.item.Frequency__c}</span> 
+                </div>
+               
+                <div class="slds-text-title_caps slds-media__figure slds-float--right">
+                    <span class=""><ui:outputCurrency value="{!v.selectedProd.totalPrice}"/></span> 
+                </div>
+            </p>
+        </div>
+        <aura:set attribute="footer">
+            <br/>          
+        </aura:set>
+    </lightning:card>
+</aura:component>

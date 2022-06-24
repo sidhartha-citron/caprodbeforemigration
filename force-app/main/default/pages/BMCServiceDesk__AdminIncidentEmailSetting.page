@@ -1,0 +1,336 @@
+<apex:page standardStylesheets="false" controller="BMCServiceDesk.AdminIncidentEmailSetting" showHeader="false" sidebar="false"> 
+    
+    <c:CommonIncludes />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminIncidentEmailSetting.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+   
+    <apex:outputPanel id="loadCustomFields">
+    <script>
+     var lblSave= '{!JSENCODE($Label.Save)}';
+     var saveEmailMsgInActionHistPropVar ={!saveEmailMsgInActionHistPropVal};
+     var createIncidentFromCCVal ={!createIncidentFromCCVal};
+     var includeprefixCheckboxPropVar = {!includeprefixCheckboxVal};
+	 var matchWholeWord = {!matchWholeWordInEmailSubjectVal};
+     var AvailableEmailFields = new Array();  
+     var SelectedEmailFields = new Array();
+     var selectedCustomObject = '{!JSENCODE(SelectedObjName)}';
+     var i=0; 
+  
+    <apex:repeat value="{!EmailFieldNameList}" var="emailFieldNameList" >    
+        AvailableEmailFields[i] = new Array(2);
+        AvailableEmailFields[i++][0]='{!emailFieldNameList}';
+    </apex:repeat>
+    
+    i=0;
+    <apex:repeat value="{!EmailFieldLabelList}" var="emailFieldLabelList" >    
+        AvailableEmailFields[i++][1]='{!emailFieldLabelList}';
+    </apex:repeat>  
+    
+    
+    i=0;
+    <apex:repeat value="{!selectedFieldNameList}" var="selectedFieldNameList" >    
+        SelectedEmailFields[i] = new Array(2);
+        SelectedEmailFields[i++][0]='{!selectedFieldNameList}';
+    </apex:repeat>
+    
+    i=0;
+    <apex:repeat value="{!selectedFieldLabelList}" var="selectedFieldLabelList" >    
+        SelectedEmailFields[i++][1]='{!selectedFieldLabelList}';
+    </apex:repeat>
+    </script>
+    </apex:outputPanel>
+    
+    <apex:outputPanel id="setTextfieldValue">
+        <script>
+        var lookupvaluetextfield = Ext.getCmp('lookupvalueid');
+        if(lookupvaluetextfield!=null && lookupvaluetextfield!='undefined'){
+            lookupvaluetextfield.setValue('{!selectedLookupValue}');
+    }
+    </script>
+    </apex:outputPanel>
+    <apex:outputpanel id="gridref">
+        <script>        
+        
+        function onSaveComplete(){
+            if('success'== '{!success}')
+                msg = '{!JSENCODE($Label.SavedSuccessfully)}';
+            else
+                msg = '{!JSENCODE($Label.MsgSaveError)}';
+            showMessage(msg);
+        }
+            
+        var emailSubjectvar ='{!JSENCODE(emailSubject)}';
+        function gridrefresh(){
+                
+                eval('{!JSENCODE(fetchdataList)}');
+                DataStore.loadData(fieldListData);
+                document.getElementById('inputTxt').disabled=true;
+                Ext.getCmp('keyvalueOptions').reset();
+                Ext.getCmp('IncidentFields').reset();
+            
+                document.getElementById('inputTxt').value="<Keyword>";
+                document.getElementById('updateButtonId').style.display='none';             
+                document.getElementById('removeButtonId').disabled=true;
+                document.getElementById('addButtonId').style.display='inline';
+                document.getElementById('removeButtonId').src=getSDEFStylePath() + '/SDEFbuttons/b_remove_disabled.png';
+                document.images['upbutton'].src= getSDEFStylePath() + '/SDEFbuttons/b_darrow_U_disable_custom.gif';
+                document.images['downbutton'].src= getSDEFStylePath() + '/SDEFbuttons/b_darrow_D_disable_custom.gif';
+        }
+        </script>
+    </apex:outputpanel>
+    <apex:outputPanel id="setUserValue">
+    <script>
+    var userLookupValue = Ext.getCmp('UserLookupId');
+    if(userLookupValue!=null && userLookupValue!='undefined'){
+        userLookupValue.setValue('{!JSENCODE(selectedUserEmail)}');
+    }
+    </script>
+</apex:outputPanel>
+ <apex:outputPanel id="setAdminValue">
+    <script>
+    var LookupValue = Ext.getCmp('AdminLookupId');
+    if(LookupValue!=null && LookupValue!='undefined'){
+       LookupValue.setValue('{!JSENCODE(selectedAdminEmail)}');
+    }
+    </script>
+</apex:outputPanel>
+ <apex:form id="templateFormId">
+ <div id="toolBarDiv"/>
+    <div id="helpDiv" class="clshelpDiv"></div>
+    <div id="mainContainer" class="clsMainContainer" >
+             
+              <table id="clientEmailTable" class="clsTable">
+              
+	              	<tr>
+	              		<td>
+	              			<div class="clsHeaderFont">{!$Label.ApplicationSetting_ClientEmails}</div>
+	              		</td>
+	              	</tr>
+                    <tr>
+                        <td class="TD10pxHeightCls"></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div id="incset1"></div>
+                        </td>
+                    </tr>
+					<tr>    
+                        <td>  
+                            <label id="TextAreaLabel" for="incidenttextArea" class="ClsMarginleft8" >{!$Label.IncidentEmailSetting2}</label>  
+							&nbsp;&nbsp;&nbsp;&nbsp;
+							<span id="matchWholeWordSpan" style="display: inline-block;"></span>
+						</td>
+                    </tr>
+                     <tr>    
+                        <td>  
+                            <textarea id="incidenttextArea" title="{!$Label.IncidentEmailSetting2Tooltip}" rows="4" cols="108" class="ClsMarginleft8">{!ExcludeWordList}</textarea>  
+                        </td>
+                    </tr>
+                     <tr>
+                          <td>  
+                            <div Class="ClsHeight10"></div>
+                          </td>  
+                     </tr>
+                    <tr>    
+               			<td>  
+                    		<div id="createIncidentFromCCValDiv" class="ClsMarginleft8"></div> 
+               			</td>
+             		</tr>
+		
+                    <tr>    
+                        <td>  
+                            <div id="id8" class="ClsMarginleft8"></div> 
+                        </td>
+                    </tr>
+                   <tr>    
+                        <td>  
+                            <div style="5px;"></div> 
+                        </td>
+                    </tr>
+             		<tr>    
+               			<td>  
+                    		<div id="saveEmailMsgInActionHistCheckboxDiv" class="ClsMarginleft8"></div> 
+               			</td>
+             		</tr> 
+                    
+		            <tr>
+			        	<td style="padding-left:3px;">
+			            	<font class="clsHeaderFont ">{!$Label.Identify_Email_Sender}</font>
+			            </td>
+			        </tr>
+		            <tr>
+		              <td>  
+		                <div id="id2" class="incf" style="color:black;"></div>
+		              </td>  
+		            </tr>
+		            
+		            <tr>
+		               <td>     
+		                 <div id="id3"  class="x-form-cb-label ClsLeftMargin30 .ClsTopMargin20">{!$Label.MsgLabel}</div>
+		               </td>
+		            </tr>
+		            <tr>    
+		                <td>        
+		                    <div Class="ClsLeftMargin30" id="emailselector"></div>
+		                </td>
+		            </tr>
+		               
+		             <tr>    
+		               <td>  
+		                    <div id="id6"></div>
+		               </td>
+		             </tr>
+		             <tr>
+		                  <td class="TD10pxHeightCls"></td>
+		             </tr>
+		             
+		         </table>        
+
+				<div style="margin-left:5px;"> <font class="clsHeaderFont">{!$Label.Incident_Email_Setting_Incident_Message}</font> </div>     
+            	<div id="delimiterid"></div>
+            
+              <div id="includeprefixCheckboxCheckboxDiv" class="ClsMarginleft8" title="{!JSENCODE($Label.Include_Prefix_tooltip)}"></div>
+                <table bgcolor="#DEE0E0" height="20" width="580" style="margin-left:10px;margin-top:10px;">
+               
+                    <tr>
+                        <td>
+                            <div class="textDivContainer" id="IncidentTD"></div>
+                        </td>
+                        <td>
+                            <div style="display:none;" id="IncidentTD1"></div>
+                        </td>
+                        <td>
+                            <div class="textDivContainer" id="keyvalueTD"></div>
+                        </td>
+                        <td align="left" width="100">
+                            <input type="text" id="inputTxt"  style="width:120px;" value="{!$Label.Keyword}" disabled="true" class="clsTempInputTextBox"/>
+                        </td>
+                        <td> 
+                        
+                            <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_add.png" onClick="addnewdata();"  id="addButtonId" style="margin-left:4px;" title="{!$Label.Add}" />
+                            <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_update.png" onClick="updateValue();" id="updateButtonId" style="display:none;margin-left:4px;" title="{!$Label.Update}" />   
+                            <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png" onClick="removeRecord();" id="removeButtonId"  title="{!$Label.Remove}" />                                                           
+          
+                        </td>
+                      
+                    </tr>
+                </table>
+                      
+            	<div id="extGridPanel" style="margin-left:10px;width:610px;height:280px;" > </div>
+    </div>
+    
+    
+      
+        <apex:actionFunction name="SavegridData" action="{!Save}" reRender="gridref" oncomplete="gridrefresh();onSaveComplete();">
+            <apex:param assignTo="{!storegridData}" name="finalgriddata" value=""/>
+            <apex:param assignTo="{!selectedFields}" name="objectemailfields" value=""/>
+            <apex:param assignTo="{!EmailIncidentAssignToData}" name="EmailIncidentAssignTo" value=""/>
+            <apex:param assignTo="{!emailSubject}" name="Esubject" value=""/>
+             <apex:param assignTo="{!SelectDelimiter}" name="DelimiterCombovalue" value=""/> 
+             <apex:param assignTo="{!saveEmailMsgInActionHistPropVal}" name="saveEmailMsgInActionHistSettng" value=""/>
+             <apex:param assignTo="{!createIncidentFromCCVal}" name="createIncidentFromCCValSettng" value=""/>
+             <apex:param assignTo="{!ExcludeWordList}" name="IncTextAreaVal" value=""/>
+             <apex:param assignTo="{!includeprefixCheckboxVal}" name="includeprefixCheckboxSettng" value=""/>
+			 <apex:param assignTo="{!matchWholeWordInEmailSubjectVal}" name="matchWholeWordSettng" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="SelectObjectCustomFields" action="{!getSelectedObjectCustomFields}" onComplete="setData();" reRender="loadCustomFields">
+                <apex:param assignTo="{!SelectedObjName}" name="customFieldComboValue" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction name="getNameField" action="{!getNameField}" onComplete="" reRender="setTextfieldValue">  
+            <apex:param assignTo="{!IncidentComboValue}" name="selectedComboValue" value=""/>
+            <apex:param assignTo="{!assignIncidentToid}" name="id" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="getUserName" action="{!getUserName}" onComplete="" reRender="setUserValue">
+            <apex:param assignTo="{!assignUserId}" name="id" value=""/>
+        </apex:actionFunction> 
+         <apex:actionFunction name="getAdminName" action="{!getAdminName}" onComplete="" reRender="setAdminValue">
+            <apex:param assignTo="{!assignAdminId}" name="id" value=""/>
+        </apex:actionFunction> 
+        
+        
+     <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/IncidentEmailSettingItemselector.js" id="itemselector"/> 
+     <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminIncidentEmailSetting.js" />
+     <script language="JavaScript" type="text/javascript" >
+    
+    var AssignIncidentListvar = '{!JSENCODE(AssignIncidentList)}';   
+    var CustomObjectsListvar = '{!JSENCODE(CustomObjectsList)}';
+    var fetchdataListvar = '{!JSENCODE(fetchdataList)}';
+    var IncidentFieldsvar = '{!JSENCODE(IncidentFields)}';
+    var keywordOptionvar = '{!JSENCODE(keywordOption)}';
+    var IncidentFieldsDataTypevar = '{!JSENCODE(IncidentFieldsDataType)}'; 
+    var incidentObjWithNamespacevar = '{!JSENCODE(incidentObjWithNamespace)}';
+    var AssignDelimterListvar = '{!JSENCODE(AssignDelimiterList)}';   
+    var selectedUserEmailvar='{!JSENCODE(selectedUserEmail)}';
+    var selectedAdminEmail='{!JSENCODE(selectedAdminEmail)}';
+    var emailIncidentAssignedTovar='{!JSENCODE(emailIncidentAssignedTo)}';
+    var delimiterAssignedvar='{!JSENCODE(delimiterIncidentAssignedTo)}';
+    var lblMsgTitle	= '{!JSENCODE($Label.IncidentEmailSettings)}';
+    var ExcludeWordList='{!JSENCODE(ExcludeWordList)}'
+    
+    var waitMsg =   new Ext.Window({ 
+                                height:100, 
+                                width:200, 
+                                resizable:false, 
+                                closable : false, 
+                                header:false,
+                                frame:false, 
+                                shadow :false, 
+                                modal:true,
+                                items:[{ 
+                                    xtype:'panel', 
+                                    height:100, 
+                                    width:200, 
+                                    bodyStyle:'background-color:transparent;border:none;', 
+                                    html:'<div align="center"><img src="{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif" /></div>' 
+                                }] 
+                            });
+     
+     Ext.ns("IncidentEmailSettingsPage");
+        IncidentEmailSettingsPage.Labels = {
+            IncidentEmailSubject: '{!JSENCODE($Label.IncidentEmailSubject)}',
+            IncidentEmailSubject2: '{!JSENCODE($Label.IncidentEmailSubject2)}',
+            OpenIncident: '{!JSENCODE($Label.OpenIncident)}',
+            AssignEmailIncidents: '{!JSENCODE($Label.AssignEmailIncidents)}', 
+            For: '{!JSENCODE($Label.Email_is_from)}',
+            AvailableEmailFields: '{!JSENCODE($Label.AvailableEmailFields)}',
+            SelectedEmailFields: '{!JSENCODE($Label.SelectedEmailFields)}',
+            unidentifiedUser: '{!JSENCODE($Label.Inbox_for_unidentified_sender_s)}',
+            SelectDelimiter: '{!JSENCODE($Label.Select_a_Delimiter)}', 
+            EmailSubjectTooltip : '{!JSENCODE($Label.EmailSubjectTooltip)}',
+            SelectEmailIncidentAssignTo: '{!JSENCODE($Label.SelectEmailIncidentAssignTo)}',
+            ApplicationSettingsTitle: '{!JSENCODE($Label.ApplicationSettingsTitle)}',
+            Incidentemailsubjecterror: '{!JSENCODE($Label.Incidentemailsubjecterror)}',
+            keyworderror: '{!JSENCODE($Label.Keyword_Error_message)}',
+            Fielderror: '{!JSENCODE($Label.Field_Already_Selected)}',
+            keywordrequired:'{!JSENCODE($Label.Select_keword)}',
+            incidentfieldrequired:'{!JSENCODE($Label.Select_Incident_field)}',
+            Emailcontentrequired:'{!JSENCODE($Label.Select_Email_Content)}',
+            IncidentField:'{!JSENCODE($Label.Incident_field)}',
+            EmailContent:'{!JSENCODE($Label.EmailContent)}',
+            Emailkeyword:'{!JSENCODE($Label.Emailkeyword)}',
+            IncidentFieldCombo:'{!JSENCODE($Label.Incident_Field_Combo_Text)}',
+            EmailContentCombo:'{!JSENCODE($Label.Email_Content)}',
+            Keyword:'{!JSENCODE($Label.Keyword)}',
+            FromAddressLabel: '{!JSENCODE($Label.From)}',
+            keyworddelimitererror: '{!JSENCODE($Label.KeywordDelimiterError)}',
+            FwdErrMail:'{!JSENCODE($Label.FwdErrMail)}',
+            saveEmailReceivedMessage:'{!JSENCODE($Label.SaveEmailReceivedMessage)}',
+            lblReset:'{!JSENCODE($Label.Clear)}',
+            CreateIncidentEmailinCcBccLabel:'{!JSENCODE($Label.CreateIncidentifEmailinCcBccLabel)}',
+            EmailSetting2ErrorMsg:'{!JSENCODE($Label.IncidentEmailSetting2ErrorMsg)}',
+            EmailSetting2ErrorMsg1:'{!JSENCODE($Label.IncidentEmailSetting2ErrorMsg1)}',
+            InvalidMappingMsg: '{!JSENCODE($Label.InvalidEmailFieldMappingMessage)}' ,
+            IncludePrefix: '{!JSENCODE($Label.IncludePrefix)}',
+			MatchWholeWord: '{!JSENCODE($Label.MatchWholeWord)}'       
+        }
+
+        function getSDEFStylePath(){
+            var path = '{!$Resource.SDEFStyles}';
+            return path;
+        }
+        var wikiUrl='{!wikiUrl}';
+        parent.addHelpOnPage(document.getElementById('helpDiv'),'incidents_email_settings.htm',wikiUrl);            
+    </script>
+  </apex:form> 
+</apex:page>

@@ -1,0 +1,129 @@
+<apex:page standardController="BMCServiceDesk__Incident__c" showHeader="false" sidebar="false" extensions="BMCServiceDesk.consoleExtensionController" >
+<style>
+	.tertiaryPalette, .individualPalette .Custom20Block .tertiaryPalette, .layoutEdit .individualPalette .Custom20Block .tertiaryPalette {
+	    background-color: #00A3D1;
+	    border-color: #00A3D1;
+	}
+	.backtotop {
+	color: #015BA7 !Important;
+	position: relative;
+	white-space: nowrap; 
+}
+	.bPageBlock.brandSecondaryBrd.bDetailBlock.secondaryPalette .pbBody,.bPageBlock.brandSecondaryBrd.bDetailBlock.secondaryPalette .pbHeader,
+	.bPageBlock.brandSecondaryBrd.bDetailBlock.secondaryPalette .content,.bPageBlock.brandSecondaryBrd.bDetailBlock.secondaryPalette .listHoverLinks{
+		display: none !important;
+	}
+</style>
+<script>
+var _RemotingActions={}
+	_RemotingActions.deleteAttachment = '{!$RemoteAction.consoleExtensionController.deleteAttachment}';
+	var strKeyPrefixAndObjNames;
+	var recordId;
+    var isLightningExperience = {!isLightningExperience};
+    var contentVersionDocMap;
+    if( isLightningExperience ) {
+		contentVersionDocMap = JSON.parse('{!contentVersionDocJson}'); 
+		_RemotingActions.PopulateKeyPrefixAndRelationshipData ='{!$RemoteAction.consoleExtensionController.PopulateKeyPrefixAndRelationshipData}'
+    	recordId = '{!JSENCODE(recordId)}';
+        Visualforce.remoting.Manager.invokeAction(_RemotingActions.PopulateKeyPrefixAndRelationshipData, recordId , false, function(result, event) {
+            if (event.status) {
+                if( null != result && '' != result ) {
+                    strKeyPrefixAndObjNames = JSON.parse( result );	
+                }
+                
+            }
+        }, {escape: false});
+    }
+    
+</script>
+ <chatter:feedWithFollowers entityId="{!$CurrentPage.parameters.Id}" />
+ 
+<apex:outputPanel id="afterSavePanel">
+	<apex:detail /> 
+	<script>
+		var idrec = '{!JSENCODE(recordId)}';
+		var _CONFIRMATIONTOKEN=''; 
+		var message = '{!JSENCODE(message)}';
+		var RecordClosed = '{!JSENCODE($label.Incident_is_Closed)}'; 
+		var objname='Incident__c'
+		var consoleDetailElements ;
+		var ApprovalPageURL = '{!$Page.ApprovalWindow}';
+		function showmessage()
+		{
+			if(message == 'Redirect')
+			{
+				var stdApprovalPageUrl = '{!URLFOR($Action.Incident__c.submit, recordId)}';
+				var submitforapprovalHandlerwindow=window.open(ApprovalPageURL +'?isApprovlWin=true&srcurl='+encodeURIComponent(stdApprovalPageUrl),null,'width=900,height=500,resizable = 1,scrollbars=1,status=1,top=200,left=300');
+				var IsApprovalwindowClosed = setInterval(function() {   
+			    if(submitforapprovalHandlerwindow.closed) {  
+			        clearInterval(IsApprovalwindowClosed); 
+			        refreshRelatedLists();
+			      
+			         
+			    }  
+			}, 1000);
+			}
+			else if(message.length > 0)
+			{
+				if (message != 'RefreshRelatedList')
+					alert(message);
+			}
+			else{
+				if(window.parent.isFocusOnIncidentForm){
+					for(var i = 0;i<this.parent.frames.length;i++){
+                        if(this.parent.frames[i].name == "incidentDetailsFrame"){
+                          this.parent.frames[i].showapprovalsucesmsg();
+                          break;
+                        }
+                    }
+				}
+			}			
+			window.parent.checkApprovalstatus(true);
+		}
+	
+	</script> 
+<script src="{!$Resource.SDEFCommonJS}/ConsoleRelatedList.js"  type="text/javascript" />
+<script src="{!$Resource.SDEFCommonJS}/OverideLinksandbuttons.js"  type="text/javascript" />
+<script type="text/javascript">
+var orgNamespace ='{!orgNamespace}';
+var TooltipLink_RMtoIN = '{!JSENCODE($Label.TooltipFor_Link_Release_to_Incident)}';
+var TooltipNewLink	= '{!JSENCODE($Label.TooltipFor_Incident_CI_Link)}';	
+var TooltipCreate_Link_CR = '{!JSENCODE($Label.TooltipFor_Create_and_Link_Change_Request)}';
+var TooltipNewCR = '{!JSENCODE($Label.TooltipFor_New_change)}';
+var TooltipLink_KAtoIN	= '{!JSENCODE($Label.TooltipFor_Link_Knowledge_To_Incident)}';
+var TooltipLink_TStoIN	= '{!JSENCODE($Label.TooltipFor_Link_task_to_Incident)}';
+var TooltipCreate_Link_TStoIN = '{!JSENCODE($Label.TooltipFor_Create_and_Link_Task)}';
+var TooltipCreate_Link_PRtoIN = '{!JSENCODE($Label.TooltipFor_Create_Problem_and_Link_to_Incident)}';
+var TooltipLinkProblem	= '{!JSENCODE($Label.TooltipFor_Link_Problem_toIncident)}'; 
+var TooltipNewTask = '{!JSENCODE($Label.Tooltip_NewTask_Incident)}';
+
+overridecustomnewbtnsTooltip();
+hidedetails();	
+overrideapprovallinks();
+OverrideNotesandAttachmentsBtns();
+overridecustomnewbtns();
+overridelinks();
+window.onclick = function() {parent.hideMenu();}       
+window.onload = function() {setRelatedListBodyWidth();}
+</script>
+</apex:outputpanel>
+<apex:form >
+ 
+<apex:actionFunction name="createAndLinkfun" action="{!createAndLink}" rerender="afterSavePanel" oncomplete="showmessage();" >
+<apex:param assignTo="{!linkName}" value="" name="linkName"/>
+</apex:actionFunction>
+<apex:actionFunction name="refreshRelatedListsfun" action="{!refreshRelatedLists}" rerender="afterSavePanel" oncomplete="showmessage();"  >
+</apex:actionFunction>
+<apex:actionFunction name="SubmitforApproval" action="{!SubmitforApproval}" rerender="afterSavePanel" oncomplete="showmessage();"   >
+</apex:actionFunction>
+</apex:form>
+<table style="border: 1;" align="Center">
+							<tr>
+								<td align="center"><span><a class="backtotop" href="#">{!$Label.Console_BackToTop}</a> </span> 
+								
+								</td>
+							</tr>
+</table>
+
+
+ </apex:Page>

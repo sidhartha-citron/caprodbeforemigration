@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Complete_Account_LEED_Field</fullName>
+    <active>true</active>
+    <description>User must complete the Account LEED field prior to close winning an opportunity</description>
+    <errorConditionFormula>AND( 
+ISCHANGED(StageName), 
+OR(
+Text(PRIORVALUE(StageName)) &lt;&gt;  $Setup.Field_Service_Settings__c.Opportunity_Case_Creation_Stage_Name__c , 
+Text(PRIORVALUE(StageName)) &lt;&gt;  $Setup.Field_Service_Settings__c.Opportunity_To_Order_Creation_Stage_Name__c ), 
+OR(
+(Text(StageName)= $Setup.Field_Service_Settings__c.Opportunity_To_Order_Creation_Stage_Name__c ), 
+(TEXT(StageName)= $Setup.Field_Service_Settings__c.Opportunity_Case_Creation_Stage_Name__c )
+), 
+ISPICKVAL( Account.LEED_Customer__c, &quot;&quot; )
+)</errorConditionFormula>
+    <errorMessage>Complete the LEED Customer field on Account prior to switching to Closed Won Stages.</errorMessage>
+</ValidationRule>

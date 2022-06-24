@@ -1,0 +1,35 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes" access="global">
+	<aura:attribute name="numPages" type="Integer" default="1"/>
+    <aura:attribute name="currPage" type="Integer" default="1"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    
+    <aura:registerEvent name="appEvent" type="c:updatePageEvt"/>
+    <aura:handler event="c:updatePageEvt" action="{!c.handleUpdatePage}"/>
+    
+    <aura:attribute name="pgs" type="Integer[]" access="private"/>
+    
+    <aura:method name="setNumPages" action="{!c.setNumPages}" description="Set number of pages">
+        <aura:attribute name="numPages" type="Integer"/>
+    </aura:method>
+    
+    <div>
+        <aura:if isTrue="{!v.currPage == 1}">
+            <span class="greyedLink">prev&nbsp;&nbsp;</span>
+            <aura:set attribute="else">
+                <a onclick="{!c.prevClick}"><span>prev</span></a>&nbsp;&nbsp;
+            </aura:set>
+        </aura:if>
+        
+        <aura:iteration items="{!v.pgs}" var="pg">
+            <a onclick="{!c.pageClick}"><span id="{!pg}" class="{!if(pg == v.currPage,'slds-text-title_bold','')}">{!pg}</span></a>&nbsp;&nbsp;
+        </aura:iteration>
+    	
+        <aura:if isTrue="{!v.currPage == v.numPages}">
+            <span class="greyedLink">next</span>
+            <aura:set attribute="else">
+                <a onclick="{!c.nextClick}"><span>next</span></a>
+            </aura:set>
+        </aura:if>
+    </div>
+</aura:component>

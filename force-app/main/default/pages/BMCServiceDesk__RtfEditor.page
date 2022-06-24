@@ -1,0 +1,37 @@
+<apex:page showHeader="false" sidebar="false" controller="BMCServiceDesk.RtfEditorController" standardStylesheets="false"> 
+	<style>
+		body{
+			margin:0px 1px;
+			
+		}
+	</style> 
+    <div id="mask">
+	    <apex:form style="" id="theForm">
+	    <apex:actionFunction name="fetchEmailBody" action="{!refreshVal}" rerender="OutputText" oncomplete="fetchEmailBodyOnComplete()"/>
+	        <apex:inputField value="{!HistoryInstance.BMCServiceDesk__RichTextNote__c}" id="rtf"/>
+	        <apex:outputPanel id="OutputText" style="display:none"> 
+	            <div id="rtfVal">{!rtfValue}</div>
+	            <textarea id="plainTextVal">{!plainTextValue}</textarea>
+	        </apex:outputPanel>
+		<c:RTFCopyPaste />
+	    </apex:form>
+	    <script> 
+	    	var formId = '{!$Component.theForm}';
+	    	var rtfId = '{!$Component.theForm.rtf}';
+	    	var callBackFn;
+	    	
+	    	function fetchEmailBodyFn(callBackFnParam){
+	    		callBackFn = callBackFnParam;
+	    		fetchEmailBody();
+	    	}
+	    		    	 
+	        function fetchEmailBodyOnComplete(){  
+	        	var plainText = document.getElementById('plainTextVal').value;
+	        	var richText = document.getElementById('rtfVal').innerText;
+	        	if(callBackFn){
+	        		callBackFn(plainText,richText);
+	        	}
+	        } 
+	    </script>
+    </div>  
+</apex:page>

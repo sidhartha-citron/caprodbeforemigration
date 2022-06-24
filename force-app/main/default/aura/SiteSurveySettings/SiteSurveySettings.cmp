@@ -1,0 +1,92 @@
+<aura:component implements="flexipage:availableForAllPageTypes" access="global" controller="SiteSurveySettingsController">
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="siteSurveyId" type="String" />    
+    <aura:attribute name="siteSurvey" type="Site_Survey__c"/>
+    <aura:attribute name="securityRecord" type="SiteSurveySettingsController.FieldSecurity"/>
+    <aura:attribute name="recordError" type="String"/>
+    <aura:attribute name="queryParams" type="String[]" default="['Id, AccountId, Site_Survey__c, Account.Site_Survey__c']"/>
+    <aura:attribute name="signatureRequiredFieldOpts" type="String[]"/>
+    <aura:attribute name="signatureRequiredPicklistOpts" type="List"/>
+    <aura:attribute name="signatureRequiredPicklistVals" type="List"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/> 
+    
+    <aura:registerEvent name="savedEvent" type="c:SiteSurveyRecordSaveEvent"/>
+    
+    <div class="slds-form slds-form_stacked slds-box slds-scrollable">
+        <div class="slds-grid slds-gutters">
+        	<div class="slds-col">
+                <div class="slds-form-element">
+                    <lightning:input aura:id="securitySignIn"  type="checkbox" label="{!$Label.c.Site_Survey_Security}" checked="{!v.siteSurvey.Security_Sign_in_out__c}" />
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="checkbox" label="{!$Label.c.Site_Survey_Key_Card}" checked="{!v.siteSurvey.Key_Card_Required__c}" />
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="checkbox" label="{!$Label.c.Site_Survey_Escort_Required}" checked="{!v.siteSurvey.Escort_Required__c}" />
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="checkbox" label="{!$Label.c.Site_Survey_Meet_Prior_to_Work}" checked="{!v.siteSurvey.Meet_with_Contact_Prior_to_Work__c}" />
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="checkbox" label="{!$Label.c.Site_Survey_Remove_Equipment}" checked="{!v.siteSurvey.Remove_Equipment_from_Vehicle__c}" />
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="checkbox" label="{!$Label.c.Site_Survey_Reload_Van}" checked="{!v.siteSurvey.Reload_Van__c}" />
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="checkbox" label="{!$Label.c.Site_Survey_Female_Skillset_Required}" checked="{!v.siteSurvey.Female_Skillset_Required__c}" />
+                </div>
+                <div class="slds-form-element">
+                    <lightning:dualListbox aura:id="signatureRequiredPicklist" label="{!$Label.c.Signature_Required_For_Label}" options="{!v.signatureRequiredPicklistOpts}" value="{!v.signatureRequiredPicklistVals}" sourceLabel="{!$Label.c.Signature_Required_For_Avail_Options}" selectedLabel="{!$Label.c.Signature_Required_For_Selected_Options}"  fieldLevelHelp="{!$Label.c.Signature_Required_For_Help_Text}" />
+                </div>
+            </div>
+        	<div class="slds-col">
+                <div class="slds-form-element">
+                    <lightning:input type="number" label="{!$Label.c.Site_Survey_Pest_Duration_Calculation}" min="0" value="{!v.siteSurvey.Pest_Duration_Calculation__c}" />
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="number" label="{!$Label.c.Pest_Work_Order_Calculation_Adjustment}" min="0" value="{!v.siteSurvey.Pest_WorkOrder_Calculation_Adjustment__c}" 
+                                     disabled="{! !v.securityRecord.canEditPestDuration}"/>
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="number" label="{!$Label.c.Min_Pest_Work_Order_Lines}" min="0" value="{!v.siteSurvey.Min_Pest_Work_Order_Lines__c}" 
+                                     disabled="{! !v.securityRecord.canEditPestMinLines}"/>
+                </div>
+                
+                <div class="slds-form-element">
+                    <lightning:input type="number" label="{!$Label.c.Hygiene_Work_Order_Calculation_Adjustment}"  value="{!v.siteSurvey.Work_Order_Calculation_Adjustment__c}" 
+                                     disabled="{! !v.securityRecord.canEditHygieneDuration}"/>
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="number" label="{!$Label.c.Min_Hygiene_Work_Order_Lines}" min="0" value="{!v.siteSurvey.Min_Hygiene_Work_Order_Lines__c}" 
+                                     disabled="{! !v.securityRecord.canEditHygieneMinLines}"/>
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="number" label="{!$Label.c.Chemical_Work_Order_Calculation_Adjustment}"  value="{!v.siteSurvey.Chem_WorkOrder_Calculation_Adjustment__c}" 
+                                     disabled="{! !v.securityRecord.canEditChemicalDuration}"/>
+                </div>
+                <div class="slds-form-element">
+                    <lightning:input type="number" label="{!$Label.c.Min_Chemical_Work_Order_Lines}" min="0" value="{!v.siteSurvey.Min_Chemical_Work_Order_Lines__c}" 
+                                     disabled="{! !v.securityRecord.canEditChemicalDuration}"/>
+                </div>
+            </div>
+            <div class="slds-col">
+                <div class="slds-form-element input-full-height">
+                    <label class="slds-form-element__label" for="input-01">{!$Label.c.Site_Survey_Notes}</label>
+                    
+                    <aura:if isTrue="{!v.securityRecord.canEditNotes}">
+                        <lightning:inputRichText value="{!v.siteSurvey.Notes__c}" disabled="{! !v.securityRecord.canEditNotes}" />
+                        <aura:set attribute="else">
+                            <lightning:formattedRichText aura:id="linkifyRichText" class="slds-text-body_small" value="{!v.siteSurvey.Notes__c}"></lightning:formattedRichText>
+                        </aura:set>
+                    </aura:if>        
+                </div> 
+            </div>
+        </div>
+                   
+         <div class="slds-form-element btn-wrapper">
+            <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Submit}" onclick="{!c.handleSave}"/>
+        </div>  
+    </div>
+</aura:component>

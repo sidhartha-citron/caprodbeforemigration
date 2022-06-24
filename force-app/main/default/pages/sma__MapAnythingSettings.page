@@ -1,0 +1,277 @@
+<apex:page controller="sma.MapAnythingBaseObjects" sidebar="false" extensions="sma.RemoteActions,sma.MARemoteFunctions,sma.MAAdminAJAXResources,sma.MADataLayers,sma.MAAutoAssignmentController,sma.MATerritoryRemoteFunctions,sma.MACustomEventConfigController,sma.MAClick2CreateSettings">
+    <apex:slds />
+    <c:MASystem />
+    <div id="ma-vue-root"></div>
+
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnything, 'jquery/jquery-3.4.1.min.js')}"></script>
+    <script async="true" defer="true" type='text/javascript' src="{!URLFOR($Resource.MapAnythingJS, 'JSActionFramework.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.MapAnything, 'toastr/toastr.min.js')}"></script>
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.MapAnything, 'toastr/toastr.min.css')}"></link>
+
+    <!-- jQuery UI -->
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnything, 'jquery/jquery-ui.min.js')}"></script>
+    <apex:stylesheet value="{!URLFOR($Resource.sma__MapAnything, 'jquery/jquery-ui.css')}"/>
+    <script type='text/javascript' src="{!resourcePaths['MapAnythingJS']}/JSHelperFunctions.js"></script>
+    <script type='text/javascript'>
+        var baseURL = '{!BaseURL}';
+        toastr.options = {
+            "positionClass": "toast-bottom-right",
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "3000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut",
+            "iconClasses" : {
+                "success" : "toast-success",
+                "error"   : "toast-error",
+                "warning" : "toast-warning",
+                "info"    : "toast-info"
+            }
+        };
+
+        var MAToastMessages = {
+            showMessage : function(options,type) {
+                type = type || 'info';
+                options = $.extend({
+                    message : '',
+                    subMessage : '',
+                    timeOut : 3000,
+                    extendedTimeOut : 1000,
+                    position : 'toast-bottom-right',
+                    closeButton : false,
+                    onclick : null
+                }, options || {});
+
+                toastr.options.timeOut = options.timeOut;
+                toastr.options.extendedTimeOut = options.extendedTimeOut;
+                toastr.options.positionClass = options.position;
+                toastr.options.closeButton = options.closeButton;
+                toastr.options.onclick = options.onclick;
+
+                if(type === 'loading') {
+                    var $message = toastr['info'](options.subMessage,options.message);
+                    $message.addClass('ma-toast-loading').removeClass('toast-info');
+                    return $message;
+                }
+                else {
+                    return toastr[type](options.subMessage,options.message);
+                }
+
+
+            },
+            showSuccess : function(options) {
+                return MAToastMessages.showMessage(options,'success');
+            },
+            showLoading : function(options) {
+                return MAToastMessages.showMessage(options,'loading');
+            },
+            showWarning : function(options) {
+                return MAToastMessages.showMessage(options,'warning');
+            },
+            showError : function(options) {
+                return MAToastMessages.showMessage(options,'error');
+            },
+            hideMessage : function (toast) {
+                toastr.clear(toast);
+                toast.remove();
+                toast = null;
+            }
+        } 
+    </script>
+
+    <!-- Webpack Style Output -->
+    <!-- <link rel="stylesheet" type="text/css" href="{!resourcePaths['MapAnythingJS']}/dist/core/styles.css" /> -->
+
+    <link rel="stylesheet" type="text/css" href="{!resourcePaths['MAMinimaps']}/css/ui-minimaps.css" />
+    <!-- icon-font -->
+    <apex:stylesheet value="{!URLFOR($Resource.sma__MapAnythingJS, 'styles/styles.css')}"/>
+    <!-- MapAnything Configuration Page Styling -->
+    <apex:stylesheet value="{!URLFOR($Resource.sma__MapAnythingJS, 'styles/css/ma-configuration-ui.css')}"/>
+    <apex:outputPanel layout="none" rendered="{!(PendoEnabled == 'true')}">
+        <script>
+            (function(apiKey){
+                (function(p,e,n,d,o){var v,w,x,y,z;o=p[d]=p[d]||{};o._q=[];
+                v=['initialize','identify','updateOptions','pageLoad'];for(w=0,x=v.length;w<x;++w)(function(m){
+                o[m]=o[m]||function(){o._q[m===v[0]?'unshift':'push']([m].concat([].slice.call(arguments,0)));};})(v[w]);
+                y=e.createElement(n);y.async=!0;y.src='https://cdn.pendo.io/agent/static/'+apiKey+'/pendo.js';
+                z=e.getElementsByTagName(n)[0];z.parentNode.insertBefore(y,z);})(window,document,'script','pendo');
+
+                // Call this whenever information about your visitors becomes available
+                // Please use Strings, Numbers, or Bools for value types.
+                pendo.initialize({
+                    visitor: { 
+                        id: '{!JSENCODE($User.Id)}',
+                        email: '{!JSENCODE($User.Email)}',
+                        firstName: '{!JSENCODE($User.FirstName)}',
+                        lastName: '{!JSENCODE($User.LastName)}',
+                        userName: '{!JSENCODE($User.Username)}',
+                        userAgent: window.navigator.userAgent
+                    },
+
+                    account: { 
+                        id: '{!JSENCODE($Organization.Id)}', // Highly recommended
+                        name: '{!JSENCODE($Organization.Name)}'
+                        // planLevel:    // Optional
+                        // planPrice:    // Optional
+                        // creationDate: // Optional
+
+                        // You can add any additional account level key-values here,
+                        // as long as it's not one of the above reserved names.
+                    }
+                });
+            })('3678d139-e89d-4a02-78a2-9822552912f0');
+        </script>
+    </apex:outputPanel>
+
+    <script>
+        // polyfill remove function for IE
+        // (function() {
+        //     function remove() { this.parentNode && this.parentNode.removeChild(this); }
+        //     if (!Element.prototype.remove) Element.prototype.remove = remove;
+        //     if (Text && !Text.prototype.remove) Text.prototype.remove = remove;
+        // })();
+
+        // Browser support + polyfill
+        // if (!!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+        //     console.log('detected IE11 ... loading polyfills');
+        //     var head = document.getElementsByTagName('head')[0] || document.body;
+        //     var script = document.createElement('script');
+        //     script.src = "{!URLFOR($Resource.sma__MapAnything, 'js/polyfill.min.js')}";
+        //     head.appendChild(script);
+        // } else if (!!navigator.userAgent.match(/MSIE 10.0.*/)) {
+        //     window.location = '/apex/Oops?type=UnsupportedBrowser';
+        // }
+
+        var $Images = {
+            priorityOther: "{!URLFOR($Resource.sma__MapAnything, 'images/Priority-tooltip.png')}",
+            priorityEinstein: "{!URLFOR($Resource.sma__MapAnything, 'images/Einstein-tooltip.png')}",
+            priorityPardot: "{!URLFOR($Resource.sma__MapAnything, 'images/Pardot-tooltip.png')}"
+        };
+
+        var MARemoting = {
+            processAJAXRequest : '{!$RemoteAction.MARemoteFunctions.processAJAXRequest}',
+            AdminStartUpAction: '{!$RemoteAction.MAAdminAJAXResources.AdminStartUpAction}',
+            getSavedData: '{!$RemoteAction.MADataLayers.getDataV2}',
+            MapAnythingIORequest: '{!$RemoteAction.MARemoteFunctions.MapAnythingIORequest}',
+            processAJAXRequest: '{!$RemoteAction.MARemoteFunctions.processAJAXRequest}',
+            saveDataLayer: '{!$RemoteAction.MADataLayers.doSaveV2}',
+            getPermissioRows: '{!$RemoteAction.MAAdminAJAXResources.getPermissioRows}',
+            getTerritoryInformation: '{!$RemoteAction.MATerritoryRemoteFunctions.getTerritoryAuthorizationInfo}',
+            saveNewMapTile: '{!$RemoteAction.MARemoteFunctions.saveNewMapTile}',
+            removeMapTile: '{!$RemoteAction.MARemoteFunctions.removeMapTile}',
+            getLogACallFieldSets: '{!$RemoteAction.MARemoteFunctions.getLogACallFieldSets}',
+            NearbyMap: {
+                read: '{!$RemoteAction.RemoteActions.getMiniMapSettings}',
+                save: '{!$RemoteAction.RemoteActions.saveMiniMapSetting}',
+                delete: '{!$RemoteAction.RemoteActions.deleteMiniMapSetting}',
+                getAllowableSObjects: '{!$RemoteAction.RemoteActions.getAllowableSObjects}',
+                getSObjectInfoBySObjectName: '{!$RemoteAction.RemoteActions.getSObjectInfoBySObjectName}',
+            },
+            AutoAssignment: {
+                getJobs: '{!$RemoteAction.MAAutoAssignmentController.getJobs}',
+                getScheduledJob: '{!$RemoteAction.MAAutoAssignmentController.getScheduledJob}',
+                schedulePlans: '{!$RemoteAction.MAAutoAssignmentController.schedulePlans}',
+                runPlans: '{!$RemoteAction.MAAutoAssignmentController.runPlans}',
+                deleteLogs: '{!$RemoteAction.MAAutoAssignmentController.runDebugLogDeleteBatch}',
+                getSObjects: '{!$RemoteAction.MAAutoAssignmentController.getSObjects}',
+                getFieldInfoBySObjectName: '{!$RemoteAction.MAAutoAssignmentController.getFieldInfoBySObjectName}',
+                createPlan: '{!$RemoteAction.MAAutoAssignmentController.createPlan}',
+                updatePlan: '{!$RemoteAction.MAAutoAssignmentController.updatePlan}'
+            },
+            Click2Create: {
+                getPicklistFieldOptions: '{!$RemoteAction.MAClick2CreateSettings.getPicklistFieldOptions}',
+                getC2CSettings: '{!$RemoteAction.MAClick2CreateSettings.getC2CSettings}',
+                saveC2CSettings: '{!$RemoteAction.MAClick2CreateSettings.saveC2CSettings}'
+            }
+
+        };
+
+        function removeNamespace(namespace, obj) {
+            try {
+                var namespacePrefix = namespace + '__';
+                $.each(obj, function (key, val) {
+                    if (key.indexOf(namespacePrefix) === 0) {
+                        obj[key.replace(namespacePrefix, '')] = val;
+                        delete obj[key];
+
+                        //go recursive if this is an object
+                        if (obj[key.replace(namespacePrefix, '')] !== null && typeof obj[key.replace(namespacePrefix, '')] == 'object') {
+                            removeNamespace(namespace, obj[key.replace(namespacePrefix, '')]);
+                        }
+                    } else if (typeof val == 'object') {
+                        removeNamespace(namespace, val);
+                    }
+                });
+            } catch (err) { } //this is most likely due to a null value being passed.  in any case, returning the original objects seems the correct action if we can't manipulate it
+
+            return obj;
+        };
+
+        function showModal (modalId) {
+            $('#' + modalId + '').addClass('in');
+            $('#' + modalId + ' .slds-scope .slds-modal').addClass('slds-fade-in-open');
+            /*if ( $($Id).has('.ma-modal-search-input') ) {
+            $($Id).find('.ma-modal-search-input').focus();
+            } else {}*/
+            if ($('.backdrop').length == 0) {
+                $('<div class="backdrop slds-backdrop"></div>').appendTo('body');
+            }
+            $('.backdrop').addClass('active visible slds-backdrop_open');
+        }
+        function showErrors(html) {
+            hideModal();
+            var popup = MA.Popup.showMAAlert({
+                header: 'Field Erros',
+                template: html
+            });
+            popup.then(function() {
+                showModal('dialog-createfields');
+            });
+        }
+        function hideModal(modalSelector, hideMask) {
+            hideMask = hideMask === false ? false : true;
+            if (modalSelector != undefined) {
+                //$('#'+modalSelector+'').removeClass('in');
+                $('#' + modalSelector + ' .slds-scope .slds-modal').removeClass('slds-fade-in-open');
+            } else {
+                //hide all modals
+                //$('.ma-modal').removeClass('in');
+                $('.maModal .slds-scope .slds-modal').removeClass('slds-fade-in-open');
+            }
+
+            if (hideMask) {
+                $('#modalScreen').removeClass('in');
+                $('.backdrop').removeClass('active visible slds-backdrop_open');
+            }
+        }
+    </script>
+
+    <!-- <script type='text/javascript' src="{!URLFOR($Resource.MapAnything, 'js/jquery-1.8.3.min.js')}"></script> -->
+    <!-- JS Color -->
+    <apex:includeScript value="{!URLFOR($Resource.sma__MapAnything, 'jscolor/jscolor.js')}"/>
+    <script type="text/javascript" src="{!resourcePaths['MapAnythingJS']}/dist/admin/bundle.js"></script>
+
+    <div id="templates" style="display:none;">
+        <table>
+            <tr class='createablefield-row'>
+                <td class='createablefield-label'></td>
+                <td style="display:none; text-align: center;" class='createablefield-exists'>
+                    <span class="slds-icon ma-icon-check"></span>
+                </td>
+                <td style="display:none; text-align: center;" class='createablefield-wrap'>
+                    <span class="slds-checkbox">
+                        <input class="createablefield-create" type="checkbox" checked="true"/>
+                        <label class="slds-checkbox__label">
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                    </span>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+</apex:page>

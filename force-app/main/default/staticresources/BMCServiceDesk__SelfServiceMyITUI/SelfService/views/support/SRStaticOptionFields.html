@@ -1,0 +1,65 @@
+<div style="margin-bottom: 10px">
+						<div ng-if="displayOption.Label && displayOption.Name!='approvalRequired'">
+							<div ng-if="displayOption.Name=='turnaroundTime' && displayOption.Value!=''">
+								<table style="width:100%">
+									<tr style="line-height: 1.5;">
+										<td style="width:40%">
+											<strong class="inline-block">{{ displayOption.Label }}</strong>
+										</td>
+										<td style="width:60%">
+											<span>{{ displayOption.Value }}</span>
+										</td>
+									</tr>
+								</table>
+							</div>
+							<div ng-if="displayOption.Name!='turnaroundTime' && !displayOption.Editable">
+								<table style="width:100%">
+									<tr style="line-height: 1.5;">
+										<td style="width:40%">
+											<strong class="inline-block">{{ displayOption.Label }}</strong>
+										</td>
+										<td style="width:60%">
+											<span ng-if="displayOption.Name == 'email'">{{ supportModel.OnBehalfOf.fEmail }}</span>
+											<span ng-show="displayOption.Name == 'requestFor' && supportModel.OnBehalfOf.fRefFieldVal != '' ">{{ decodeText(supportModel.OnBehalfOf.fRefFieldVal) }}</span>
+											<span ng-show="displayOption.Name == 'requestFor' && supportModel.OnBehalfOf.fRefFieldVal ==''">{{ displayOption.Value }}</span>
+											
+											<span ng-if="displayOption.Name == 'phone'">{{ supportModel.OnBehalfOf.fPhone }}</span>
+											<span ng-if="displayOption.Name == 'customerPrice'">{{ supportModel.config.priceLocalized }}</span>
+											<span ng-if="(displayOption.Name != 'phone' && displayOption.Name != 'customerPrice' && displayOption.Name != 'email' && displayOption.Name != 'requestFor') ">{{ displayOption.Value }}</span>
+										</td>
+									</tr>
+								</table>
+							</div>
+							<div ng-if="displayOption.Name =='customerPrice'" style="margin-top: 10px">
+								<table style="width:100%">
+									<tr style="line-height: 1.5;">
+										<td style="width:40%">
+											<strong class="inline-block">{{selfServiceLabels.reqDefTotalPrice}}</strong>
+										</td>
+										<td style="width:60%">
+											<span>
+												<label style="font-weight: normal; margin-bottom: 0px;" ng-if="(supportModel.displayOptions.quantity) > 0">{{supportModel.displayOptions.totalPriceLocalized}}</label>
+												<label style="font-weight: normal; margin-bottom: 0px;" ng-if="(supportModel.displayOptions.quantity < 1 || !(supportModel.displayOptions.quantity))">0 {{supportModel.config.currencyType}}</label>
+											</span>
+										</td>
+									</tr>
+								</table>
+							</div>
+							<div ng-if="displayOption.Editable">
+								<div class="srd-question-label-container__left">
+									<h5 class="srd-question-label">
+										{{displayOption.Label}}
+										<span class="srd-question-label__required" ng-show="displayOption.IsRequired">
+											{{ $root.selfServiceLabels.required }}</span>
+									</h5>
+								</div>
+								
+								<srd-Date-Time-Question data="displayOption" ng-if="displayOption.Type=='date/time' && displayOption.Name=='dateRequired'"></srd-Date-Time-Question>
+								<ng-form name="subFormQty">
+									<input name="formField" style="transition: all 0.2s;width: 100%; border-radius: 2px; border: 1px solid #999999; line-height: 1; padding: 10px;" ng-model="supportModel.displayOptions.quantity" ng-if="displayOption.Type=='number' && displayOption.Name=='quantity'" ng-change="supportModel.calculatetotalPrice()" type="number" min="1" maxlength ="3" ng-keydown="preventKeydown($event)" pattern="\d*"  tabindex="1" ng-required="true"/>
+									<span class="srd-question-error_message" ng-show="'form-submitted' && subFormQty.formField.$invalid && !subFormQty.formField.$error.required">{{selfServiceLabels.InvalidNumber}}</span>
+									<span class="srd-question-error_message" ng-show="'form-submitted' && subFormQty.formField.$error.required">{{selfServiceLabels.EnterValue}}</span>
+								</ng-form>
+							</div>	
+						</div>
+					</div>

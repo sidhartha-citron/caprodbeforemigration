@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <actionCalls>
+        <name>NavigateToNewRecord</name>
+        <label>NavigateToNewRecord</label>
+        <locationX>765</locationX>
+        <locationY>54</locationY>
+        <actionName>c:NavigateToNewRecord</actionName>
+        <actionType>component</actionType>
+        <inputParameters>
+            <name>CaseId</name>
+            <value>
+                <elementReference>CaseId</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <apiVersion>49.0</apiVersion>
+    <description>Flow to create community access request Tickets.</description>
+    <dynamicChoiceSets>
+        <name>PestPac_Choice_Set</name>
+        <dataType>Picklist</dataType>
+        <displayField xsi:nil="true"/>
+        <object xsi:nil="true"/>
+        <picklistField>PestPac__c</picklistField>
+        <picklistObject>Case</picklistObject>
+    </dynamicChoiceSets>
+    <formulas>
+        <name>Case_Description</name>
+        <dataType>String</dataType>
+        <expression>&quot;Contact: &quot;&amp;{!Get_Contact.FirstName}&amp;&quot; &quot;&amp;{!Get_Contact.LastName}&amp;br()&amp;&quot;Related Accounts: &quot;&amp;{!Related_Accounts}&amp;br()&amp;&quot;PestPac?: &quot;&amp;{!PestPac}&amp;br()&amp;&quot;Notes: &quot;&amp;{!Notes}&amp;br()&amp;&quot;Requested by: &quot;&amp;{!$User.FirstName}&amp;&quot; &quot;&amp;{!$User.LastName}</expression>
+    </formulas>
+    <interviewLabel>Community Access Request {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Community Access Request</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Flow</processType>
+    <recordCreates>
+        <name>Community_Access_Request_Case_Creation</name>
+        <label>Community Access Request Case Creation</label>
+        <locationX>583</locationX>
+        <locationY>54</locationY>
+        <assignRecordIdToReference>CaseId</assignRecordIdToReference>
+        <connector>
+            <targetReference>NavigateToNewRecord</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>AccountId</field>
+            <value>
+                <elementReference>Get_Contact.AccountId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>ContactId</field>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Description</field>
+            <value>
+                <elementReference>Case_Description</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Origin</field>
+            <value>
+                <stringValue>Ticket</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>RecordTypeId</field>
+            <value>
+                <stringValue>012f1000000PUJDAA4</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Subject</field>
+            <value>
+                <elementReference>CaseSubject</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Type</field>
+            <value>
+                <stringValue>General Inquiry</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Case</object>
+    </recordCreates>
+    <recordLookups>
+        <name>Get_Contact</name>
+        <label>Get Contact</label>
+        <locationX>175</locationX>
+        <locationY>53</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Community_Access_Request</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Contact</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>FirstName</queriedFields>
+        <queriedFields>LastName</queriedFields>
+        <queriedFields>AccountId</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <screens>
+        <name>Community_Access_Request</name>
+        <label>Community Access Request</label>
+        <locationX>294</locationX>
+        <locationY>53</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <connector>
+            <targetReference>Community_Access_Request_Confirmation</targetReference>
+        </connector>
+        <fields>
+            <name>Community_Access_Request_Instructions</name>
+            <fieldText>&lt;p&gt;&lt;b style=&quot;font-size: 14px; background-color: rgb(255, 255, 255); color: rgb(62, 62, 60);&quot;&gt;Please specify &lt;/b&gt;&lt;b style=&quot;font-size: 14px; background-color: rgb(255, 255, 255); color: rgb(119, 188, 31);&quot;&gt;{!Get_Contact.FirstName} {!Get_Contact.LastName}&apos;s&lt;/b&gt;&lt;b style=&quot;font-size: 14px; background-color: rgb(255, 255, 255); color: rgb(62, 62, 60);&quot;&gt; related Accounts and whether any are PestPac then click &apos;Next&apos; to proceed.&lt;/b&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>Related_Accounts</name>
+            <dataType>String</dataType>
+            <fieldText>Related Accounts:</fieldText>
+            <fieldType>InputField</fieldType>
+            <helpText>&lt;p&gt;List all the Customer Ship To AccPac Account #s {!Get_Contact.FirstName} {!Get_Contact.LastName} should have access to.&lt;/p&gt;</helpText>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>PestPac</name>
+            <choiceReferences>PestPac_Choice_Set</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>PestPac?:</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <helpText>&lt;p&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(62, 62, 60);&quot;&gt;Select &apos;Yes&apos; if any of {!Get_Contact.FirstName} {!Get_Contact.LastName}&apos;s related Accounts are PestPac. &apos;Yes&apos; grants {!Get_Contact.FirstName} {!Get_Contact.LastName} access to the Files &amp;amp; Reports community icon/page.&lt;/span&gt;&lt;/p&gt;</helpText>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>Notes</name>
+            <dataType>String</dataType>
+            <fieldText>Notes:</fieldText>
+            <fieldType>InputField</fieldType>
+            <helpText>&lt;p&gt;Specify any applicable notes to support community access provisioning for {!Get_Contact.FirstName} {!Get_Contact.LastName}.&lt;/p&gt;</helpText>
+            <isRequired>false</isRequired>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <screens>
+        <name>Community_Access_Request_Confirmation</name>
+        <label>Community Access Request Confirmation</label>
+        <locationX>436</locationX>
+        <locationY>51</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <connector>
+            <targetReference>Community_Access_Request_Case_Creation</targetReference>
+        </connector>
+        <fields>
+            <name>Community_Access_Request_Confirmation_Instructions</name>
+            <fieldText>&lt;p&gt;&lt;b style=&quot;font-size: 14px;&quot;&gt;Please confirm that the following information is correct.&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;If any information is incorrect, click the &apos;&lt;/span&gt;&lt;b style=&quot;font-size: 12px;&quot;&gt;Previous&lt;/b&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;&apos; button to go back and make changes, otherwise, click &apos;&lt;/span&gt;&lt;b style=&quot;font-size: 12px;&quot;&gt;Next&lt;/b&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;&apos; to complete the community access request.&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>Community_Access_Details</name>
+            <fieldText>&lt;p&gt;&lt;b style=&quot;background-color: rgb(255, 255, 255); font-size: 12px;&quot;&gt;Contact: &lt;/b&gt;&lt;b style=&quot;background-color: rgb(255, 255, 255); font-size: 12px; color: rgb(119, 188, 31);&quot;&gt;{!Get_Contact.FirstName} {!Get_Contact.LastName}&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;b style=&quot;background-color: rgb(255, 255, 255); font-size: 12px;&quot;&gt;Related Accounts:&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b style=&quot;color: rgb(119, 188, 31);&quot;&gt;{!Related_Accounts}&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;b style=&quot;font-size: 12px;&quot;&gt;PestPac?:&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b style=&quot;color: rgb(119, 188, 31);&quot;&gt;{!PestPac}&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;b style=&quot;font-size: 12px;&quot;&gt;Notes:&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b style=&quot;color: rgb(119, 188, 31);&quot;&gt;{!Notes}&lt;/b&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <start>
+        <locationX>45</locationX>
+        <locationY>48</locationY>
+        <connector>
+            <targetReference>Get_Contact</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <name>CaseId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>CaseSubject</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <stringValue>Community Access Request for {!Get_Contact.FirstName} {!Get_Contact.LastName}</stringValue>
+        </value>
+    </variables>
+    <variables>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>

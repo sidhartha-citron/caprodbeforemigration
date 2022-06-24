@@ -1,0 +1,44 @@
+<aura:component access="global" controller="SurveyAssetAllocationController">
+    
+    <aura:attribute name="selectedProduct" type="Object" />
+    <aura:attribute name="surveyLocation" type="Survey_Location__c"/>
+    <aura:attribute name="allocatedQty" type="Integer" />
+    <aura:attribute name="parentRecordId" type="String"/>
+    <aura:attribute name="seasonalOrder" type="Boolean" />
+    <aura:attribute name="existingAsset" type="Boolean" default="false"/>
+    
+    <aura:registerEvent name="NewAllocatedCreated" type="c:SurveyAllocationSavedEvt"/>
+    <aura:registerEvent name="ModalCloseEvent" type="c:ModalCloseEvt"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:method name="setAllocationDetails" action="{!c.setAllocationDetails}" description="Set allocation details">
+        <aura:attribute name="draggedProduct" type="Object"/>
+        <aura:attribute name="roomToAllocate" type="Survey_Location__c"/>
+        <aura:attribute name="parentRecord" type="String"/>
+        <!-- <aura:attribute name="orderSeasonal" type="Boolean"/> -->
+    </aura:method>
+    
+    <c:CustomToast aura:id="customToast" />
+    
+    <div class="slds-form slds-form_stacked">
+        <div class="slds-form-element">
+            <lightning:input type="number" aura:id="allocatedQty" name="allocatedQty" label="{! $Label.c.Site_Survey_Label_Qty_To_Allocate + ' ' + v.surveyLocation.Location_Type__c + ' - ' + $Label.c.Site_Survey_Floor + ' ' + v.surveyLocation.Floor__c}" 
+                             value="{!v.allocatedQty}" min="1" max="{!v.selectedProduct.availqty}" onblur="{!c.validateAllocateQty}" />
+        </div>
+        <div class="slds-form-element">
+            <lightning:textarea aura:id="notes" value="{!v.selectedProduct.Notes}" label="{!$Label.c.Site_Survey_Notes}" />
+        </div>
+        
+        <!-- Not used under current data model but preserved if required in future, Aleena, set to false from apex -->
+        <aura:if isTrue="{!v.seasonalOrder}">
+            <div class="slds-form-element">
+                <lightning:input type="toggle" label="{!$Label.c.Site_Survey_Label_Existing_Asset}" name="togglevalue" checked="{!v.existingAsset}" />
+            </div>
+        </aura:if>
+        
+        <div class="slds-form-element" align="right">
+            <lightning:button variant="brand" aura:id="btnAllocateQty" label="{!$Label.c.Site_Survey_Submit}" onclick="{! c.handleAllocate }" /> 
+            &nbsp;
+            <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Close}" onclick="{! c.closeModal }" /> 
+        </div>
+    </div> 
+</aura:component>

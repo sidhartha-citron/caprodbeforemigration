@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Billing_Address_Validation</fullName>
+    <active>true</active>
+    <description>Billing country should be Canada and shipping state should valid two letter province codes by Canada Post</description>
+    <errorConditionFormula>AND ( 
+OR( BillingCountry = &quot;CA&quot;, BillingCountry=&quot;CAN&quot;, BillingCountry=&quot;CANADA&quot;, BillingCountry=&quot;Canada&quot;, BillingCountry=&quot;canada&quot;, BillingCountry=&quot;ca&quot;, BillingCountry=&quot;Ca&quot;, BillingCountry=&quot;can&quot;, BillingCountry=&quot;Can&quot;), 
+OR( 
+LEN( BillingState ) &lt; 2, 
+NOT( 
+CONTAINS(&quot;AB:BC:MB:NB:NL:NT:NS:NU:ON:PE:QC:SK:YT&quot;, BillingState) 
+)))</errorConditionFormula>
+    <errorDisplayField>BillingState</errorDisplayField>
+    <errorMessage>Billing State must be valid two letter province codes by Canada Post</errorMessage>
+</ValidationRule>

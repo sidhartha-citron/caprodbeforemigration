@@ -1,0 +1,65 @@
+<apex:page standardController="Contact" extensions="CTCT2.ContactOrLeadCampaignHistory_Controller" action="{!InitPage}" >
+
+	<style>
+	.center {text-align:center;}
+	</style>
+
+	<apex:pageMessages />
+
+	<apex:outputPanel rendered="{!pageError}">
+		Unable to obtain Constant Contact Campaign History
+	</apex:outputPanel>
+	<apex:form id="theForm" rendered="{!NOT(pageError)}">
+	<apex:outputPanel id="thePanel">
+		<apex:dataTable value="{!lstHelpers}" var="cHelper" style="width:100%;" id="theTable" >
+			<apex:column >
+				<apex:facet name="header">Campaign Name</apex:facet>
+				<apex:outputText value="{!cHelper.campaignName}" />
+			</apex:column>
+			<apex:column >
+				<apex:facet name="header">Sent Date</apex:facet>
+				<apex:outputText value="{!cHelper.campaignSentDateAsString}" />
+			</apex:column>
+			<apex:column headerClass="center" styleClass="center" >
+				<apex:facet name="header"># Opens</apex:facet>
+				<apex:outputText value="{!cHelper.numOpens}" />
+			</apex:column>
+			<apex:column headerClass="center" styleClass="center" >
+				<apex:facet name="header"># Forwards</apex:facet>
+				<apex:outputText value="{!cHelper.numForwards}" />
+			</apex:column>
+			<apex:column headerClass="center" styleClass="center" >
+				<apex:facet name="header"># Clicks</apex:facet>
+				<apex:outputText value="{!cHelper.numClicks}" />
+			</apex:column>
+		</apex:dataTable>
+		<br />
+		
+		<apex:inputHidden value="{!GotAllCampaignDates}" id="GotAllCampaignDates" />
+	
+	<apex:actionFunction name="DoFetchNextSummary" immediate="false" action="{!FetchNextSummary}" 
+	                     rerender="thePanel" onComplete="GetNextCampaignSentDate();" />
+
+	<script type="text/javascript">
+		function GetNextCampaignSentDate() {
+			var elem = document.getElementById("{!$COMPONENT.GotAllCampaignDates}");
+			if (elem) {
+				if (elem.value == 'false') DoFetchNextSummary();
+			}
+		}
+
+  		var previousOnload = window.onload;
+		window.onload = function() {
+			if (previousOnload) {
+				previousOnload();
+			}
+			GetNextCampaignSentDate();
+		}
+	</script>
+	
+	</apex:outputPanel>
+	</apex:form>
+
+	<!-- This exists only so the standard controller will include this field in its getRecord() query. -->
+	<apex:outputText value="{!Contact.Email}" rendered="false" />
+</apex:page>

@@ -1,0 +1,21 @@
+<div ng-show="categoryItemData.data.childUpScrollAvailable" ng-style="categoryItemData.data.scrollUpStyle" class="categoryScrollDiv upScrollDivClass" style="height: 30px !important;">
+    <span id="scrollChildCategoryUp" ng-class="isLastNode == false ? 'scrollSecondLevelUp' : 'scrollThirdLevelUp'" ng-style="categoryItemData.data.scrollUpScrollImage" class="upDownScrollClass upScrollClass" ng-mouseover="scrollUpOver()" ng-mouseout="scrollUpOut()"></span>
+</div>
+<div ng-show="categoryItemData.data.childDownScrollAvailable" ng-style="categoryItemData.data.scrollDownStyle" class="categoryScrollDiv downScrollDivClass browseCategoryTopClass" style="height: 30px !important;">
+    <span id="scrollChildCategoryDown" ng-class="isLastNode == false ? 'scrollSecondLevelDown' : 'scrollThirdLevelDown'" ng-style="categoryItemData.data.scrollDownScrollImage" class="upDownScrollClass downScrollClass" ng-mouseover="scrollDownOver()" ng-mouseout="scrollDownOut()"></span>
+</div>
+<div ng-attr-id="{{isLastNode ? 'scrollThirdChildEndDiv' : 'scrollSecondChildEndDiv'}}" ng-style="categoryItemData.data.scrollEndStyle" style="position: absolute; left: 266px;"></div>
+<div aria-listnavigation ng-attr-id="{{isLastNode ? 'thirdLevelCategoryId' : 'secondLevelCategoryId'}}" role="listbox" ng-style="categoryItemData.styleData" class="subCategoryDropdownNav childCatDivBorder" ng-keydown="setElementFocus($event);" tabindex="0">
+    <div selectable aria-selected="false" tabindex="-1" ng-class="getCategoryDivClass(item)" ng-click="selectItem(item,true)" ng-repeat="item in categoryItemData.data.subCategories" ng-mouseenter="handleCategoryEnter($event, item, categoryItemData.data.subCategories);" ng-mouseleave="handleCategoryLeave(item)" ng-keyup="catKeyPressHandler($event, item, categoryItemData.data.subCategories)" data-parentId={{categoryItemData.data.categoryId}} data-catDesc={{item.categoryDescription}} data-boundary="window" data-placement="bottom" data-toggle="popover" data-catId={{item.categoryId}} rfcat-tooltip>
+        <div class="categoryDivClass">
+            <span class="catIconPicklist">
+                <img ng-if="item.catImage && item.catImage != 'useDefaultFromStaticResource'" ng-src="{{item.catImage}}" class="browseCategoryIcon category_for_breadcrumbs"/>
+                <img ng-if="item.catImage && item.catImage == 'useDefaultFromStaticResource'" ng-src="{{supportModel.defaultCategoryIconFromStaticResource}}" class="browseCategoryIcon category_for_breadcrumbs"/>
+            </span>
+            <div ng-class="getCategoryTextClass(item)" aria-label="{{item.accessibilityName}}">
+                <span>{{decodeCategory(item.name)}}</span>
+            </div>
+            <span ng-if="item.leaf == 'false' && isLastNode == false" ng-class="item.hovering ? 'i-timeline-toolbar-dropdown-arrow expandCategoryClass expandHighlightClass' : 'i-user-nav-dropdown-arrow expandCategoryClass expandClass'"></span>
+        </div>
+    </div>
+</div>

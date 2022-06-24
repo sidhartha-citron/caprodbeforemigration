@@ -1,0 +1,65 @@
+<div ng-cloak id="incidentForm" class="srd-questions-placeholder" style="overflow-y: auto;" set-Height="setNewIncFormHeight">
+	<loading-spinner overlay="true" if="supportModel.isSrCreating || supportModel.dataLoading"></loading-spinner>
+
+	<srd-on-behalf-of-question ng-show="!supportModel.dataLoading" on-behalf-of-enabled="srdDetailsCtrlState.onBehalfOfEnabled" requested-for="srdDetailsCtrlState.requestedFor"></srd-on-behalf-of-question>
+	<div class="srd-question-wrapper">
+		<div class="srd-question"
+			 ng-repeat="question in incident.questions"
+			 data-id="{{question.id}}"
+			 data-hasAnswer="{{question.hasAnswer}}"
+			 data-answer="{{question.Value}}"
+			 data-visibility="{{question.isVisible}}"
+			 data-hidden="{{!question.isVisible}}"
+			 data-parent="{{question.parentId}}"
+			 data-order="{{question.order}}"
+			 data-level="{{question.level}}"
+			>
+			<ng-form name="subFormInputs">
+				<div ng-switch="question.Type" ng-if="question.Text != '<BLANK>'">
+					<srd-text-question ng-switch-when="string" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="textfield" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="phone" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="textarea" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="encryptedstring" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="email" data="question"></srd-text-question>
+					<srd-text-question ng-switch-when="url" data="question"></srd-text-question>
+					<srd-radio-question ng-switch-when="radiobutton" data="question"></srd-radio-question>
+					<srd-checkbox-question ng-switch-when="boolean" data="question"></srd-checkbox-question>
+					<srd-number-question ng-switch-when="number" data="question"></srd-number-question>
+					<srd-menu-question ng-switch-when="picklist" data="question"></srd-menu-question>
+					<srd-menu-question ng-switch-when="multipicklist" data="question"></srd-menu-question>
+					<srd-date-time-question ng-switch-when="datetime" data="question"></srd-date-time-question>
+					<srd-date-question ng-switch-when="date" data="question"></srd-date-question>
+					<srd-reference-question-tree ng-switch-when="reference" data="question" for-sr="false" ng-if="question.isCategory"></srd-reference-question-tree>
+					<srd-reference-question ng-switch-when="reference" data="question" ng-if="!(question.isCategory)" on-behalf-of-user="srdDetailsCtrlState.requestedFor.userId"></srd-reference-question>
+					<srd-text-question ng-switch-when="richtextarea" data="question"></srd-text-question> 
+					
+					<span id="{{(formSubmitted && (subFormInputs.formField.$error.required || subFormInputs.radioButtonForm.formField.$error.required)) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && (subFormInputs.formField.$error.required || subFormInputs.radioButtonForm.formField.$error.required)">{{selfServiceLabels.EnterValue}}</span>
+					<span id="{{(formSubmitted && subFormInputs.formField.$error.MinSel) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.MinSel">{{selfServiceLabels.SS_InvalidSelection}}({{selfServiceLabels.MinimumSelections}} {{question.Validations.MinValue}})</span>
+					<span id="{{(formSubmitted && subFormInputs.formField.$error.email) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.email">{{selfServiceLabels.InvalidEmailAddress}}</span>
+					<span id="{{(formSubmitted && subFormInputs.formField.$error.maxlength) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.maxlength">{{selfServiceLabels.InvalidLength}} ({{selfServiceLabels.Maximum}} {{question.FieldLength}})</span>
+					<span id="{{( formSubmitted && (subFormInputs.formField.$error.positiveValue || subFormInputs.formField.$error.number || subFormInputs.formField.$error.badInput)) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="( formSubmitted && (subFormInputs.formField.$error.positiveValue || subFormInputs.formField.$error.number || subFormInputs.formField.$error.badInput))">{{selfServiceLabels.InvalidNumber}}</span>
+					<span id="{{(formSubmitted && subFormInputs.formField.$error.url) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.url">{{selfServiceLabels.InvalidURL}}</span>				
+					<span id="{{(formSubmitted && subFormInputs.formField.$error.min) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.min">{{selfServiceLabels.range}}({{selfServiceLabels.MinimumValue}} {{question.Validations.MinValue}})</span>
+					<span id="{{(formSubmitted && subFormInputs.formField.$error.max) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.max">{{selfServiceLabels.range}}({{selfServiceLabels.MaximumValue}} {{question.Validations.MaxValue}})</span>
+					<span id="{{(formSubmitted && subFormInputs.formField.$error.minmax) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.minmax">{{selfServiceLabels.range}} ({{selfServiceLabels.ExpectedRange}}{{question.Validations.MinValue}}-{{question.Validations.MaxValue}})</span>
+					<span id="{{(formSubmitted && subFormInputs.formField.$error.minlength && !question.Validations.MaxValue) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && subFormInputs.formField.$error.minlength && !question.Validations.MaxValue">{{selfServiceLabels.InvalidLength}} ({{selfServiceLabels.MinimumLength}} {{question.Validations.MinValue}})</span>
+					<span id="{{(formSubmitted && question.Type=='date' && subFormInputs.formField.$error.ValidDate) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && question.Type=='date' && subFormInputs.formField.$error.ValidDate">{{selfServiceLabels.InvalidDate}}</span>
+					<span id="{{(formSubmitted && question.Type=='datetime' && subFormInputs.formField.$error.ValidDate) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && question.Type=='datetime' && subFormInputs.formField.$error.ValidDate">{{selfServiceLabels.InvalidDate}}</span>
+					<span id="{{(formSubmitted && question.Type=='date' && !subFormInputs.formField.$error.ValidDate && subFormInputs.formField.$error.smaller) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && question.Type=='date' && !subFormInputs.formField.$error.ValidDate && subFormInputs.formField.$error.smaller">{{selfServiceLabels.Expected}}{{question.Text}} < {{question.errorMsg}}</span>
+					<span id="{{(formSubmitted && question.Type=='date' && !subFormInputs.formField.$error.ValidDate && subFormInputs.formField.$error.greater) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && question.Type=='date' && !subFormInputs.formField.$error.ValidDate && subFormInputs.formField.$error.greater">{{selfServiceLabels.Expected}}{{question.Text}} > {{question.errorMsg}}</span>
+					<span id="{{(formSubmitted && question.Type=='date/time' && !subFormInputs.formField.$error.ValidDate && subFormInputs.formField.$error.smaller) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && question.Type=='date/time' && !subFormInputs.formField.$error.ValidDate && subFormInputs.formField.$error.smaller">{{selfServiceLabels.Expected}}{{question.Text}} < {{question.errorMsg}}</span>
+					<span id="{{(formSubmitted && question.Type=='date/time' && !subFormInputs.formField.$error.ValidDate && subFormInputs.formField.$error.greater) ? question.id+'errorMsg' : ''}}" class="srd-question-error_message" ng-show="formSubmitted && question.Type=='date/time' && !subFormInputs.formField.$error.ValidDate && subFormInputs.formField.$error.greater">{{selfServiceLabels.Expected}}{{question.Text}} > {{question.errorMsg}}</span>
+				</div>
+				<div ng-if="question.Text == '<BLANK>'" style="height: 40px;">
+					
+				</div>
+			</ng-form>
+		</div>
+		<div id="smart-suggestions-pane" class="" set-Height="setNewIncFormHeight">
+			<smart-suggestions></smart-suggestions>
+		</div>
+	</div>
+	<srd-attachments data="supportModel.attachmentData" ></srd-attachments>
+	
+</div>

@@ -1,0 +1,64 @@
+<aura:component controller="EDW_ConfigureAppointmentController">
+    <aura:attribute type="EDW_ViewModels.MainViewModel" name="initData" />
+    <aura:attribute type="EDW_ViewModels.TableOrderItem[]" name="tableRows" />
+    <aura:attribute type="String[]" name="selectedOrderItemIds" />
+    
+    <aura:handler event="c:EDW_SendNewTableRowsRequestEvent" action="{!c.newRowsRequest}"/>
+    <aura:handler event="c:EDW_OrderItemBatchJobCompletedEvent" action="{!c.rebuildOrderItemList}"/>
+    <aura:handler name="deleteOrderItemEvent" event="c:EDW_DeleteOrderItemEvent" action="{!c.removeRow}"/>
+    <aura:handler name="paginationEvent" event="c:EDW_PaginationEvent" action="{!c.updatePageNumber}"/>
+    <aura:handler name="validateSurveyLocationsEvent" event="c:EDW_ValidateSurveyLocationsEvent" action="{!c.validateSurveyLocations}"/>
+    <aura:handler event="c:EDW_MassEditEvent" action="{!c.updateSelectedOrderItems}"/>
+    
+    <aura:method name="toggleTableSpinner" action="{!c.toggleTableSpinner}" description="Use to toggle on or off the table loading spinner"></aura:method>
+    
+	<div id="current-order" class="ch-section-wrapper slds-container--fluid">
+        <div class="ch-section-header slds-page-header__title">
+            <div class="section-icon section-icon-collapsed" data-collapsetarget="current-order" onclick="{!c.expandContractSection}">
+                <lightning:buttonIcon class="button-icon" iconName="utility:down" variant="bare" alternativeText="Down" />
+            </div>
+            <c:EDW_ConfigureAppointmentSectionTitlesComponent iconName="standard:orders" iconAlternativeText="Orders" iconSize="medium" sectionTitle="{!$Label.c.Current_Order}" />
+        </div>
+        <div aura:id="current-order" class="ch-section-body rolledup">
+            <div class="slds-is-relative ch-table-wrapper">
+                <lightning:spinner class="slds-hide" alternativeText="Loading" size="medium" aura:id="tableSpinner"/>
+                <table aura:id="orderItemTable" class="slds-table slds-table_bordered slds-table_col-bordered ch-product-table ch-table-compact">
+                    <thead>
+                        <tr>
+                            <th id="ch-product-table__actions" class="slds-text-title_caps">{!$Label.c.Actions}</th>
+                            <th id="ch-product-table__survey-location" class="slds-text-title_caps">{!$Label.c.Survey_Location}</th>
+                            <aura:if isTrue="{!v.initData.account.Is_Multi_Res__c}">
+                            	<th id="ch-product-table__number-of-rooms" class="slds-text-title_caps">{!$Label.c.Number_of_Rooms_Table}</th>
+                            </aura:if>
+                            <th id="ch-product-table__infestation-level" class="slds-text-title_caps">{!$Label.c.Infestation_Level}</th>
+                            <aura:if isTrue="{!v.initData.account.PO_Required_on_Line_Item__c}">
+                            	<th id="ch-product-table__po-number" class="slds-text-title_caps">PO Number</th>
+                            </aura:if>
+                            <th id="ch-product-table__product" class="slds-text-title_caps">{!$Label.c.Product}</th>
+                            <th id="ch-product-table__price" class="slds-text-title_caps">{!$Label.c.EDW_Price}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr aura:id="noDataRow">
+                            <td class="slds-text-align_center" colspan="50">{!$Label.c.No_Data}</td>
+                        </tr>
+                        
+                        <aura:iteration items="{!v.tableRows}" var="row" indexVar="index">
+                            <!--Begin:Shashi:10-4-2019:Populate related infestation and rooms-->
+                            <c:EDW_CurrentOrderItemComponent index="{!index}" row="{!row}" infestationLevels="{!row.infestLevelsCopy}" numberOfRooms="{!row.numOfRoomsCopy}" siteSurveyId="{!v.initData.account.Site_Survey__c}" isMultiRes="{!v.initData.account.Is_Multi_Res__c}" isPORequiredOnLineItem="{!v.initData.account.PO_Required_on_Line_Item__c}" accountId="{!v.initData.account.Id}" />
+                            <!--End-->
+                        </aura:iteration>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div class="slds-m-top_medium slds-text-align_right">
+                    <h2 class=""><strong>{!$Label.c.Total_Est_Price}</strong>&nbsp;<ui:outputCurrency aura:id="curr" value="{!v.initData.totalOrderAmount}" format="$##,###,###,##0.00"/></h2>
+                </div>
+                <div>
+                    <c:EDW_Pagination currentPageNumber="{!v.initData.pageNumber}" disableNext="{!v.initData.disableNext}"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</aura:component>

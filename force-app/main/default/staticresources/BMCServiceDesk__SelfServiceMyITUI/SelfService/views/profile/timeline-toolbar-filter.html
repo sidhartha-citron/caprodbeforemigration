@@ -1,0 +1,89 @@
+<div>
+	<div id="timelineToolbarFilter" class="timeline-toolbar-filter" tabindex="0" ng-if="!profileCtrlState.beId" ng-keydown="$event.which === 13 || $event.which === 32 ? toggleFilterDiv($event,true) : null" ng-click="toggleFilterDiv($event)" role="button" aria-label="{{selfServiceLabels.FilterActivities}}">
+		<ins class="timeline-toolbar-filter__current-icon {{profileCtrlState.currentTimelineFilter.iconClass || 'i-timeline-toolbar-all'}}"></ins>
+		<span class="timeline-toolbar-filter__selection" ng-if="profileCtrlState.records">
+			{{ profileCtrlState.records == "Service Requests" ? selfServiceLabels.ServiceRequests : profileCtrlState.records == "Tickets" ? selfServiceLabels.Tickets : selfServiceLabels.all}}
+		</span>
+		<ins class="timeline-toolbar-filter__dropdown-arrow i-timeline-toolbar-dropdown-arrow"></ins>
+	</div>
+	<div class="timeline-toolbar-filter" style="border:none;" ng-if="profileCtrlState.beId">
+		<div class="timeline-toolbar-filter_baseelement-name"><a class="timeline-toolbar-filter__selection" ng-click="goBack('support.ViewCIsAssets.all')" title="{{profileCtrlState.beName}}">{{profileCtrlState.beName}}</a></div> <div class="timeline-toolbar-filter_related-tickets-label">  &nbsp;> {{selfServiceLabels.relatedTickets}} </div>
+	</div>
+	<div ng-if="profileModel.user.isMspAdmin" class="appzone-navigation-container timeline-toolbar__actions" style="display: table;max-height: 20px; float:right;">
+		<button id="selfButton" ng-click="refreshActivityStream(true,1,false, true,profileCtrlState.searchStr);" ng-disabled="isSelfActivity" style="display: table-cell;height: 30px;line-height: initial;padding-bottom: 0px;" > {{selfServiceLabels.self}} </button>
+		<button id="othersButton" ng-click="refreshActivityStream(false,1,false, true,profileCtrlState.searchStr);" ng-disabled="!isSelfActivity"> {{selfServiceLabels.others}} </button>
+	</div>
+	<div class="timeline-toolbar__actions">
+		<div ng-if="!profileCtrlState.timelineSearchMode">
+		
+		</div>
+	</div>	
+	<div class="profile-search-input-container">
+			<span id="searchButton" class="search-icon-gray srchIcon" ng-click="toggleSearchDiv();" tabindex="0" role="button" aria-label="{{selfServiceLabels.searchPlaceholder}}" ng-keydown="$event.which === 13 || $event.which === 32 ? toggleSearchDiv() : null"> 
+			</span>
+			<!-- Following span contains blue icon and it will always be invisible. It has been added to load the blue icon faster on mouse hover of gray icon for the first time.
+			In absence of this span, blue icon takes time to load for the first time on mouse hover of gray icon. -->
+			<span class="search-icon" style="display: block; visibility: hidden;"></span> 
+	</div>
+	<div class="searchDiv"> 
+		<div>
+			<input type="search" class="profile-search-input ng-valid ng-isolate-scope ng-dirty ng-touched ng-not-empty ng-valid-parse" ng-model="profileCtrlState.searchStr" id="searchTxt" ng-keyup="searchWithTimer()" focus-elm="true"
+			placeholder="{{ selfServiceLabels.search}}" autofocus style="display:none;">
+			<div class="profile-search-remove-btn-input search-home-remove-btn-input search-remove-btn-dpl"
+				 ng-show="profileCtrlState.searchStr.length && profileCtrlState.showSearchDiv"
+				 ng-click="clearSearchText()" tabindex="0" aria-label="{{selfServiceLabels.ClearSearch}}" role="button" 
+				 ng-keydown="$event.which === 13 || $event.which === 32 ? clearSearchText() : null">
+				 <span class="d-icon-cross"/>
+			</div>
+		</div>
+	</div>
+	<div class="timeline-toolbar-csv" ng-style="profileCtrlState.showSearchDiv ? {'margin-top': '14px'} : {}">
+			<span class="timeline-toolbar-csvDownload csvDownload" ng-keydown="$event.which === 13 || $event.which === 32 ? generateCSVLink(true) : null" ng-click="generateCSVLink(true)" title="{{selfServiceLabels.ExportCSV}}" aria-label="{{selfServiceLabels.ExportCSV}}" tabindex="0" role="button"></span>
+			<span class="csvDownloadCyan" style="display: block; visibility: hidden;"></span>
+	</div>
+	<div class="timeline-toolbar-csv-spinner" ng-style="profileCtrlState.showSearchDiv ? {'margin-top': '22px'} : {}"> 
+		<loading-spinner if="isCsvCreation" overlay="true" inline="true"></loading-spinner> 
+	</div>
+	<div class="mask" ng-show="profileCtrlState.showFilterDiv"></div>
+	<div id="filterTableDiv" ng-show="profileCtrlState.showFilterDiv" class="filterDiv" tabindex="0" ng-keydown="closeFilterPopup($event)">
+		<table class="filter-table">
+			<th class="paddingLeft20 noBorderForFilterLabel filter-div-title" tabindex="0">{{selfServiceLabels.FilterActivities}}</th>
+			<tr>
+				<td class="paddingLeft20 filter-dropdown-title" aria-hidden="true">{{selfServiceLabels.Records}}</td>
+				<td class="paddingRight20">
+					<select tabindex="0" class="filter-dropdown d-dropdown dropdown" ng-model="profileCtrlState.records" ng-change="filterChangeHandler()" aria-label="{{selfServiceLabels.Records}}">
+						<option value="All">{{selfServiceLabels.all}}</option>
+						<option value="Tickets">{{selfServiceLabels.Tickets}}</option>
+						<option value="Service Requests">{{selfServiceLabels.ServiceRequests}}</option>
+					</select>
+				</td>
+			</tr>
+			<tr ng-show="showState">
+				<td class="paddingLeft20 filter-dropdown-title" aria-hidden="true">{{selfServiceLabels.State}}</td>
+				<td class="paddingRight20">
+					<select tabindex="0" class="filter-dropdown d-dropdown dropdown" ng-model="profileCtrlState.state" ng-change="createStatusArrayBasedOnState()" aria-label="{{selfServiceLabels.State}}">
+						<option value="All">{{selfServiceLabels.all}}</option>
+						<option value="true">{{selfServiceLabels.Opened}}</option>
+						<option value="false">{{selfServiceLabels.Closed}}</option>
+					</select>
+				</td>
+			</tr>
+			<tr ng-show="showStatus">
+				<td class="paddingLeft20 filter-dropdown-title" aria-hidden="true">{{selfServiceLabels.status}}</td>
+				<td class="paddingRight20">
+					<select tabindex="0" class="filter-dropdown d-dropdown dropdown" ng-model="profileCtrlState.status" aria-label="{{selfServiceLabels.status}}">
+						<option ng-repeat="opt in profileCtrlState.relevantStatusValues" value="{{opt.Id}}">{{opt.Status}}</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+			<td></td>
+			<td class="paddingRight20" style="float:right;">
+					<button id="applyFilterButton" tabindex="0" type="button" class="btn Branding-Right_Panel-button_outline apply-btn" ng-click="applyChanges()">
+					<ins style="text-decoration: inherit;" class="__icon-share"> </ins>
+				{{selfServiceLabels.Apply}}</button>
+			</td>
+			</tr>
+		</table>
+	</div>
+</div>

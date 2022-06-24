@@ -1,0 +1,115 @@
+<apex:page controller="BMCServiceDesk.AdminSelfServiceController" showHeader="false" standardStylesheets="false" action="{!AdminContactUsLoader}" id="pg">
+<c:CommonIncludes /> 
+<style>
+.x-panel-body{
+        *zoom:0 ;
+        *overflow :visible ;
+}
+
+</style>
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSelfService.css"/>
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <apex:form id="form">    
+    	 <div id = "btnToolbar">   </div> 
+    	 <div id="helpDiv" class="clshelpDiv"></div>
+    	 <apex:outputPanel id="mainPanel">
+          <table class = "mainPanel " style = "margin-top:5px">                
+                 <tr style="display:{!(if(isSSSwitchNewUI,'none',''))}">                       
+                   <td colspan="2">
+                              <table class="clsInnerTabel">
+                                   <tr>
+                                      <td >
+                                      <apex:inputCheckbox value="{!selfServiceBean.showContactUs}"  onClick="updatemsgtemplatesection(this)" id="showcntct" />
+                                    </td> 
+                                    <td  > 
+                                     <apex:outputLabel value="{!$Label.bmcservicedesk__displaycontactuslinklabel}"  />
+                                    </td> 
+                                 </tr>
+                            </table>  
+                     </td>
+                   </tr>
+                   <tr><td class = "div2pxVspacing"></td></tr>
+                   <tr>
+                       <td colspan="2" class="headerMessageOnPage"><apex:outputLabel value="{!$Label.bmcservicedesk__contactusmessage}"/></td>
+                   </tr>
+                   <tr><td class = "div2pxVspacing"></td></tr>
+                   <tr>
+                      <td colspan="2" ><apex:inputTextarea styleClass="contactUsNewClsInputTextArea" value="{!selfServiceBean.Contact_Us_Message}" disabled="{!NOT(selfServiceBean.showContactUs)}" id="contactUsMessageTextArea"/></td>
+                   </tr> 
+                   <tr><td class = "div2pxVspacing"></td></tr>
+                   <tr>
+                      <td colspan="2">
+                        <div class = "clsfloatLeft">
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__contactuscategory}"/>
+                        </div>
+                        <div class = "clsfloatLeft">
+                            <apex:inputText styleClass="contactUsNewClsInputTextBoxReadOnly" style="background-color:white;" id="templateName" value="{!templateName}" disabled="true" />
+                        </div> 
+                        <div class = "CommandButtonDiv" style = "float:left">
+                            <input type = "button" onclick="templateName();"   Class="lookupIconOn" id="templateid" />
+                        </div> 
+                      </td>
+                   </tr>                                                         
+                   
+                   <tr>
+                       <td colspan="2"><div class="div15pxVspacing"/></td>
+                   </tr>
+       </table>
+       </apex:outputPanel>
+       <apex:outputPanel id="errorId">
+           <script>               
+               var message = '{!JSENCODE(messageString)}';                  
+           </script>
+       </apex:outputPanel>
+        <apex:actionFunction action="{!templateQuery}" name="setTemplateNext" reRender="dummy,templateName" > 
+          	<apex:param assignTo="{!savedId}" name="savedName" value=""/>
+     	</apex:actionFunction>
+     	 <apex:actionFunction name="save" action="{!contactUsSave}" rerender="errorId" onComplete="waitMsg.hide();showErrorMsg();" />
+     	 <apex:actionFunction name="reset" action="{!ContactUsReset}" rerender="mainPanel"  />  
+       </apex:form>
+         <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/SliderTip.js"/>
+ 		 <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSTemplate.js"/>
+ 		 <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminContactUs.js"/>
+ 		 <script>
+
+			var saveLabel = '{!JSENCODE($Label.save)}';
+			var showcntctvar='{!JSENCODE($Component.pg.form.showcntct)}'; 
+			var undoDefaultSettingPageLabel='{!JSENCODE($Label.Reset)}';	
+			var urlsaveimage = '{!$Resource.SDEFStyles}/SDEFbuttons/b_pick.gif';
+			var isChecked;
+		    var templateArea='{!JSENCODE($Component.pg.form.templateName)}';
+		    var contactUsMessageTextArea='{!JSENCODE($Component.pg.form.contactUsMessageTextArea)}';		    
+		    function showErrorMsg(){
+		              
+		         if(message!=null && message !=''){                                
+		             Ext.MessageBox.show({                                
+		                 title: '{!JSENCODE($Label.SSContactUs)}',
+		                 msg:message ,
+		                 width:300,
+		                 buttons: Ext.MessageBox.OK
+		             });
+		        }
+		    }
+		    function ResetBtnHandler(){
+		    	reset();
+		    }
+		    function updatemsgtemplatesection(isChecked)
+		    {
+		        if(isChecked.checked)
+		        {
+		         document.getElementById(templateArea).disable=false;
+		         document.getElementById(contactUsMessageTextArea).disabled=false;
+		        
+		        }
+		        else
+		        {
+		        document.getElementById(templateArea).disabled=true;
+		        document.getElementById(contactUsMessageTextArea).disabled=true;
+		        
+		        }
+		        
+		    }
+		   var wikiUrl='{!wikiUrl}';
+           parent.addHelpOnPage(document.getElementById('helpDiv'),'contact_us.htm',wikiUrl);  
+		</script>
+</apex:page>

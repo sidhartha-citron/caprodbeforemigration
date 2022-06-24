@@ -1,0 +1,26 @@
+<div class="support-request-container">
+	<loading-spinner if="unifiedCatalogSectionCtrlState.sectionLoading" style="min-height:100px"></loading-spinner>
+
+	<div ng-if="!unifiedCatalogSectionCtrlState.sectionLoading" ng-init="setFocusToElement()">
+		<div class="page-toolbar page-toolbar_no-border">
+			<page-breadcrumbs></page-breadcrumbs>
+		</div>
+
+		<div class="catalog-section catalog-section_page">
+			<header class="catalog-section__header clearfix">
+				<h4 class="catalog-section__name  bold-text" role="text" tabindex="0">{{unifiedCatalogSectionCtrlState.section.title}}</h4>
+				<span class="catalog-section__item-count" ng-if="unifiedCatalogSectionCtrlState.section.totalItemCount">
+					{{filteredItems.length}}
+				</span>
+			</header>
+
+			<ul aria-listnavigation role="listbox" id="itemID" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'itemID');" class="catalog-section__items" tabindex="0">
+				<unified-catalog-item selectable ng-focus="item.selected = true" ng-blur="item.selected = false" aria-selected="false" tabindex="-1" role="option"
+					ng-repeat="item in filteredItems = (unifiedCatalogSectionCtrlState.section.items | filter: unifiedCatalogSectionCtrlState.searchText | filter: filterByCategory | orderBy: unifiedCatalogSectionCtrlState.sort.activeType.field : unifiedCatalogSectionCtrlState.sort.activeType.desc)"
+					data="item"
+					display-style="catalog" noc="unifiedCatalogSectionCtrlState.numberOfColumns">
+				</unified-catalog-item>
+			</ul>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,124 @@
+<apex:page id="SSApprovalListPage" controller="BMCServiceDesk.SSApprovalListController"  sidebar="false"  showHeader="false" standardStylesheets="false" >
+<div id="themeDiv"></div> 
+<head> 
+    <title>{!HTMLENCODE($Label.SSBrowserTitle)}</title>
+
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+
+<style>
+.msgBoxCls {
+    background-color: transparent !important;
+    border: medium none !important;
+    box-shadow: 0 0 0 transparent !important;
+}
+
+.msgBoxBodyCls {
+    background-color: #FFFFFF !important;
+    border: medium none !important;
+    box-shadow: 0 0 0 #FFFFFF !important;
+}
+
+#ssMyRequestsGridPanel .x-window-default {
+    background-color: transparent !important;
+    border: medium none !important;
+    box-shadow: 0 0 0 transparent !important;
+    border-color: transparent !important;
+    background-image: none !important;
+}
+
+#waitMsgId div .x-nbr .x-window-default-ml, .x-nbr .x-window-default-bl
+{
+	background-image: none !important;
+}
+
+#waitMsgId * .x-window-tc, * .x-window-ml, .x-window-ml, * .x-window-mr, * .x-window-tl, .x-window-tl, * .x-window-bl, .x-window-bl,  * .x-window-tr, * .x-window-br, * .x-window-bc, .x-tool {
+    background-image: none !important;
+}
+</style>
+
+</head>
+<body>   
+
+<div id="divGrid"></div>
+
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+<script type="text/javascript">
+     
+    var errorMessage = '';
+    var showLoadingImgFunction = '{!$Resource.SDEFExtJS}';
+    var displayMsg= '{!JSENCODE($Label.NoRecordsFound)}';
+    var emptyMsg= '{!JSENCODE($Label.NoRecordsFound)}';
+    var SSApprovalReassign = '{!$Page.SSApprovalReassign}';
+	var ssApprovalProcess = '{!$Page.SSApprovalProcess}';
+	var ssApprovalProcessTitle = '{!JSENCODE($Label.Approval)}';
+		
+    var selectedStatusfield;
+    var selectedAccfield;
+    var oldSearchText;
+
+    var sortNumberAsc = true;
+    var sortClientIDAsc = true;
+    var sortSubmittedAsc = true;
+    var sortStatusAsc = true;
+    var myData;
+    
+    GridState = { SortBy:'Id', SortDirection: 'desc' }
+
+    var SSReassign= '{!JSENCODE($Label.Reassign)}';
+    var SSApprove= '{!JSENCODE($Label.Approve)}';
+    var SSReject='{!JSENCODE($Label.Reject)}';
+    var SSCancel='{!JSENCODE($Label.SSCancel)}';
+    var SSComment='{!JSENCODE($Label.SSComment)}';
+    var SSRefresh='{!JSENCODE($Label.Refresh)}';
+    var recordUrl='{!JSENCODE(recordUrl)}';
+    var IsComponent = "{!JSENCODE($CurrentPage.parameters.isComponent)}";
+    
+    
+	function renderRecord(value, p, record) {
+        return Ext.String.format(
+            '<a href="#" style="color:black;" onclick="openPopupWindow(\'{0}{3}{5}\',450,850,\'{1}\'); return false;">'+Ext.String.htmlEncode(value)+'</a>',
+            recordUrl,
+            value,
+            record.data["ProcessInstance.TargetObject.Name"] +'-'+ value,            
+            record.data.ObjectId,
+            record.data["ProcessInstance.TargetObjectId"] +': '+ value,
+            '?isdtp=vw'
+        );
+    }
+ 
+    myData = [{!myHelpRequestData}];
+    var storeColumnList=[{!storeColumnList}];
+    var gridColumnList=[{!gridColumnList}];
+
+    var selectedIds='';
+    var selectedReassignIds='';
+    var selectedRelatedTo='';
+    var bNoSelected = true;
+    var bNoReassignSelected = true;
+    var isMultiSelected = false;
+	var isRFHotkeysDisabled={!isRFHotkeysDisabled};
+    
+    Ext.Loader.setConfig({ enabled: true });
+
+    Ext.require([
+       'Ext.grid.*',
+        'Ext.data.*',
+        'Ext.ModelManager',
+        'Ext.tip.QuickTipManager',         
+        'Ext.selection.CheckboxModel'
+    ]);
+
+    var _getPageRecords = "{!$RemoteAction.SSApprovalListController.GetPageRecords}";
+    var _approvedProcessGetPageRecords = "{!$RemoteAction.SSApprovalListController.ApprovedProcessGetPageRecords}";
+</script>
+
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+<script src="{!$Resource.SSjs}/src/SSApprovalListPage.js" />
+<script type="text/javascript">         
+        var colorCodeList = '{!JSENCODE(themeColorCodeString)}'; 
+        var content = '{!JSENCODE(dynamicStyle)}';
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+</script>
+<script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" /> 
+</body>
+</apex:page>

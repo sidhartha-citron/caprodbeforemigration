@@ -1,0 +1,140 @@
+<apex:page controller="BMCServiceDesk.KM_SFKnowledgeSearchController" showHeader="false" sidebar="false" cache="false" contentType="text/html" standardStylesheets="false">
+
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" />
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ext-all.js" id="ext-all-js"/>
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/Knowledge.css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+ 
+<script>
+    Ext.onReady(function(){
+    if (!({!SFKnowMultiLang}))
+    {
+    	document.getElementById('outerDiv').style.display='none';
+    }
+    var objSearch = {!SearchResults};
+    var sError = '{!JSENCODE(sError)}';
+    var noRecordmsg = "{!JSENCODE($Label.msgNoRecordFoundSearchPage)}";
+    /*if(sError.length>0)
+    	{
+    		//alert(noRecordmsg);
+    		return;
+    	}*/
+    var store = new Ext.data.JsonStore({
+                fields: [
+                   {name: 'ArticleNumber'},
+                   {name: 'URL'},
+                   {name: 'Title'},
+                   {name: 'Type'},
+                   {name: 'Summary'},
+                   {name: 'PublishedDate'}
+                ],
+                idIndex: 0
+            });
+   
+     var grid = new Ext.grid.GridPanel({
+                store: store,
+                 columns: [
+                            {header: "{!JSENCODE($Label.Article_Number)}", width: 20,  dataIndex: 'ArticleNumber', sortable:true},
+                            {header: "{!JSENCODE($Label.ServiceTargetTitle)}", width: 20,  dataIndex: 'Title', sortable:true},
+                            {header: "{!JSENCODE($Label.Type)}", width: 15,  dataIndex: 'Type', sortable:true},
+                            {header: "{!JSENCODE($Label.Article_Summary)}", width: 30,  dataIndex: 'Summary', sortable:true},
+                            {header: "{!JSENCODE($Label.Published_Date)}", width: 15,  dataIndex: 'PublishedDate', sortable:true},
+							{header: "LastPublishedDate", width:0,  dataIndex: 'PublishedDate', sortable:true, hidden:true, xtype: 'datecolumn', format: 'Y/m/d'}
+                           ],
+                stripeRows: true,
+                enableHdMenu:false,                                
+                autoHeight: true,
+                autoWidth: true,
+                emptyText:'noRecordmsg',
+                viewConfig: {
+                    forceFit: true,
+                    scrollOffset:0
+                    
+                }
+             });
+      
+      grid.on('celldblclick', function(sm){
+      	var gridrecord = grid.getSelectionModel().getSelected();
+		var index = grid.getStore().indexOf(gridrecord);
+		
+		var sURL = gridrecord.get('URL');
+		if(sURL != '--')
+			window.open(sURL); 
+      });
+	  grid.on('sortchange', function(grid, sortInfo){
+        if(sortInfo.field == 'PublishedDate') {
+          grid.getStore().sort("LastPublishedDate", sortInfo.direction);   
+        }
+      });
+      store.on('load', function() {
+		//if( store.getTotalCount() > 0) 
+			grid.render('gridPanel');
+		//else
+			//alert(noRecordmsg);	
+	});
+	
+    store.loadData(objSearch);
+ 
+    });
+    
+  function ShowKnowledgeArticle(selLang)
+    {          	
+        window.location.href = 'KM_SFKnowledgeSearch?kword={!JSENCODE(keyWord)}&psize={!JSENCODE(pageSize)}&lg=' + selLang
+    }        
+                
+</script>
+
+<style>
+    .ComboList
+	{
+    
+	    background-color: white;
+	    border-color: #6A7378 #BAC3C8 #BAC3C8 #6A7378;
+	    border-style: solid;
+	    border-width: 1px;
+	    color: #000000;
+	    font-family: Tahoma,MS Sans Serif;
+	    font-size: 11px;
+	    height: 18px;
+	    margin: 0;
+	    padding: 0;
+	    vertical-align: middle;
+	    white-space: normal;
+	    width:100px;
+	}
+	.outputPnl
+	{
+	    	padding-top:10px;padding-bottom:10px;
+	}
+	.outputLabel
+	{
+	    	padding:10px;
+	    	font-family: tahoma,verdana,arial;
+	    	font-size: 11px;
+	}
+	.sort-desc .x-grid3-sort-icon {
+		background-image: url({!$Resource.SDEFStyles}/SDEFimages/arrow_sort_descending.gif) !important;
+		height:10px;
+		width:10px;
+	}
+	.sort-asc .x-grid3-sort-icon {
+		background-image: url({!$Resource.SDEFStyles}/SDEFimages/arrow_sort_ascending.gif) !important;
+		height:10px;
+		width:10px;
+	}
+</style>
+
+ <apex:form id="knowForm">  
+ <div id="outerDiv" Class="outputPnl">
+    <apex:outputLabel id="lblArticleLang" value="{!JSENCODE($Label.bmcservicedesk__language)}" styleClass="outputLabel" rendered="{!SFKnowMultiLang}"></apex:outputLabel>
+     <apex:selectList size="1"  id="languageId" value="{!DefaultLanguage}" styleClass="ComboList" rendered="{!SFKnowMultiLang}"
+	            onchange="ShowKnowledgeArticle(this.options[this.selectedIndex].value);">
+	     <apex:selectOptions value="{!LanguageItems}"/>
+	</apex:selectList>
+ </div>
+
+ 
+<div id='gridPanel' ></div>
+</apex:form>
+</apex:page>

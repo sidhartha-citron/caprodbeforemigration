@@ -1,0 +1,25 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,force:hasRecordId" access="global" controller="EmergencyDispatchWizardController">
+	<lightning:workspaceAPI aura:id="workspace"/>
+    
+    <aura:attribute type="EDW_ViewModels.MainViewModel" name="initData" />
+    <aura:attribute type="String" name="mode" />
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler event="c:EDW_NavigateEvent" action="{!c.handleNavigateEvent}" />
+    
+    <ui:scrollerWrapper class="scrollerSize">
+        <lightning:card title="">
+            <c:PathComponent aura:id="pathComponent" pathNames="{!v.initData.paths}" />
+            
+            <div aura:id="appContainer" class="slds-p-around_medium">
+                <!--<c:EDW_SelectCustomerComponent aura:id="selectCustomerComponent" initData="{!v.initData}" recordId="{!v.recordId}" />-->
+                <aura:if isTrue="{!v.mode == 'NEW'}">
+                	<c:EDW_SelectCustomerComponent aura:id="selectCustomerComponent" initData="{!v.initData}" recordId="{!v.recordId}" />
+                </aura:if>
+                <aura:if isTrue="{!v.mode == 'EDIT'}">
+                	<c:EDW_ConfigureAppointmentComponent initData="{!v.initData}" recordId="{!v.recordId}" mode="{!v.mode}" />
+                </aura:if>
+            </div>
+        </lightning:card>
+    </ui:scrollerWrapper>
+</aura:component>

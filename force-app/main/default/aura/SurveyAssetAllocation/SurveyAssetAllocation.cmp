@@ -1,0 +1,220 @@
+<aura:component implements="flexipage:availableForAllPageTypes" access="global" controller="SurveyAssetAllocationController" >
+    <aura:attribute name="recordId" type="String"/> 
+    <aura:attribute name="siteSurvey" type="Site_Survey__c"/>
+    <aura:attribute name="locationsPerPage" type="Integer"/>
+    <aura:attribute name="securityRecord" type="SiteSurveySettingsController.FieldSecurity"/>
+    <aura:attribute name="siteSurveyId" type="Id" />
+    <aura:attribute name="viewData" type="SurveyAssetAllocationController.ViewData" />
+    <aura:attribute name="tempSurveyLocations" type="List" />
+    <aura:attribute name="displayedSurveyLocations" type="List" />
+    <aura:attribute name="spinner" type="Boolean" default="false"/>
+    <aura:attribute name="surveyLocationIdToDelete" type="String"/> 
+    <aura:attribute type="Integer" name="pageNumber" default="1" />
+	<aura:attribute name="searchString" type="String" default=""/>
+    <aura:attribute name="defaultSortValue" type="String" default="Name" />
+    <aura:attribute name="disableNext" type="Boolean" default="false" />
+    <aura:attribute name="querySearchString" type="String" default="" />
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    
+    <lightning:spinner alternativeText="Loading" size="medium" aura:id="theSpinner" class="slds-hide"/>
+    
+    <aura:handler name="NewSurveyLocationEvent" event="c:SurveyRoomCreated" action="{!c.handleNewSurveyLocationCreated}"/>
+    <aura:handler name="NewAllocatedCreated" event="c:SurveyAllocationSavedEvt" action="{!c.handleNewAllocationCreated}"/>
+    <aura:handler name="ModalCloseEvent" event="c:ModalCloseEvt" action="{!c.handleModalClose}"/>
+    <aura:handler name="cloneEvent" event="c:SurveyAllocationClonedEvent" action="{!c.handleCloneEvent}"/>
+    <aura:handler name="promptEvent" event="c:SiteSurveyPromptEvent" action="{!c.handlePromptEvent}"/>
+    <aura:handler name="change" value="{!v.pageNumber}"	action="{!c.updatePageNum}" />
+    
+    <c:CustomToast aura:id="customToast" />
+    <c:SiteSurveyPrompt aura:id="promptComponent" />
+    <c:SurveyAllocationClone aura:id="cloneComponent" recordId="{!v.recordId}"/>
+    <c:SiteSurveyAutoAllocate aura:id="autoAllocateComponent" recordId="{!v.recordId}" siteSurveyId="{!v.siteSurveyId}"/>
+    
+    <div class="custom-grid">
+        <div class="custom-col left-col">
+            <div class="slds-page-header__title section-header">{!$Label.c.Site_Survey_Title_Unallocated_Products}</div>
+            <ul class="slds-has-dividers_around-space">
+                <aura:iteration items="{!v.viewData.unAllocatedAssets}" var="surveyProduct">
+                    <li class="slds-item" draggable="{!v.viewData.surveyLocations.length > 0}" ondragover="{!c.onDragOver}" ondragstart="{!c.onDragStart}" ondragend="{!c.onDragEnd}"
+                        data-productid="{!surveyProduct.productid}" data-relatedprod="{!surveyProduct.relatedProdId}" 
+                        data-availableqty="{!surveyProduct.quantity}" data-frequency="{!surveyProduct.serviceFrequency}" style="cursor: move">
+                        <article class="slds-tile slds-tile_board">  
+                            <div class="slds-shrink-none">
+                                <lightning:buttonIcon iconName="utility:side_list" 
+                                                      variant="bare" alternativeText="Clone" 
+                                                      iconClass="dark" size="medium" value="{!surveyProduct}"
+                                                      onclick="{!c.openAutoAllocate}"
+                                                      title="Auto Allocate"
+                                                      class	="slds-float_right"
+                                                      /> 
+                            </div>
+                            <div class="slds-tile__detail slds-text-body_small slds-truncate_container_75">
+                                <aura:if isTrue="{!$Locale.language =='fr'}">
+                                    <p class="slds-truncate tileHeader" title="{!surveyProduct.fname}">{!surveyProduct.fname}</p>
+                                </aura:if>
+                                <aura:if isTrue="{!$Locale.language !='fr'}">
+                                    <p class="slds-truncate tileHeader" title="{!surveyProduct.name}">{!surveyProduct.name}</p>
+                                </aura:if>
+                                
+                                <p class="slds-truncate tileHeader" title="{!surveyProduct.relatedProdName}">{!surveyProduct.relatedProdName}</p>
+                                <p class="slds-truncate" title="{!surveyProduct.serviceFrequency}">{!surveyProduct.serviceFrequency}</p>
+                                <p class="slds-truncate">{!$Label.c.Site_Survey_Quantity}:&nbsp;{!surveyProduct.quantity}</p>
+                            </div>
+                        </article>                                   
+                    </li>
+                </aura:iteration>
+            </ul>
+        </div>
+        <div class="custom-col right-col">
+            <div class="section-header">
+                <!-- 21530 part 5 - MD - to be moved to another component eventually -->
+                <div class="slds-page-header__title">
+                    {!$Label.c.Site_Survey_Title_Locations} &nbsp;
+                </div>
+                <lightning:button class="btn-add" label="{!$Label.c.Site_Survey_Action_Add_New_Location}" iconName="utility:new" onclick="{!c.handleAddSurveyLocation}"/>
+                <div class="sorting-wrapper">
+                    <div class="form-wrapper">
+                        <label>{!$Label.c.Site_Survey_Search}</label>
+                        <span onkeypress="{!c.preSearchLocations}">
+                        <lightning:input variant="label-hidden" value="{!v.searchString}" />
+                        </span>
+                        <lightning:buttonIcon onclick="{!c.searchLocations}" iconName="utility:search" size="small" variant="bare" class="btn-search" />
+                    </div>
+                    <div class="form-wrapper">
+                        <label>{!$Label.c.Site_Survey_Sort_By}</label>
+                        <lightning:select variant="label-hidden" onchange="{!c.sort}" aura:id="selectSort" value="{!v.defaultSortValue}">
+                            <aura:iteration items="{!v.viewData.sortFields}" var="field">
+                                <option value="{!field.API_Name__c}" selected="{!field.API_Name__c == 'Name' ? 'selected' : ''}">{!field.MasterLabel}</option>
+                            </aura:iteration>
+                        </lightning:select>
+                    </div>
+                    <div class="sort-direction-wrapper form-wrapper">
+                        <label>{!$Label.c.Site_Survey_Sort_Descending}
+                            <ui:inputCheckbox aura:id="sortDesc" change="{!c.sort}" />
+                        </label>
+                    </div>
+                    <lightning:button class="btn-add" label="Reset" iconName="utility:refresh" onclick="{!c.resetSearchFilters}"/>
+                </div>
+            </div>
+            
+            <ul class="slds-has-dividers_around-space">
+                <aura:iteration items="{!v.displayedSurveyLocations}" var="surveyLocation">
+                    <li class="slds-item survey-location" ondragenter="{!c.onDragEnter}" 
+                        ondragover="{!c.onDragOver}" 
+                        ondragleave="{!c.onDragLeave}" ondrop="{!c.onDrop}"                                               
+                        data-roomid="{!surveyLocation.Id}" >
+                        <article class="slds-tile slds-tile_board" aura:id="draggableTo" id="draggableTo" > 
+                            <div class="location-btn-wrapper">
+                                <h3 class="slds-truncate"></h3>
+                                <div class="slds-shrink-none"> 
+                                    <lightning:buttonIcon iconName="utility:file" 
+                                                          variant="bare" alternativeText="Clone" 
+                                                          iconClass="dark" size="medium" value="{!surveyLocation}"
+                                                          onclick="{!c.cloneAllocations}"
+                                                          title="{!$Label.c.Site_Survey_Action_Clone_Allocations}"/> 
+                                    <lightning:buttonIcon iconName="utility:edit" 
+                                                          variant="bare" alternativeText="Edit" 
+                                                          iconClass="dark" size="medium" value="{!surveyLocation}" 
+                                                          onclick="{!c.editSurveyLocation}"
+                                                          title="{!$Label.c.Site_Survey_Action_Edit_Location}"/> 
+                                    <aura:iteration items="{!v.viewData.locationCounter}" var="l">
+                                        <aura:if isTrue="{!and(l.locationId == surveyLocation.Id, l.hasAssets)}">
+                                            <lightning:buttonIcon iconName="utility:clear" 
+                                                                  variant="bare" alternativeText="Remove" 
+                                                                  iconClass="dark" size="medium" value="{!surveyLocation.Id}" 
+                                                                  onclick="{!c.removeSurveyLocation}"
+                                                                  title="{!$Label.c.Site_Survey_Action_Remove_Location}"/> 
+                                        </aura:if>                                            
+                                    </aura:iteration>
+                                </div>
+                            </div>
+                            <div class="slds-tile__detail slds-text-body_small">                                           
+                                <p class="slds-truncate tileHeader slds-hyphenate no-text-overflow slds-m-bottom_x-small">
+                                    {!surveyLocation.Name != null ? (surveyLocation.Name ):''}
+                                </p>        
+                                <p class="slds-truncate">
+                                    <label class="text-bold">{!$Label.c.Site_Survey_Floor}: </label> {!surveyLocation.Floor__c} &nbsp;
+                                    <label class="text-bold">{!$Label.c.Site_Survey_Unit}: </label> {!surveyLocation.Unit_Number__c} &nbsp;
+                                    <label class="text-bold">{!$Label.c.Site_Survey_Service_Order}: </label> {!surveyLocation.Service_Order__c}
+                                </p>
+                                <p class="slds-truncate">
+                                    <label class="text-bold">{!$Label.c.Site_Survey_Location_Type}: </label> {!surveyLocation.labelLocationType} &nbsp;
+                                    <label class="text-bold">{!$Label.c.Site_Survey_Location_Subtype}: </label>  {!surveyLocation.labelLocationSubType}
+                                </p>
+                                <ul class="selected-item-list">
+                                    <aura:iteration items="{!v.viewData.allocatedAssets}" var="asset">
+                                        <aura:if isTrue="{!asset.locationId == surveyLocation.Id}">
+                                            <li class="selected-item">
+                                                <aura:if isTrue="{!asset.isParent}">
+                                                    <div class="slds-box sldxBoxOverride" style="background-color:#E0E5EE">
+                                                        <div class="slds-float_right">
+                                                            <lightning:buttonIcon iconName="utility:clear" name="{!asset.quantityWithRecord}" 
+                                                                                  variant="bare" alternativeText="{!$Label.c.Site_Survey_Action_Remove_Allocation}" 
+                                                                                  iconClass="dark" size="medium" 
+                                                                                  value="{!asset.name+'|'+surveyLocation.Id+'|'+ asset.productid+'|'+ asset.relatedProdId+'|'+ asset.serviceFrequency}" 
+                                                                                  onclick="{!c.removeAllocation}" title="{!$Label.c.Site_Survey_Action_Remove_Allocation}"/>
+                                                            
+                                                        </div>
+                                                        <p class="no-text-overflow">
+                                                            <label class="text-bold">{!$Label.c.Site_Survey_Label_Product_Name}: </label>
+                                                            <aura:if isTrue="{!$Locale.language =='fr'}">{!asset.fname}></aura:if>
+                                                            <aura:if isTrue="{!$Locale.language !='fr'}">{!asset.name}></aura:if>
+                                                            {!asset.relatedProdName}                                 
+                                                        </p>
+                                                        <p class="slds-truncate" title="{!asset.serviceFrequency}"><label class="text-bold">{!$Label.c.Site_Survey_Frequency}: </label> {!asset.serviceFrequency}</p>
+                                                        <p><label class="text-bold">{!$Label.c.Site_Survey_Quantity}: </label> {!asset.quantity}</p>
+                                                    </div>
+                                                    <aura:set attribute="else">
+                                                        <div class="slds-box sldxBoxOverride">
+                                                            <p class="no-text-overflow">
+                                                                <label class="text-bold">{!$Label.c.Site_Survey_Label_Product_Name}: </label> {!asset.name} &nbsp; {!asset.relatedProdName}                                      
+                                                            </p>
+                                                            <p class="slds-truncate" title="{!asset.serviceFrequency}"><label class="text-bold">{!$Label.c.Site_Survey_Frequency}: </label> {!asset.serviceFrequency}</p>
+                                                            <p><label class="text-bold">{!$Label.c.Site_Survey_Quantity}: </label> {!asset.quantity}</p>
+                                                        </div>
+                                                    </aura:set>
+                                                </aura:if>
+                                            </li>                                                        
+                                        </aura:if>
+                                    </aura:iteration>                                                
+                                </ul>
+                            </div>
+                        </article>                                    
+                    </li>
+                </aura:iteration>
+            </ul>
+          <c:pagination currentPageNumber="{!v.pageNumber}" disableNext="{!v.disableNext}"/>
+        </div>
+    </div>
+    
+    <div class="slds">
+        <div aria-hidden="true" role="dialog" class="slds-modal slds-modal--prompt slds-fade-in-hide" aura:id="modalAllocateProduct">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header slds-theme--info">
+                    <lightning:buttonIcon iconName="utility:close" variant="bare" 
+                                          onclick="{!c.hidePopupAllocateProduct}" class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                          iconClass="slds-button__icon slds-button__icon_large" alternativeText="{!$Label.c.Site_Survey_Close}"/>                    
+                    <h2 class="slds-text-heading--medium">{!$Label.c.Site_Survey_Title_Quantity_to_Allocate}</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <c:SiteSurveyAllocateProduct aura:id="addAllocation" />
+                </div>               
+            </div>
+        </div>
+        <div aria-hidden="true" role="dialog" class="slds-modal slds-modal_medium slds-modal--prompt slds-fade-in-hide" aura:id="modalAddSurveyRoom">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header slds-theme--info">
+                    <lightning:buttonIcon iconName="utility:close" variant="bare" 
+                                          onclick="{!c.hidePopupAddSurveyRoom}" class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                          iconClass="slds-button__icon slds-button__icon_large" alternativeText="{!$Label.c.Site_Survey_Close}"/>                    
+                    <h2 class="slds-text-heading--medium">{!$Label.c.Site_Survey_Title_Add_Edit_Location}</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <c:AddSurveyRoom aura:id="addSurveyRoom" siteSurveyId="{!v.siteSurveyId}" languageCode="{!v.viewData.languageCode}" /> 
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slds-backdrop slds-backdrop--hide" aura:id="backdrop"></div>
+</aura:component>

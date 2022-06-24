@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Indicate_if_ticket_is_Pest_related</fullName>
+    <active>false</active>
+    <errorConditionFormula>AND(
+
+NOT(ISNEW()),
+
+RecordType.DeveloperName &lt;&gt; &quot;Internal_Application_Support&quot;,
+
+TEXT($User.UserType) = &quot;Standard&quot;,
+
+$Profile.Name &lt;&gt;&apos;ServiceDesk Client&apos;,
+
+$Profile.Name &lt;&gt;&apos;API User&apos;,
+
+(NOW() - CreatedDate) &gt; 0.0001,
+
+NOT(IsClosed),
+
+NOT(ISCHANGED(Last_Inbound_Email_Date_Time__c)),
+
+ISBLANK(TEXT(Pest_Related_Ticket__c))
+
+
+)</errorConditionFormula>
+    <errorDisplayField>Pest_Related_Ticket__c</errorDisplayField>
+    <errorMessage>**********************************************************You got this error because the IS THIS PEST CONTROL RELATED field is blank.  Please update the field with a YES or NO then try again*****************************************************</errorMessage>
+</ValidationRule>

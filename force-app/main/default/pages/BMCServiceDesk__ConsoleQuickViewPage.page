@@ -1,0 +1,421 @@
+<apex:page sidebar="false" controller="BMCServiceDesk.ConsoleQuickViewController" showHeader="false" id="ConsoleQVPage" contentType="text/html" standardStylesheets="false">
+  <link rel="stylesheet" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" type="text/css" />
+  	<link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />
+  <link rel="stylesheet" href="{!$Resource.SDEFStyles}/consolecomponent.css" type="text/css" />
+  <apex:outputpanel rendered="{!(userLanguage=='iw')}">
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/consolecomponentRTL.css"/>  
+  </apex:outputpanel>
+  <script src="{!$Resource.ExtJS4_1_3}/ext-all.js" type="text/javascript" />
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/highcharts.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/highcharts-3d.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/exporting.js"></script> 
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/export-data.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/offline-exporting.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/no-data-to-display.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/QuickViewHighcharts.js"></script>
+  
+  
+  <div id="chartView" style="display: block; background: white;height:100%;width:100%;"></div>  
+ <style>
+ 	.helpIconCls{
+		margin-left: 27.5px !important;
+	}
+ </style>
+<script>
+var namespace = 'BMCServiceDesk__';
+var isLightningExperience ={!isLightningExperience};
+var sortDir='{!qvSortDir}';
+var sortByField='{!sortByField}';
+var isSingleModuleQV = {!isSingleModuleQV};
+var modelfields = [];
+var gridColumns = [];
+var totalRows= '{!rowIndex}';
+var colsSize = '{!intMaxCols}';
+var SDEFStylesPATH = '{!$Resource.SDEFStyles}';
+var dateFormat = '{!JSENCODE(dateFormat)}';
+var dateOnlyFormat = '{!JSENCODE(dateOnlyFormat)}';
+var chartDisplayed = {!chartDisplayed};
+var viewState = '{!JSENCODE(viewType)}';
+var lastRefreshed='{!JSENCODE(lastrefreshtime)}';
+var noRecordsDisplayMsg= '{!JSENCODE($Label.NoRecordsFound)}';
+var isObjectNameAvailable = {!isObjectNameAvailable};
+var cookieName =  '{!JSENCODE($CurrentPage.parameters.queryName)}'+'{!JSENCODE($User.Id)}';
+var cookieValue = Ext.util.Cookies.get(cookieName);
+var chartSpecsCookie = '{!JSENCODE($CurrentPage.parameters.queryName)}'+'_Charts';
+var isDashboard = {!JSENCODE($CurrentPage.parameters.isDashboard)};
+var ie11Regex = /rv:11.0/;
+var isSingleRow = {!JSENCODE($CurrentPage.parameters.isSingleRow)};
+var nonPrint = '¬';
+var currentPage = '{!currentPage}';
+var customPageSize = '{!customPageSize}';
+var totalPage = '{!totalpage}';
+var totalRecords = '{!totalRecords}';
+var createAccessDeniedObjs = '{!JSENCODE(createAccessDeniedObjs)}';
+var deletableAccessDeniedObjs = '{!JSENCODE(deleteAccessDeniedObjs)}';
+var updateAccessDeniedObjs = '{!JSENCODE(updateAccessDeniedObjs)}';
+var qvTitle = "{!JSENCODE($CurrentPage.parameters.qvTitle)}";
+var isOptimized = {!isOptimized};
+var queryForChartPopup={!queryForChartPopup};
+var hasRTFilters = {!hasRTFilters};
+var filterInfo=[];
+var dateFormat = '{!JSENCODE(dateFormat)}';
+var isSystemQVForQue = {!isSystemQVForQue};
+var widgetId = '{!JSENCODE($CurrentPage.parameters.widgetId)}';
+var isException = {!isException};
+var encryptedFieldIds = [];
+var qvObjAccessError = '{!JSENCODE(qvObjAccessError)}';
+_ServerLabels = {}
+_ServerLabels.New = "{!JSENCODE($Label.New)}";
+_ServerLabels.Delete = "{!JSENCODE($Label.Delete)}";
+_ServerLabels.ChangeOwner = "{!JSENCODE($Label.ChangeOwner)}";
+_ServerLabels.Table = "{!JSENCODE($Label.Table)}";
+_ServerLabels.Chart = "{!JSENCODE($Label.Chart)}";
+_ServerLabels.lastRefreshedLabel = '{!JSENCODE($Label.LastAutoRefreshed)}';
+_ServerLabels.refreshMinLabel = '{!JSENCODE($Label.refreshMin)}';
+_ServerLabels.autoRefreshLabel = '{!JSENCODE($Label.autoRefresh)}';
+_ServerLabels.intervalMinLabel = '{!JSENCODE($Label.intervalMin)}';
+_ServerLabels.toolTipAutoRefreshON = '{!JSENCODE($Label.toolTipAutoRefreshON)}';
+_ServerLabels.toolTipAutoRefreshOFF = '{!JSENCODE($Label.toolTipAutoRefreshOFF)}';
+_ServerLabels.Apply = '{!JSENCODE($Label.Apply)}';
+_ServerLabels.deleteMsg = '{!JSENCODE($Label.DeleteConfirmMessage)}';
+_ServerLabels.multiDeleteMsg = '{!JSENCODE($Label.MultipleDeleteConfirmMessage)}';
+_ServerLabels.WaitMaskMsg = "{!JSENCODE($Label.SSLoading)}...";
+_ServerLabels.NoRecordFoundMsg = "{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}";
+_ServerLabels.PageRefresh = "{!JSENCODE($Label.Refresh)}";
+_ServerLabels.PageNext = "{!JSENCODE($Label.Next)}";
+_ServerLabels.PageFirst = "{!JSENCODE($Label.FirstPage)}";
+_ServerLabels.PageLast = "{!JSENCODE($Label.LastPage)}";
+_ServerLabels.PagePrevious = "{!JSENCODE($Label.Previous)}";
+_ServerLabels.Page = "{!JSENCODE($Label.Page)}";
+_ServerLabels.Of = "{!JSENCODE($Label.Of)} {0}";
+_ServerLabels.LabelOf = "{!JSENCODE($Label.Of)}";
+_ServerLabels.Records = "{!JSENCODE($Label.Records)}";
+_ServerLabels.missingValue='{!JSENCODE($Label.Missing_Value)}';
+_ServerLabels.Information='{!JSENCODE($Label.Information)}';
+_ServerLabels.ShowMessageQV2Label='{!JSENCODE($Label.ShowMessageQV2)}';
+_ServerLabels.RecordsPerPage = "{!JSENCODE($Label.Records_per_page)}";
+_ServerLabels.Incident= "{!JSENCODE($Label.Incident)}";
+_ServerLabels.Task = "{!JSENCODE($Label.Task)}";
+_ServerLabels.Problem = "{!JSENCODE($Label.Problem)}";
+_ServerLabels.Release = "{!JSENCODE($Label.Release)}";
+_ServerLabels.Change_request = "{!JSENCODE($Label.Change_Request)}";
+_ServerLabels.Broadcast = "{!JSENCODE($Label.Broadcast1)}";
+_ServerLabels.OR = "{!JSENCODE($Label.OR)}";
+_ServerLabels.SLM_AND = "{!JSENCODE($Label.SLM_AND)}";
+_ServerLabels.Help = "{!JSENCODE($Label.TooltipHelp)}";
+_ServerLabels.invalidLookupString = "{!JSENCODE($Label.invalidLookupString)}";
+_ServerLabels.Views = "{!JSENCODE($Label.Views)}";
+_ServerLabels.AdvancedFilter = "{!JSENCODE($Label.AdvancedFilter)}";
+_ServerLabels.NoFilterApplied = "{!JSENCODE($Label.NoFilterApplied)}";
+_ServerLabels.ValidationForOperator = "{!JSENCODE($Label.ValidationForOperator)}";
+_ServerLabels.PrintChart = "{!JSENCODE($Label.PrintChart)}";
+_ServerLabels.DownloadPNG = "{!JSENCODE($Label.DownloadPNG)}";
+_ServerLabels.DownloadJPEG = "{!JSENCODE($Label.DownloadJPEG)}";
+_ServerLabels.DownloadPDF = "{!JSENCODE($Label.DownloadPDF)}";
+_ServerLabels.DownloadSVG = "{!JSENCODE($Label.DownloadSVG)}";
+_ServerLabels.DownloadCSV = "{!JSENCODE($Label.DownloadCSV)}";
+_ServerLabels.DownloadXLS = "{!JSENCODE($Label.DownloadXLS)}";
+_ServerLabels.NoRecordsFound = "{!JSENCODE($Label.NoRecordsFound)}";
+
+
+var isServiceRequest = {!IsServiceRequest};
+function createMask(){
+	return new Ext.LoadMask(Ext.getBody(), {msg:_ServerLabels.WaitMaskMsg});
+}
+var waitMask = createMask();
+waitMask.show();
+var helpResource='',wikiUrl='{!wikiUrl}', userLanguage = '{!userLanguage}',showJapaneseHelp = '{!showJapaneseHelp}';
+if (userLanguage == 'ja' && showJapaneseHelp.toLowerCase() == 'true'){
+    helpResource = '{!$Resource.StdFormHelp_JA}';
+}else{
+    helpResource = '{!$Resource.StdFormHelp}';
+}
+_RemotingActions={}
+_RemotingActions.ChangeOwnerStaffNQueue= "{!$RemoteAction.ConsoleQuickViewController.ChangeOwnerStaffNQueue}";
+_RemotingActions.getLookUpData= "{!$RemoteAction.ConsoleQuickViewController.getLookUpData}";
+
+</script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+<script src="{!$Resource.SDEFCommonJS}/ConsoleQuickViewPage.js" />
+<apex:form >
+	<apex:actionFunction Name="UncheckIsOptimizedFlag" action="{!UncheckIsOptimizedFlag}" rerender=""/>
+	<apex:actionFunction Name="addObjectFieldToFieldsInfoTable" action="{!addObjectFieldToFieldsInfoTable}" rerender=""/>
+	<apex:actionFunction name="loadResultSet" action="{!loadResultSet}" rerender="columndetailspanel, loadResultSetPanel" oncomplete="ReloadForm();">
+		<apex:param name="viewType" assignTo="{!viewType}" value=""/>
+		<apex:param name="queryForChartPopup" assignTo="{!queryForChartPopup}" value=""/>
+	</apex:actionFunction>
+	<apex:actionFunction name="loadChartPopupData" action="{!loadResultSet}" rerender="loadResultSetPanel,columndetailspanel" oncomplete="waitMask.hide();showChartPopup();">
+        <apex:param name="queryForChartPopup" assignTo="{!queryForChartPopup}" value=""/>
+        <apex:param name="chartDataStr" assignTo="{!chartDataStr}" value=""/>
+    </apex:actionFunction>
+	<apex:actionFunction Name="loadTableData" rerender="loadResultSetPanel" action="{!loadResultSet}" oncomplete="ReloadForm();">
+        <apex:param name="currentPage" value="currentPage" assignTo="{!currentPage}"/>
+    </apex:actionFunction>
+	<apex:actionFunction Name="deleteRecord" action="{!deleteRecord}" oncomplete="loadTableData(currentPage);ShowMessage('','{!JSENCODE(errorMsgList)}')" rerender="loadResultSetPanel" >
+		<apex:param name="record_ids" value="record_ids" assignTo="{!recordForDelete}" />
+		<apex:param name="objName" value="objName" assignTo="{!sourceObjectName}"/>
+	</apex:actionFunction>
+    
+   <apex:actionFunction Name="saveQuickViewData" action="{!saveQuickViewData}" rerender="" oncomplete="if(isDashboard == false) {window.parent.updateMyQVList();}"/>
+<apex:actionfunction name="saveState" action="{!saveState}" rerender="">
+		<apex:param name="viewType" assignTo="{!viewType}" value=""/>
+		<apex:param name="sequence" assignTo="{!sequenceId}" value=""/>
+	</apex:actionfunction>
+	<apex:actionFunction name="loadRunTimeFilter" action="{!loadResultSet}" rerender="loadResultSetPanel" oncomplete="ReloadForm();">
+        <apex:param name="filterStr" assignTo="{!filterStr}" value=""/>
+		<apex:param name="rtfString" assignTo="{!rtfString}" value=""/>
+		<apex:param name="queryForChartPopup" assignTo="{!queryForChartPopup}" value=""/>
+    </apex:actionFunction>
+	<apex:actionFunction Name="changeRecordsPerPage" action="{!loadResultSet}" rerender="loadResultSetPanel" oncomplete="ReloadForm();">
+        <apex:param name="isChangeRecSize" value="" assignTo="{!isChangeRecSize}"/>
+        <apex:param name="customPageSize" value="customPageSize" assignTo="{!customPageSize}"/>        
+    </apex:actionFunction>
+    <apex:actionFunction name="handleColumnClick" action="{!handleColumnClick}" rerender="loadResultSetPanel" oncomplete="ReloadForm();">
+    	<apex:param name="sortColumn" value="" assignTo="{!sortColumn}"/>
+    	<apex:param name="orderSeq" value="" assignTo="{!orderSeq}"/>    
+    </apex:actionFunction>
+	<apex:actionFunction name="minimizeQV" rerender="loadResultSetPanel" action="{!loadResultSet}" oncomplete="ReloadForm();">
+        <apex:param name="viewType" assignTo="{!viewType}" value=""/>
+        <apex:param name="currentPage" assignTo="{!currentPage}"  value=""/>   
+    </apex:actionFunction>
+	<apex:outputPanel id="openEditWindowPanel" >	
+	<apex:repeat value="{!objectLabelNameList}" var="field">
+	<script>
+		objectLabelNameList[objectLabelNameListIter] = new Array(3);
+		objectLabelNameList[objectLabelNameListIter][0] = '{!JSENCODE(field.label)}';
+		objectLabelNameList[objectLabelNameListIter][1] = '{!JSENCODE(field.name)}';
+		objectLabelNameList[objectLabelNameListIter][2] = '{!JSENCODE(field.pageName)}';
+		objectLabelNameListIter = objectLabelNameListIter + 1;
+	</script>
+	</apex:repeat>
+	</apex:outputPanel>
+	<apex:outputpanel id="columndetailspanel" >
+		<script>
+			gridColumns = [];
+			modelfields = [];
+			var totalColWidth=0;
+			var isLinkAdded=false;
+		</script>
+		<apex:repeat value="{!listColumnDetail}" var="coldata" id="colrepeater">
+		<script>
+			var colHeader = "{!JSENCODE(coldata.columnHeader)}";
+			var isColHidden=false;
+			var colWidth =parseInt("{!coldata.columnWidth}");
+			var isFirstCol=false;
+			var datatype= "{!coldata.dataType}";
+			totalColWidth+=colWidth;
+			if(colWidth==0)
+			  isColHidden=true;
+
+			if(datatype.toUpperCase() == 'REFERENCE'){
+				modelfields.push({
+					name:'{!coldata.fieldAPIName}',
+					sortType: 'asUCText'
+				});
+			} else if (datatype.toUpperCase() == 'DOUBLE') {
+				modelfields.push({
+					name:'{!coldata.fieldAPIName}',
+					sortType: 'asFloat'
+				});
+			} else {
+				modelfields.push('{!coldata.fieldAPIName}');
+			}
+
+			if(colHeader.match('¬Name')){
+				colHeader = colHeader.substring(0, colHeader.indexOf('¬'));	
+			}
+			if(!isColHidden && !isLinkAdded){
+			    isFirstCol=true;
+				isLinkAdded=true;
+			}			
+			gridColumns.push({
+				header: colHeader,
+				dataIndex: "{!coldata.fieldAPIName}",
+				minWidth:colWidth,
+                flex:1,
+				isWrappable:{!coldata.isWrappable},
+				dataType: datatype,
+				renderer: renderColumnStyle,
+				hidden: isColHidden,
+				hideable: false,
+				isFirstCol:isFirstCol,
+				sortable:{!coldata.isColSortable},
+				isHTMLFormatted:{!coldata.isHTMLFormatted},
+				isCalculated:{!coldata.isCalculated}
+			});
+
+		</script>
+		</apex:repeat>		
+	</apex:outputpanel>
+	<apex:outputPanel id="loadResultSetPanel">
+        <script>
+			colsSize = '{!intMaxCols}';
+			viewState = '{!JSENCODE(viewType)}';
+			lastRefreshed='{!JSENCODE(lastrefreshtime)}';
+			currentPage = '{!currentPage}';
+			totalRecords = '{!totalRecords}';
+			customPageSize = '{!customPageSize}';
+			totalPage = '{!totalpage}';
+			queryForChartPopup={!queryForChartPopup};
+			var chartType = "";
+			var dataXML= '{!JSENCODE(dataXML)}';            
+			var highchartsAllDataJSON = '{!JSENCODE(highchartsAllDataInfoBundle)}';	
+			var highchartsAllData = {};
+			var chartData;
+			var chartXAxisCategories;
+			var chartsSpecs;
+			var chartTypeValue;
+			var chartClickHandler;
+			var chartTitle;
+			var isChart3D;
+            var useDeprecatedFusionCharts = {!useDeprecatedFusionCharts};
+			if(highchartsAllDataJSON){
+				highchartsAllData = JSON.parse(highchartsAllDataJSON);
+				chartData = highchartsAllData.dataJson;
+				chartXAxisCategories = highchartsAllData.chartXAxisCategories;
+				chartClickHandler = highchartsAllData.highchartClickHandler;				
+				chartsSpecs = highchartsAllData.chartsSpecs;
+				chartTypeValue = chartsSpecs.chartTypeValue;
+				chartTitle = highchartsAllData.chartTitle;
+				isChart3D = chartsSpecs.isChart3D;
+			}			                                                                      
+            var QVChart = {};                                                                                               
+			if(viewState=='tableView')
+			funcQVDataPanelJS({!listQVRows}, '{!rowIndex}');
+			chartDisplayed = {!chartDisplayed};
+			 if({!(queryForChartPopup)}) {
+                    funcWholePageJS('{!intMaxCols}', '{!rowIndex}');
+                    funcQVDataPanelJS({!listQVRows}, '{!rowIndex}');
+                    PopulateChartGroupRowDataArray('{!JSENCODE(chartDataStr)}');
+            }else{
+                renderNewCharts();
+			}			
+        </script>
+    </apex:outputPanel>
+<apex:outputpanel id="pickListPanel">
+	<script>
+		var pickListData = new Array();
+		var pickListArray = new Array();        
+		var pickListIter = 0;
+	</script>
+	<apex:repeat value="{!pickVals}" var="PickListValue">
+		<script>
+			pickListData[pickListIter] = new Array(3);
+			pickListData[pickListIter][2] = '{!JSENCODE(PickListValue.conditionFieldName)}';
+			pickListData[pickListIter][0] = '{!JSENCODE(PickListValue.conditionValue)}';
+			pickListData[pickListIter][1] = '{!JSENCODE(PickListValue.conditionLabel)}';
+			pickListData[pickListIter][3] = '{!JSENCODE(PickListValue.conditionFieldLabel)}';
+			pickListIter = pickListIter +1;
+		</script>
+	</apex:repeat>
+ </apex:outputpanel>  
+ </apex:form>
+ <div id="qvFilterPanel" class="rf-adv-filter-popup" style="display:none;">
+ <div id="filterErrorPanel" class="ErrorPanel">{!JSENCODE($Label.invalidLookupString)}</div> 
+ <div id="filterErrorPanelOperator" class="ErrorPanel">{!JSENCODE($Label.ValidationForOperator)}</div>
+ <div id="conditionsPanel"> 
+    <table border="0" >
+		<th>
+        	<label class="filterLabel"> {!JSENCODE($Label.Filter)} </label>
+    	</th>
+    	<tr style="height:5px"><td></td></tr>    	
+     <apex:repeat value="{!advFilterDataList}" var="advFilterDataRecord">
+        <script>
+            filterInfo.push({
+                value:'{!JSENCODE(advFilterDataRecord.rtCondition.operand1__c)}',
+                type:'{!advFilterDataRecord.fieldType}',
+                queryCondId:'{!advFilterDataRecord.rtCondition.id}',
+                extraInfo:'{!advFilterDataRecord.extraInfo}',
+                label:'{!JSENCODE(advFilterDataRecord.rtCondition.displaylabel__c)}',
+                operator:'{!IF(advFilterDataRecord.rtCondition != null, advFilterDataRecord.rtCondition.SYSQVOperator__c, "")}',
+                groupingOperator:'{!advFilterDataRecord.rtCondition.groupingOperator__c}',
+                isFilterEnabled:'{!advFilterDataRecord.isFilterEnabled}',
+				hasInitialvalue:'{!advFilterDataRecord.hasInitialvalue}'
+            });             
+        </script>
+        <tr>
+            <td style="vertical-align:top; max-width: 10%;"> 
+                <input type="checkbox" class="rf-filter-chkbox" id="{!advFilterDataRecord.rtCondition.id}_isChecked" value="{!advFilterDataRecord.isFilterEnabled}"  onchange="setChkBoxTooltip('{!advFilterDataRecord.rtCondition.id}','{!advFilterDataRecord.fieldType}');"/>
+            	<script>
+                	if ({!advFilterDataRecord.disableCheckbox}) {
+                		encryptedFieldIds.push('{!JSENCODE(advFilterDataRecord.rtCondition.id)}');
+                	}
+                </script>
+            </td>
+			<td style="vertical-align:top;max-width: 40%;">
+				<apex:outputText value="CRUDFLSCHECK# False Positive: Both CRUD & FLS check are not required (SYSQVCondition__c is a metadata objects)." rendered="false"/>
+				<label id="{!advFilterDataRecord.rtCondition.id}_displayLabel" class="rf-filter-lbl-Disabled"> <apex:outputText value="{!advFilterDataRecord.rtCondition.BMCServiceDesk__displaylabel__c}" escape="false" /></label>
+            </td>
+			<td style="vertical-align:top;max-width: 10%">
+				<label id="{!advFilterDataRecord.rtCondition.id}_operator" class="rf-filter-operator-Disabled"> {!advFilterDataRecord.rtCondition.SYSQVOperator__c}</label>
+			</td>
+         <td  style="vertical-align:top;max-width: 40%">
+        <apex:outputpanel rendered="{!IF(advFilterDataRecord.fieldType  == 'ASSIGNEDTO_FIELD',true,false)}">
+			<table id="{!advFilterDataRecord.rtCondition.id}_lktable">
+			<tr>
+			<td>
+				<select disabled="disabled" id="{!advFilterDataRecord.rtCondition.id}" class="rf-input-text-Disabled" onchange="onOwnerChange(this)">
+					<option selected="true" value="">{!JSENCODE($Label.None)}</option>                    
+					<option value="Me">{!JSENCODE($Label.Me)}</option>
+					<option value="My Queues" style="display:{!IF(CONTAINS(advFilterDataRecord.extraInfo,'ownerid'),'','none')}">{!JSENCODE($Label.MyQueues)}</option>
+					<option value="SelectStaff">{!JSENCODE($Label.SelectStaff)}</option>
+					<option value="SelectQueue" style="display:{!IF(CONTAINS(advFilterDataRecord.extraInfo,'ownerid'),'','none')}">{!JSENCODE($Label.SelectQueue)}...</option>
+				</select> 
+		   </td>
+			<td id="{!advFilterDataRecord.rtCondition.id}_lktd" style="display:none;padding-left: 10px;">
+				<input type="text" id="{!advFilterDataRecord.rtCondition.id}_lkname" value="{!JSENCODE(advFilterDataRecord.rtCondition.operand1__c)}" class="rf-input-text-Disabled" autocomplete="off" onkeyup="fetchTypeAheadData(this,'{!JSENCODE(advFilterDataRecord.rtCondition.id)}', '{!JSENCODE(advFilterDataRecord.extraInfo)}',event);" onblur="disableDiv('autocompleteDiv', 'reference', this)" />
+			    <input type="hidden" id="{!advFilterDataRecord.rtCondition.id}_lkid" value="{!JSENCODE(advFilterDataRecord.rtCondition.operand1__c)}" />
+				<img style="cursor: pointer;" src="/s.gif" onclick="openOwnerLookupPopUP('{!JSENCODE(advFilterDataRecord.rtCondition.id)}','{!JSENCODE(advFilterDataRecord.extraInfo)}');return false;" class="lookupIconLaunchForm" ></img>
+			</td>
+			<script>	setSelectedValue('{!advFilterDataRecord.rtCondition.id}','{!JSENCODE(advFilterDataRecord.rtCondition.operand1__c)}','{!advFilterDataRecord.fieldType}','{!advFilterDataRecord.extraInfo}');
+            </script>
+			</tr>
+		   </table>
+        </apex:outputpanel>
+        <apex:outputpanel rendered="{!IF(advFilterDataRecord.fieldType  == 'combo',true,false)}">
+            <select disabled="disabled" id="{!advFilterDataRecord.rtCondition.id}" class="rf-input-text-Disabled" >
+                <option selected="true" value="true">{!JSENCODE($Label.True)}</option>
+                <option value="false">{!JSENCODE($Label.False)}</option>
+            </select>
+			<script>
+            	setSelectedValue('{!advFilterDataRecord.rtCondition.id}','{!JSENCODE(advFilterDataRecord.rtCondition.operand1__c)}','{!advFilterDataRecord.fieldType}');
+            </script>
+        </apex:outputpanel>
+	   <apex:outputpanel rendered="{!IF(advFilterDataRecord.fieldType  == 'lookUp',true,false)}">              
+          <input type="text" class="rf-input-text-Disabled" id="{!advFilterDataRecord.rtCondition.id}_lkname" value="{!JSENCODE(advFilterDataRecord.rtCondition.operand1__c)}" autocomplete="off"  onkeyup="fetchTypeAheadData(this,'{!JSENCODE(advFilterDataRecord.rtCondition.id)}','{!JSENCODE(advFilterDataRecord.extraInfo)}',event);" onblur="disableDiv('autocompleteDiv', 'reference', this)"/>
+          <input type="hidden" id="{!advFilterDataRecord.rtCondition.id}_lkid" value="{!JSENCODE(advFilterDataRecord.rtCondition.operand1__c)}" />
+          <img style="cursor: pointer;" src="/s.gif" onclick="openLookupPopUP('{!advFilterDataRecord.rtCondition.id}','{!JSENCODE(advFilterDataRecord.extraInfo)}');return false;" class="lookupIconLaunchForm" ></img>
+         </apex:outputpanel>
+		 <apex:outputpanel rendered="{!IF(advFilterDataRecord.fieldType  == 'date' || advFilterDataRecord.fieldType  ==  'datetime' ,true,false)}">              
+          <div id="{!advFilterDataRecord.rtCondition.id}_datefield" />
+         </apex:outputpanel>
+		 <apex:outputpanel rendered="{!IF(advFilterDataRecord.fieldType  == 'picklist',true,false)}">
+			<select disabled="disabled" id='{!JSENCODE(advFilterDataRecord.rtCondition.id)}_pick' class="rf-input-text-Disabled"> </select>
+			<script>
+				loadPickList('{!advFilterDataRecord.extraInfo}','{!JSENCODE(advFilterDataRecord.rtCondition.id)}','{!JSENCODE(advFilterDataRecord.rtCondition.operand1__c)}');
+			</script>
+		 </apex:outputpanel>
+		<apex:outputpanel rendered="{!IF(OR(advFilterDataRecord.fieldType  == 'text',advFilterDataRecord.fieldType  == 'textarea',advFilterDataRecord.fieldType  == 'number',advFilterDataRecord.fieldType  == 'double',advFilterDataRecord.fieldType  == 'phone',advFilterDataRecord.fieldType  == 'EMAIL',advFilterDataRecord.fieldType  == 'CURRENCY',advFilterDataRecord.fieldType  == 'PERCENT',advFilterDataRecord.fieldType  == 'URL'),true,false)}">              
+			<input type="text" class="rf-input-text-Disabled" id="{!advFilterDataRecord.rtCondition.id}" onkeypress="return checkType(event,'{!advFilterDataRecord.fieldType}')" value="{!IF(advFilterDataRecord.rtCondition.operand1__c  == 'ANY','',JSENCODE(advFilterDataRecord.rtCondition.operand1__c))}" />                    
+        </apex:outputpanel>
+		<script>setChkBoxValue('{!advFilterDataRecord.rtCondition.id}','{!advFilterDataRecord.isFilterEnabled}','{!advFilterDataRecord.fieldType}');</script>
+        </td>
+        </tr>
+        <tr><td height="10"></td></tr>
+    </apex:repeat>
+    </table>
+  </div>
+   <div id="applyBtnDiv"> 
+     <div style="height:30% !important"/>
+     <button type="button" id="filterSearch" onclick="runTimeSearchHandler()">{!JSENCODE($Label.Apply)}</button>
+   </div>
+</div>
+<div id='autocompleteDiv' class="rf-autocomplete-qvDiv" >
+	<select id="selectAutoOptions" style="width: auto !important;" class="clsAutocompleteSelectOption" onmousedown="isAutocomplete = true;"  onclick="SelectAutoValue(this,'autocompleteDiv');" multiple="multiple" ></select>
+</div>	
+<script>
+		if(isException){
+			UncheckIsOptimizedFlag();
+		}
+</script>
+</apex:page>

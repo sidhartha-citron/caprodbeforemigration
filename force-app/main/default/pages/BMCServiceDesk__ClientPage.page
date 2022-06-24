@@ -1,0 +1,1188 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.ClientController" contentType="{!contetnTypeForIE}" standardStylesheets="false">
+     <c:CommonIncludes />
+      <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ClientPage.js"/>
+   
+    <!--<script type="text/javascript" src="{!$Resource.ExtJS}/ext-all-debug.js"></script>-->
+    <style>
+        .clientlbl{
+            padding-left: 8px;
+            padding-top:10px;
+        }
+        .clientlbl input{
+            float:left;
+        }
+        .clientlbl .lblStaffMember{
+            text-align: left;
+            color:#000000;
+            font-family:Tahoma,MS Sans Serif;
+            font-size:11px;
+            padding-left:10px;
+            float:left;
+            width: 140px;
+        }
+        .clsClientSelectList, #roleFieldCombo {
+            font-family: Tahoma, MS Sans Serif;
+            font-size: 11px;
+            border: 1px solid;
+			color:#000000;
+			border-top-color: #6a7378;
+		    border-left-color: #6a7378;
+		    border-right-color: #bac3c8;
+		    border-bottom-color: #bac3c8;   
+		    *margin-left: 5px;
+             
+         }
+       
+.timzoneCls ,#timezoneFieldCombo, #localeFieldCombo, #languageFieldCombo {
+	font-family: Tahoma, MS sans-serif;
+	font-size: 11px;
+	height:17px;
+	*height:19px;
+	border: 1px solid;
+	color:#000000;
+	border-top-color: #6a7378;
+    border-left-color: #6a7378;
+    border-right-color: #bac3c8;
+    border-bottom-color: #bac3c8;
+    
+}
+
+
+    </style>
+    
+    
+    <script>
+	 var userExistForRole;
+	 var currentSelectedRole;
+     var clientName ;               
+     var clientId ;
+     var isPortalUser;
+     var errormsg;
+     var chkBoxValue;
+     var aName;
+     var moduleFieldCombo;
+     var timezoneFieldStore;
+     var comboFldIndex = -1;
+     var timezonevalue;
+     var timeZoneData = {!timezoneFldsNames};
+     var localeFieldCombo;
+     var localeFieldStore;
+     var localevalue;
+     var localeData = {!localeFldsNames};
+     var languageFieldCombo;
+     var languageFieldStore;
+     var languagevalue;
+     var languageData = {!languageFldsNames};
+     var roleFieldCombo;
+     var roleFieldStore;
+     var rolevalue;
+     var roleData = JSON.parse('{!JSENCODE(roles)}');
+     var accountId = '{!JSENCODE(organizationId)}';
+	 var isActive_User;     
+     var warningMsgForCloseClient = '{!JSENCODE($Label.warningMsgForClose)}';
+     var isStaffManager = {!isStaffManager};
+     var roleFldvalue;
+     var customerPortalManager ='{!customerPortalManager}';
+     var disableRole = {!disableRole};
+     var customerPortalManagerCustom ='{!customerPortalManagerCustom}';
+     var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+     var isFromConsole = '{!JSENCODE($CurrentPage.parameters.isFromConsole)}';
+     document.onclick = activateWindow; 
+	 var isStaffUser={!isStaffUser};
+	 var isSysAdmin={!isUserPermissionsModifyAllData};
+	 var managePermissionSet;//This variable is used for enabling or disabling the permission set button
+	 var warningMsgForFirstClient = '{!JSENCODE($Label.warningMsgForFirstClient)}';
+	 var warningMsgForFirstClientForSelectedRole = '{!JSENCODE($Label.warningMsgForFirstClientForSelectedRole)}';
+	 var ConfirmAction= '{!JSENCODE($Label.Confirm_Action)}';
+	 var YesLabel= '{!JSENCODE($Label.ExtjsMessageYes)}';
+	 var NoLabel= '<div style="height:16px" class="x-btn-default-small-focus">{!JSENCODE($Label.ExtjsMessageNo)}</div>';
+	 var showSelfHelp = parent.showSelfHelp;
+	 var enableWalkthroughFlow =parent.enableWalkthroughFlow;
+	 var isLightningExperience = '{!isLightningExperience}';
+     var userLanguage = parent.userLanguage;
+	  Ext.ns("ClientPageComp");
+         ClientPageComp.ComponentVars = {
+            userTimeZone: '{!$Component.clientForm.userTimeZone}',
+			userLocale: '{!$Component.clientForm.userLocale}',
+			userLanguage: '{!$Component.clientForm.userLanguage}',
+			roleListId :'{!$Component.clientForm.pbarId.detailsPanel_Id.roleListId}',
+			role_label_astric:'{!$Component.clientForm.pbarId.detailsPanel_Id.role_label_astric}',
+			account_id:'{!$Component.clientForm.pbarId.detailsPanel_Id.account_id_id}',
+			account_id_name:'{!$Component.clientForm.pbarId.detailsPanel_Id.account_id_name}',
+			account_label_astric:'{!$Component.clientForm.pbarId.detailsPanel_Id.account_label_astric}',
+			selectedUserLicId:'{!$Component.clientForm.pbarId.detailsPanel_Id.selectedUserLicId}'
+	 }
+	 function managePermissionSets(){
+	    managePermissionSet = 'FALSE';
+	 	var remeadyAdminstrator = '{!isPermissionSet}'; // If logged in user has Remedyadministrator , set the value to true. 
+	 	var manageServiceDesk = '{!isStaffManager}'; // If logged in user has Managerservicedesk, set the value to true.
+	 	var isLoggedinUserStaff = '{!isLoggedInUserStaff}' ; // If logged in user has IsStaffUser__c" checkbox checked, set the value to true. 
+	 	var isportal = document.getElementById("{!$Component.clientForm.isPortalUserFlag}").value; // If logged in user has "IsStaffUser__c" checkbox checked and current open record on client page is a record with "IsStaffUser__c" checkbox unchecked, set the value to true.
+	 	var canManagePermissionSet = document.getElementById("{!$Component.clientForm.canManagePermissionSet}").value;
+	 	if((canManagePermissionSet.toUpperCase() == 'TRUE') && (isActive_User.toUpperCase() == 'TRUE') && (manageServiceDesk.toUpperCase() == 'TRUE' || remeadyAdminstrator.toUpperCase() == 'TRUE' || (isportal.toUpperCase() == 'FALSE' && isLoggedinUserStaff.toUpperCase() == 'TRUE'))){
+	 	  managePermissionSet = 'TRUE';
+	 	}
+	 }
+     function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+     }
+        /*
+            Code for handling Data change on Page
+            - START
+        */
+        
+     var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+     function afterSaveAction(){
+        showError();
+		if(clientId!=null && clientId!='')
+          document.getElementById(ClientPageComp.ComponentVars.selectedUserLicId).disabled=true;
+		errormsg='';
+	 }
+   	 function afterResetSI(){
+   	  	var modName = "{!JSENCODE($CurrentPage.parameters.moduleName)}";  
+     	var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}" 
+        if((!isFromConsole || isFromConsole.toUpperCase() != 'TRUE') && modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined' && errormsg=='{!JSENCODE($Label.savedSuccessfully)}'){
+			window.parent.registerSave(wid);
+            window.parent.parent.refreshSupportingInformation(parentWid,modName);
+        }
+     }
+     var isPopUp = "{!JSENCODE($CurrentPage.parameters.isPopUp)}";
+	    var clickedOnce = false;  
+	    function handleChange(){
+	        if(!clickedOnce){
+	            clickedOnce = true;
+                
+                if(isPopUp)
+                    setDirtyFlag();
+                else
+					window.parent.registerChange(wid2);
+	        }
+        }
+	        
+	    function handleResetChange(){
+	    	if(clickedOnce){
+               clickedOnce = false;
+               window.parent.registerSave(wid2);
+           }
+	       }
+	       
+        function RoleMessage(){  
+            if((userExistForRole).toUpperCase()=='FALSE')
+				showWarningMsgForFirstClientOfSelectedRole(); 
+        }  
+		 
+		 /*
+     		END
+     	*/
+		
+        
+        var resizeGrid= function resizeGrid(){
+        if(Ext.getCmp('southPanelSI')!=undefined)
+         Ext.getCmp('southPanelSI').setWidth(Ext.getCmp('southPanelSI').getWidth());
+        };
+        if(window.parent.refreshGridSI!=undefined)
+        window.parent.refreshGridSI(wid,resizeGrid);
+        
+    function callCopyPage(){
+        window.parent.addTab("ClientPage?copyId=" + clientId,"{!JSENCODE($Label.ClientWindowHeaderSearchPage)}","{!JSENCODE($Label.ClientWindowHeaderSearchPage)}");
+    }
+    var isLookup = "{!JSENCODE($CurrentPage.parameters.islookup)}"; 
+    var isInactive = "{!JSENCODE($CurrentPage.parameters.isinactive)}"; 
+    if(isLookup){
+      window.parent.changePopUpTitle('{!objLabel}');
+    }
+    function saveRecords(){
+       
+        if(isLookup){       
+          window.parent.refreshDocs();
+          window.parent.closePopup();
+          
+       }
+     }
+     
+    
+        function updateList(){
+              if(!isPopUp){                
+                window.parent.refreshList();
+               }
+        }
+    
+        function closeWindow(){
+            if(isLookup){
+                window.parent.refreshDocs();
+                window.parent.closePopup();
+            }else{
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+        }
+        }
+        
+        var savedEmail;
+        var objId;
+        function validateAndSave(){
+        	
+           var isCustomerPortalEnabled = '{!isCustomerPortalEnabled}';	
+           
+           if(isCustomerPortalEnabled=='false'){
+           	 showMessage('{!JSENCODE($Label.CustomerPortalNotEnabledMsg)}');
+           	 return;
+           }
+           var newEmail = document.getElementById("{!$Component.clientForm.User_id_email}").value;
+           var oldEmail = savedEmail ;
+           //alert(oldEmail +'   -->   '+newEmail );
+           
+           objId = "{!JSENCODE(client.id)}";
+           if(objId != null && objId != '' && oldEmail != '' && oldEmail != newEmail ){
+               Ext.Msg.show({
+                   title:'{!JSENCODE($Label.EmailAddressChanged)}',
+                   msg: '{!JSENCODE($Label.UserEmailChangeMessage)}',
+                   buttons: Ext.Msg.OKCANCEL,
+                   fn: function(btn){
+                       if(btn === 'ok'){
+                              Ext.getCmp('btnSave').setDisabled(true);
+                              waitbox(0); 
+                              saveContact();
+                       }
+                   },
+                   width: 400,
+                   icon: Ext.MessageBox.INFO
+                });
+           }else{
+                chkBoxValue=Ext.getCmp('idInactive').getValue();
+                // RA, 03/12/2010
+                // contact should be saved first.
+                var accName =document.getElementById('{!$Component.clientForm.pbarId.detailsPanel_Id.account_id_name}').value; 
+                if((accName == null || accName == '') && (clientId != null & clientId != '') && isPortalUser){
+		     		showMessage('{!JSENCODE($Label.ClientAccountBlankErrorMsg)}');
+		     		//document.getElementById('{!$Component.clientForm.pbarId.detailsPanel_Id.account_id_name}').value=aName; 
+		     	}else
+		     	{
+                	Ext.getCmp('btnSave').setDisabled(true);
+                	waitbox(0);
+                	saveContact();
+                }
+                //save(chkBoxValue);
+           }
+        }
+        var disableTrue = true;
+        var isEditable = {!isEditable}, isCreatable = {!isCreatable};
+        Ext.onReady(function(){
+        managePermissionSets();	
+		setAccountRoleAsMandatory();
+		showError();
+        updateTitle(); /// vilas
+        Ext.QuickTips.init();
+         if(isLookup){
+            disableTrue = true;
+          }else{ 
+          disableTrue = false; }
+
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event) { activeAllWindowFlag=false;  openPage("ClientPage","{!JSENCODE($Label.ClientWindowHeaderSearchPage)}","{!JSENCODE($Label.ClientWindowHeaderSearchPage)}"); };
+        
+        var SaveBtnHandler = function(button,event) {
+	        var isStaff_newValue = document.getElementById('{!$Component.clientForm.pbarId.detailsPanel_Id.User_id_IsStaffUser__c}').checked;        
+			
+			if(isPortalUser)
+	           	validateAndSave();
+	        else if(isStaff_newValue && !isStaffManager){
+	        	showMessage('{!JSENCODE($label.YouDontHavepermissionToStaffAdmin)}');
+	        } 
+	        else{
+				errormsg='';
+				waitbox(0); 
+	        	saveRecord();
+			}
+		};
+        var CopyBtnHandler = function(button,event) { activeAllWindowFlag=false; callCopyPage();};
+        var ResetBtnHandler = function(button,event) {  resetClient(); };
+        var managePermissionset = function(button,event) {
+			var userlicenseTypeId = document.getElementById(ClientPageComp.ComponentVars.selectedUserLicId).value;
+			openPopupWithTitle('permissionsetSelector?clientId=' +clientId+'&userLicenseId='+ userlicenseTypeId ,'', '{!JSENCODE($Label.toolTipManageUserPermissionSets)}',570, 550);
+        											     };
+        var NextBtnHandler = function (button,event) { if(document.getElementById('nextId').disabled!=true) nextClientBtnHandler1(); };
+        var PreviuosBtnHandler = function (button,event) { if(document.getElementById('prevId').disabled!=true) previousClientBtnHandler1(); };
+   
+     if (document.getElementById('btnToolbar').childNodes.length == 0) {
+   
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+             cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                id:'btnNew',
+                iconCls: 'bmcNew',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.new)}',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                     
+                },
+                handler:NewBtnHandler
+             
+            },' ',{
+                scale: 'medium',
+                id: 'btnSave',
+                iconCls: 'bmcSave',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.save)}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                    
+                },
+                handler:SaveBtnHandler                
+             
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.copy)}',
+                id:'copyId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                     
+                } ,
+                handler:CopyBtnHandler              
+               
+            },' ','-',' ',{
+            	scale: 'medium',
+                iconCls: 'manageUserPermissionsSets',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.toolTipManageUserPermissionSets)}',
+                id:'manageUserPermissionSet',
+                hidden:disableTrue,
+                handler:managePermissionset     
+            },'-',' ',' ',{
+                scale: 'medium',
+                iconCls: 'bmcRefreshDasboard',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.Refresh)}',
+                 id:'resetId',
+                 hidden:disableTrue,
+                 
+                handler:ResetBtnHandler                     
+               
+            }, new Ext.Toolbar.Fill(), 
+            {
+                  id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               align:'top',
+               checked: false,
+               boxLabel:'{!JSENCODE($Label.inactive)}',
+               cls:'chkStyle',
+               boxLabel:'<span class="checkboxLabelCls">{!JSENCODE($Label.inactive)}</span>',
+               listeners:{
+                    render:function(){
+                        Ext.QuickTips.register({
+                            target:this,
+                            dismissDelay: 20000,
+                            text: '{!JSENCODE($Label.TooltipClientInactive)}'
+                        });
+                    }               
+               }                                     
+            }, {
+               
+               
+                 xtype : 'box',
+                 id:'prevId',
+                autoEl:  {tag: 'img', 
+                          src:('{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_previous.gif'),   
+                         title:'{!JSENCODE($Label.previousRecord)}'
+                         },
+                          
+                cls:'cursorCls',
+               listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                             
+            },{
+               
+                xtype : 'box',
+                id:'nextId',
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_next.gif',
+                          title:'{!JSENCODE($Label.nextRecord)}' },
+                cls:'cursorSpaceCls',
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+               
+                
+            }
+            ] 
+        });
+     }
+        if(managePermissionSet.toUpperCase() == 'FALSE' || '{!clientId}' == ''){
+       		Ext.getCmp('manageUserPermissionSet').disable();
+       		Ext.getCmp('manageUserPermissionSet').setTooltip('{!JSENCODE($Label.lblStaffNotEditable)}');
+        }  
+        
+        /*below code is commented for user story US119552*/
+        if (!isStaffManager && (isStaffUser || isSysAdmin))
+        {
+            Ext.getCmp('btnSave').disable();
+            Ext.getCmp('btnSave').setTooltip('{!JSENCODE($Label.lblStaffNotEditable)}');            
+        }
+       /* if ({!isStaffUser} || isSysAdmin)
+        {
+            Ext.getCmp('btnSave').disable();
+            Ext.getCmp('btnSave').setTooltip('{!JSENCODE($Label.lblStaffNotEditable)}');
+        }
+        
+		if({!isStaffUser} && !isPortalUser)
+		{
+			Ext.getCmp('copyId').setDisabled(true);
+			Ext.getCmp('copyId').setIconClass("bmcCopyDisable");
+		}*/
+        if(isInactive){                 
+        Ext.getCmp('idInactive').setDisabled(true);         
+       
+        }    
+        Ext.getCmp('idInactive').setValue('{!inactive}');
+
+        
+        clientId = '{!JSENCODE(clientId)}';    
+        if(clientId == null || clientId == ''){                
+        Ext.getCmp('copyId').setDisabled(true);
+        Ext.getCmp('resetId').setDisabled(true);
+        
+        //disabled next prev while creating new client
+        Ext.getCmp('prevId').setDisabled(true);
+        Ext.getCmp('nextId').setDisabled(true);
+        
+        }
+         ///////////// // IE7-8 Related Changes
+                   var canvasPanel = new Ext.Panel({
+                         layout:'border',
+                        // width:'auto',    
+                        height:Ext.isIE7 ? 670: Ext.isIE ? 674:Ext.isSafari ? 695:680,
+                         border:false, 
+                         id:'canvasPanelId',
+                        cls:'canvasPanelCls',
+                         items:[{  
+                                xtype: 'panel', // TabPanel itself has no title    
+                                  layout: 'fit',                                                   
+                                overflow:'auto',
+                                autoScroll:true,
+                                split:false,
+                                width:'auto',    
+                                height:470, 
+                                cls:'northPanelCls',
+                                                                             
+                                region: 'center',                   
+                               // margins:'2 4 2 0',
+                                                       
+                                contentEl : Ext.isIE ? 'capsule' : '{!$Component.clientForm}'
+                                
+                        },{                                                         
+                                xtype: 'panel', // TabPanel itself has no title
+                                layout: 'fit',  
+                                overflow:'auto',
+                                 border:false, 
+                                  id:'southPanelSI',
+                                autoScroll:true,
+                                split:true,
+                                collapsible: true,
+                                collapseMode: 'mini',
+                                width:'auto',    
+                                height:Ext.isIE ?205:205,
+                                minHeight:Ext.isIE ?120:150,
+                                                                                  
+                                region: 'south',
+                               listeners : {
+                                    resize:function( obj,adjWidth,adjHeight,rawWidth,rawHeight ) { 
+                                    
+                                        if(Ext.getCmp('south-panel')!=undefined){
+                                               Ext.getCmp('south-panel').setHeight(adjHeight);                                           
+                                        }
+                                   }
+                               },
+                              
+                               contentEl :'detailsDiv' 
+                        }],
+                        listeners: {
+                            afterlayout: function(c) {
+                                c.layout.south.miniSplitEl.dom.qtip = 'Drag to resize.Click to collapse';
+                                c.layout.south.getCollapsedEl();
+                                c.layout.south.miniCollapsedEl.dom.qtip = 'Click to expand';
+                            },
+                            single: true
+                     }
+                        
+                       
+                         
+                       
+                });
+            
+                     var viewport = new Ext.Viewport({
+                     layout:'anchor',
+                    // renderTo:'viewPortDiv',
+                     width:'auto',
+                     id:'viewportId',
+                     border:false, 
+                    cls:'viewportCanvasCls', 
+                     //items:canvasPanel
+                     items:[{anchor: '100%', layout:'fit', items:canvasPanel} ]
+                    });
+/////////////// // End IE7-8 Related Changes
+				 
+				initLoadData();
+
+            var activeUser={!IF(client.IsActive, "true","false")};
+        		if(!activeUser){
+        	//disableAll()
+        			setTimeout(disableAll,1250);
+        		}
+		handleElemEvent();
+		if(clientId == null || clientId == ''){  
+	       document.getElementById('{!$Component.clientForm.User_id_email}').focus();
+         }
+         if(!isEditable){
+         	Ext.getCmp('btnSave').setDisabled(true);
+         	Ext.getCmp('manageUserPermissionSet').setDisabled(true);
+         	
+         }
+         if(!isCreatable){
+         	Ext.getCmp('btnNew').setDisabled(true);
+         	Ext.getCmp('copyId').setDisabled(true);
+         }
+         if(isFromConsole && isFromConsole.toUpperCase() == 'TRUE'){
+         	Ext.getCmp('btnNew').setVisible(false);
+         	Ext.getCmp('copyId').setVisible(false);
+         }
+    });
+   var idset;
+		if(idset == null || idset == ''){
+			if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+			if(typeof(window.parent.returnListOfId)=='function')
+				idset=window.parent.returnListOfId();
+		}else{
+			if(typeof(window.parent.parent.getIdArray)=='function')
+				idset=window.parent.parent.getIdArray();
+				window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+			}
+		}
+
+        function previousClientBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(idset.length > i){
+                if(idSetString==''){
+                    idSetString=idset[i];
+                }else{
+                    idSetString=idSetString+','+idset[i];
+                }
+                i++;
+            }
+            previousClientBtnHandler(idSetString);
+        
+        }
+     
+       function nextClientBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(idset.length > i){
+                if(idSetString==''){
+                    idSetString=idset[i];
+                }else{
+                    idSetString=idSetString+','+idset[i];
+                }
+                i++;
+            }
+            nextClientBtnHandler(idSetString);
+        
+        } 
+    
+    function buttonValidator() {
+       if((clientName != null && clientName != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){
+       	    managePermissionSets(); 
+			
+	        Ext.getCmp('copyId').setDisabled(false);
+	       	
+	        Ext.getCmp('resetId').setDisabled(false);
+	        if(managePermissionSet.toUpperCase() == 'TRUE'){
+	       		Ext.getCmp('manageUserPermissionSet').setDisabled(false);
+	       		Ext.getCmp('manageUserPermissionSet').setTooltip('{!JSENCODE($Label.toolTipManageUserPermissionSets)}');
+	        }else{
+	        	Ext.getCmp('manageUserPermissionSet').disable();
+       			Ext.getCmp('manageUserPermissionSet').setTooltip('{!JSENCODE($Label.lblStaffNotEditable)}');
+	        }  
+       }
+     }
+     
+     function populateEmail(){
+     	//code added by Manish Puri for Bug number 1810
+        var userName =document.getElementById('{!$Component.clientForm.User_id_username}').value; 
+        var emailVal = document.getElementById('{!$Component.clientForm.User_id_email}').value;
+       
+         if(emailVal != null && emailVal != '' && (userName == null || userName == '')){
+            document.getElementById('{!$Component.clientForm.User_id_username}').value = emailVal; 
+         }
+     }
+     
+     //alert('disableRole  is --> ' + '{!disableRole}');
+     function enableRole(){
+     	//alert('Inside enableRole.....');
+     	var accID = null;
+     	accID = document.getElementById('{!$Component.clientForm.pbarId.detailsPanel_Id.account_id_id}').value;
+     	//alert('accID is --->' + accID); 
+     	document.getElementById('{!$Component.clientForm.pbarId.detailsPanel_Id.account_id_id}').value = null;
+		Ext.getCmp('btnSave').setDisabled(true);
+     	setOrganization(accID);
+     	//accID = null;
+     	//document.getElementById('{!$Component.clientForm.pbarId.detailsPanel_Id.account_id_id}').value = null;
+     }
+     
+	function setRoleTooltips() {
+		var arrRoles = document.getElementById('{!$Component.clientForm.pbarId.detailsPanel_Id.roleListId}').childNodes;
+		var i;
+		for(i=0; i< arrRoles.length; i++) {
+			arrRoles[i].title = RemedyForceHTMLProcessor.getText(arrRoles[i]);
+		}
+	}
+	function handleLicenseChange(obj){
+		   populateProfiles(obj.value);
+	}	
+    function handleSDStaffChkChange(){
+	
+			var isStaff_newValue = document.getElementById('{!$Component.clientForm.pbarId.detailsPanel_Id.User_id_IsStaffUser__c}').checked;
+	        UserLicenseList(isStaff_newValue);
+		 
+	}
+   </script>
+  <apex:outputPanel id="activeSIId">
+    <script>
+    	 function getCLTid(cltId,isSave){
+    	 
+        if(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}'){
+          if(isLookup){
+              window.parent.refreshDocs();  
+              window.parent.closePopup();
+           }else{
+               setId(cltId,isSave); 
+           }
+        }
+     }
+     function resetSupportingInformation(isSave){
+		     	var activeUser={!IF(client.IsActive, "true","false")};
+		        if(!activeUser){
+		        	disableAll();
+		        }else
+		        	enableAll();
+                getCLTid(clientId,isSave);
+       	}
+    
+    </script>
+  </apex:outputPanel>
+     <apex:outputPanel id="titlePanel">
+            <script>
+            var urgId= '{!JSENCODE(urgId)}';
+             
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="accountPanel">
+            <script>
+            var orgName= '{!JSENCODE(organizationName)}';
+            function refreshorgName(){
+            	if(orgName != null && typeof(orgName)!='undefined')
+            		document.getElementById('{!$Component.clientForm.pbarId.detailsPanel_Id.account_id_name}').value = orgName;
+            }
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="afterSavePanel">
+        <script>
+           function handleSave(){
+               var id = "{!JSENCODE(client.Id)}"; 
+            if(!isFromConsole || isFromConsole.toUpperCase() != 'TRUE'){   
+            window.parent.handleSave(wid, id);
+        }
+        }
+          savedEmail = "{!JSENCODE(email)}";
+          objId = "{!JSENCODE(client.id)}";
+          function saveRecord() {
+          	//alert('Error msg is -->' + errormsg);
+            if (errormsg=="") {
+                chkBoxValue=Ext.getCmp('idInactive').getValue();
+               //alert('Calling save --->');
+                save(chkBoxValue);
+            }
+            else {
+            	waitMsg.hide();
+                enableSaveButton();
+                showError();
+            }
+        }
+       function AssignNewUserId(){
+           return '{!JSENCODE(clientId)}';              
+       }      
+    
+        </script>
+     </apex:outputPanel>
+      <apex:outputPanel id="panelId">
+        <script>
+        
+           clientName = '{!JSENCODE(client.username)}';               
+           clientId = '{!JSENCODE(client.Id)}'; 
+           isPortalUser={!isPortalUser};
+           aName='{!JSENCODE(orgName)}';
+           timeZoneData = {!timezoneFldsNames};
+           timezonevalue = '{!JSENCODE(userTimeZone)}';
+           localevalue = '{!JSENCODE(userLocale)}';
+           localeData = {!localeFldsNames};
+           languageData = {!languageFldsNames}; 
+           languagevalue = '{!JSENCODE(userLanguage)}';
+           rolevalue = '{!JSENCODE(client.UserRoleId)}';
+           roleData = JSON.parse('{!JSENCODE(roles)}');
+           disableRole = {!disableRole};
+           if('{!JSENCODE(organizationId)}' && '{!JSENCODE(organizationId)}' != null){
+           accountId = '{!JSENCODE(organizationId)}';
+           }else{
+               accountId = '{!JSENCODE(client.Account_ID__c)}';
+           }
+           function setComboStore(){
+			   	setComboStoreJS();
+		   }
+		   
+		   
+		 
+        </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';    
+        </script>
+        </apex:outputPanel>
+		<apex:outputPanel id="RoleMessagePanel">
+            <script>  
+				userExistForRole = '{!isUserExistForRole}';
+                
+            </script>
+        </apex:outputPanel>
+     
+     <apex:outputPanel id="titleChangePanel">
+        <script>
+            function updateTitle(){
+                if(!isPopUp){
+                var newTitle= '{!JSENCODE(client.username)}';
+                 if(newTitle != null && newTitle !=''){
+                    window.parent.changeTitle(wid,newTitle,'{!JSENCODE($Label.ClientWindowHeaderSearchPage)}');
+               }
+               }
+            }
+            
+            function enableSaveButton() {
+                isDirty = false;
+                Ext.getCmp('btnSave').setDisabled(false);
+            } 
+            
+            function closePopUp(){
+             if(isPopUp){
+               if((errormsg!= null) && (errormsg != '') && (errormsg!='{!JSENCODE($Label.SavedSuccessfully)}')) {
+                  Ext.MessageBox.show({ msg:  errormsg, width: 300, buttons: Ext.MessageBox.OK});         
+                }else{
+               var username= '{!JSENCODE(fullName)}';
+               var id= '{!JSENCODE(client.id)}';
+               var accountID = '{!JSENCODE(client.Account_ID__c)}';
+			   var accountName =	'{!JSENCODE(client.Account_Name__c)}';
+               window.opener.clientfields(id, username, accountID, accountName);
+               if((errormsg != null) && (errormsg != '') ) {
+                  Ext.MessageBox.show({ msg:  errormsg, width: 300, buttons: Ext.MessageBox.OK}); 
+                  }
+               }
+                }
+            }
+        </script>
+    </apex:outputPanel>     
+ <apex:form id="clientForm">        
+ <div id="capsule" class="CapsuleDiv1">      
+        <apex:outputPanel id="inactivePanel">
+        <script>
+           function updateInactive(){
+              Ext.getCmp('idInactive').setValue('{!inactive}');
+                isSysAdmin={!isUserPermissionsModifyAllData};
+                /*below code is commented for user story US119552*/
+                /*Ext.getCmp('btnSave').enable();
+                Ext.getCmp('btnSave').setTooltip('{!JSENCODE($Label.Save)}');
+                if ({!isStaffUser} || isSysAdmin)
+                {
+                    Ext.getCmp('btnSave').disable();
+                    Ext.getCmp('btnSave').setTooltip('{!JSENCODE($Label.lblStaffNotEditable)}');
+                } */
+           }
+           
+           isActive_User = '{!IF(client.IsActive, "true", "false")}';
+       </script>
+       <apex:inputHidden value="{!isPortalUserFlag}" id="isPortalUserFlag"/>
+       <apex:inputHidden value="{!canManagePermissionSet}" id="canManagePermissionSet"/>
+    </apex:outputPanel>
+        <apex:outputPanel id="dPanel"></apex:outputPanel>
+    <apex:outputPanel id="formOuputPanel">
+        <!-- Page body in this panel -->
+        <apex:messages />
+       
+          <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            <apex:actionFunction name="populateProfiles" action="{!populateProfiles}" reRender="User_id_IsStaffUser__c,selectedProfileId,roleListId,panelId"  oncomplete="setRoleOptions()">
+				<apex:param assignTo="{!selectedUserLic}" name="selectedUserLicense" value=""/>
+          </apex:actionFunction>
+           <apex:actionFunction name="UserLicenseList" action="{!populateUserLicense}" reRender="selectedUserLicId"   >
+          			<apex:param assignTo="{!client.BMCServiceDesk__IsStaffUser__c}" name="isStaffChk" value=""/>
+          </apex:actionFunction>
+			<apex:actionFunction action="{!saveContact}" name="saveContact" rerender="afterSavePanel,validationComponent,errorId,User_id_LanguageLocaleKey" onComplete="saveRecord();handleElemEvent();" />
+             <apex:actionFunction action="{!saveUserAccount}" name="saveUserAccount" rerender="afterSavePanel,validationComponent,errorId,User_id_LanguageLocaleKey" onComplete="afterSaveAction();"/>
+            <apex:actionFunction action="{!save}" name="save" reRender="afterSavePanel,validationComponent, panelId,errorId,titleChangePanel,User_id_LanguageLocaleKey,canManagePermissionSet"  onComplete="saveUserAccountLink();waitMsg.hide();saveClientUrgency();updateList();updateTitle();enableSaveButton();">
+             <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+                 </apex:actionFunction>
+            <apex:actionFunction action="{!saveClientUrgency}" reRender="afterSavePanel,validationComponent,panelId,errorId,activeSIId,inactivePanel"  name="saveClientUrgency" oncomplete="closePopUp();handleSave();buttonValidator();updateList();afterSaveAction();resetSupportingInformation(true);"/>
+            <apex:actionFunction action="{!organizationQuery}"
+                name="setOrganization" reRender="accountPanel,roleListId, panelId" onComplete="setRoleTooltips(); refreshorgName();setRoleOptions();">
+                <apex:param assignTo="{!organizationId}" value=""
+                    name="saveOrganization " />
+            </apex:actionFunction>
+            <apex:actionFunction action="{!urgencyQuery}" name="setUrgency" reRender="Urgency__c_id_name" >
+                <apex:param assignTo="{!urgId}" value="" name="saveUrgency " />
+            </apex:actionFunction>
+            <apex:actionFunction action="{!newClient}" name="newClient" />
+            <apex:actionFunction action="{!reset}" name="resetClient" rerender="User_id_email,User_id_username,User_id_lastname, User_id_firstname,Urgency__c_id_name, remarkId,User_id_LanguageLocaleKey ,User_id_LocaleSidKey,afterSavePanel,panelId,  roleListId,account_id_id,account_id_name,User_id_IsStaffUser__c,pbaritm_contact,inactivePanel,activeSIId,userTimeZone,selectedProfileId" oncomplete="setComboStore();updateInactive();handleResetChange();handleElemEvent();"/>
+            <apex:actionFunction action="{!nextBtnHandler}" name="nextClientBtnHandler" 
+                                    rerender="isPortalUserFlag,canManagePermissionSet,titleChangePanel,User_id_email,User_id_username,User_id_lastname, User_id_firstname,Urgency__c_id_name, remarkId,User_id_LanguageLocaleKey ,User_id_LocaleSidKey,afterSavePanel,panelId, roleListId,account_id_id,account_id_name,User_id_IsStaffUser__c,pbaritm_contact,inactivePanel,activeSIId,userTimeZone,selectedUserLicId,selectedProfileId" onComplete="setComboStore();updateInactive();buttonValidator();handleResetChange();updateTitle();handleElemEvent();resetSupportingInformation(false);reloadSupportInfo();handleSave();">  
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+            </apex:actionFunction>
+            <apex:actionFunction action="{!previousBtnHandler}" name="previousClientBtnHandler" 
+                                    rerender="isPortalUserFlag,canManagePermissionSet,titleChangePanel,User_id_email,User_id_username,User_id_lastname, User_id_firstname,Urgency__c_id_name, remarkId,User_id_LanguageLocaleKey ,User_id_LocaleSidKey,afterSavePanel,panelId, roleListId,account_id_id,account_id_name,User_id_IsStaffUser__c,pbaritm_contact,inactivePanel,activeSIId,userTimeZone,selectedUserLicId,selectedProfileId" onComplete="setComboStore();updateInactive();buttonValidator();handleResetChange();handleElemEvent();updateTitle();resetSupportingInformation(false);reloadSupportInfo();handleSave();"> 
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+            </apex:actionFunction>
+
+            <apex:actionFunction action="{!checkUserExistForRole}" name="selectedRoleHaveUser" reRender="RoleMessagePanel" oncomplete="RoleMessage();">                    
+                <apex:param assignTo="{!userRoleIdValue}" name="currentSelectedRole" value="" />
+            </apex:actionFunction>
+            <table class="clsMainTableSI" cellspacing="0" cellpadding="0">
+
+                <tr class="clsRowGreyBg">
+                    <td>
+                    <div id="btnToolbar"></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                    <table  class="clsTable" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td class="clsTopAlignment75"><apex:outputPanel id="tablePanel">
+                                <table  class="clsTable" cellspacing="0" cellpadding="0"> 
+                                    <tr>
+                                        <td colspan="2"><div class="div15pxVspacing"/></td>
+                                    </tr>
+									<tr>
+                                            <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.bmcservicedesk__emailadddress}" /><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                            <td class="clsInputTextBoxTD" ><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientemailaddress}" value="{!email}" 
+                                                id="User_id_email" styleClass="clsInputTextBox" onblur="populateEmail();" tabindex="1"/>   
+                                            </td>
+                                       
+                                        </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__clientid}" /><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientclientid}" value="{!username}" styleClass="clsInputTextBox" id="User_id_username"
+                                                                        tabindex="2"/></td>
+                                    </tr>
+									 <tr>
+                                       <td></td>
+                                   
+                                       <td class="EmailAdddressHelpTextCls">{!$Label.ClientIdHelpText}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__firstname}" /></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientfirstname}" value="{!firstname}" styleClass="clsInputTextBox" id="User_id_firstname" tabindex="3"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__lastname}" /><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientlastname}" value="{!lastname}" styleClass="clsInputTextBox"  id="User_id_lastname" tabindex="4"/></td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.User.fields.TimeZoneSidKey.label}" /><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                          <td class="clsInputTextBoxTD">
+                                          <div id="timezoneCombo" ></div>
+                                          <apex:inputhidden id="userTimeZone" value="{!userTimeZone}"/> 
+                                          </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.User.fields.LocaleSidKey.label}" /><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                          <td class="clsInputTextBoxTD">
+                                           <div id="localeCombo" ></div>
+                                           <apex:inputhidden id="userLocale" value="{!userLocale}"/>
+                                           </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.User.fields.LanguageLocaleKey.label}" /><span class="clsRequiredBlack">&nbsp;*</span></td>
+                                        <td class="clsInputTextBoxTD">
+                                        <div id="languageCombo" ></div>
+                                           <apex:inputhidden id="userLanguage" value="{!userLanguage}"/>
+										</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__urgency}" /></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclienturgency}" id="Urgency__c_id_name"
+                                            styleClass="clsInputTextBox" value="{!urgencyId}" onblur="showalldata(event,'',escape('inactive__c = false'));" tabindex="5"/></td>
+                                        <td class="lookupIconTD">
+											<div class="lookUpIconDiv"><input type="button" class="lookupIconOn" onclick="if(!inProgress) {openPopupRF('SearchPage?popupId=Urgency&isLookup=true', setUrgency);}" 
+                                                id="urgencyLookup" tabindex="6"/></div></td>
+                                    </tr>
+                                    
+                            </table>
+                            <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td class="clsInputBoldLabelTableFirstRowTD"><apex:outputLabel value="{!$Label.bmcservicedesk__remarks}" /></td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputTextAreaTD" >
+                                    <div class="clsRelativePosition">
+                                        <apex:inputTextarea title="{!$Label.bmcservicedesk__tooltipclientremarks}" value="{!remark}" styleClass="clsInputTextArea" tabindex="7" id="remarkId"/>
+                                    </div>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td>&nbsp;</td>
+                                </tr>
+                                   
+                             </table>
+                            </apex:outputPanel></td>
+                            
+                            <td><div class="div17pxHspacing"/></td>
+                            <td class="clsTopAlignment25">
+                            <div class="panelCapsule"><apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" 
+                                id="pbarId">
+                                <apex:panelBarItem label="{!$Label.bmcservicedesk__details}" expanded="false" id="detailsPanel_Id"
+                                    headerClass="panelHeader" contentClass="panelContent">
+                                    <table class="clsTable" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td styleClass='clsPanelInputLabelTD' style="padding-top:15px;padding-bottom:10px;padding-left:10px;white-space:nowrap;">
+                                                <apex:inputcheckbox value="{!client.BMCServiceDesk__IsStaffUser__c}"  id="User_id_IsStaffUser__c"  onchange="handleSDStaffChkChange()"  disabled="{!IF(OR(isServiceDeskDisabled,NOT(isStaffManager)), true, false)}"/>
+                                                
+                                            <apex:outputLabel styleClass="clsPanelInputLabelTD" value=" {!$Label.bmcservicedesk__servicedeskstaffmember}"/>
+                                               
+                                            </td>
+                                           
+                                        </tr>
+                                        <tr>
+                                            <td styleClass='clsPanelInputLabelTD' style="padding-top:0px;padding-bottom:10px;padding-left:10px;white-space:nowrap;">
+                                                <apex:inputcheckbox value="{!isAssignRemedyforceLic}" id="User_id_AssignRemedyforceLic__c"  disabled="{!isManageRFLicDisabled}"  />
+                                                <apex:outputLabel styleClass="clsPanelInputLabelTD" value="{!$ObjectType.User.fields.BMCServiceDesk__AssignRemedyforceLic__c.label}"/>
+                                            </td>
+                                        </tr>
+                                   </table>
+                                  <table class="clsTable" cellspacing="0" cellpadding="0">
+								  <tr>
+                                   <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$ObjectType.UserLicense.label}" /></td>
+
+                                  <td  class="clsPanelInputTextboxTD2">
+                                  <apex:selectList id="selectedUserLicId" value="{!selectedUserLic}" disabled="{!IF(client.id!=null, true, false)}" size="1" styleClass="clsInputPickList"  onchange="handleLicenseChange(this);">
+                                            <apex:selectOptions value="{!userLicenseList}"/>
+                                </apex:selectList>
+                                  </td>
+                                  </tr>
+                                  <tr>
+                                   <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$ObjectType.Profile.label}" /></td>
+                                  <td class="clsPanelInputTextboxTD2">
+                                  <apex:selectList id="selectedProfileId" value="{!selectedProfile}" size="1" styleClass="clsInputPickList"  >
+                                            <apex:selectOptions value="{!ProfileForUserLicense}"/>
+                                </apex:selectList>
+                                  </td>
+								</tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__account}" /><apex:outputLabel id="account_label_astric" value=" *" styleClass="clsRequiredBlack" /></td>
+                                            <td class="clsPanelInputTextboxTD2"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientorganization}" value="{!organizationName}" 
+                                                styleClass="clsPanelInputTextbox" id="account_id_name"
+                                                onblur="showalldata(event,enableRole);" tabindex="8"/>
+                                                <apex:inputhidden id="account_id_id"/> 
+                                            </td>
+                                            <td class="lookupIconPanelTD">    
+                                            <div class="lookUpIconDiv"><apex:commandButton onclick="if(!inProgress) {openPopupRF('SearchPage?popupId=Organization&isLookup=true',setOrganization);}" styleClass="lookupIconOn"
+                                                reRender="dummy" id="accountLookup" tabindex="9"/></div></td>
+                                        </tr>
+                                        <tr>
+                                           <td class="clsPanelInputLabelTD" >
+                                                <apex:outputLabel value="{!$Label.bmcservicedesk__role}"/><apex:outputLabel id="role_label_astric" value=" *" styleClass="clsRequiredBlack" /></td>
+                                            <td class="clsPanelInputTextboxTD" >
+                                                 <div id="roleCombo"></div>
+                                           		<apex:inputhidden id="roleListId" value="{!client.UserRoleId}"/>
+                                            </td>
+                                           
+                                        </tr>
+                                    
+                                       
+                                       
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__position}" /></td>
+                                            <td class="clsPanelInputTextboxTD1" ><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientposition}" value="{!position}"
+                                                styleClass="clsPanelInputTextbox" tabindex="10"/></td>
+                                        </tr>
+                                    </table>
+                                </apex:panelBarItem>
+                                <apex:panelBarItem label="{!$Label.bmcservicedesk__contactdetails}"  expanded="true"
+                                    headerClass="panelHeader" contentClass="panelContent" id="contactDetails_Id">
+                                    <apex:outputPanel id="pbaritm_contact">
+                                    <script> 
+                                        savedEmail = "{!JSENCODE(email)}";
+                                        objId = "{!JSENCODE(client.id)}";
+                                    </script>
+                                    <table  class="clsTable" cellspacing="0" cellpadding="0"> 
+                                        <tr>
+                                            <td>
+                                            <div class="div15pxVspacing" />
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td><img
+                                                src="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFimages/_.GIF" styleClass="clsImageSp" /></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__phone}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientphone}" value="{!phone}" styleClass="clsPanelInputTextbox" tabindex="11"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD">&nbsp;</td>
+                                        </tr>
+										<tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__adminmobile}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientmobile}" value="{!mobile}" styleClass="clsPanelInputTextbox" tabindex="12"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD">&nbsp;</td>
+                                        </tr>
+                                       <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__extension}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText value="{!extension}" styleClass="clsPanelInputTextbox" tabindex="13"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD">&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__address}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputTextArea title="{!$Label.bmcservicedesk__tooltipclientaddress}" value="{!address}"
+                                                styleClass="clsPanelInputTextArea" tabindex="14"/></td>
+                                                <td class="lookupIconPanelTD">&nbsp;</td>
+                                        </tr>
+                                         <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__city}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientcity}" value="{!city}" styleClass="clsPanelInputTextbox" tabindex="15"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD">&nbsp;</td>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__state}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientstate}" value="{!state}" styleClass="clsPanelInputTextbox" tabindex="16"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD">&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__zip}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientzip}" value="{!zip}" styleClass="clsPanelInputTextbox" tabindex="17"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD">&nbsp;</td>
+                                        </tr>
+                                       <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__country}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientcountry}" value="{!country}"
+                                                styleClass="clsPanelInputTextbox" tabindex="18"/></td>
+                                                <td class="lookupIconPanelTD">&nbsp;</td>
+                                        </tr>
+                                       <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.bmcservicedesk__division}" /></td>
+                                              <td class="clsPanelInputTextboxTD1"><apex:inputText title="{!$Label.bmcservicedesk__tooltipclientdivision}" styleClass="clsPanelInputTextbox"  value="{!division}" tabindex="19"/></td>
+                                            <td class="lookupIconPanelTD">&nbsp;</td>
+                                        </tr>
+                                        
+                                    </table>
+                                    </apex:outputPanel>
+                                </apex:panelBarItem>
+                            </apex:panelBar></div>
+                            </td>
+                        </tr>
+                    </table>
+                    </td>
+                </tr>
+                
+            </table>
+            
+          </apex:outputPanel>
+         </div>
+         <div class="detailSectinDivCls">
+                      <table>
+                      <tr >
+                                    <td >
+                                           <c:SupportInformationComponent setinactive="{!NOT(client.isactive)}" objectName="User" fKeyValue="{!clientId}" urlForStaticResource="{!$Resource.BMCServiceDesk__SDEFStyles}" isStandardLayout="{!isStandardLayout}" />
+                                    </td>
+                         </tr>
+                       </table>          
+            </div>
+                  <apex:outputPanel id="dummy"></apex:outputPanel>
+                  <c:TabOutComponent ></c:TabOutComponent>
+<!--  Ends IE7-8 Related Changes Taken div inside form-->
+
+        </apex:form>
+  
+      <style>
+           .clsInputTextBox {
+             *height: 19px;
+          }
+          
+          .clsPanelInputTextboxTD1{
+            *padding-bottom: 5px;
+          }
+          
+           .clsPanelInputTextboxReadOnly {
+               *height: 19px;
+            }
+          
+          .clsPanelInputTextbox {
+              *height: 19px;
+            }
+          
+          .clsPanelInputTextAreaReadOnly {
+           *width: 195px;
+            }
+            .clsIdInputTextBox {
+               *height: 19px;
+            }
+            .clsInputTextBoxReadOnly {
+                *height: 19px;
+            }
+			.clsInputPickList {
+				border-color: #6A7378 #BAC3C8 #BAC3C8 #6A7378;
+				border-style: solid;
+				border-width: 1px;
+				font-family: Tahoma,MS Sans Serif;
+				font-size: 11px;
+				height: 19px;
+				width: 137px;
+				color:#000000;
+          }
+          
+            body{
+            overflow: auto !important;
+            }
+    </style>
+</apex:page>

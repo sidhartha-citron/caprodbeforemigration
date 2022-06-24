@@ -1,0 +1,141 @@
+<apex:page controller="BMCServiceDesk.DueDateRecalculator" sidebar="false" showHeader="false" title="{!$Label.bmcservicedesk__duedaterecalculate}" standardStylesheets="false">
+<c:CommonIncludes />
+    <style>
+        .x-panel-tbar-noheader .x-toolbar, .x-panel-mc .x-panel-tbar .x-toolbar {
+            border-bottom:0 none;
+            border-top:none;
+         }
+        .x-toolbar {
+            background-color:none;
+            border:none;
+        }
+        .x-toolbar {
+            border-width:0px;
+            padding:0px;
+        }
+        .x-toolbar {
+            padding:0px;
+            position:relative;
+        }
+    </style>
+    <script>
+        Ext.onReady(function(){
+        Ext.QuickTips.init();
+        var OkBtnHandler = function(button,event) {  calculateDueDate(); };
+        var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolCloseCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                tooltipType : 'title',
+                tooltip: '{!JSENCODE($Label.Ok)}',
+                iconCls: 'bmcSave',
+                handler:OkBtnHandler
+            }]
+        });
+    });
+    </script>   
+    <apex:outputPanel id="varPanelId">
+        <script>
+            var selectOption = "{!JSENCODE(selectedOption)}";
+            window.parent.changePopUpTitle('{!JSENCODE($Label.DueDateCalculation)}');
+            var stdLayout = getUrlParameter('stdLayout');
+            var isRTFEnabled = getUrlParameter('isRTFEnabled');
+            if(stdLayout == 'true'){        
+                var header = '{!JSENCODE($Label.DueDateCalculation)}';
+                document.title=header ;
+            }
+            function getUrlParameter( param ){
+                param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");;
+                var r1 = "[\\?&]"+param+"=([^&#]*)";
+                var r2 = new RegExp( r1 );
+                var r3 = r2.exec( window.location.href );
+                if( r3 == null ){return ""}
+                else {return r3[1]};
+            }
+        </script>
+    </apex:outputPanel>
+    <script>
+        function closeWindow(){       
+            var isIE11 = window.location.hash = !!window.MSInputMethodContext; 
+            if(stdLayout == 'true'){           
+                window.onbeforeunload = null;
+                if(Ext.isIE || isIE11){                	
+                	if(!(window.navigator.userAgent.indexOf('Edge/') > 0))
+               		{
+                    	var parentObj = window.dialogArguments;                    	
+                    	if(isRTFEnabled != null && isRTFEnabled == 'true')
+                    		parentObj.calculateDueDateRTF(selectOption);
+                   		else 
+                  			parentObj.calculateDueDate(selectOption);
+                  	}
+                  	else
+                  	{
+	                  	if(isRTFEnabled != null && isRTFEnabled == 'true')
+	                		window.parent.opener.calculateDueDateRTF(selectOption);
+	                	else
+	                    	window.parent.opener.calculateDueDate(selectOption);
+                  	}  	
+                }else{                	
+                	if(isRTFEnabled != null && isRTFEnabled == 'true')
+                		window.parent.opener.calculateDueDateRTF(selectOption);
+                	else
+                    	window.parent.opener.calculateDueDate(selectOption);
+                }                	
+                window.close();
+            }else{            	
+                window.parent.setPopUpVar(selectOption);
+                window.parent.closePopup();
+            }
+        }        
+    </script>
+    <apex:outputPanel >
+    <apex:form >
+            <apex:actionFunction name="calculateDueDate"
+                    action="{!calculateDueDate}"
+                    oncomplete="closeWindow();" rerender="varPanelId"/>    
+                <div id="capsule">
+                     <table cellspacing="0" cellpadding="0" class="clsMainTable">
+                        <tr class="clsRowGreyBg">
+                            <td>
+                                <div id="btnToolbar"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td valign="top">
+                                 <table class="clsTable" cellspacing="0" cellpadding="0"> 
+                                    <tr>
+                                        <td valign="top">
+                                             <div class="div13pxVspacing"></div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>    
+                                            <table class="clsTable" cellspacing="0" cellpadding="0" height="103px"> 
+                                                <tr>
+                                                    <td class="clsInputLabelTD">
+                                                        <apex:selectRadio layout="pageDirection" value="{!selectedOption}" styleClass="checkLabel" style="padding-bottom:10px;">
+                                                                <apex:selectOptions value="{!items}"/>
+                                                        </apex:selectRadio>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><div class="div9pxVspacing"/></td>
+                                                </tr>
+                                           </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>    
+            </apex:form>
+    </apex:outputPanel>
+</apex:page>

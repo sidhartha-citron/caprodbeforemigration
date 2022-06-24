@@ -1,0 +1,914 @@
+<apex:page cache="true" controller="BMCServiceDesk.QuickViewController" showHeader="false" sidebar="false" id="thePage" contentType="text/html" standardStylesheets="false">
+    <head>
+     <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>
+	 <link rel="stylesheet" href="{!$Resource.SDEFCommonJS}/vendor/fullcalendar.css"/>
+	 <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/QuickViewPage.css" />
+	 <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />
+     </head>
+    <c:CommonIncludes2 />
+   
+	<script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/jquery-ui.min.js')}"/>
+
+	
+    <script type="text/javascript" src="{!$Resource.SDEFExtJS31}/src/locale/ext-lang-{!userlocale}.js"/>     
+    
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/highcharts.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/highcharts-3d.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/exporting.js"></script> 
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/export-data.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/offline-exporting.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/vendor/Highcharts/no-data-to-display.js"></script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/QuickViewHighcharts.js"></script>
+  	        
+    
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"/>
+     <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/QuickViewPage.js"/>
+    <style>
+        .tbarIconCls{
+        background-image: url({!$Resource.SDEFStyles}/SDEFimages/arrow_right_blue.gif) !important;
+        }
+
+        .x-window-dlg .ext-mb-waitMessage {
+        background:url({!$Resource.SDEFStyles}/SDEFimages/ajax-loader.gif) no-repeat 0px 0px;
+        height:64px;
+        width :64px;
+        }
+    </style>
+
+    <script>
+         var stdLayoutFlag = window.parent.parent.stdLayout;
+          var MonthJanuary='{!JSENCODE($Label.MonthJanuary)}';
+         var MonthFebruary='{!JSENCODE($Label.MonthFebruary)}';
+         var MonthMarch='{!JSENCODE($Label.MonthMarch)}';
+         var MonthApril='{!JSENCODE($Label.MonthApril)}';
+         var MonthMay='{!JSENCODE($Label.May)}';
+         var MonthJune='{!JSENCODE($Label.MonthJune)}';
+         var MonthJuly='{!JSENCODE($Label.MonthJuly)}';
+         var MonthAugust='{!JSENCODE($Label.MonthAugust)}';
+         var MonthSeptember='{!JSENCODE($Label.MonthSeptember)}';
+         var MonthOctober='{!JSENCODE($Label.MonthOctober)}';
+         var MonthNovember='{!JSENCODE($Label.MonthNovember)}';
+         var MonthDecember='{!JSENCODE($Label.MonthDecember)}';
+         
+         var MonthJan='{!JSENCODE($Label.Jan)}';
+         var MonthFeb='{!JSENCODE($Label.Feb)}';
+         var MonthMar='{!JSENCODE($Label.Mar)}';
+         var MonthApr='{!JSENCODE($Label.Apr)}';
+         var MonthJun='{!JSENCODE($Label.Jun)}';
+         var MonthJul='{!JSENCODE($Label.Jul)}';
+         var MonthAug='{!JSENCODE($Label.Aug)}';
+         var MonthSep='{!JSENCODE($Label.Sep)}';
+         var MonthOct='{!JSENCODE($Label.Oct)}';
+         var MonthNov='{!JSENCODE($Label.Nov)}';
+         var MonthDec='{!JSENCODE($Label.Dec)}';
+         
+         
+       
+         var WeekdayMon='{!JSENCODE($Label.WeekdayMon)}';
+         var WeekdayTue='{!JSENCODE($Label.WeekdayTue)}';
+         var WeekdayWed='{!JSENCODE($Label.WeekdayWed)}';
+         var WeekdayThu='{!JSENCODE($Label.WeekdayThu)}';
+         var WeekdayFri='{!JSENCODE($Label.WeekdayFri)}';
+         var WeekdaySat='{!JSENCODE($Label.WeekdaySat)}';
+         var WeekdaySun='{!JSENCODE($Label.WeekdaySun)}'; 
+      
+            
+         var WeekdayMonday='{!JSENCODE($Label.Monday)}';
+         var WeekdayTuesday='{!JSENCODE($Label.Tuesday)}';
+         var WeekdayWednesday='{!JSENCODE($Label.Wednesday)}';
+         var WeekdayThursday='{!JSENCODE($Label.Thursday)}';
+         var WeekdayFriday='{!JSENCODE($Label.Friday)}';
+         var WeekdaySaturday='{!JSENCODE($Label.Saturday)}';
+         var WeekdaySunday='{!JSENCODE($Label.Sunday)}';
+        noRecordsDisplayMsg= '{!JSENCODE($Label.NoRecordsFound)}';
+        var isSingleModuleQV = '{!isSingleModuleQV}';
+        var dateFormat = '{!JSENCODE(dateFormat)}';
+        var dateOnlyFormat = '{!JSENCODE(dateOnlyFormat)}';
+        var viewState = '{!JSENCODE(viewType)}';
+        var chartDisplayed = {!chartDisplayed};
+        var initCalendarFlag = {!initCalendarFlag};
+        var calView='{!JSENCODE(calView)}';
+        var extJsResource ='{!$Resource.SDEFExtJS}';
+        var sdefStylesResource = '{!$Resource.SDEFStyles}';
+        var widgetId= '{!JSENCODE($CurrentPage.parameters.widgetId)}';
+        var minuteLabel='{!JSENCODE($Label.minutes)}';
+        var refreshEveryLabel = '{!JSENCODE($Label.refreshEvery)}';
+        var refreshedLabel = '{!JSENCODE($Label.refreshed)}';
+        var maxIntervalLabel = '{!JSENCODE($Label.maxInterval)}';
+        var cookieName =  '{!JSENCODE($CurrentPage.parameters.widgetId)}'+'{!JSENCODE($User.Id)}';
+        var chartSpecsCookie = '{!JSENCODE($CurrentPage.parameters.queryName)}'+'_Charts';
+        var cookieValue = Ext.util.Cookies.get(cookieName);
+        var parseLimit = cookieValue;
+        var inactiveFlag ={!inactiveFlag};
+        var stateFlag={!stateFlag};
+
+        var width = '{!$Component.thePage:theForm:width}';
+        var height = '{!$Component.thePage:theForm:height}';
+        var xPos = '{!$Component.thePage:theForm:xPos}';
+        var yPos = '{!$Component.thePage:theForm:yPos}';
+        var maxState = '{!$Component.thePage:theForm:maximizedState}';
+        var minState = '{!$Component.thePage:theForm:minimizedState}';
+        var sequenceId = '{!$Component.thePage:theForm:sequenceId}';
+        var startDate = '{!$Component.thePage:theForm:visiblestartdate}';
+        var endDate = '{!$Component.thePage:theForm:visibleenddate}'
+
+        var active = '{!$Component.thePage:theForm:active}';
+        var inactive = '{!$Component.thePage:theForm:inactive}';
+        var opened = '{!$Component.thePage:theForm:opened}';
+        //var closed = '{!$Component.thePage:theForm:closed}';
+        var widgetViewState = '{!$Component.thePage:theForm:viewState}';
+        var advFilter = '{!$Component.thePage:theForm:advFilterState}';
+        var rtfString = '{!$Component.thePage:theForm:rtfString}';
+        var lastRefreshedLabel = '{!JSENCODE($Label.LastRefreshed)}';
+        var lastRefreshed='{!JSENCODE(lastrefreshtime)}';
+        var refreshMinLabel = '{!JSENCODE($Label.refreshMin)}';
+        var toolTipAutoRefreshON = '{!JSENCODE($Label.toolTipAutoRefreshON)}';
+        var toolTipAutoRefreshOFF = '{!JSENCODE($Label.toolTipAutoRefreshOFF)}';
+        var isRefreshBtnState=true;
+        var isRefreshBtnPressed = 'true';
+        var firstTime = true;
+    var oldColumnIndex = -1;
+    var oldColClickedHeader = '';
+    var infoLabel = '{!JSENCODE($Label.Information)}';
+    var invalidChartFldMsg = '{!JSENCODE($Label.invalidChartFldMsg)}';  
+    var missingValue='{!JSENCODE($Label.Missing_Value)}';
+    var configurationPageTitle = '{!JSENCODE($Label.ConfigurationItems)}';
+    var flds;
+    var nonPrint = '¬';
+    
+    var _ServerLabels = {};
+    _ServerLabels.PrintChart = "{!JSENCODE($Label.PrintChart)}";
+    _ServerLabels.DownloadPNG = "{!JSENCODE($Label.DownloadPNG)}";
+    _ServerLabels.DownloadJPEG = "{!JSENCODE($Label.DownloadJPEG)}";
+    _ServerLabels.DownloadPDF = "{!JSENCODE($Label.DownloadPDF)}";
+    _ServerLabels.DownloadSVG = "{!JSENCODE($Label.DownloadSVG)}";
+    _ServerLabels.DownloadCSV = "{!JSENCODE($Label.DownloadCSV)}";
+    _ServerLabels.DownloadXLS = "{!JSENCODE($Label.DownloadXLS)}";
+    _ServerLabels.NoRecordsFound = "{!JSENCODE($Label.NoRecordsFound)}";
+    
+    function getSDFStylesResPath()
+    {
+      var resPath = '{!$Resource.SDEFStyles}';
+      return resPath;
+    }
+        function setWidth(val) {
+        setCtlVal(width, val);
+        }
+        function setHeight(val) {
+        setCtlVal(height, val);
+        }
+        function setXPos(val) {
+        setCtlVal(xPos, val);
+        }
+        function setYPos(val) {
+        setCtlVal(yPos, val);
+        }
+
+        function setMaxState(val) {
+        setCtlVal(maxState, val);
+        }
+        function setMinState(val) {
+        setCtlVal(minState, val);
+        }
+        function setSequenceId(val) {
+        setCtlVal(sequenceId, val);
+        }
+        function setActive(val) {
+        setCtlVal(active, val);
+        }
+        function setInActive(val) {
+        setCtlVal(inactive, val);
+        }
+
+        function setOpened(val) {
+        setCtlVal(opened, val);
+        }
+        function setWidgetViewState(val) {
+        setCtlVal(widgetViewState, val);
+        }
+
+        function setAdvFilterState(val) {
+        setCtlVal(advFilter, val);
+        }
+
+        function serRTFString(val) {
+        setCtlVal(rtfString, val);
+        }
+
+        function loadOnCompleteFun() {
+        if(viewState=='calendarView') {
+        showCalendar(true);
+        }
+        hideWaitbox();
+        Ext.getCmp('refreshed').setText(lastRefreshedLabel+ lastRefreshed);
+        }
+
+        function setStartDate(val) {
+        setCtlVal(startDate, val);
+        }
+
+        function setEndDate(val) {
+        setCtlVal(endDate, val);
+        }
+        
+        function showErrorMsg(errorMsg) {
+            Ext.Msg.show({
+                title: infoLabel,
+                msg: errorMsg,
+                width: 250,
+                buttons: Ext.MessageBox.OK
+            });
+        }
+        function isCreateable(moduleName) {
+            var createAccessDeniedObjs = '{!JSENCODE(createAccessDeniedObjs)}';
+            objs = createAccessDeniedObjs.split(nonPrint);
+            for(var i=0; i<objs.length; i++) {
+                if(objs[i]==moduleName) {
+                    return false;
+                }
+            }
+            return true;    
+        }
+        
+        function isDeletable(moduleName) {
+            var deletableAccessDeniedObjs = '{!JSENCODE(deleteAccessDeniedObjs)}';
+            objs = deletableAccessDeniedObjs.split(nonPrint);       
+            for(var i=0; i<objs.length; i++) {
+                if(objs[i]==moduleName) {
+                    return false;
+                }
+            }
+            return true;    
+        }
+
+
+    </script>
+
+   
+		<script type='text/javascript' src='{!$Resource.SDEFCommonJS}/vendor/fullcalendar.min.js'></script>
+    <script> noRecordsMsgbox(); </script>
+
+    <apex:outputPanel id="loadResultSetPanel">
+        <script>
+        	var highchartsAllDataJSON = '{!JSENCODE(highchartsAllDataInfoBundle)}';
+        	var highchartsAllData = {};			
+			var chartData; 
+			var chartXAxisCategories;
+			var chartsSpecs;
+			var chartTypeValue;
+			var chartClickHandler;		
+			var chartTitle;	
+			var isChart3D;
+            var QVchart = {};
+           	var useDeprecatedFusionCharts = {!useDeprecatedFusionCharts};
+			if(highchartsAllDataJSON){
+				highchartsAllData = JSON.parse(highchartsAllDataJSON);
+				chartData = highchartsAllData.dataJson;
+				chartXAxisCategories = highchartsAllData.chartXAxisCategories;
+				chartClickHandler = highchartsAllData.highchartClickHandler;				
+				chartsSpecs = highchartsAllData.chartsSpecs;
+				chartTypeValue = chartsSpecs.chartTypeValue;
+				chartTitle = highchartsAllData.chartTitle;
+				isChart3D = chartsSpecs.isChart3D;
+			}			                                                                                  			                
+            if('{!JSENCODE(errorMsgList)}'!='') {
+                showErrorMsg('{!JSENCODE(errorMsgList)}');
+            }
+            if(viewState=='chartView') {
+              if({!(queryForChartPopup)}) {
+                    funcWholePageJS('{!intMaxCols}', '{!rowIndex}');
+                    funcQVDataPanelJS('{!JSENCODE(listQVRows)}', '{!rowIndex}');
+                    flds = new Array((colsSize+1));
+                    for(i=0; colsSize>=i; i++){
+                        flds[i]='fld'+i;
+                    }
+                    PopulateChartGroupRowDataArray('{!JSENCODE(chartDataStr)}');
+                    document.getElementById('thePage:theForm:queryForChartPopup').value = false;
+                }else {
+                    chartDisplayed = {!chartDisplayed};
+                    renderNewCharts();
+                    hideWaitbox();
+                }
+                
+            }else if(viewState=='calendarView') {
+                prepCalPanelJS([{!strEvents}]);
+
+            }
+            lastRefreshed='{!JSENCODE(lastrefreshtime)}';
+        </script>
+    </apex:outputPanel>
+
+    <apex:form id="theForm">
+    <c:ValidationComponent errorMsgList="{!errorMsgList}" id="validationComponent"></c:ValidationComponent>
+        <apex:outputPanel id="calendarDataPanel">
+            <script>
+                function prepCalPanel() {
+                prepCalPanelJS([{!strEvents}]);
+                }
+                prepCalPanel();
+            </script>
+        </apex:outputPanel>
+
+        <apex:actionFunction Name="loadResultSet" action="{!loadResultSet}" rerender="columndetailspanel, loadResultSetPanel, qvPaginationPanel, calendarPanel" onComplete="loadOnCompleteFun();">
+        </apex:actionFunction>
+
+        <apex:actionFunction Name="loadTableData" action="{!loadResultSet}" rerender="qvPaginationPanel,QuickViewDatapanel" onComplete="loadOnCompleteFun();">
+        </apex:actionFunction>
+
+        <apex:actionFunction Name="getCalendarData" action="{!getCalendarData}" rerender="calendarDataPanel,calendarPanel" oncomplete="showCalendar(true);">
+        </apex:actionFunction>
+
+        <apex:actionFunction Name="refreshPage" action="{!refreshQuery}">
+        </apex:actionFunction>
+
+        <apex:actionFunction Name="deleteRecord" action="{!deleteRecord}" onComplete="refreshWindow();refreshRelatedPortlets();disableButtons();" rerender="exceptionMsgPanel" >
+        </apex:actionFunction>
+
+        <apex:actionFunction Name="assignToStaffFun" rerender="dummyPanel" onComplete="refreshPage();">
+        </apex:actionFunction>
+
+        <apex:actionFunction Name="assignToSuggestedStaffFun" rerender="dummyPanel" onComplete="refreshPage();">
+        </apex:actionFunction>
+
+
+        <apex:actionFunction Name="assignToMySelf" rerender="dummyPanel" onComplete="refreshPage();">
+        </apex:actionFunction>
+
+        <apex:actionFunction Name="assignTOQueueFun" rerender="dummyPanel" onComplete="refreshPage();">
+        </apex:actionFunction>
+
+        <apex:actionFunction Name="applyFilters" action="{!applyFilters}">
+        </apex:actionFunction>
+
+        <apex:actionFunction Name="generateDataXML" rerender="chartPanel" action="{!generateChartDataXML}">
+        </apex:actionFunction>
+
+        <apex:actionFunction Name="getNameField" action="{!getNameField}" rerender="varsPanelId">
+            <apex:param assignTo="{!selectedIndex}" name="isActive" value=""/>
+        </apex:actionFunction>
+
+ <apex:actionFunction name="handleColumnClick" action="{!handleColumnClick}" rerender="QuickViewDatapanel, qvPaginationPanel">
+    <apex:param name="sortColumn" value="" assignTo="{!sortColumn}"/>
+    <apex:param name="orderSeq" value="" assignTo="{!orderSeq}"/>
+   </apex:actionFunction>
+
+        <apex:inputHidden id="recordForDelete" value="{!recordForDelete}" immediate="true" />
+
+        <apex:inputHidden id="filterStr" value="{!filterStr}" immediate="true" />
+
+        <apex:inputHidden id="rtfString" value="{!rtfString}" immediate="true" />
+
+        <apex:inputHidden id="fieldInfo" value="{!filterStrLookup}" immediate="true" />
+
+        <apex:inputHidden id="currentList" value="{!currentList}" immediate="true" />
+
+        <apex:inputHidden id="visiblestartdate" value="{!calStartDate}" immediate="true" />
+        <apex:inputHidden id="visibleenddate" value="{!calEndDate}" immediate="true" />
+        <apex:inputHidden id="queryForChartPopup" value="{!queryForChartPopup}" immediate="true" />
+        <apex:inputHidden id="chartDataStr" value="{!chartDataStr}" immediate="true" />
+        
+        <apex:outputPanel id="exceptionMsgPanel">
+        <script>
+           var exceptionErrorMsg ='{!JSENCODE(errorMsgList)}';
+           if(exceptionErrorMsg !='' ) {
+                showErrorMsg(exceptionErrorMsg);
+            }
+        </script>
+        </apex:outputPanel>
+
+        <apex:outputPanel id="varsPanelId">
+            <script>
+                function refVarPanel() {
+                refVarPanelJS('{!filterStrLookupNameFld}', '{!selectedIndex}');
+                }
+                refVarPanel();
+
+            </script>
+        </apex:outputPanel>
+
+
+        <apex:inputHidden id="popupId" value="{!popupId}" immediate="true" />
+
+        <apex:outputPanel id="varsPanel">
+            <script>
+                var nodeValue = '{!nodeValue}';
+            </script>
+        </apex:outputPanel>
+
+
+        <apex:outputPanel id="wholePage" rendered="true">
+            <script>
+                funcWholePageJS('{!intMaxCols}', '{!rowIndex}');
+            </script>
+			<apex:outputText value="CRUDFLSCheck# No association with any sObject fields." rendered="false"/>
+            <apex:outputpanel id="columndetailspanel" style="display:none">
+                <apex:repeat value="{!listColumnDetail}" var="coldata" id="colrepeater">
+                    <apex:outputpanel id="column">
+                        <apex:inputtext value="{!coldata.columnHeader}" id="columnHeader" />
+                        <apex:inputtext value="{!coldata.columnWidth}" id="columnWidth" />
+                        <apex:inputtext value="{!coldata.fieldAPIName}" id="columnName"/>
+                        <apex:inputtext value="{!coldata.dataType}" id="dataType"/>
+                        <apex:inputtext value="{!coldata.isWrappable}" id="isWrappable"/>
+                        <apex:inputtext value="{!coldata.isColSortable}" id="isColSortable"/>
+                        <apex:inputtext value="{!coldata.isHTMLFormatted}" id="isHTMLFormatted"/>
+                        <apex:inputtext value="{!coldata.isCalculated}" id="isCalculated"/>                        
+                    </apex:outputpanel>
+                </apex:repeat>
+                <script>
+                    if(viewState=='tableView') {
+                        getGridData();
+                    }
+                    
+                    function getGridData() {
+                        funcWholePageJS('{!intMaxCols}', '{!rowIndex}');
+                        funcQVDataPanelJS('{!JSENCODE(listQVRows)}', '{!rowIndex}');
+                        var flds = new Array((colsSize+1));
+                        for(i=0; colsSize>=i; i++){
+                            flds[i]='fld'+i;
+                        }
+                        var gridStore = new Ext.data.ArrayStore({
+                            data: resultSet,
+                            fields: flds
+                        });
+                        var gridColModel = new Ext.grid.ColumnModel({
+                            defaults: {sortable: false},
+                            columns:PopulateColumnArray()
+                        })
+                        if(grid!=null) {
+                            grid.reconfigure(gridStore, gridColModel);
+                        }
+                       hideWaitbox();
+                    }
+                </script>
+            </apex:outputpanel>
+
+            <apex:outputpanel id="QuickViewDatapanel" style="display:none">
+                <script>
+                    flds = new Array((colsSize+1));
+                    for(i=0; colsSize>=i; i++){
+                        flds[i]='fld'+i;
+                    }
+                    
+                    funcQVDataPanelJS('{!JSENCODE(listQVRows)}','{!rowIndex}');
+                    hideWaitbox();
+                </script>
+            </apex:outputpanel>
+
+
+
+
+
+            <script>
+                var url;
+                flds = new Array((colsSize+1));
+                for(i=0; colsSize>=i; i++){
+                flds[i]='fld'+i;
+
+                }
+                
+                var colModelInfoList = {!qvWidgetColumnModelInfo};
+                var colSortInfo = '{!JSENCODE(sortInfo)}';
+                function renderGrid(){
+                renderGridJS(colModelInfoList,colSortInfo);
+                }
+                var tooManyRecsLabel = '{!JSENCODE($Label.TooManyRecords)}';
+                var allRowsReturned = {!allRowsReturned};
+                var DonotShowTooManyRecordsMessage= {!DonotShowTooManyRecordsMessage};
+                function extInit(){
+                extInitJS(allRowsReturned, infoLabel, tooManyRecsLabel,DonotShowTooManyRecordsMessage);
+                }
+
+                var showTableView = function(button, event) {
+                showTableViewJS('{!JSENCODE($CurrentPage.parameters.queryName)}', typeof(event));
+                };
+
+                var showChartView = function(button, event) {
+                showChartViewJS( '{!JSENCODE($CurrentPage.parameters.queryName)}','{!JSENCODE($Label.statusMsg)}', typeof(event));
+                };
+
+
+                function showCalendarView() {
+                showCalendarViewJS('{!JSENCODE($Label.statusMsg)}');
+                }
+                var hasRTFilters = {!hasRTFilters};
+                refreshBtnHandler = function(button, event) {
+
+                refreshBtnHandlerJS(hasRTFilters);
+                };
+
+                function refreshWindow() {
+                refreshWindowJS(hasRTFilters);
+                }
+
+                function refreshCalendarView(){
+                if(Ext.getCmp('calendarViewPanel')!= null && viewState=='calendarView'){
+                showCalendar(false);
+                }
+                }
+
+                var deleteBtnHandler = function(button, event) {
+                var deleteLabel = '{!JSENCODE($Label.Delete)}';
+                var deleteIncidentPage = '{!JSENCODE($Label.DeleteConfirmMessage)}';
+                deleteBtnHandlerJS(deleteLabel,deleteIncidentPage);
+                };
+                var newLabel = '{!JSENCODE($Label.New)}';
+                var  showMsgQV1Label ='{!JSENCODE($Label.ShowMessageQV1)}';
+                var refreshLabel = '{!JSENCODE($Label.Refresh)}';
+                var deleteLabel = '{!JSENCODE($Label.Delete)}';
+                var copyLabel = '{!JSENCODE($Label.Copy)}';
+                var viewsLabel = '{!JSENCODE($Label.Views)}';
+                var tableLabel = '{!JSENCODE($Label.Table)}';
+                var chartLabel = '{!JSENCODE($Label.Chart)}';
+                var applyLabel = '{!JSENCODE($Label.Apply)}';
+                var calendarLabel = '{!JSENCODE($Label.Calendar)}';
+                var openItemsLabel = '{!JSENCODE($Label.OpenItems)}';
+                var  closedItemsLabel = '{!JSENCODE($Label.ClosedItems)}';
+                var activeItemsLabel = '{!JSENCODE($Label.ActiveItems)}';
+                var inactiveItemsLabel = '{!JSENCODE($Label.InactiveItems)}';
+                var assignToLabel = '{!JSENCODE($Label.AssignTo)}';
+                var  staffWindowHeaderSearchPageLabel= '{!JSENCODE($Label.IncidentsStaff)}';
+                var incidentsSuggestedStaffLabel = '{!JSENCODE($Label.IncidentsSuggestedStaff)}';
+                var incidentMyselfLabel = '{!JSENCODE($Label.IncidentMyself)}';
+                var incidentMemberofLabel= '{!JSENCODE($Label.IncidentMemberof)}';
+                var queueLabel = '{!JSENCODE($Label.Queue)}';
+                var selectedProfilesLabel = '{!JSENCODE($Label.SelectedProfiles)}';
+                var clearAssignTo = '{!JSENCODE($Label.ClearAssignTo)}';
+                var actionsLabel  = '{!JSENCODE($Label.Actions)}';
+                var statusMsg = '{!JSENCODE($Label.statusMsg)}';
+
+                var customPageSize = parseInt('{!customPageSize}');
+                var profileName = ' {!JSENCODE($Profile.Name)}';
+                var Me = '{!JSENCODE($Label.Me)}';
+                var MyQueues = '{!JSENCODE($Label.MyQueues)}';
+                var selectStaff = '{!JSENCODE($Label.SelectStaff)}';
+                var selectQueue = '{!JSENCODE($Label.SelectQueue)}';
+                var ownerId = '{!JSENCODE($Label.Ownerid)}';
+
+                var ObjIncidentLabel = '{!JSENCODE($ObjectType.Incident__c.label)}';
+                var ObjTaskLabel = '{!JSENCODE($ObjectType.Task__c.label)}';
+                var ObjBroadastLabel = '{!JSENCODE($ObjectType.Broadcasts__c.label)}';
+                var ObjChangeRequestLabel = '{!JSENCODE($ObjectType.Change_Request__c.label)}';
+                var ObjProblemLabel = '{!JSENCODE($ObjectType.Problem__c.label)}';
+                var ObjCategoryLabel = '{!JSENCODE($ObjectType.Category__c.label)}';
+                var ObjCategoryTypeLabel = '{!JSENCODE($ObjectType.CategoryTypes__c.label)}';
+                var ObjAccountLabel = '{!JSENCODE($ObjectType.Account.label)}';
+                var ObjImpactLabel = '{!JSENCODE($ObjectType.Impact__c.label)}';
+                var ObjUrgencyLabel = '{!JSENCODE($ObjectType.Urgency__c.label)}';
+                var ObjStatusLabel = '{!JSENCODE($ObjectType.Status__c.label)}';
+                var ObjPriorityLabel = '{!JSENCODE($ObjectType.Priority__c.label)}';
+                var ObjActionLabel = '{!JSENCODE($ObjectType.Action__c.label)}';
+                var ObjUserLabel = '{!JSENCODE($ObjectType.User.label)}';
+                var ObjIncidentHistoryLabel = '{!JSENCODE($ObjectType.IncidentHistory__c.label)}';
+                var ObjBroadcastHistoryLabel = '{!JSENCODE($ObjectType.BroadcastHistory__c.label)}';
+                var ObjTaskHistoryLabel = '{!JSENCODE($ObjectType.TaskHistory__c.label)}';
+                var ObjStandardDescriptionLabel = '{!JSENCODE($ObjectType.StandardDescription__c.label)}';
+                var ObjTemplateLabel = '{!JSENCODE($ObjectType.SYSTemplate__c.label)}';
+                var ObjFAQLabel = '{!JSENCODE($ObjectType.FAQ__c.label)}';
+                var ObjFAQCategoryLabel = '{!JSENCODE($ObjectType.FAQ_Category__c.label)}';
+                var ObjChangeAssessmentLabel = '{!JSENCODE($ObjectType.Change_Assessment__c.label)}';
+                var ObjProjectedServiceOutageLabel = '{!JSENCODE($ObjectType.Projected_Service_Outage__c.label)}';
+
+
+
+                function getViewsArray() {
+                filterOptions = new Array(1);
+                filterOptions[0] = 'Hi';
+                }
+                var calViewComponentId = '{!$Component.calView}';
+
+                var newBtnMenu = new Array();
+                var selectedRowIndex;
+
+
+
+                function getQvState(){
+                var active = '{!JSENCODE(activeFilter)}';
+                var inactive = '{!JSENCODE(inactiveFilter)}';
+                var isOpen = '{!JSENCODE(openItemsFilter)}';
+                var isClosed = '{!JSENCODE(closedItemsFilter)}';
+                var sortColumn = '{!JSENCODE(sortColumn)}';
+                var orderSeq =  '{!JSENCODE(orderSeq)}';
+                setSortHeader(sortColumn, orderSeq);
+                getQVStateJS(active, inactive, isOpen, isClosed);
+
+                }
+                
+                
+                                
+                var nodePopupIdsStr = '{!JSENCODE(nodePopupIdsStr)}';
+
+                var dayLabel = '{!JSENCODE($Label.Day)}';
+                var weekLabel = '{!JSENCODE($Label.Week)}';
+                var monthLabel = '{!JSENCODE($Label.Month)}';
+                var trueLabel = '{!JSENCODE($Label.True)}';
+                var falseLabel = '{!JSENCODE($Label.False)}';
+                var  searchLabel =  '{!JSENCODE($Label.Search)}';
+                var clientWindowHeaderSearchPageLabel = '{!JSENCODE($Label.ClientWindowHeaderSearchPage)}';
+                var owneridLabel = '{!JSENCODE($Label.Ownerid)}';
+                var ShowMessageQV2Label = '{!JSENCODE($Label.ShowMessageQV2)}';
+                var advancedFilterLabel = '{!JSENCODE($Label.AdvancedFilter)}';
+                var columnModelInfoComponentId = '{!$Component.columnModelInfo}';
+                var columnModelSortInfoComponentId = '{!$Component.columnModelSortInfo}';
+                var advFilterCollapsed = {!advFilterCollapsed};
+                var isSystemQVForQue = {!isSystemQVForQue};
+
+                function showChartPopup() {
+                    chartDataStore = new Ext.data.ArrayStore({
+                        data: chartDataResultSet,
+                        fields: flds
+                    });
+                    
+                // Grid defining grid for showing data.
+                    var chartDatagrid = new Ext.grid.GridPanel({
+                        id: 'chartDatagrid',
+                        store: chartDataStore,
+                        border: false,
+                        columnLines: true,
+                        enableColumnResize: false,
+                        enableColumnMove: false,
+                        colModel: new Ext.grid.ColumnModel({
+                            columns: PopulateColumnChartArray()
+                        }),
+                        sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
+                        height: 250,
+                        border: true,
+                        viewConfig: {
+                            scrollOffset:0,
+                            getRowClass: function(record, index) {
+                            var idPagenameFormat = record.get(idFldDataIndex);
+                            idPagenameFormat = idPagenameFormat.split(',');
+                            if(idPagenameFormat[2]!='' && idPagenameFormat[2]!=null) {
+                            var cssName = 'css' + String(idPagenameFormat[2]).replace('#','');
+                            if (Ext.get(cssName) == null)
+                            {
+                            var cssDef = '.' + cssName + ' { background-color: ' + idPagenameFormat[2] + '; }';
+                            Ext.util.CSS.createStyleSheet(cssDef, cssName );
+                            }
+                            return cssName;
+                            }
+                            }
+        
+                        },
+                        listeners: {
+                        rowdblclick :function(grid, row, e) {
+                            isRowClicked = true;
+                            openTab(chartDatagrid.store.getAt(selectedRowIndex).get(idFldDataIndex), chartDatagrid.store.getAt(selectedRowIndex).get(nameFldDataIndex));
+                        },
+                        rowclick :function(grid, row, e) {
+                        //isRowClicked = true;
+                            selectedRowIndex=row;
+                            var record = grid.store.getAt(selectedRowIndex);
+                            recordDetails = record.get(idFldDataIndex);
+                            recordDetails = recordDetails.split(',');
+                            if(recordDetails[5] == 'Task__c' || recordDetails[5] == 'Broadcasts__c' || recordDetails[5] == 'Incident__c') {
+                                Ext.getCmp('assignedToId').disabled = false;
+                            }
+        
+                        }
+                        }
+                    });
+                    if(Ext.getCmp('chartPopupWin')!=null) {
+                        Ext.getCmp('chartPopupWin').removeAll();
+                        Ext.getCmp('chartPopupWin').add(chartDatagrid);
+                        Ext.getCmp('chartPopupWin').show();
+                    }
+                     
+                 }
+                 
+            </script>
+            <apex:inputHidden value="{!queryId}" id="QVId" />
+            <apex:inputHidden value="{!widgetId}" id="widgetId" />
+            <apex:inputHidden value="{!minimized}" id="minimizedState"/>
+            <apex:inputHidden value="{!maximized}" id="maximizedState"/>
+            <apex:inputHidden value="{!columnModelInfo}" id="columnModelInfo"/>
+            <apex:inputHidden value="{!sortInfo}" id="columnModelSortInfo"/>
+            <apex:inputHidden value="{!sequenceId}" id="sequenceId"/>
+
+            <apex:inputHidden value="{!openItemsFilter}" id="opened"/>
+            <apex:inputHidden value="{!closedItemsFilter}" id="closed"/>
+            <apex:inputHidden value="{!activeFilter}" id="active"/>
+            <apex:inputHidden value="{!inactiveFilter}" id="inactive"/>
+            <apex:inputHidden value="{!viewType}" id="viewState"/>
+            <apex:inputHidden value="{!advFilterCollapsed}" id="advFilterState"/>
+            <apex:inputHidden value="{!calView}" id="calView"/>
+
+            <apex:inputHidden value="{!width}" id="width"/>
+            <apex:inputHidden value="{!height}" id="height"/>
+            <apex:inputHidden value="{!xPos}" id="xPos"/>
+            <apex:inputHidden value="{!yPos}" id="yPos"/>
+
+
+            <apex:actionfunction name="setfilterOptions" action="{!setfilterOptions}" rerender="dummyPanel">
+                <apex:param name="activeFltr" assignTo="{!activeFilter}" value=""/>
+                <apex:param name="inactiveFltr" assignTo="{!inactiveFilter}" value=""/>
+                <apex:param name="openItems" assignTo="{!openItemsFilter}" value=""/>
+                <apex:param name="closedItems" assignTo="{!closedItemsFilter}" value=""/>
+            </apex:actionfunction>
+            
+            <apex:actionfunction name="saveState" action="{!saveState}" rerender="dummyPanel"/>
+
+            <apex:outputpanel id="pickListPanel">
+                <script>
+                    var pickListIter = 0;
+                    var ValueLabelArr = new Array();
+                </script>
+                <apex:repeat value="{!pickVals}" var="PickListValue">
+                    <script>
+                        pickListData[pickListIter] = new Array(3);
+                        pickListData[pickListIter][2] = '{!JSENCODE(PickListValue.conditionFieldName)}';
+                        pickListData[pickListIter][0] = '{!JSENCODE(PickListValue.conditionValue)}';
+                        pickListData[pickListIter][1] = '{!JSENCODE(PickListValue.conditionLabel)}';
+                        pickListData[pickListIter][3] = '{!JSENCODE(PickListValue.conditionFieldLabel)}';
+                        ValueLabelArr[pickListData[pickListIter][0]] = pickListData[pickListIter][1];
+                        pickListIter = pickListIter +1;
+                    </script>
+                </apex:repeat>
+            </apex:outputpanel>
+
+            <script>
+                var objectLabelNameList = new Array();
+                var objectLabelNameListIter = 0;
+            </script>
+            <apex:repeat value="{!objectLabelNameList}" var="field">
+                <script>
+                    objectLabelNameList[objectLabelNameListIter] = new Array(3);
+                    objectLabelNameList[objectLabelNameListIter][0] = '{!JSENCODE(field.label)}';
+                    objectLabelNameList[objectLabelNameListIter][1] = '{!JSENCODE(field.name)}';
+                    objectLabelNameList[objectLabelNameListIter][2] = '{!JSENCODE(field.pageName)}';
+                    objectLabelNameListIter = objectLabelNameListIter + 1;
+                </script>
+            </apex:repeat>
+            <script>
+                var advFilterData = new Array();
+                var i=0;
+                var tempRec;
+            </script>
+            <apex:repeat value="{!advFilterDataList}" var="advFilterDataRecord">
+                <script>
+                    advFilterData[i] = new Array(5);
+                    advFilterData[i][0] = '{!JSENCODE(advFilterDataRecord.rtCondition.displaylabel__c)}';
+				    advFilterData[i][1] = '{!JSENCODE(advFilterDataRecord.rtCondition.operand1__c)}';
+                    advFilterData[i][2] = '{!advFilterDataRecord.fieldType}';
+                    advFilterData[i][3] = '{!advFilterDataRecord.rtCondition.id}';
+                    advFilterData[i][4] = '{!advFilterDataRecord.extraInfo}';
+                    i++;
+                </script>
+            </apex:repeat>
+            <script>
+                if('{!intMaxCols}' != null && ('{!intMaxCols}').length == 0){
+                colsSize = 0;
+                }else{
+                colsSize = parseInt('{!intMaxCols}');
+                }
+                if('{!rowIndex}' != null && ('{!rowIndex}').length == 0){
+                totalRows = 0;
+                }else{
+                totalRows = parseInt('{!rowIndex}');
+                }
+                for(i=0; colsSize>=i; i++){
+                flds[i]='fld'+i;
+                }
+            </script>
+
+        </apex:outputPanel>
+        <div style="display:none">
+            <div id="grid" style="display: block; background: white;"></div>
+            <div id="chartViewPanelPanel">
+            <div id="chartView" style="display: block; background: white;"></div>
+    		</div>
+            <div id="monthview"></div>
+            <div id="weekview"></div>
+            <div id="dayview"></div>
+            <div id="legendDiv" style="display: block;"></div>
+
+        </div>
+
+        <table width="100%" cellspacing="0" cellpadding="0" class="tableCls">
+            <tr>
+                <td>
+                    <div id="btnToolBarDiv" ></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div id="viewPortDiv"  style="display:block; background: white;" ></div>
+                </td>
+            </tr>
+        </table>
+
+        <apex:outputPanel id="calendarPanel">
+            <script>
+                //calView = '{!JSENCODE(calView)}';
+                initCalendarFlag = {!initCalendarFlag};
+
+
+            </script>
+            <div style="display:none">
+                <div id="popupContents">
+                    <table cellspacing="0" cellpadding="0" class="tableCls" border="0">
+                        <tr height="8">
+                            <td colspan="4"></td>
+                        </tr>
+                        <apex:repeat value="{!popupWindowInit}" var="popup" >
+                            <tr>
+                                <td class="clsInputLabelTD" align="left">
+                                    <apex:outputlabel value="{!popup.label}" ></apex:outputlabel>
+                                </td>
+                                <td width="64">
+                                    <table cellspacing="0" cellpadding="4" class="tableCls" width="100%">
+                                        <tr height="13">
+                                            <td class="clsInputLabelTD " width="100%" align="right" style="{!popup.colorCode}" >
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td width="11"></td>
+                            </tr>
+                        </apex:repeat>
+                        <tr height="8">
+                            <td colspan="4"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </apex:outputPanel>
+
+        <apex:outputPanel id="chartPanel">
+            <script>
+
+                chartDisplayed = {!chartDisplayed};
+                var highchartsAllDataJSON = '{!JSENCODE(highchartsAllDataInfoBundle)}';
+				var highchartsAllData = {};
+				var chartData;
+				var chartXAxisCategories;
+				var chartsSpecs;
+				var chartTypeValue;
+				var chartClickHandler;
+				var chartTitle;
+				var isChart3D;
+                var QVchart = {};
+            	var useDeprecatedFusionCharts = {!useDeprecatedFusionCharts};
+				if(highchartsAllDataJSON){
+					highchartsAllData = JSON.parse(highchartsAllDataJSON);
+					chartData = highchartsAllData.dataJson;
+					chartXAxisCategories = highchartsAllData.chartXAxisCategories;
+					chartClickHandler = highchartsAllData.highchartClickHandler;				
+					chartsSpecs = highchartsAllData.chartsSpecs;
+					chartTypeValue = chartsSpecs.chartTypeValue;//.toLowerCase();
+					chartTitle = highchartsAllData.chartTitle;
+					isChart3D = chartsSpecs.isChart3D;
+				}			                                                                                  				
+                renderNewCharts();
+                hideWaitbox();
+            </script>
+        </apex:outputPanel>
+        <apex:outputpanel id="qvPaginationPanel">
+            <div style="display:none">
+           <div class="prevNextDiv" id="qvPageDiv" >
+                <table align="center" width="100%" height="100%">
+                   <tr>
+                    <td>
+                        <apex:commandbutton id="firstClick" action="{!handleFirstClick}" title="{!$Label.bmcservicedesk__firstpage}" oncomplete="showWaitbox();loadTableData();" Style="resize:false" styleClass="clsImage1 flRight"/>
+                    </td>
+                    <td>   
+                        <apex:commandbutton id="previousClick" action="{!handlePreviousClick}" oncomplete="showWaitbox();loadTableData();" title="{!$Label.bmcservicedesk__previouspage}" Style="resize:false" styleClass="clsImage2 flLeft"/>
+                    </td>
+                    <td align="center">   
+                     <div id="pageInfoDiv" class="clsPaginationLabel"></div>
+                    </td>
+                    
+                    <td align = "right" >
+                        <apex:commandbutton id="nextClick" action="{!handleNextClick}" oncomplete="showWaitbox();loadTableData();" title="{!$Label.bmcservicedesk__nextpage}" styleClass="clsImage3 flRight" style="resize:false"/>
+                    </td>
+                    <td align = "right" >
+                        <apex:commandbutton id="lastClick" action="{!handleLastClick}" oncomplete="showWaitbox();loadTableData();" styleClass="clsImage4 flLeft" style="resize:false" title="{!$Label.bmcservicedesk__lastpage}"/>
+                    </td>
+                    
+                     
+                   </tr>
+                </table>   
+            </div>  
+            </div>
+            <script>
+                document.getElementById('thePage:theForm:firstClick').disabled = {!IF(hasPrevious,false,true)};
+                document.getElementById('thePage:theForm:previousClick').disabled = {!IF(hasPrevious,false,true)};
+                if(Ext.getCmp('pageInfoText')==null) {definePageInfo();}
+                    if ({!totalpage} <= 0)
+                    {   
+                        Ext.getCmp('pageInfoText').setText(""); 
+                    }
+                    else
+                    {
+                        Ext.getCmp('pageInfoText').setText("{!JSENCODE($Label.Page)} " + {!currentPage} + " of " + {!totalpage});
+                    }
+
+            </script>
+        </apex:outputpanel>
+    </apex:form>
+
+    <!--pre>{!log}</pre-->
+    <script>
+    	Ext.onReady(QVReady);
+    </script>
+</apex:page>

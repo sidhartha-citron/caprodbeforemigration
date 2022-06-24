@@ -1,0 +1,609 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.CustomActionController"  standardStylesheets="false">
+   <c:CommonIncludes />
+   <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomActionPage.css"/>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/itemselector.js" id="itemselector"/> 
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CustomAction.js"/>
+     <script>
+     
+     var impactName;
+     var customActionName;               
+     var customActionFormName;               
+     var impactId;
+     var customActionId;
+     var errormsg;
+     var chkBoxValue;
+     var comboFldIndex = -1;
+     var isfocus = 0;
+     var isEnterConst = 0;
+     var selectedRow;
+     var pNameForUpdate;
+     var preview; 
+     var isException = false;
+     var customActionHeader ='{!JSENCODE($ObjectType.Custom_Action__c.Label)}'; 
+     var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+     
+     
+     Ext.ns("CustomAction");
+            CustomAction.Labels = {
+            	SavedSuccessfully: '{!JSENCODE($Label.SavedSuccessfully)}',
+				New: '{!JSENCODE($Label.New)}',
+				Save: '{!JSENCODE($Label.Save)}',
+				Copy: '{!JSENCODE($Label.Copy)}',
+				Delete: '{!JSENCODE($Label.Delete)}',
+				Reset: '{!JSENCODE($Label.Refresh)}',
+				PreviousRecord: '{!JSENCODE($Label.PreviousRecord)}',
+				NextRecord: '{!JSENCODE($Label.NextRecord)}',
+				Inactive: '{!JSENCODE($ObjectType.Custom_Action__c.fields.Inactive__c.label)}',
+				selectedProfileListEmpty: '{!JSENCODE($Label.selectedProfileListEmpty)}',
+				DeleteConfirmMessage: '{!JSENCODE($Label.DeleteConfirmMessage)}',
+				DeletedRecord: '{!JSENCODE($Label.DeletedRecord)}',
+				InsufficentDeletePrivilege: '{!JSENCODE($Label.InsufficentDeletePrivilege)}',
+				SelectField: '{!JSENCODE($Label.SelectField)}',
+				ModuleType: '{!JSENCODE($Label.TooltipQuickViewsWizardChartType)}',
+				parameterNameEmpty: '{!JSENCODE($Label.parameterNameEmpty)}',
+				parameterNameUnique: '{!JSENCODE($Label.parameterNameUnique)}',
+				EmptyModuleFieldValue: '{!JSENCODE($Label.EmptyModuleFieldValue)}',
+				EmptyConstantValue: '{!JSENCODE($Label.EmptyConstantValue)}',
+				parameterName: '{!JSENCODE($Label.parameterName)}',
+				EnterConstant: '{!JSENCODE($Label.EnterConstant)}',
+				Information: '{!JSENCODE($Label.Information)}'
+            }
+     Ext.ns("CustomActionPageComp");
+         CustomActionPageComp.ComponentVars = {
+         	isRecDeleted: {!isRecDeleted},
+         	URLId: '{!$Component.customActionForm.URLId}',
+         	ActionNameID: '{!$Component.customActionForm.ActionName__Id}',
+         	radFCR8: '{!$Component.customActionForm.panelbarId.panelbarItemId.radFCR8}'	
+         }
+     customActionId = '{!JSENCODE(customAction.Id)}';       
+     //var isRecDeleted = '{!isRecDeleted}';
+     var isIncInactive= '{!customAction.inactive__c}';
+     document.onclick = activateWindow; 
+     function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+     }
+     function getID(){
+            return '{!JSENCODE($CurrentPage.parameters.id)}';
+     }
+     function getSDFStylesResPath(){
+          return '{!$Resource.SDEFStyles}';
+        }
+   
+        /*
+            Code for handling Data change on Page
+            - START
+        */
+        var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}'; 
+           
+     
+         
+         /*
+            END
+        */
+        
+        Ext.reg('itemselector', Ext.ux.form.ItemSelector);
+    
+    //backwards compat
+        Ext.ux.ItemSelector = Ext.ux.form.ItemSelector;
+        var ds;
+        var ds1;    
+        var selectedValues ='';
+        var separator= '-';
+        var moduleFieldStore;
+        var moduleFieldCombo;
+    function  fetchModuleFieldStore(){
+                moduleFieldStore = new Ext.data.ArrayStore({
+                    fields:['lable','apiName'],
+                    data:{!moduleFldsNames}
+               });
+                    }
+    function setData2(){
+            ds.loadData(fieldList);
+            ds1.loadData(profileList);        
+            Ext.getCmp('form').doLayout();
+        }
+    var gridData= [];
+     var grid;
+    // to set Griddata
+       
+    function showTable(){
+        tableStore = new Ext.data.ArrayStore({
+            fields: ['field','constValue','apiName','isDynamic'],
+            data : gridData
+        });
+        function renderTooltip(value, metaData, record, rowIndex, colIndex, tableStore) { 
+            //metaData.attr = 'title="'+listData[rowIndex][colIndex]+'"';
+            return value;     
+        }      
+        var winWidth=   window.parent.Ext.getCmp('winId'+wid).getWidth();   
+        grid = new Ext.grid.GridPanel({
+              renderTo:'extGridPanel',
+              id:'grid',
+              width: Ext.isIE ? winWidth-298:winWidth-292,
+              border:true,
+              store: tableStore,
+              columns: [{
+                  id:'FieldLabel',
+                  header: '{!JSENCODE($Label.parameterName)}', 
+                  width:50, 
+                  sortable: true, 
+                  dataIndex: 'field'
+              },{
+                  header: '{!JSENCODE($Label.parameterValue)}', 
+                  renderer: renderTooltip, 
+                  id:'ValueField',
+                  width:50, 
+                  sortable: true, 
+                  dataIndex: 'constValue'
+              },{
+                  header: '{!JSENCODE($Label.LocalValue)}', 
+                  renderer: renderTooltip,
+                  id:'apiNameFld',
+                  width:50, 
+                  sortable: true,
+                  hidden: true, 
+                  dataIndex: 'apiName'
+              },{
+                  header: '{!JSENCODE($Label.LocalValue)}', 
+                  renderer: renderTooltip,
+                  id:'isDynamicFld',
+                  width:50, 
+                  sortable: true,
+                  hidden: true, 
+                  dataIndex: 'isDynamic'
+              }],
+          stripeRows: true,
+          autoExpandColumn: 'FieldLabel',
+          height:100,
+           minWidth:350,
+          layout: 'fit',
+          stateful: true,
+          stateId: 'grid',
+          autoScroll:false,
+          viewConfig:{
+              forceFit:true,
+              scrollOffset:0 
+          },
+          autoFitColumns: true,
+              listeners: {
+                  rowClick :function(grid,a,b){
+                      var record = grid.store.getAt(a);
+                      field=record.get('field');
+                      value=record.get('constValue');
+                      value=listDataGrid[a][1];
+                      locValue=record.get('apiName');
+                      selectedRow = a;
+                      onRowClkofParamGrid(record);
+                      //setVisibilityOnClick(locValue);                            
+                      //document.getElementById('{!$Component.templateFormId.id_selectList}').value=locValue;                          
+                      //document.getElementById("{!$Component.templateFormId.removeButtonId}").disabled= false;
+                  }
+              }        
+      });
+        //grid.on('columnresize', textTruncationForValueField);
+        //newColumnSize = grid.getColumnModel().getColumnWidth(1);
+    }
+     var wid='{!JSENCODE($CurrentPage.parameters.wid)}';
+        var resizeGrid= function resizeGrid(){
+        var winWidth=window.parent.Ext.getCmp('winId'+wid).getWidth();
+        var forColgridWidth=Ext.isIE7 ? 298 : Ext.isIE8 ? 298:292;
+        var comboObj=Ext.getCmp('moduleFieldCombo');
+        
+        var gridObj=Ext.getCmp('grid');
+        if(gridObj!=undefined)
+            gridObj.setWidth(winWidth-forColgridWidth);
+
+        var tableWidth=document.getElementById('parameterTable').clientWidth;
+        tableWidth = Ext.isIE7 ? tableWidth-10 : Ext.isIE8 ? tableWidth-6: tableWidth;
+        comboObj.setWidth(tableWidth*0.35);
+        };
+       if(window.parent.refreshGridSI!=undefined)
+            window.parent.refreshGridSI(wid,resizeGrid); 
+    
+        
+    function buttonValidator() {
+       if((customActionFormName != null && customActionFormName != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.SavedSuccessfully)}')){   
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('deleteId').setIconClass('bmcDelete');
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('resetId').setDisabled(false);
+       }  
+     }
+    var cusActionIdSet;
+    if(cusActionIdSet == null || cusActionIdSet == ''){
+        if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+        if(typeof(window.parent.returnListOfId)=='function')
+            cusActionIdSet=window.parent.returnListOfId();
+    }else{
+        if(typeof(window.parent.parent.getIdArray)=='function')
+            cusActionIdSet=window.parent.parent.getIdArray();
+            window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+        }
+    }
+
+    </script>  
+   
+    <apex:outputPanel id="dataPanel">
+        <script>
+            preview = '{!JSENCODE(previewOfURL)}';
+            listDataGrid = new Array();
+            var i=0; 
+            <apex:repeat value="{!listData}" var="gridRowobj" >    
+                listDataGrid[i] = new Array(4);
+                listDataGrid[i][0]=urldecode('{!JSENCODE(gridRowobj.paramName)}');
+                listDataGrid[i][1]=urldecode('{!JSENCODE(gridRowobj.paramConstVal)}');
+                listDataGrid[i][2]='{!JSENCODE(gridRowobj.paramApiName)}';
+                listDataGrid[i][3]='{!JSENCODE(gridRowobj.paramisDynamic)}';
+                i++;
+            </apex:repeat>
+            
+            function setData(){
+                tableStore.removeAll();
+                Ext.getCmp('grid').getView().refresh();
+                tableStore.loadData(listDataGrid);
+                //textTruncationForValueField(-1,null);
+                Ext.getCmp('grid').getView().refresh();
+            }                     
+            function loadPreview(){
+                document.getElementById('previewText').value = '{!JSENCODE(previewOfURL)}';
+               
+            }                    
+        </script>
+    </apex:outputPanel>
+    
+    <apex:outputPanel id="fieldComboPanel">
+        <script>
+           {!moduleFldsNames} 
+            function setFieldComboData(){
+                moduleFieldStore.removeAll();
+                //Ext.getCmp('grid').getView().refresh();
+                moduleFieldStore.loadData({!moduleFldsNames});
+                //textTruncationForValueField(-1,null);
+                //Ext.getCmp('grid').getView().refresh();
+           }
+        </script>
+        </apex:outputPanel>
+        
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           customActionName = '{!JSENCODE(customAction.name)}';               
+           customActionId = '{!JSENCODE(customAction.Id)}';      
+           customActionFormName = '{!JSENCODE(customAction.ActionName__c)}';	
+        </script>
+        </apex:outputPanel>
+        
+         <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+        <apex:outputPanel id="afterSavePanel">
+            <script>
+               function handleSave(){
+                   var id = "{!JSENCODE(customAction.Id)}";
+                window.parent.handleSave(wid, id);
+            }
+              
+            
+            </script>
+        </apex:outputPanel>
+       <apex:outputPanel id="titlePanel">
+        <script>
+            
+           function updateTitle(){
+                var newTitle= '{!JSENCODE(customAction.ActionName__c)}';
+                if(newTitle != ""){     
+                    window.parent.changeTitle(wid,newTitle,customActionHeader);                 
+                }               
+            }
+            function enableSaveButton() {
+                Ext.getCmp('saveId').setDisabled(false);
+            } 
+            function updateList(){
+               window.parent.refreshList();
+            }
+        </script>
+    </apex:outputPanel>  
+          
+         <apex:outputPanel id="inactivePanel">
+        <script>
+            function updateInactive(){
+                Ext.getCmp('idInactive').setValue('{!customAction.Inactive__c}');
+            }
+            function updateEveryOne(){
+                if(typeof(fieldList)!= 'undefined' && fieldList.size() == 0){
+	                document.getElementById('{!$Component.customActionForm.panelbarId.panelbarItemId.radFCR8}').checked= true;
+	                toggleItemSelector();
+                }else{
+                	document.getElementById('{!$Component.customActionForm.panelbarId.panelbarItemId.radFCR8}').checked=false;
+                	toggleItemSelector();
+                }
+            }
+        </script>
+    </apex:outputPanel>
+    <apex:outputpanel id="ModuleFieldsPanel">
+    <script>
+        fieldList = new Array();
+        var i=0; 
+        <apex:repeat value="{!selectedProfileList}" var="fieldName11" >    
+            fieldList[i] = new Array(2);
+            fieldList[i][0]=  '{!JSENCODE(fieldName11.id)}';
+            fieldList[i][1]=  '{!JSENCODE(fieldName11.Name)}';
+            i++;
+        </apex:repeat> 
+                
+        profileList = new Array();
+        var i=0; 
+        <apex:repeat value="{!profileFldList}" var="profileNamelst" >    
+            profileList[i] = new Array(2);
+            profileList[i][0] ='{!JSENCODE(profileNamelst.id)}';
+            profileList[i][1] ='{!JSENCODE(profileNamelst.Name)}';
+            i++;
+            
+        </apex:repeat>
+          
+    </script>
+    </apex:outputpanel>
+    <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form id="customActionForm">
+            <!-- apex:actionFunction action="{!newImpact}" name="newImpact"/ -->
+             <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            <apex:actionFunction action="{!deleteCustomAction}" name="deleteCustomAction" onComplete="completeDelete();" rerender="errorId,validationComponent"/>
+            <apex:actionFunction action="{!nextBtnHandler}" name="nextBtnHandler" 
+                                    rerender="titlePanel,ModuleFieldsPanel,dataPanel,fieldComboPanel,inactivePanel,afterSavePanel,ActionName__Id,descriptionId,Module,URLId,previewText,LaunchLocation,Module" onComplete="setData();setData2();setFieldComboData(); updateInactive();handleResetChange();updateTitle();generatePreviewUrl();updateEveryOne();">
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>  
+            </apex:actionFunction>
+            <apex:actionFunction action="{!previousBtnHandler}" name="previousBtnHandler" 
+                                        rerender="titlePanel,dataPanel,fieldComboPanel,ModuleFieldsPanel,inactivePanel,afterSavePanel,ActionName__Id,descriptionId,Module,URLId,previewText,LaunchLocation,Module" onComplete="setData();setData2();setFieldComboData(); updateInactive();handleResetChange();updateTitle();generatePreviewUrl();updateEveryOne();">
+                                        <apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+            </apex:actionFunction>
+           
+            <apex:actionFunction action="{!save}" name="save" reRender="titlePanel,validationComponent,panelId,afterSavePanel,errorId,Module" 
+                        oncomplete="waitMsg.hide();showError();buttonValidator();updateList();handleElemEvent();handleSave();enableSaveButton();updateTitle();">
+                        <apex:param assignTo="{!selectedProfiles}" name="idSetString" value=""/>  
+                        <apex:param assignTo="{!paramList}" name="paramList" value=""/>
+                        <apex:param assignTo="{!chkBoxValue}" name="chkBoxValue" value=""/>  
+             </apex:actionFunction>
+             <apex:actionFunction name="populateFields" action="{!initModuleFldsNames}" reRender="id_selectList,dataPanel, fieldComboPanel, extGridPanel,lookUpPanel,widgetPanelGrp,ButtonPanelGrp,fldTypePanel" oncomplete="setData();setFieldComboData();generatePreviewUrl();"/>
+                        <table class="clsMainTable" cellspacing="0" cellpadding="0">
+                            <tr class="clsRowGreyBg">
+                                <td colspan="4">
+                                    <div id="btnToolbar"></div>                                
+                                </td>
+                            </tr>  
+                            <tr>
+                                           <td><div class="div10pxHspacing"/></td>
+                               
+                               <td class="clsTopAlignment75">
+                                                <apex:outputPanel id="tablePanelFirst" >
+                                
+                                
+                                                   <table class="clsTable" cellspacing="0" cellpadding="0">
+                                                        <tr>
+                                                            <td colspan="2"><div class="div15pxVspacing"/></td>
+                                                        </tr>
+                                                        <tr>
+                                                             <td class="clsInputLabelTD"> 
+                                               <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__ActionName__c.label}"/><span class="clsRequiredBlack">*</span>
+                                                             </td>
+                                        <td>
+                                              <apex:inputText title="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__ActionName__c.inlineHelpText}" value="{!customAction.BMCServiceDesk__ActionName__c}" id="ActionName__Id" styleclass="clstxtBox"  /> 
+                                                              </td>
+                                                        </tr>
+                                                        <tr>
+                                       <td colspan="2"><div class="div5pxVspacing"/></td>
+                                                        </tr>
+                                                        <tr>
+                                       <td class="clsInputLabelTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__Description__c.label}"/>
+                                       </td>
+                                       <td>
+                                        <apex:inputTextarea id="descriptionId" title="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__Description__c.inlineHelpText}" value="{!customAction.BMCServiceDesk__Description__c}"  styleclass="clsdescriptionId"/>
+                                                             </td>
+                                                        </tr>
+                                                         <tr>
+                                       <td colspan="2">
+                                                                <div class="div5pxVspacing"></div>
+                                                            </td>
+                                                           
+                                                         </tr>
+                                                        <tr>
+                                                             <td class="clsInputLabelTD"> 
+                                                                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__Form__c.label}"/>
+                                                             </td>
+                                    <td>
+                                         <apex:selectList title="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__Form__c.inlineHelpText}" value="{!customAction.BMCServiceDesk__Form__c}" id="Module" size="1" styleClass="clspicklist" disabled="{!isFormSaved}" onchange="populateFields();" >
+                                                                        <apex:selectOptions value="{!moduleItems}"/>                                                    
+                                                                    </apex:selectList> 
+                                                            </td>
+                                                         </tr>
+                                                         <tr>
+                                      <td class="clsInputBoldLabelTD" colspan="2"><apex:outputLabel value="{!$Label.bmcservicedesk__action}"/>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>        
+                                                                <td class="clsInputLabelTD"> 
+                                                                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__LaunchUrl__c.label}"/><span class="clsRequiredBlack">*</span>
+                                                                </td>
+                                          <td>
+                                             <apex:inputTextarea title="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__LaunchUrl__c.inlineHelpText}" value="{!customAction.BMCServiceDesk__LaunchUrl__c}" id="URLId" onchange="generatePreviewUrl();" styleclass="clsURLId" /> 
+                                                                </td>
+                                                         </tr>
+                                                          <tr>
+                                      <td colspan="2">
+                                                                <div class="div5pxVspacing"></div>
+                                                            </td>
+                                                         </tr>
+                                                         <tr>
+                                                            <td class="clsInputLabelTD" colspan="2"> 
+                                                                    <apex:outputLabel value="{!$Label.bmcservicedesk__launchparameters}"/>
+                                                             </td>
+                                                         </tr>
+                                   <td colspan="2">
+                                        <div class="div5pxVspacing"></div>
+                                       </td>
+                                  
+                                 </table>
+                                 
+                                 
+                                 <table id="parameterTable" cellspacing="0" cellpadding="0"  class="clsparameterTable" border="0" >
+                                     <tr>
+                                        <td colspan="5">
+                                            <div class="div10pxVspacing"></div>
+                                        </td>
+                                     </tr>
+                                     <tr>
+                                         <td width="40%"> 
+                                            <input type="text"  id="paramName"  title="{!$Label.URLParameterName}"  Class="clsTempInputTextBox123"
+                                                    onfocus="if (this.value=='{!$Label.parameterName}'){ this.value = ''; this.style.color='#000000';}isfocus = 1"  value="{!$Label.parameterName}" style="color:#B5B8C8;" />
+                                         </td>
+                                         <td width="5%" >
+                                                <apex:outputLabel value="=" styleClass="clsEqualToRadio"/>
+                                         </td>
+                                         <td width="5%">
+                                            <input type="radio" name="colors" id="comboRd" class="clsEqualToRadio" onclick="enableValidation();" checked="true" />
+                                         </td>
+                                         <td width="35%">
+                                            <div id="moduleFldsCombo" title="{!$Label.FormFieldsList}" style="width:100%;"></div>
+                                         </td>
+                                         <td width="15%">
+                                            <apex:panelGroup id="ButtonPanelGrp">
+                                                <input type="button" Class="bgBtnGrey"  value="{!$Label.Add}" onClick="addParameter();"  id="okButtonId"  style="display:inline" />
+                                                <input type="button" Class="bgBtnGrey"  value="{!$Label.Update}" onClick="updateParameter();"  id="updateButtonId"  style="display:none"  />
+                                            </apex:panelGroup>
+                                         </td>
+                                     </tr>
+                                     <tr>
+                                         <td height="4" COLSPAN="5" ></td>
+                                     </tr>
+                                     <tr>
+                                          <td width="40%"></td>
+                                          <td width="5%" ></td>
+                                          <td width="5%">
+                                                <input type="radio" name="colors" id="txtBoxRd" class="clsEqualToRadio" onclick="enableValidation();" />
+                                          </td>
+                                          <td width="35%">
+                                                <input type="text"  id="paramConstVal"  title="{!$Label.URLConstantParameter}" disabled="true" Class="clsParamConst" 
+                                                onfocus="if (this.value=='{!$Label.EnterConstant}'){ this.value = ''; this.style.color='#000000'; }isEnterConst = 1;"  value="{!$Label.EnterConstant}" style="color:#B5B8C8;" />
+                                          </td>
+                                          <td width="15%">
+                                                <apex:panelGroup id="ButtonPanelGrp1">
+                                                    <input type="button" Class="bgBtnGrey"  value="{!$Label.Remove}" onClick="removeParameter();"  id="removeButtonId"  disabled="true"  style="display:inline" />
+                                                </apex:panelGroup>
+                                          </td>
+                                     </tr>
+                                     <tr>
+                                          <td colspan="5">
+                                             <div class="div10pxVspacing"></div>
+                                          </td>
+                                     </tr> 
+                                 </table>
+                              
+                               
+                               
+                            <table cellspacing="0" cellpadding="0" class="clsTable" >
+                               
+                        
+                                  <tr>
+                                    <td colspan="2">
+                                        <div id="extGridPanel"></div>
+                                                            </td>
+                                                         </tr>
+                                                         <tr>
+                                                            <td colspan="2">
+                                                                <div class="div10pxVspacing"></div>
+                                                            </td>
+                                  
+                                                         </tr>
+                                 
+                                </table> 
+                                 <table cellspacing="0" cellpadding="0" class="clsTable" >
+                                                         <tr>       
+                                                            <td class="clsInputLabelTD"> 
+                                                                <apex:outputLabel value="{!$Label.bmcservicedesk__preview}"/>
+                                                            </td>
+                                                            <td>
+                                       <textarea id="previewText" rows="2" cols="30" title="{!$Label.PreviewUrl}"  readonly="true" class="clspreviewText"/> 
+                                                            </td>
+                                                         </tr>
+                                                         <tr> 
+                                    <td class="clsInputBoldLabelTD" colspan="2"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Custom_Action__c.fields.BMCServiceDesk__LaunchIn__c.label}"/>
+                                                            </td>
+                                                         </tr>
+                                                         <tr>
+                                                            <td colspan="2">
+                                                                <apex:selectRadio value="{!customAction.BMCServiceDesk__LaunchIn__c}" id="LaunchLocation" layout="pageDirection" styleClass="checkLabelTemp" >
+                                                                            <apex:selectOptions value="{!launchLocationItems}"/>                                                    
+                                                                  </apex:selectRadio>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                
+                                                </apex:outputPanel>           
+                               
+                                            </td>
+                              
+                               
+                               
+                               
+                               
+                               
+                               
+                               
+                               <td><div class="div17pxHspacing"/></td>
+                              
+                               <td class="clsTopAlignment25">
+                                                 <div class="panelCapsule" style="vertical-align:top">
+                                                      <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" id="panelbarId">
+                                                         <apex:panelBarItem label="{!$Label.bmcservicedesk__actionforuseby}" expanded="true" id="panelbarItemId" headerClass="panelHeader">
+                                                             <table class="clsTable" cellspacing="0" cellpadding="0">
+                                                                <tr>
+                                                                    <td><div class="div15pxVspacing"/></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="clsPanelInputCheckboxTDS">
+                                                                <apex:outputPanel id="tablePanelSec" >
+                                                                        <apex:inputCheckbox title="{!$Label.bmcservicedesk__customactionforusebyeveryone}" value="{!allProfile}" id="radFCR8" onclick="toggleItemSelector();" style="margin-left:10px;"/> 
+                                                                        <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.bmcservicedesk__allprofiles}"/>
+                                                                <script>
+                                                                    document.getElementById('{!$Component.customActionForm.panelbarId.panelbarItemId.radFCR8}').checked=("{!JSENCODE(customAction.Name)}"=="" || {!allProfile});
+                                                                    toggleItemSelector();
+                                                                </script>  
+                                                               </apex:outputPanel>
+                                                                    </td>
+                                                                </tr>       
+                                                                 <tr>
+                                                                    <td colspan="2" width="100%">
+                                                                        <table>
+                                                                            <tr>
+                                                                                <td class="clsBoldInputLabelTD" width="135" style="padding-left:6px;">
+                                                                                    <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__availableprofile)}" title="{!$Label.bmcservicedesk__availableprofilecustomaction}" />
+                                                                                </td>
+                                                                                <td class="clsBoldInputLabelTD" >
+                                                                                    <apex:outputLabel value="{!$Label.bmcservicedesk__selectedprofile}" title="{!$Label.bmcservicedesk__availableprofilecustomaction}" />
+                                                                                </td>
+                                                                               </tr>
+                                                                             </table>
+                                                                    </td>
+                                                                </tr>                                                     
+                                                                 <tr>
+                                                                    <td> <div id="itemselector" class="demo-ct" style="margin-left:10px;" ></div> </td>
+                                                                 </tr>
+                                                                                                                             
+                                                             </table>
+                                                         </apex:panelBarItem>
+                                                      </apex:panelBar>
+                                                 </div>
+                               
+                                </td>
+                            </tr>
+                        </table>
+                
+            </apex:form>
+    </apex:outputPanel>  
+</apex:page>

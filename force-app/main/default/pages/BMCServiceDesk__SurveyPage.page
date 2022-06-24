@@ -1,0 +1,513 @@
+<apex:page standardStylesheets="false" showHeader="false" sidebar="false" Standardcontroller="BMCServiceDesk__Survey__c" cache="false" extensions="BMCServiceDesk.SurveyController" language="{!ClientLanguage}">
+    <head><title>{!JSENCODE($Label.Service_Desk_Survey)}</title></head>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SSThemes}/{!staticResource}/SSLandingPage.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SurveyPage.css" />
+    <link rel="stylesheet" href="{!$Resource.DeepView}/ConsoleViewCustomization/style/jquery-ui.min.css"/>
+    <script type="text/javascript" src="{!$Resource.SelfServiceMyITUI}/SelfService/scripts/vendor/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.DeepView, 'ConsoleViewCustomization/script/jquery-ui.min.js')}"/>
+    <style>
+        .detailsTbl {width: 100%; vertical-align: middle;}
+        #circle {
+          width: 20px;
+          height: 20px;
+          -webkit-border-radius: 15px;
+          -moz-border-radius: 15px;
+          border-radius: 20px;
+          /*background: red;*/
+        }
+      
+        .ui-slider .ui-slider-handle {
+            width: 0.6em !important;
+            height: 1.2em !important;
+        }
+
+        hr {
+            border: medium none;
+            height: 1px;
+            background-color: #E1E1E1;
+        }
+        
+		.tooltip.top .tooltip-arrow {
+			bottom: 0;
+			left: 50%;
+			margin-left: -5px;
+			border-width: 5px 5px 0;
+			border-top-color: #000000;
+		}
+		.tooltip-inner {
+			max-width: 200px;
+			padding: 8px;
+			color: #ffffff;
+			text-align: center;
+			text-decoration: none;
+			background-color: #000000;
+			-webkit-border-radius: 4px;
+			-moz-border-radius: 4px;
+			border-radius: 4px;
+			width: 100px;
+			margin-top: 14px;
+			margin-left: -43px;
+			position:absolute;
+            bottom: 5px;
+		}
+		.tooltip-inner-RTL {
+		 	direction : rtl !important;
+		}
+		
+		.slider-tip {opacity: 1;bottom: 120%;margin-left: -8px;}
+		.tooltip.top {margin-top: 7px;padding: 5px 0;margin-left: -7px;}
+		.tooltip {
+			position: relative; /*absolute*/
+			z-index: 1030;
+			display: block;
+			visibility: visible;
+			font-size: 11px;
+			line-height: 1.4;
+		}
+		.tooltip-arrow {
+			position: relative; /*absolute*/
+			width: 0;
+			height: 0;
+			border-color: transparent;
+			border-style: solid;
+			margin-bottom: -50px !important;
+			margin-left: -2px !important;
+		}
+
+        .Branding-Title_bar {
+            background: {!JSENCODE(ss3BrandingTokens['token12'])};
+            border-top: 1px solid {!JSENCODE(ss3BrandingTokens['token11'])};
+        }
+}
+
+    </style>
+    <script>
+		var minPicklistValues = {!minValuesToDisplay};
+	</script>
+    <apex:form id="surveyform" >
+        <div dir="{!IF(ClientLanguage=='iw','rtl','ltr')}">
+                <div>
+                         <apex:outputPanel styleClass="rf-top-banner-div" layout="block">
+                            <a onclick="openWindow();" title="{!URLTipText}" style ="cursor:pointer" id="bmcLink" target="_blank">
+                                <apex:image value="{!URLFOR($Resource.BMCServiceDesk__SSThemes,staticResource+'/SDEFimages/BMCHelix-Remedyforce_Logo.png')}" rendered="{!NOT(customBannerHeaderImageVisible)}"/>
+                                <apex:image url="/servlet/servlet.FileDownload?file={!bannerHeaderId}" rendered="{!customBannerHeaderImageVisible}" />
+                            </a>   
+                             
+                         </apex:outputPanel>  
+                </div> 
+             
+				<script>
+					var fieldValMap = new Object();
+					var fieldValString;
+					var mapIndexOptions = [];
+					var optionsList;
+					var clientLang ='{!JSENCODE(ClientLanguage)}';
+				</script>
+				
+                <apex:outputPanel id="mainPanel" >
+                <apex:outputPanel rendered="{!NOT(isSubmit)}" >
+                        <div >
+                                <table id="rf-ticker"  class="rf-ticker-div tableWidth {!IF(ssVersion=='Self Service 3.0',' Branding-Title_bar','')}" style="text-align: center;">
+                                	<tr><td class="rf-banner-link description" >
+	                                    <apex:outputText value="{!$Label.bmcservicedesk__survey_title}"/>
+	                                </td></tr>
+                                </table>
+                                <div class = "verticalDistance15px"></div>
+                                <table class= "marginLeft">
+									<tr><td>
+									<div class = "colHeader">
+                                    <apex:outputText value="{!$Label.bmcservicedesk__survey_description}"/>
+                                    <hr style="height: 2px;"></hr>
+									</div>
+									</td></tr>
+								</table>
+                                <div class = "verticalDistance10px"></div>
+                        </div> 
+                        
+                        <div>  
+                                <table  id="queTable" class= "marginLeft">
+                                	<apex:variable var="index" value="{!0}" />
+                                    <tr>
+                                        <td colspan="2">
+                                        	 <div  class = "errormessage" id="pgMsgs">
+                                	<apex:pageMessages />
+                                </div>
+                        						<div class = "verticalDistance10px"></div>
+                                 <script>
+									function isErrorMessageDisplayed(){
+										var errorTitle;
+										var messageBlock = document.getElementById('pgMsgs');
+										var messageTable = messageBlock.getElementsByClassName('messageTable');
+											if (messageTable && messageTable.length > 0) {
+												var messageText = messageTable[0].getElementsByClassName('messageText');
+												if (messageText && messageText.length > 0 && messageText[0].hasChildNodes()) {
+													var errorH4 = messageText[0].getElementsByTagName('H4');
+													if (errorH4 && errorH4.length > 0) {
+														errorTitle = errorH4[0].innerText;
+														if(errorTitle && errorTitle != '')
+															return true;
+													}		
+												}
+											}
+											return false; 	
+									}
+									var isError = isErrorMessageDisplayed();
+									
+									if(isError){
+										resetPageData();
+									}
+                                  </script>
+                                   <apex:outputPanel style="display:{!IF(TopLegend,'block','none')}" rendered="{!TopLegend && Questions!=null && NOT(ISBLANK(Questions))}"> 
+                                   <hr/>  
+                                    <table class="detailsTbl">
+                                        <tr>
+                                            <apex:repeat value="{!Questions[0].options}" var="option">
+                                                <td style="width: {!100/minValuesToDisplay}%;">
+                                                    <div id="circle" style="background:{!option.colorCode};margin: 0 auto;"></div>
+                                                </td>
+                                            </apex:repeat>
+                                        </tr>
+                                        <tr>
+                                            <apex:repeat value="{!Questions[0].options}" var="option">
+                                                <td id="tdcolorBarTopLegends"  class = "ssDefaultFontCls" style="text-align:center;width: {!100/minValuesToDisplay}%;vertical-align:top;">
+                                                    {!option.itemName}
+                                                </td>
+                                            </apex:repeat>
+                                        </tr>
+                                    </table>
+                                                <hr/>
+                                </apex:outputPanel>
+                                        </td>
+                                    </tr>
+                                    <apex:repeat value="{!Questions}" var="que">
+                                        <tr>
+                                            <td class = "ssDefaultFontCls" style="vertical-align: top;"><!-- align="right" -->
+                                                <apex:variable var="index" value="{!index+1}"/>  
+                                                <apex:outputText value="{!FLOOR(index)}"/>. 
+                                            </td>
+                                            <td class = "ssDefaultFontCls">
+                                                 <apex:outPutPanel rendered="{!NOT(DisplayHelpText)}" >
+                                                    <apex:outputText value="{!$ObjectType.BMCServiceDesk__Survey__c.fields[que.fieldAPIName].Label}"/>
+                                                </apex:outPutPanel>
+                                                <apex:outPutPanel rendered="{!DisplayHelpText}" >
+                                                    <apex:outputText value="{!$ObjectType.BMCServiceDesk__Survey__c.fields[que.fieldAPIName].InlineHelpText}" styleClass="breakLongHelpText"/>
+                                                </apex:outPutPanel>
+                                                <apex:outPutPanel rendered="{!que.isRequired}" >
+                                                    <font style = "color:#c00">*</font>
+                                                </apex:outPutPanel>
+                                            </td>
+                                        </tr>
+                                        <tr >
+                                            <td class = "verticalDistance1px">
+                                            </td><td></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan = "2">
+                                                <div id="slider{!index}" style="height: 12px;">
+                                                    <script>
+                                                        optionsList = [];
+                                                    </script>
+                                                    <apex:repeat value="{!que.Options}" var="option">
+                                                        <script>
+                                                            optionsList.push('{!JSENCODE(option.itemName)}');
+                                                        </script>
+														<div style="background: {!option.colorCode};float:{!IF(ClientLanguage=='iw','right','left')} ;width: {!100/minValuesToDisplay}%;height: 100%; cursor: pointer;"/>
+                                                    </apex:repeat>
+													<script>
+													   if(!isError)		
+                                                       mapIndexOptions[{!index-1}] = optionsList;
+                                                   </script>
+                                                </div>
+                                                <script>
+                                                    var defaultindex={!que.indexOfDefault}
+                                                    
+                                                    var defaultSliderPos;
+                                                	var totalCols = {!minValuesToDisplay};
+                                                    var oneColumnMaxvalue = 100/totalCols;
+                                                    var val;
+
+                                                  if(defaultindex>0){
+                                                  	defaultSliderPos=(oneColumnMaxvalue*defaultindex)-(oneColumnMaxvalue/2);
+                                                  	if(clientLang =='iw') // When languages is Hebrew adjust selection to manage the RTL display 
+                                                    {
+                                                    	defaultSliderPos = minPicklistValues*oneColumnMaxvalue - defaultSliderPos;
+                                                    } 
+                                                  }
+                                                  else
+                                                  defaultSliderPos=0;
+                                                
+                                                    $("#slider{!index}").slider({
+                                                        slide: function(event, ui) {
+                                                            $(this).find('.ui-slider-handle').show();
+                                                        },
+                                                        create: function(event, ui){
+                                                            if(isError && fieldValMap){
+                                                                var sliderNoSelectedIndex = fieldValMap[{!index}];
+                                                                if(sliderNoSelectedIndex){
+                                                                	defaultSliderPos = (oneColumnMaxvalue*sliderNoSelectedIndex)-(oneColumnMaxvalue/2);
+                                                                	if(clientLang =='iw') // When languages is Hebrew adjust selection to manage the RTL display  
+                                                        			{
+                                                        				defaultSliderPos = minPicklistValues*oneColumnMaxvalue - defaultSliderPos;
+                                                        			} 
+                                                                }
+                                                        	}
+                                                            if(defaultSliderPos>0 && defaultindex<=totalCols)
+                                                                $(this).slider('value', defaultSliderPos);
+                                                            else {
+                                                                $(this).find('.ui-slider-handle').hide();
+
+                                                            }
+                                                        },
+                                                        stop: function( event, ui ) {
+                                                            var percent = ui.value;
+                                                            var key = $(this)[0].id;
+                                                            
+                                                            for(i=1;i<={!minValuesToDisplay};i++){
+                                                            	if(percent <= (oneColumnMaxvalue * i)){
+                                                            		val = (oneColumnMaxvalue*i)-(oneColumnMaxvalue/2);
+                                                            		$("#slider{!index}").slider( "value", val);                                                            		
+                                                            		break;
+                                                            	}
+                                                            }
+                                                            if(clientLang =='iw') // When languages is Hebrew adjust selection to manage the reverse order  
+                                                        	{
+                                                        		i = minPicklistValues - i + 1;
+                                                        	}
+                                                            fieldValMap[{!index}] = i;
+                                                            
+                                                            //This is to avoid any VF validation errors
+                                                            setHiddenDropdownValues({!index}-1,i)
+                                                            
+                                                        }
+                                                    });
+
+													$( ".ui-slider-handle" ).on('focusout mouseleave', function() {
+														$('.ui-slider-handle').html("");
+													}); 
+													
+													$( ".ui-slider-handle" ).mouseenter(function() {
+													
+														var value = $(this).parent().slider( "option", "value" );
+														var sliderId = $(this).parent().attr('id');
+														var sliderno=sliderId.substr("slider".length); // The id value is like "slider10", takeout "slider" to get id value
+														var tooltipposition=value/oneColumnMaxvalue
+														tooltipposition=Math.floor(tooltipposition);
+														var rtlCssClass = '';
+														if(clientLang =='iw') // When languages is Hebrew pick tooltip adjust index to get correct tooltip 
+                                                        {
+                                                        	tooltipposition = minPicklistValues - tooltipposition - 1;
+                                                        	rtlCssClass= "tooltip-inner-RTL";
+                                                        }
+                                                        var tooltiptext = mapIndexOptions[sliderno-1][tooltipposition];
+														if(tooltiptext){
+															$(this).html('<div dir="ltr" class="tooltip top slider-tip"><div class="tooltip-inner '+ rtlCssClass + '">' + jsInHTMLEncode(tooltiptext) + '</div><div class="tooltip-arrow"></div></div>');                                                     
+                                                      	}
+                                                      });
+                                                      
+                                                </script>
+                                            </td>
+                                        </tr>
+                                        <tr >
+                                            <td class = "verticalDistance1px">
+                                            </td><td></td>
+                                        </tr>
+                                        
+                                            <tr style="{!IF(BelowLegend,'','display:none')}">
+                                                <td colspan = "2">
+                                                    <table class="detailsTbl">
+                                                        <tr id="trcolorBarRowLegends">
+                                                            <apex:repeat value="{!que.options}" var="option">
+                                                                <td rf-colorfieldAPI="{!option.itemValue}" style = "text-align:center;font-size: 12px !important;font-family: Arial !important;color: #000000 !important;width: {!100/minValuesToDisplay}%; vertical-align:top">
+                                                                    {!option.itemName}
+                                                                </td>
+                                                            </apex:repeat>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                              <tr >
+                                            <td class = "verticalDistance1px">
+                                            </td><td></td>
+                                        </tr>
+                                            
+                                    </apex:repeat>
+                                    
+                                    <script>
+	                                   	function setFldVals(){
+											document.getElementById('{!$Component.ssContactusSubmit}').disabled = true;
+	                                   		if(typeof(fieldValMap)!='undefined' && fieldValMap!=null && fieldValMap!={})
+	                                   			fieldValString = JSON.stringify(fieldValMap);
+	                                   		saveSurvey(fieldValString);											
+	                                   	}
+	                                </script>
+                                    
+                                    <apex:actionFunction name="saveSurvey" action="{!save}" reRender="mainPanel,afterSubmitBtn,msg">
+                                        <apex:param value="" assignTo="{!fieldValues}" name="fieldValString"/>
+                                    </apex:actionFunction>
+                                    
+                                    <tr>
+                                        <td colspan="2">	
+                                        <apex:outputPanel style="display: {!IF(BottomLegend,'block','none')}" rendered="{!BottomLegend && Questions!=null && NOT(ISBLANK(Questions))}">
+                                            <hr/>                                       
+                                        <table class="detailsTbl" >
+                                            <tr>
+                                                <apex:repeat value="{!Questions[0].options}" var="option">
+                                                    <td style="width: {!100/minValuesToDisplay}%;">
+                                                        <div id="circle" style="background:{!option.colorCode}; margin: 0 auto;"></div>
+                                                </td>
+                                                </apex:repeat>
+                                            </tr>
+                                            <tr>
+                                                <apex:repeat value="{!Questions[0].options}" var="option" rendered="{!BottomLegend}">
+                                                    <td id="tdcolorBarBottomLegends" class = "ssDefaultFontCls" style="text-align:center;width: {!100/minValuesToDisplay}%;vertical-align:top;">
+                                                        {!option.itemName}
+                                                	</td>
+                                                </apex:repeat>
+                                            </tr>
+                                        </table>
+                                            <hr/>
+                                    </apex:outputPanel>
+                                        </td>
+                                    </tr>
+                                    <tr >
+                                        <td class = "verticalDistance1px">
+                                        </td><td></td>
+                                    </tr>
+                                    
+                                    <!-- <apex:repeat value="{!IF(ServiceRequest == false ,$ObjectType.Survey__c.FieldSets.Incident_Survey,$ObjectType.Survey__c.FieldSets.ServiceRequest_Survey)}" var="survey" id="fieldset"> -->
+                                        <apex:repeat value="{!TextFieldsList}" var="survey" id="fieldset">
+                                        <tr>
+                                            <td class = "ssDefaultFontCls" style="vertical-align: top;">
+                                                <apex:variable var="index" value="{!index+1}"/>  
+                                                <apex:outputText value="{!FLOOR(index)}"/>. 
+                                            </td>
+                                            <td class = "ssDefaultFontCls">
+                                                
+                                                <apex:outPutPanel rendered="{!NOT(DisplayHelpText)}" >
+                                                    <apex:outputText value="{!$ObjectType.BMCServiceDesk__Survey__c.fields[survey].Label}"/>
+                                                </apex:outPutPanel>
+                                                <apex:outPutPanel rendered="{!DisplayHelpText}" >
+                                                    <apex:outputText value="{!$ObjectType.BMCServiceDesk__Survey__c.fields[survey].InlineHelpText}" styleClass="breakLongHelpText"/>
+                                                </apex:outPutPanel>
+                                                <apex:outPutPanel rendered="{!OR(survey.required, survey.dbrequired)}" >
+                                                    <font style = "color:#c00">*</font>
+                                                </apex:outPutPanel>                                               
+                                            </td>
+                                        </tr>
+                                        <tr >
+                                            <td class = "verticalDistance1px">
+                                            </td><td></td>
+                                        </tr>
+                                       <tr>
+                                            <td></td>
+                                             <td >
+                                             	 <apex:outputPanel rendered="{!CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'picklist')}" >
+                                                       <apex:inputField value="{!BMCServiceDesk__Survey__c[survey]}" required="{!OR(survey.required, survey.dbrequired)}" />
+                                                 </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'double')}" >
+                                                        <apex:inputfield value="{!BMCServiceDesk__Survey__c[survey]}" required="{!OR(survey.required, survey.dbrequired)}" style="width:120px" />
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'percent')}" >
+                                                     <apex:inputfield value="{!BMCServiceDesk__Survey__c[survey]}" required="{!OR(survey.required, survey.dbrequired)}" style="width:25px" />  %
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!OR(CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'textarea'),CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'string'))}" >
+                                                     <apex:inputField value="{!BMCServiceDesk__Survey__c[survey]}" required="{!OR(survey.required, survey.dbrequired)}" style="width:240px"  />  
+                                                </apex:outputPanel>
+                                                 <apex:outputPanel rendered="{!CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'boolean')}" >
+                                                    <apex:inputField value="{!BMCServiceDesk__Survey__c[survey]}" styleclass="marginLeft" />
+                                                </apex:outputPanel>                                            
+                                                <apex:outputPanel rendered="{!NOT(OR(CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'picklist'),CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'double'),CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'textarea'),CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'boolean'),CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'percent'),CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[survey].type,'string')))}" >
+                                                     <apex:inputField value="{!BMCServiceDesk__Survey__c[survey]}" required="{!OR(survey.required, survey.dbrequired)}"  />  
+                                                </apex:outputPanel>
+                                             </td>
+                                      </tr>
+                                      <apex:outputPanel >
+                                       <tr >
+                                            <td class = "verticalDistance5px">
+                                                
+                                            </td><td></td>
+                                        </tr>
+                                        </apex:outputPanel>
+                                    </apex:repeat>
+										<tr>
+                                            <td></td>                                            
+                                            <td>
+											<div class = "verticalDistance15px" />
+											<div class = "verticalDistance15px" />
+											<div class = "ssDefaultFontCls">
+                             {!JSENCODE($Label.survey_Note_Of_Thanks)}
+											</div></td>
+                                        </tr>
+										<tr>
+                                            <td></td>                                            
+                                            <td>
+                        <div class = "verticalDistance15px" />
+											<div>                     
+                        <apex:commandButton value="{!$Label.bmcservicedesk__sscontactussubmit}" id="ssContactusSubmit" onclick="setFldVals(fieldValMap);return false;" disabled="{!IF($CurrentPage.parameters.ispreview == 'true' ,true,false)}"/>
+											</div></td>
+                                        </tr>
+                                </table>   
+                        </div>
+                      
+                </apex:outputPanel>
+                </apex:outputPanel>
+                <apex:outputPanel id="afterSubmitBtn">
+               
+                <apex:outputPanel rendered="{!isSubmit}" >
+                        <div >
+                        <br /><br />
+                            
+                            <center>
+                                    <apex:outputText value="{!messages}" styleclass="title" id="msg" />
+                            </center>
+                        </div>
+                        <div class = "verticalDistance5px"></div>
+                        <div id="clsBtn">
+                            <center>
+                                    <input type = "button" onclick ="JavaScript:window.open('', '_self', '');window.close();" value="{!$Label.Close}"  />
+                            </center>
+                            <script>
+                                function GetIEVersion() {
+								  var sAgent = window.navigator.userAgent;
+								  var Idx = sAgent.indexOf("MSIE");
+								  if (Idx > 0) 
+									return parseInt(sAgent.substring(Idx+ 5, sAgent.indexOf(".", Idx)));
+								  else if (!!navigator.userAgent.match(/Trident\/7\./)) 
+									return 11;
+								  else
+									return 0; //It is not IE
+								}
+								
+                                if (GetIEVersion() > 0) 
+                                    document.getElementById("clsBtn").style.display = "block";
+                                else 
+                                    document.getElementById("clsBtn").style.display = "none";
+                                
+                            </script>
+                        </div>
+                </apex:outputPanel> 
+                </apex:outputPanel>
+			<apex:repeat value="{!ColourTextFieldsList}" var="surveyQues" id="hiddenFS">
+					<apex:outputPanel rendered="{!CONTAINS($ObjectType.BMCServiceDesk__Survey__c.fields[surveyQues].type,'picklist')}" style="display:none" >
+                    	<apex:inputField id="hiddenSelectCtrls" value="{!BMCServiceDesk__Survey__c[surveyQues]}" />
+                   	</apex:outputPanel>
+			</apex:repeat>
+			 </div> 
+    </apex:form>
+    
+     <script>
+        var url ='{!JSENCODE(companyURL)}';
+        var colourBarCounts = {!JSENCODE(TEXT(colourBarQuestionCount))}; //Count of colour bar questions
+        var isTopLegendEnabled = Boolean('{!JSENCODE(IF(TopLegend,"true", ""))}');
+        var isBottomLegendEnabled = Boolean('{!JSENCODE(IF(BottomLegend,"true", ""))}');
+        var strID = '{!JSENCODE($Component.surveyform.hiddenFS)}';
+        function jsInHTMLEncode(val) {
+			if(val){
+				val = val.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+			}
+			return val;
+		}
+    </script>
+   
+   <script src="{!$Resource.SDEFCommonJS}/Survey.js"  type="text/javascript"/>
+</apex:page>

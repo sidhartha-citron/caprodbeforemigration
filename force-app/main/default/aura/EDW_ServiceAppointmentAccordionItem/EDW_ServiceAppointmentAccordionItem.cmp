@@ -1,0 +1,38 @@
+<aura:component controller="EDW_AppointmentVisitDateTimeController">
+    <aura:attribute name="serviceAppointment" type="ServiceAppointment" required="true" />
+    <aura:attribute name="schedulingPolicies" type="FSL__Scheduling_Policy__c[]" required="true" />
+    <aura:attribute name="index" type="Integer" />
+    <aura:attribute name="max" type="Integer" />
+    <aura:attribute name="rootUrl" type="String" />
+    <aura:attribute name="isServiceAppointmentValidForClosing" type="Boolean"  />
+    
+    <aura:registerEvent name="deleteServiceAppointmentEvent" type="c:EDW_ServiceAppointmentDeletedEvent" />
+    
+    <aura:handler event="c:EDW_AccordionSectionExpandedEvent" action="{!c.sectionExpandedEvent}" />
+    
+    <div class="overlay" aura:id="spinnerWrapper"></div>
+    
+    <lightning:accordionSection name="{!v.serviceAppointment.AppointmentNumber}" label="{!v.serviceAppointment.AppointmentNumber}">
+    
+        <aura:set attribute="actions">
+            <div class="ch-sa-counter">
+                <div>
+                    <lightning:icon iconName="{!v.serviceAppointment.Has_Resource_Assigned__c ? 'utility:check' : 'utility:warning'}" variant="{!v.serviceAppointment.Has_Resource_Assigned__c ? 'success' : 'warning'}" size="x-small" />
+                </div>
+                <div>{!v.index} of {!v.max}</div>
+            </div>
+            <lightning:button class="ch-button-warning" label="Cancel" title="Cancel" onclick="{!c.cancelServiceAppointment}" disabled="{!v.isServiceAppointmentValidForClosing}" />
+            <lightning:button label="Delete" title="Delete" variant="destructive" onclick="{!c.deleteServiceAppointment}" disabled="{!v.isServiceAppointmentValidForClosing}" />
+        </aura:set>
+        <aura:set attribute="body">
+            <lightning:recordEditForm aura:id="recordViewForm"
+                                      recordId="{!v.serviceAppointment.Id}"
+                                      recordTypeId="{!v.serviceAppointment.RecordTypeId}"
+                                      objectApiName="ServiceAppointment">
+                <lightning:messages />
+                <lightning:inputField aura:id="selectedPolicy" fieldName="FSL__Scheduling_Policy_Used__c" onchange="{!c.policyChange}" disabled="{!v.serviceAppointment.Has_Resource_Assigned__c}" />
+            	<div aura:id="iframeContainer"></div>
+            </lightning:recordEditForm>
+        </aura:set>
+    </lightning:accordionSection>
+</aura:component>

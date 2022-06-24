@@ -1,0 +1,147 @@
+<!--
+ - Created by timothychiang on 2020-04-16.
+ -->
+
+<!-- Cpq 2 Table Row Equipment -->
+<template>
+	<td class="slds-col slds-cell-shrink">
+		<lightning-button-icon
+			icon-name="utility:delete"
+			alternative-text="Delete"
+			class="slds-m-left_xx-small"
+			title="Delete"
+			onclick={handleDelete}></lightning-button-icon>
+		<br/><br/><br/><br/><br/>
+		<template if:false={isAllValid}>
+			<lightning-helptext icon-name="utility:error" icon-variant="error" content="Please correct all fields."></lightning-helptext>
+		</template>
+		<template if:true={errorText}>
+			<lightning-helptext icon-name="utility:error" icon-variant="error" content={errorText}></lightning-helptext>
+		</template>
+	</td>
+	<td class="slds-col slds-cell-wrap">
+		<c-cpq-2-product-line-item-info line-item={lineItem}></c-cpq-2-product-line-item-info>
+	</td>
+	<td class="slds-col slds-cell-wrap">
+		<span class="slds-form-element__label">Category</span><br/>
+		<span>{productInfo.Category_Description__c}</span>
+		<br/>
+		<span class="slds-form-element__label">UoM</span><br/>
+		{productInfo.Unit__c}
+		<br/>
+		<!--span class="slds-form-element__label">Qty Available</span><br/>
+		<lightning-formatted-number
+			value={quantityAvailable}
+			format-style="decimal"
+			maximum-fraction-digits="0"
+		></lightning-formatted-number>
+		<br/-->
+		<span class="slds-form-element__label">List Price</span><br/>
+		<lightning-formatted-number
+			value={pricebookInfo.UnitPrice}
+			format-style="currency"
+			currency-code={isoCode}
+		></lightning-formatted-number>
+	</td>
+	<td class="slds-col">
+		<lightning-input
+			class="valid-field"
+			type="number"
+			name="quantity"
+			label="Quantity"
+			value={quantity}
+			required
+			min="0"
+			onchange={genericOnChange}></lightning-input>
+		<lightning-input
+			class="valid-field"
+			type="number"
+			name="purchasePrice"
+			label="Sales Price"
+			value={purchasePrice}
+			step="0.01"
+			required={isPurchasePriceRequired}
+			disabled={isLineItemFieldsDisabled}
+			onchange={genericOnChange}></lightning-input>
+		<template if:true={showDiscount}>
+			<span class="slds-text-color_error">
+				(
+				<lightning-formatted-number
+					value={discount}
+					format-style="percent"
+				></lightning-formatted-number>&nbsp;Off)
+			</span>
+		</template>
+		<br/>
+		<span class="slds-form-element__label">Total</span><br/>
+		<lightning-formatted-number
+			value={totalPrice}
+			format-style="currency"
+			currency-code={isoCode}
+		></lightning-formatted-number>
+		<br />
+		<lightning-input
+			type="text"
+			name="lineNotes"
+			label="Line Notes"
+			value={lineItem.description}
+			disabled={isLineItemFieldsDisabled}
+			onchange={genericOnChange}></lightning-input>
+	</td>
+	<td class="slds-col">
+		<lightning-input type="checkbox"
+						 label="Submit as Core List"
+						 name="isCoreListSubmitted"
+						 checked={isCoreListSubmitted}
+						 disabled={isCoreListSubmittedDisabled}
+						 onchange={genericOnChange}></lightning-input>
+		<lightning-input
+			class="valid-field"
+			type="number"
+			name="requestedCoreListPrice"
+			label="Core List Price"
+			value={requestedCoreListPrice}
+			step="0.01"
+			required={isCoreListSubmitted}
+			disabled={isCoreListPriceDisabled}
+			onchange={genericOnChange}></lightning-input>
+		<template if:true={showCoreListDiscount}>
+			<span class="slds-text-color_error">
+				(
+				<lightning-formatted-number
+					value={discountCoreList}
+					format-style="percent"
+				></lightning-formatted-number>&nbsp;Off)
+			</span>
+		</template>
+	</td>
+	<td class="slds-col">
+		<c-metadata-pick-list
+			allow-no-value=true
+			default-value={installationStatus}
+			picklist-name="installationStatus"
+			object-name="OpportunityLineItem"
+			field-name="Installation_Status__c"
+			onfilterchange={installationStatusOnChange}
+			disabled={isInstallationStatusDisabled}>
+		</c-metadata-pick-list>
+		<lightning-input
+			type="number"
+			name="installationPrice"
+			label="Install Price/Unit"
+			value={installationPrice}
+			formatter="currency"
+			step="0.01"
+			required={isInstallationPriceRequired}
+			readonly={isInstallationPriceReadOnly}
+			class="valid-field"
+			onchange={genericOnChange}></lightning-input>
+		<span class="slds-form-element__label">Total Install</span><br/>
+		<lightning-formatted-number
+			value={installTotal}
+			format-style="currency"
+			currency-code={isoCode}
+		></lightning-formatted-number>
+	</td>
+
+</template>

@@ -1,0 +1,271 @@
+<apex:page showHeader="false" standardStylesheets="true" controller="BMCServiceDesk.AdminNormalizationController">
+<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css"/>
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/AdminNormalization.css" type="text/css" />
+
+<script>
+var hideListViewMask;
+function afterFrameLoad(){
+ if( hideListViewMask != null && hideListViewMask != undefined && typeof(hideListViewMask)=='function')
+	hideListViewMask();
+}
+function getSDFStylesResPath(){
+    var resPath = '{!$Resource.SDEFStyles}';
+    return resPath;
+}
+</script>
+<apex:form id="mainForm" style="display:none;">
+<table border="0" width="100%" style="overflow:hidden;">
+    <tr class="rf-td-toolbar" id="NormRule_toolbar">
+	<td colspan="6">
+		<input type="image" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_new.gif" onClick="NewRule();return false;"  id="newRuleId" title="{!$Label.New}" tabindex="0" />
+		<input type="image" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_save.gif" onClick="SaveRule();return false;"  id="saveRuleId" title="{!$Label.Save}" tabindex="0" />
+		<input type="image" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_delete_disable.gif" onClick="DeleteRule();return false;" disabled="true" id="delRuleId" title="{!$Label.Delete}" tabindex="0" />
+        <div id="SaveMessageDiv" class="msgCls" style="display:none">
+			<table class="messageTable" cellspacing="0" cellpadding="0" border="0">
+			<tr valign="top">
+					<td>
+						<apex:image styleClass="SaveSuccessIcon" title="{!$Label.bmcservicedesk__savedsuccessfully}" value="/s.gif" alt="{!$Label.bmcservicedesk__savedsuccessfully}" />
+					</td>
+					<td>
+						<div id="SaveMessage"  style="margin-left:6px; width:100%;" ><apex:outputText value="{!$Label.bmcservicedesk__savedsuccessfully}" /></div>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div class="rf-toolbar-div">
+		<apex:inputCheckbox value="{!nRuleRecord.BMCServiceDesk__Inactive__c}" id="InactiveId"  style="float:left"/>
+		<apex:outputLabel value="{!$Label.bmcservicedesk__inactive}" style="float:left;padding-left:3px;" />
+		</div>
+	</td>
+	</tr>
+	<tr class="rf-nrule-tr1" style="padding-top:0px;">
+	<td class="rf-label-td" colspan="5" style="padding-top:0px;"><apex:pageMessages id="errormsg"/></td>
+	</tr>
+	<tr class="rf-nrule-tr1">
+		<td class="rf-label-td"  width="130"> <apex:outputLabel value="{!$Label.bmcservicedesk__objectname}" styleClass="rf-flt-right" /> </td>  
+		<td class="rf-value-td"  width="190">
+		   <div id="ObjectName"></div>
+		</td>
+		<td class="rf-label-td"  width="100"> <apex:outputLabel styleClass="rf-flt-right"  value="{!$Label.bmcservicedesk__fieldname}" /> </td>
+		<td class="rf-value-td" >
+			<div id="FieldName"></div>
+		</td>
+		<td class="rf-value-td" >
+        <apex:inputCheckbox value="{!appMethod}" id="appMethodId"  style="float:right;{!IF(nRuleRecord.BMCServiceDesk__Rule_Type__c != 'Ignored Value Rule','', 'display:none')}" title="{!$Label.bmcservicedesk__normalizationruleformcheckboxinfo}" onclick="showWarningMessage(this);" />
+	    </td>
+        <td id="GenerateLabel" class="rf-label-td" style="{!IF(nRuleRecord.Rule_Type__c != 'Ignored Value Rule','', 'display:none')}"> <apex:outputLabel value="{!$Label.bmcservicedesk__normalizationruleformcheckbox}" /> </td>
+	</tr>
+    <tr class="rf-nrule-tr1">
+        <td height="2" colspan="6"> </td>
+    </tr>   
+	<tr class="rf-nrule-tr1">
+        <td class="rf-label-td" width="100" colspan="1"> <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Normalization_Rule__c.fields.BMCServiceDesk__Rule_Type__c.Label}" styleClass="rf-flt-right" /> </td>  
+        <td class="rf-value-td" colspan="5">
+           <div id="RuleType"></div>
+        </td>
+    </tr>
+	<tr class="rf-nrule-tr1">
+		<td height="15" colspan="6"> </td>
+	</tr>
+	<tr class="rf-nrule-tr1">
+		<td height="25" colspan="6"> 
+		  <div id="variation_Div" ><a href="#" id="varLblId"  onclick="showVariationPanel();" > <span style="float:left;" id="RuleListTitle">{!JSENCODE($Label.AvailableRules)}</span>
+		   <img src="/s.gif" class="panelUpImg" id="imgCollapseId" /></a>
+		  </div> 
+		</td>
+	</tr>
+	<tr class="rf-nrule-tr1">
+	  <td colspan="6"> 
+	  <div id='Normalization_List' >
+		<iframe  onLoad="afterFrameLoad();" id ="NRframe" name="NRframe" width ="100%" style="border:none;" height="260" frameborder="0" ></iframe>
+	 </div>
+	 </td>
+	</tr>
+	<tr class="rf-nrule-tr1">
+	<td colspan="6"> <hr id="hrId" ></hr> </td>
+	</tr>
+    <tr class="rf-nrule-tr1">
+	<td colspan="6" class="rf-label-td"> 
+	<apex:outputpanel id="Rulelbl">
+	<apex:outputLabel styleClass="rfRuleTitle" value="{!JSENCODE($Label.bmcservicedesk__newrule)}" rendered="{!IF(nRuleId!=null,false,true)}"/>
+	<apex:outputLabel styleClass="rfRuleTitle" value="{!$ObjectType.BMCServiceDesk__Normalization_Rule__c.fields.Name.Label}: " rendered="{!IF(nRuleId!=null,true,false)}"/> 
+	<apex:outputLabel styleClass="rfRuleTitle" value="{!nRuleRecord.Name}" />
+	</apex:outputpanel>
+	</td>
+	</tr>
+	<tr class="rf-nrule-tr1">
+    <td class="rf-label-td" > <apex:outputLabel id="NormalizedValueLabel" styleClass="rf-flt-right" value="{!If(nRuleRecord.BMCServiceDesk__Rule_Type__c != 'Ignored Value Rule',$Label.bmcservicedesk__normalizedvalue,$Label.bmcservicedesk__ignoredvalue)}" /> </td>
+	<td colspan="5" class="rf-value-td"> <apex:inputText id="masterValueId" styleClass="rf-nr-text" title="{!$ObjectType.BMCServiceDesk__Normalization_Rule__c.fields.BMCServiceDesk__Field_Value__c.inlineHelpText}" value="{!nRuleRecord.BMCServiceDesk__Field_Value__c}"  /> 
+    <input type="image"  src="{!$Resource.SDEFStyles}/SDEFbuttons/b_pick.gif" style=
+    "display:none" onClick="if (selectedFieldLabel =='') return false; openmasterlookup();return false;"  id="mslkpId"  tabindex="0" />
+	</td>
+	</tr>
+	<tr class="rf-nrule-tr1">
+	<td height="5" colspan="6"> </td>
+	</tr>
+	<tr class="rf-nrule-tr1">
+    <td id="LabelTd" colspan="6" class="rf-label-td"> <apex:outputLabel style="{!IF(nRuleRecord.BMCServiceDesk__Rule_Type__c != 'Ignored Value Rule','', 'display:none')};font-weight:bold;color:#004376;" value="{!$Label.bmcservicedesk__mapaliases}" /> </td>
+	</tr>
+	<tr class="rf-nrule-tr1">
+	<td height="5" colspan="6"> </td>
+	</tr>
+    <tr class="rf-nrule-tr1" style="{!IF(nRuleRecord.Rule_Type__c != 'Ignored Value Rule','', 'display:none')}">
+	  <td colspan="6">
+	  <div id="mappingDiv" >
+	  <table border="0" width="100%" >
+	  <tr class="rf-td-toolbar">
+		<td  style="padding-left:10px;" width="120">
+			<apex:outputLabel value="{!$Label.bmcservicedesk__fieldvalue}" />  
+		</td>
+		<td width="100">
+			<apex:selectList id="selOperatorId" size="1" styleClass="rf-nr-select" rendered="true">
+                <apex:selectOptions value="{!Operator}"/>                                                   
+            </apex:selectList>
+		</td>
+		<td width="40%">
+             <input type="text" class="rf-nr-text" style="margin-left: 5px;" id="RfText" onkeyup="enableAddCancel();" oncut="enableAddCancel();" onpaste="enableAddCancel();"/>
+    
+             <input type="button" id="AddBtnId" class="rf-btn" disabled="disabled" value="{!JSENCODE($Label.Add)}" onclick="validateBeforeAdd();"/>
+             <button type="button" id="UpdateBtnId" class="rf-btn" style="display:none;" onClick="addRecordToDataGrid();">{!JSENCODE($Label.Update)}</button> 
+              <input type="button" id="DeleteBtnId" class="rf-btn" disabled="disabled" value="{!JSENCODE($Label.Remove)}" onclick="deleteRecordOfGrid();"/>
+        	<input type="button" id="CancelButtonId" class="rf-btn" disabled="disabled" value="{!JSENCODE($Label.Clear)}" onClick="showAddUpdate(true);ClearSelectedRowValue();"> </input>
+        </td>
+		<td>
+		<div  class="rf-map-tbar">
+		   <input type="text" style="float:left" class="rf-nr-text" id="txtsearch"  onkeypress="return searchOnEnter(event)" />
+		   <input type="image" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_search.png" onClick="searchVariations();return false;" id="searchMapId" title="{!$Label.Search}" tabindex="0" />
+	       <input type="image" src="{!$Resource.SDEFStyles}/SDEFbuttons/b_clear_search.png" onClick="resetMappingGrid();return false;"   id="resetMapId" title="{!$Label.Reset}" tabindex="0" />
+		   <input type="image"  src="{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif" onClick="prevRecord();return false;"  id="prevBtnId" title="{!$Label.PreviousPage}" style="float:left" tabindex="0" />
+           <input type="image"  src="{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif" onClick="nextRecord();return false;"  id="nextBtnId" title="{!$Label.NextPage}" style="float:left;padding-right:10px;" tabindex="0"/>
+		</div>
+		</td>
+		</tr>
+		</table>
+		</div>
+		</td>
+	</tr>
+    <tr class="rf-nrule-tr1" style="{!IF(nRuleRecord.Rule_Type__c != 'Ignored Value Rule','', 'display:none')}">
+	  <td colspan="6" > <div class="rf-mapping-Grid" id="mappingGrid" />  </td>
+	</tr>
+	<tr  class="rf-nrule-tr2">
+		<td height="10" colspan="6"> </td>
+    </tr>
+</table>
+
+<apex:actionFunction action="{!saveRecord}" name="saveRecord" rerender="reloadGridPanel,Rulelbl,appMethodId,masterValueId,objectId,InactiveId,afterSaveId,errormsg" oncomplete="refreshRulePage();afterSave('{!nRuleRecord.Name}');handleElemEvent();hideCheckbox();reloadMappingGrid();">
+ 		<apex:param name="ParameterVal" assignTo="{!parameterVal}" value=""/>
+ 		<apex:param name="deletedConditions" assignTo="{!deletedConditions}" value=""/>
+		<apex:param name="fieldType" value=""/>
+		<apex:param name="objectName" assignTo="{!objectName}" value=""/>
+        <apex:param name="RuleType" assignTo="{!selectedRuleType}" value=""/>
+</apex:actionFunction>
+<apex:actionFunction action="{!LoadExistingRule}" name="LoadExistingRule" rerender="appMethodId,masterValueId,objectId,InactiveId,reloadGridPanel,Rulelbl,errormsg" oncomplete="updateTitle('{!nRuleRecord.Name}',false);disableObjectAndFields(true);hideWaitMask();ReloadCondtionStore();">
+        <apex:param name="nRuleId" assignTo="{!nRuleId}" value="" />
+</apex:actionFunction>
+<apex:actionFunction action="{!DeleteRecord}" name="DeleteRecord" rerender="InactiveId" oncomplete="afterDelete();">
+        <apex:param name="nRuleId" value="" />
+</apex:actionFunction>
+<apex:actionfunction name="getFieldValues" action="{!getFieldValues}" reRender="fieldnameJS,errormsg" oncomplete="hideWaitMask();"> 
+	<apex:param name="objectName" assignTo="{!objectName}" value=""/>
+</apex:actionFunction>
+<apex:actionfunction name="setFieldValue" action="{!setFieldName}" reRender="appMethodId,errormsg" oncomplete="hideCheckbox();">
+	<apex:param name="FieldName" assignTo="{!fieldName}" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="searchMapping" action="{!searchMapping}" reRender="reloadGridPanel" onComplete="reloadMappingGrid();hideWaitMask();">
+	<apex:param assignTo="{!searchString}" name="searchString" value="" />
+</apex:actionFunction>
+<apex:actionFunction name="resetMapping" action="{!resetMapping}" reRender="reloadGridPanel" onComplete="reloadMappingGrid();hideWaitMask();"/>
+<apex:actionFunction name="nextRec" action="{!next}" reRender="reloadGridPanel" onComplete="reloadMappingGrid();hideWaitMask();enableBtn();"/>
+<apex:actionFunction name="prevRec" action="{!Previous}" reRender="reloadGridPanel" onComplete="reloadMappingGrid();hideWaitMask();enableBtn()"/>
+<apex:actionFunction name="createNewRule" action="{!createNewRule}" reRender="masterValueId,reloadGridPanel,Rulelbl,reloadNewRocordId" onComplete="reloadMappingGrid();hideWaitMask();enableBtn();disableObjectAndFields(false)"/>
+<apex:outputpanel id="fieldnameJS">
+<script>
+	var FieldNames={!FieldNameJSON};
+	if(typeof(FieldNameStore)!=null && typeof(FieldNameStore)!='undefined')
+		FieldNameStore.loadData(FieldNames);			
+</script>
+</apex:outputpanel>
+<apex:outputPanel id="afterSaveId">
+<script>
+	isSavedSuccessfully = {!isSavedSuccessfully};
+	var nRuleId= '{!JSENCODE(nRuleId)}';
+    var delRuleIcon =  document.getElementById('delRuleId');
+    if (nRuleId != '') {
+    	delRuleIcon.disabled = false;
+   	 	delRuleIcon.src = getSDFStylesResPath() +'/SDEFbuttons/b_delete.gif';
+    }
+</script>
+</apex:outputPanel>
+<apex:outputPanel id="reloadGridPanel">
+<script>
+	var mappingGridData=JSON.parse('{!JSENCODE(MappingGridData)}');
+	var hasnext={!hasNext};
+    var hasPrevious={!hasPrevious};
+	nRuleId= '{!JSENCODE(nRuleId)}';
+	if(nRuleId != '') {
+		delRuleIcon.disabled = false;
+   	 	delRuleIcon.src = getSDFStylesResPath() +'/SDEFbuttons/b_delete.gif';
+    }
+</script>
+</apex:outputPanel>
+<apex:outputPanel id="reloadNewRocordId">
+<script>
+    var newRecordId= '{!JSENCODE(nRuleId)}';
+</script>
+</apex:outputPanel>
+</apex:form>
+
+<script>
+var mappingGrid;
+var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+ _ServerLabels = {}
+ _ServerLabels.WaitMaskMsg = "{!JSENCODE($Label.PleaseWait)}...";
+ _ServerLabels.Delete = "{!JSENCODE($Label.Delete)}";
+ _ServerLabels.DeleteConfirmMessage = "{!JSENCODE($Label.DeleteConfirmMessage)}";
+ _ServerLabels.winTitle = '{!JSENCODE($Label.bmcservicedesk__newrule)}';
+ _ServerLabels.SavedSuccessfully = '{!JSENCODE($Label.SavedSuccessfully)}';
+ _ServerLabels.FieldName = '{!JSENCODE($Label.FieldName)}';
+ _ServerLabels.MappedAlias = '{!JSENCODE($Label.MappedAlias)}';
+ _ServerLabels.Operator = '{!JSENCODE($Label.Operator)}';
+ _ServerLabels.ValidateMinimumCharsSearchPage = '{!JSENCODE($Label.GsErrorMsg)}';
+var selectedRecord,MappingGridStore;
+var nonPrint = '¬';
+var PE = 'П';
+var selectedFieldName ='{!JSENCODE(FieldName)}';
+var appMethodId = '{!$Component.mainForm:appMethodId}';
+var ObjectNameEleID ='{!$Component.mainForm:objectId}';
+var MasterValLabel='{!JSENCODE($Label.NormalizedValue)}';
+var MasterValEleID='{!$Component.mainForm:masterValueId}';
+var normValLabel= '{!$Component.mainForm:NormalizedValueLabel}';
+var IgnoredVal = '{!JSENCODE($Label.IgnoredValue)}';
+var NormalizationRule = '{!JSENCODE($Label.NormalizedValue)}';
+var lblRuleField ='{!JSENCODE($Label.CIExpField)}';
+var selectedFieldAPIName ='{!JSENCODE(FieldName)}';
+var deletedConditions='';
+var RuleListIframeEle=document.getElementById('NRframe');
+var lblRuleObj='{!JSENCODE($Label.Object)}';
+var orgNamespace='{!OrgNamespace}';
+var selectFieldMsg = '{!JSENCODE($Label.ErrorMsgTemplateS)}';
+var SpecifyValueMsg = '{!JSENCODE($Label.SpecifyValue)}';
+var mainFormId='{!$Component.mainForm}';
+var lblWarningForGenerateException = '{!JSENCODE($Label.WarningForGenerateException)}';
+var lblWarningMsgHeader = '{!JSENCODE($ObjectType.Normalization_Rule__c.label)}';
+function getOperateId(){
+	return document.getElementById('{!$Component.mainForm.selOperatorId}');
+}
+var selectedobject= '{!JSENCODE(objectName)}';
+var objectArray = [];
+objectArray[0]= {apiname:orgNamespace+'BMC_BaseElement__c', label:'{!JSENCODE($ObjectType.BMC_BaseElement__c.label)}'}; 
+if({!isModelEnabled})
+objectArray[1]={apiname:orgNamespace+'Model__c', label:'{!JSENCODE($ObjectType.Model__c.label)}'};
+
+var selectedType = '{!JSENCODE(selectedRuleType)}';
+var ruleTypeArr = {!ruleType};
+ruleTypeArr[0]= {name:'Normalization Rule', label:ruleTypeArr[0]}; 
+ruleTypeArr[1]={name:'Ignored Value Rule', label:ruleTypeArr[1]};
+
+</script>
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"/>
+<script src="{!$Resource.SDEFCommonJS}/AdminNormalizationPage.js"  type="text/javascript" />
+<script src="{!$Resource.SDEFCommonJS}/AdminJSCommon.js"  type="text/javascript" />
+</apex:page>

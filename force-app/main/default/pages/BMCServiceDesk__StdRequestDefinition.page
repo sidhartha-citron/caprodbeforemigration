@@ -1,0 +1,83 @@
+<apex:page standardController="BMCServiceDesk__Incident__c" extensions="BMCServiceDesk.IncidentExtension"  showHeader="false" standardStylesheets="false">
+<head>
+ <style>
+.lookupIconLaunchForm {
+	background-image: url({!URLFOR($Resource.SDEFStyles,'SDEFbuttons/b_launch_form_on.gif')});
+	vertical-align: top;
+	padding-left: 5px;
+	width: 19px;
+	height: 19px;
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
+}
+ </style>
+</head>
+ <script>
+     
+ var requestDetail = null;
+ var requestDefName = '{!JSENCODE(incident.FKRequestDefinition__r.serviceRequestTitle__c)}';
+ var selectedReqDefID = '{!JSENCODE(incident.FKRequestDefinition__c)}';
+ var selectedReqDefTitle = '{!JSENCODE(incident.FKRequestDefinition__r.serviceRequestTitle__c)}';
+ var requestDetailID     = '{!JSENCODE(incident.FKRequestDetail__c)}';
+ var requestDetailCloneId     = '{!JSENCODE(incident.RequestDetailCloneId__c)}';
+ var incidentId = '{!JSENCODE(incident.Id)}';
+ var clientId = '{!JSENCODE(incident.FKClient__c)}';
+ var selectedCatId = '{!JSENCODE(incident.FKCategory__c)}';
+ var status = '{!incident.state__c}';
+ 
+window.onload = function(){
+	var isFromStd=true;
+	try{
+		var winLoc=window.parent.location;
+		if(winLoc!=null && winLoc!=undefined){
+			var winLoc=String(winLoc);
+			if(winLoc.indexOf("consoleIncidentRelatedList")!=-1)
+				isFromStd=false;
+		}
+	}catch(err) {
+		isFromStd=true;
+	}
+	if (requestDetailCloneId == null || requestDetailCloneId == 'undefined')
+		requestDetailCloneId='';
+
+    if(isFromStd && status == 'true' &&  (selectedReqDefTitle !=null && typeof(selectedReqDefTitle)!='undefined' && selectedReqDefTitle !='' )
+        && (requestDetailID==null || typeof(requestDetailID)=='undefined' || requestDetailID =='' )){        
+         openSRDetailpopUp();
+    }          
+}
+ </script>
+  
+    <apex:form id="incidentForm" target="_parent" >
+        
+        <apex:actionFunction name="saveIncidentWithRequestDtl" action="{!saveIncidentWithRequestDtl}" rerender="Varpanel" onComplete="refreshIncident();">
+            <apex:param assignTo="{!savedIdTest}" name="savedID" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction name="removeRequestDetailFromIncident" action="{!removeRequestDetailFromIncident}" onComplete="refreshIncident();">
+        </apex:actionFunction>
+        
+        <apex:actionFunction name="refreshIncident" action="{!refreshIncident}" />
+        
+         <table>
+             <tr>
+                <td class="lookupIconTD">
+                 <div>
+                     <input type="button" id="reqDetailBtn" class="lookupIconLaunchForm" onclick="openSRDetailpopUp()"  tabindex="512" title="{!JSENCODE($Label.ServiceRequestDetail)}"/>
+                 </div>
+                </td>
+            </tr>
+        </table>
+    </apex:form>
+   <script src="{!$Resource.BMCServiceDesk__SDEFCommonJS}/StdRequestDefinition.js"/>   
+   <apex:outputPanel id="Varpanel">
+	<script>
+	    	var errorMsg = '{!JSENCODE(messageString)}';
+	    	if (errorMsg.length > 0) {
+	    		alert(errorMsg);
+	    		removeRequestDetailFromIncident();
+	    	
+	    	}
+	 </script>
+ </apex:outputPanel>
+</apex:page>

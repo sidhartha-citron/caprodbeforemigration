@@ -1,0 +1,94 @@
+<div class="support-howto-container">
+	<loading-spinner centered="true" if="supportModel.dataLoading"></loading-spinner>
+	<div  class="category-breadcrumb-container" aria-label="Breadcrumb">
+		<span class="category-breadcrumb-span" ng-show="dropDownBreadCrumbsData.breadCrumbs.length > 0 && dropDownBreadCrumbsData.resultsDisplayed">
+			<a class="page-breadcrumb-item Branding-Right_Panel-hyperlink breadcrumb-navigate" ng-click="goToState('support.howto.all')" tabindex="0">
+				<span ng-bind-html=selfServiceLabels.Categories/>
+			</a>
+			<span class="page-breadcrumb-item" style="font-weight:bold;">&#10095;</span>
+		</span>
+		<span  ng-repeat="breadcrumbItem in dropDownBreadCrumbsData.breadCrumbs" ng-show="dropDownBreadCrumbsData.breadCrumbs.length > 0 && dropDownBreadCrumbsData.resultsDisplayed" class="category-breadcrumb-span">		
+			<a class="page-breadcrumb-item Branding-Right_Panel-hyperlink breadcrumb-navigate"  ng-if="!$last" ng-click="goBackToCategory($index)" tabindex="0">
+				 <span ng-bind-html="breadcrumbItem.name"/>
+			</a>
+			<span class="page-breadcrumb-item" style="font-weight:bold;" ng-if="!$last">&#10095;</span>
+			<span class="page-breadcrumb-item" style="font-weight:bold;" ng-if=" $last" class="page-breadcrumb-item" ng-class="{ 'page-breadcrumb-item_active': $last }" aria-current="page" tabindex="0">
+				<span ng-bind-html="breadcrumbItem.name"/>
+			</span>		
+		</span>
+	</div>	
+    <div ng-if="topLevelCategories.length == 0" style="text-align: center;" tabindex="0">     
+		<div>{{selfServiceLabels.noResults}}</div>     
+    </div>
+	<div  ng-if="topLevelCategories.length > 0 && !dropDownBreadCrumbsData.resultsDisplayed">
+			<ul aria-listnavigation id="articleId" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'articleId');" role="listbox" style="padding:0px;" tabindex="0">
+				<li selectable ng-focus="item.selected = true" ng-blur="item.selected = false" aria-selected="false" tabindex="-1" role="option" 
+					ng-repeat="item in topLevelCategories | orderBy: 'name'" ng-click="selectItem(item,true)" class="item-display-catalog" data-placement="right" data-toggle="popover" data-catId={{item.categoryId}} rfss-tooltip set-Width-Of-Tile="{{numberOfCols}}">
+					<div ng-if="item.catImage && item.catImage != 'useDefaultFromStaticResource'" class="support-request__icon icon_for_category">
+						<img  src='{{item.catImage}}' class="support-request__icon" aria-hidden="true" />
+					</div>
+					<div ng-if="item.catImage && item.catImage == 'useDefaultFromStaticResource'" class="support-request__icon icon_for_category">
+						<img ng-src="{{supportModel.defaultCategoryIconFromStaticResource}}" class="support-request__icon" aria-hidden="true"/>
+					</div>
+					<div ng-class="item.serviceRequestDefinitionId == null ? 'item-display-catalog-text' : ''" ng-bind-html="item.name" ng-if="item.name"/>
+				</li>
+			</ul>
+	</div>          
+    <div class="filter-sorting-container"  ng-show="dropDownBreadCrumbsData.resultsDisplayed">
+		<div ng-show="dropDownBreadCrumbsData.subCategories.length > 0" class="filter-container dropdown">
+			<div aria-listnavigation aria-label="{{selfServiceLabels.Categories}}" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'articleCategoryId');" role="listbox" class="category-dropdown dropdown-toggle" data-toggle="dropdown" ng-click="supportModel.updateCategoryDropdownUI();" tabindex="0"><span class="catalog-section-toolbar-menu__dropdown-toggle"><span class="activity-item_clickable">{{selfServiceLabels.Categories}} <span class="d-icon-triangle_down"/></span></span></div>	
+			<div class="dropdown-menu dropdown-container-div" ng-class="{'multi-column-wrapper':dropDownBreadCrumbsData.subCategories.length > supportModel.categoryFilterConfig.minLimit && dropDownBreadCrumbsData.subCategories.length < supportModel.categoryFilterConfig.maxLimit}" id="dropdown-container-div">	
+				<ul aria-listnavigation id="articleCategoryId" class="category-ul" ng-class="{'multi-column-ul': dropDownBreadCrumbsData.subCategories.length > supportModel.categoryFilterConfig.minLimit && dropDownBreadCrumbsData.subCategories.length <supportModel.categoryFilterConfig.maxLimit}" >
+					<li selectable ng-focus="menuItem.selected = true" ng-blur="menuItem.selected = false" aria-selected="false" tabindex="-1" class="category-option" data-boundary="window" data-placement="right" data-toggle="popover" data-catId={{item.categoryId}} rfss-tooltip ng-repeat="item in dropDownBreadCrumbsData.subCategories | orderBy: 'name'" ng-click="selectItem(item,true)" >
+						<span class="catIconPicklist">
+							<img ng-if="item.catImage && item.catImage != 'useDefaultFromStaticResource'" src='{{item.catImage}}' class="category_for_breadcrumbs"  />
+							<img ng-if="item.catImage && item.catImage == 'useDefaultFromStaticResource'" ng-src="{{supportModel.defaultCategoryIconFromStaticResource}}" class="category_for_breadcrumbs"/>
+						</span>
+						<span class="catIconPicklist">
+							{{decodeText(item.name)}}
+						</span>
+					</li>
+					<li class="dummy-category-listitem" ng-if="dropDownBreadCrumbsData.subCategories.length%2!=0 && dropDownBreadCrumbsData.subCategories.length > supportModel.categoryFilterConfig.minLimit && dropDownBreadCrumbsData.subCategories.length <supportModel.categoryFilterConfig.maxLimit" ></li>
+				</ul>
+			</div>
+		</div>
+		<div ng-if="howToItems.length != 0" class="sort-container" title="{{sortBy}} " role="none">
+			<span aria-button style="cursor: pointer" ng-class="{'inactiveLink Branding-Right_Panel-hyperlink':dynamicOrder == '', activeLink:dynamicOrder == 'title'}" ng-click="setOrder('title')" aria-label="{{sortByTitle}}">{{selfServiceLabels.ServiceTargetTitle}}</span> | <span aria-button style="cursor: pointer" ng-class="{'inactiveLink Branding-Right_Panel-hyperlink':dynamicOrder == 'title', activeLink: dynamicOrder == ''}" ng-click="setOrder('popularity')" aria-label="{{sortByPopularity}}">{{selfServiceLabels.Popular}}</span>
+		 </div>
+    </div>  
+    <div class="filter-result-container">
+		<div ng-if="howToItems.length == 0 && dropDownBreadCrumbsData.resultsDisplayed" tabindex="0">       
+			<div>{{selfServiceLabels.noResults}}</div>     
+		</div>
+		<ul aria-listnavigation id="articleId" ng-keydown="supportServiceModel.setFocusToFirstElement($event,'articleId');" role="listbox" style="padding:0px;" tabindex="0" ng-if="howToItems.length != 0">
+			<li selectable ng-focus="item.selected = true" ng-blur="item.selected = false" aria-selected="false" tabindex="-1" role="option" 
+				 class="support-request" ng-repeat="howto in howToItems | orderBy:dynamicOrder " ng-click="openItem(howto)" ng-show="!howToModel.dataLoading">
+				<img class="catalog-item__icon"
+					src="{{supportServiceModel.moduleIcons.KAFAQ}}"
+					ng-if="howto.RecordTypeDevName == 'FAQ¬'+namespaceWithoutUnderscore"
+					alt="" />
+				<img class="catalog-item__icon"
+					src="{{supportServiceModel.moduleIcons.KAHowTo}}"
+					ng-if="howto.RecordTypeDevName == 'How_To¬'+namespaceWithoutUnderscore"
+					alt="" />
+				<img class="catalog-item__icon"
+					src="{{supportServiceModel.moduleIcons.KAError}}"
+					ng-if="howto.RecordTypeDevName == 'Known_Error¬'+namespaceWithoutUnderscore"
+					alt="" />
+				<img class="catalog-item__icon"
+					src="{{supportServiceModel.moduleIcons.KAProblem}}"
+					ng-if="howto.RecordTypeDevName == 'Problem_Solution¬'+namespaceWithoutUnderscore"
+					alt="" />	
+				<img class="catalog-item__icon"
+					src="{{supportServiceModel.moduleIcons.KACustom}}"
+					ng-if="howto.RecordTypeDevName != 'Problem_Solution¬'+namespaceWithoutUnderscore &&
+						howto.RecordTypeDevName != 'How_To¬'+namespaceWithoutUnderscore &&
+						howto.RecordTypeDevName != 'Known_Error¬'+namespaceWithoutUnderscore && 
+						howto.RecordTypeDevName != 'FAQ¬'+namespaceWithoutUnderscore"
+					alt="" />	  	 	 
+				<div class="support-request__title maintain-word-breaks" ng-bind-html="howto.title"></div>
+				<div class="support-request__description" ng-bind-html="howto.desc"></div>
+			</li>
+		</ul>
+	</div>
+</div>

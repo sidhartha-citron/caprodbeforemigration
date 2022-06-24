@@ -1,0 +1,460 @@
+<apex:page controller="BMCServiceDesk.QVWizardController" showHeader="false" standardStylesheets="false">
+<c:CommonIncludes />
+<style>
+.x-grid3-row-alt{
+    background-color: #EBEBEB !important;
+}
+
+</style>       
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/QVWizard.js"/>  
+<!--<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/QVWizGeneral.css" />-->
+<div id="capsule" class="CapsuleDiv1" style="height:100%">
+<apex:outputPanel id="genSection">
+<apex:form id="QVInforForm">       
+<c:ValidationComponent errorMsgList="" id="vComponent"></c:ValidationComponent>
+<script>
+var wikiUrl='{!JSENCODE(wikiUrl)}';
+var errormsg = '{!JSENCODE(messageString)}'; 
+var infoMsg = '{!JSENCODE($Label.Information)}';
+var saveMsg = '{!JSENCODE($Label.SaveSuccessfullyQVWizChartviewPage)}';
+var saveMsgForRFDashboard = '{!JSENCODE($Label.SaveSuccessfullyQVWizCalendarviewPage)}';
+var isFromConsole = {!isFromConsole};
+
+if(window.parent != undefined && window.parent != null && typeof(window.parent.wikiUrl) != undefined)
+	window.parent.wikiUrl = '{!JSENCODE(wikiUrl)}';
+function initBtn(){
+
+document.getElementById('BTNNext').disabled=false;
+
+document.getElementById('BTNPrevious').disabled="{!skipIntro}"
+
+}
+        function disableautocomplete() {
+          var forms = document.getElementsByTagName('form');
+          
+          for (var i = 0; i < forms.length; ++i) {
+            if (forms[i].setAttribute) {
+              forms[i].setAttribute('autocomplete', 'off')
+            } else {
+              forms[i].autocomplete = 'off'
+            }
+          }
+        } 
+        if(Ext.isSafari) {     
+            if (window.addEventListener) {
+              window.addEventListener('load', disableautocomplete, true)
+            } else if (window.attachEvent) {
+              window.attachEvent('onload', disableautocomplete)
+            } else {
+              window.onload = disableautocomplete
+            }       
+       }
+</script>
+<script>
+var resultSet;
+var cols = new Array(2);     
+cols[0]='ID'; 
+cols[1]='Profile';
+//cols[2]='Description';
+var sm = new Ext.grid.CheckboxSelectionModel({checkOnly: true, locked: false, 
+        listeners: {selectionchange: selectionchanged} });
+var arrCols = new Array(cols.length+1);
+arrCols[0] = sm;
+arrCols[1] = {id:cols[0], header: cols[0], width: 10, dataIndex: cols[0], hideable: false, hidden: true};
+arrCols[2] = {id:cols[1], header: cols[1], sortable: true, dataIndex: cols[1]};
+//arrCols[3] = {id:cols[2], header: cols[2], sortable: true, dataIndex: cols[2]};
+resultSet = new Array({!JSENCODE(TEXT(lstProfiles.size))});
+{!lstProfilesData}
+
+var grid;
+function renderGrid(){
+    if(grid!=null) { grid.store.loadData(resultSet); return; }
+    Ext.QuickTips.init();
+    var xg = Ext.grid;
+    // shared reader
+    var reader = new Ext.data.ArrayReader({}, cols);
+    var store = new Ext.data.Store({
+        reader: reader, data: resultSet
+    });
+    grid = new xg.GridPanel({
+        store: store,
+        cm: new xg.ColumnModel({
+            defaults: {sortable: true},
+            columns:arrCols
+        }),
+        enableColumnResize: false,
+        enableColumnMove: false,
+        sm: sm, viewConfig: {scrollOffset: 0,forceFit: true},       
+        autoWidth: true,
+        stripeRows:true,
+        height:200,
+        listeners: {
+             afterrender: function() {
+                 setSysAdmn(); setSelectedRows();initBtn();   
+             }, delay: 1000
+        }
+    });   
+     
+    grid.render('grid');
+    
+    grid.on('rowclick', function(grid, rowIndex, e){
+        var rec = grid.store.getAt(rowIndex);
+        var id = rec.get(cols[1]);    
+        //grid.getSelectionModel().selectRows(selectedrowIndices, true); 
+        //alert(id);
+        if(id=="System Administrator"){
+            e.stopEvent();        
+            grid.getSelectionModel().selectRow(rowIndex, true);
+        }
+    });
+}
+function extInit(){
+    renderGrid();    
+}
+function setSysAdmn(){
+    var sysadmn = "System Administrator";
+    var str = grid.getStore();
+    for (var i = 0; i < str.getCount(); i++) {        
+        if(sysadmn==str.getAt(i).get(cols[1])){
+            grid.getSelectionModel().selectRow(i, true);
+            break;
+        }   
+    }
+}
+function selectionchanged(){return uncheckAll();}
+function processAll(){    
+    if(!document.getElementById("{!$Component.everyone}").checked){
+        grid.getSelectionModel().clearSelections();
+        var str = grid.getStore();
+        for (var ij = 0; ij < str.getCount(); ij++) {
+           grid.getSelectionModel().deselectRow(ij);
+        }
+    }
+    uncheckAll();    
+}
+function uncheckAll(){    
+    if(grid==null) return;
+    sm.removeListener( 'selectionchange', selectionchanged);
+    if(document.getElementById("{!$Component.everyone}").checked){
+        grid.getSelectionModel().clearSelections();        
+        var str = grid.getStore();
+        for (var ij = 0; ij < str.getCount(); ij++) {
+           grid.getSelectionModel().selectRow(ij, true);
+        }
+    }else{        
+        setSysAdmn();
+    }
+    //document.getElementById("{!$Component.selectedProfiles}").value="";    
+    sm.addListener( 'selectionchange', selectionchanged);
+    return document.getElementById("{!$Component.everyone}").checked;
+}
+function saveProfiles(){
+    document.getElementById("{!$Component.selectedProfiles}").value="";
+    if(document.getElementById("{!$Component.everyone}").checked) 
+        uncheckAll();
+    else{
+        setSysAdmn();
+        var conditionString=''; 
+        var m = grid.getSelectionModel().getSelections();   
+        for(j=0; j < m.length; j++){
+           conditionString = conditionString + m[j].get(cols[0])+",";
+        }
+        document.getElementById("{!$Component.selectedProfiles}").value= conditionString;
+    }        
+}
+function setSelectedRows(){
+
+    var selectedRecs=","+document.getElementById("{!$Component.selectedProfiles}").value;        
+    var str = grid.getStore();
+    for (var i = 0; i < str.getCount(); i++) {        
+        if(selectedRecs.indexOf(","+str.getAt(i).get(cols[0])+",")!=-1){
+            grid.getSelectionModel().selectRow(i, true);
+        }   
+    }
+	var qvQryName = '{!JSENCODE(qvQry.name__c)}';
+	var qvQryProfile = '{!JSENCODE(qvQryAcc.profiles__c)}';
+    if(qvQryName!="" && ""==qvQryProfile){
+        document.getElementById("{!$Component.everyone}").checked=true;
+        uncheckAll();
+    }
+}
+function backPage(){saveProfiles(); backPg(); }
+function nextPage(){
+
+    //Validation for making QV name mandatory.
+    var qvName = document.getElementById("{!$Component.qvName}").value;
+    if(qvName == '') {
+        showMessage('{!JSENCODE($Label.ErrorMsgQVTitleMandatory)}');
+    }
+    else if(qvName.length>80) {
+        showMessage('{!JSENCODE($Label.ErrorMsgQVTitleMaxLength)}');
+    }
+    else {
+    	checkForDuplicateQVName(qvName);
+	}
+}
+function validateForDuplicateName() {
+	if (isDuplicateQVName) {
+		showMessage('{!JSENCODE($Label.ConsoleUniqueQVValidationErrorMsg)}');
+	}
+	else {
+        saveProfiles(); /*nextPg();*/ 
+        try
+        {
+        	moveToNextPage();
+        }
+        catch(e)
+        {
+        }
+    }
+}
+var isDuplicateQVName;
+        </script>
+<apex:messages />
+<apex:outputPanel id="errorpanel">
+	<script>
+	isDuplicateQVName = {!isDuplicateQVName};
+	</script>
+</apex:outputPanel>
+<apex:actionFunction name="moveToNextPage" action="{!stepQuery}" />
+<apex:actionFunction name="checkForDuplicateQVName" action="{!checkForDuplicateQVName}" oncomplete="validateForDuplicateName();" rerender="errorpanel">
+	<apex:param assignTo="{!newEditedQueryName}" name="newEditedQueryName" value=""/>
+</apex:actionFunction>
+        <div id="capsule" class="clsMainDiv">
+            <table cellpadding="0" cellspacing="0" class="clsMainTableQV">
+                  <tBody>
+                    <tr align="center" >
+                       <td align="center" style="background-color:#eff3f5;" colspan="3">
+                        <!-- Progress bar image -->
+                                                        <table class="clsBrProgressBar" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td height="15px" colspan="21"></td>
+                                </tr>
+                                <tr>
+                                    <td class="qvStyle15perWidth"></td>
+                                    <td class="qvStyle45Width"></td>
+                                    <apex:repeat value="{!lstIntro}" var="string">
+                                        <td class="QVStage1">
+                                            <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                        </td>
+                                        <td class="QVStage2"></td>
+                                        <td class="QVStage2"></td>
+                                    </apex:repeat>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Current.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td id="QVimg2" class="QVStage2"></td>
+                                    <td id="QVimg3" class="QVStage2"></td>
+                                    <td id ="Calview" class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td style="width:5%"></td>
+                                    <td style="width:10%"></td>
+									<td style="width:5%" style="text-align: center;">
+									  <a onclick="OpenNewHelpPage();return false;" href="#" style="{!IF(isFromConsole ,'display:block','display:none')}">
+									   <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_console_help.png"/>
+									   </a>
+									</td>
+                                </tr>
+                                <tr>
+                                    <td height="10px" colspan="21"></td>
+                                </tr>
+                                <tr>
+                                    <td class="qvStyle15perWidth"></td>
+                                    <apex:repeat value="{!lstIntro}" var="string">
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarIntro}</td>
+                                    </apex:repeat>
+                                    <td colspan="3" class="currentStatusTxt" align="center">{!$Label.General}</td>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarQuery}</td>
+                                    <td colspan="3" class="statusTxt" align="center" >{!$Label.QVWizPrgBarTable}</td>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarChart}</td>
+                                    <td colspan="3" id="calLabel" class="statusTxt" align="center">{!$Label.QVWizPrgBarCalendar}</td>
+                                    <td colspan="2" class="qvStyle15perWidth"></td>
+                                </tr>
+                            </table>
+                                                                                                               
+                        </td>
+                    </tr>
+                    <tr>
+                        <td height="13px"></td>
+                    </tr>
+                   <tr style="height:100%">
+                       <td><div class="div15pxHSpacing" style="height:100%"/></td>
+                        <td class="clsPadding15px" valign="top" style="height:100%">                          
+                        <table class="clsBrTable" cellpadding="0" cellspacing="0" width="100%" style="height:100%">
+                          <tbody>   
+                            <tr>
+                              <td class="clsBRInfoTitle">
+                                    <!--<div class="clsBRInfoTitle" valign="middle">-->
+                                          <apex:outputLabel value="{!$Label.bmcservicedesk__qveditgeneral}" id="editGeneral" style="padding-top:10px;"/>
+                                    <!--</div>      -->
+                              </td>
+                            </tr>
+                            
+                            <!-- Put the page contents inside the following TR -->
+                            <tr>
+                              <td valign="top">
+                                <table cellpadding="0" cellspacing="0" width="100%">
+                                    <tr height="15px">
+                                        <td colspan="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="qvwidth15px"></td>
+                                        <td> 
+                                            <div class="qvinformationBar">
+                                                <apex:outputLabel value="{!$Label.bmcservicedesk__qvgeninfomsgforsysqv}" id="QVGenInfo" style="valign:middle; font-weight:bold;" rendered="{!qvQry.BMCServiceDesk__System__c}"/>
+                                                <apex:outputPanel rendered="{!qvQry.BMCServiceDesk__System__c}">
+                                                <br></br> 
+                                                </apex:outputPanel>
+                                                <apex:outputLabel value="{!$Label.bmcservicedesk__qvgeninfomsg}"  style="valign:middle;" id="QvGenInfoMsg" rendered="{!!qvQry.BMCServiceDesk__System__c}"/>
+                                            </div>
+                                        </td>
+                                        <td class="qvwidth15px"></td>
+                                    </tr>
+                                    <tr height="15px">
+                                        <td colspan="3"></td>
+                                    </tr>
+                                    <tr >
+                                        <td colspan="3">
+                                        <table cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td class="BRclsInputLabelTD">
+                                                <apex:outputLabel value="{!$Label.bmcservicedesk__qvname}"/>      
+                                            </td>                                       
+                                            <td>
+                                                <apex:inputText disabled="{!isSystemQV}" id="qvName" value="{!qvQry.BMCServiceDesk__name__c}" title="{!$Label.bmcservicedesk__tooltipquickviewswizardquickviewname}"  styleClass="clsBRInputTextBox" />
+                                            </td>
+                                            <td><div class="div13pxVSpacingBR"/></td>
+                                        </tr>
+                                        </table>
+                                        </td>
+                                    </tr>
+                                    <tr height="15px">
+                                        <td colspan="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="BRclsInputBoldLabelTableFirstRowTD clsLabelDescriptionTD" colspan="3" >
+                                            <apex:outputLabel value="{!$Label.bmcservicedesk__description}" id="QVDescLabel"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="BRclsInputTextAreaTD clsDscTextAreaTD" colspan="3" >
+                                            <apex:inputTextarea id="qvDesc" disabled="{!isSystemQV}" value="{!qvQry.BMCServiceDesk__description__c}"  title="{!$Label.bmcservicedesk__tooltipquickviewswizarddescription}" styleClass="clsInputTextArea" style="{!IF(isSystemQV,'background-color:#f0f0f0','background-color:#ffffff')};width: 503px"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3">
+                                            <div class="div12pxVspacing">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="BRclsInputBoldLabelTableFirstRowTD clsLabelDescriptionTD">
+                                            <table border="0" width="100%"><tr>
+                                            <td>
+                                                <apex:outputLabel value="{!$Label.bmcservicedesk__qvsharewith}:" id="TooltiQV" title="{!$Label.bmcservicedesk__tooltipquickviewswizardsharewith}"/>
+                                            </td>
+                                            </tr></table>
+                                        </td>                                        
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="BRclsInputBoldLabelTableFirstRowTD clsLabelDescriptionTD">
+                                            <table border="0" width="100%"><tr>
+                                            <!--td width="50%" align="right" valign="middle" style="padding-left: 0; font-family:Tahoma,MS Sans Serif; font-weight: normal;font-size:11px;"-->
+											<apex:outputText value="CRUDFLSCheck# False Positive: Since this is not bind to any field no need to perform FLS and CRUD permission." rendered="false" />
+                                             <td><apex:inputCheckbox id="everyone" onClick="processAll()" title="{!$Label.bmcservicedesk__tooltipquickviewswizardeveryone}" styleClass="clsInputCheckBox"/>&nbsp;
+                                                <apex:outputLabel value="{!$Label.bmcservicedesk__allprofiles}"  id="QVShareWithEveryone" />
+                                            </td>
+                                            </tr></table>
+                                        </td>                                        
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" valign="top">
+                                            <table width="100%" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td class="qvwidth15px"></td>
+                                                    <td><div id="grid"></div></td>
+                                                    <td class="qvwidth15px"></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>        
+                            </tr>
+                            <!--<tr>
+                                <td class="clsPadding15px">
+                                    <table class="clsBrTable" cellpadding="0" cellspacing="0">
+                                        <tbody class="clearMarginPadding">    
+                                        <tr>
+                                            <td class="BRclsInputBoldLabelTableFirstRowTD clsLabelDescriptionTD">
+                                                <apex:outputLabel value="{!$Label.bmcservicedesk__qvsharewith}:"/>                                            
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPadding15px">
+                                                <div id="grid"></div>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>-->
+                            
+                            <!-- Page contents end here -->
+                            <tr class="clsButtonBarTD"  >
+                              <td colspan="3" align="right">
+                                <table cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td><!--apex:commandButton value="{!$Label.Previous}" id="BTNPrevious" styleclass="bgBtnGrey" onClick="backPage();" action="{!stepIntro}" disabled="{!skipIntro}"/-->
+                                        <input  style="{!IF(AND(isSystemQV,isFromConsole),'display:none','display:block')};" type="button" value="{!$Label.Previous}" id="BTNPrevious" class="QvBtnGreyDisabled" onClick="backPage();"  disabled="true" />
+                                        </td>
+                                        <td width="3px"></td>
+                                        <td><!--apex:commandButton value="{!$Label.Next}" id="BTNNext"  styleClass="bgBtnGrey" onClick="nextPage();" reRender="dummy" /-->
+                                        <input style="{!IF(AND(isSystemQV,isFromConsole),'display:none','display:block')};" type="button" disabled="true" value="{!$Label.Next}" id="BTNNext" Class="QvBtnGrey" onClick="nextPage();"  />
+                                        </td>
+                                        <td>
+                                        	<apex:commandButton id="BTNSavePermissions" value="{!JSENCODE($Label.bmcservicedesk__savepermissions)}" style="{!IF(isSystemQV,'display:block','display:none')};" styleClass="QvBtnGrey" Action="{!savePermissions}" onClick="managePermissions();" oncomplete="shSaved();" reRender="errorId" />
+                                        </td>                                        
+                                        <td width="5px"></td>
+                                    </tr>
+                                </table>
+                               </td>
+                            </tr>
+                          </tbody>  
+                        </table>
+                      </td>
+                      <td><div class="div15pxHSpacing"/></td>
+                 </tr>
+               </tBody>
+              </table>
+           </div>  
+           <apex:inputHidden id="selectedProfiles" value="{!qvQryAcc.BMCServiceDesk__profiles__c}" />
+		   <apex:outputPanel id="errorId">
+		   	<script>
+		   		errormsg = '{!JSENCODE(messageString)}';		   		
+		   	</script>
+		   </apex:outputPanel>
+<apex:actionFunction Name="backPg" action="{!stepIntro}"/>
+<apex:actionFunction Name="nextPg" action="{!stepQuery}"/>
+</apex:form>           
+</apex:outputPanel>
+</div>  
+ <body onload="hideCalendarView();"></body>
+<script>Ext.onReady(extInit);</script>
+</apex:page>

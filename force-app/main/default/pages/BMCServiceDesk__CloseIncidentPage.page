@@ -1,0 +1,307 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.CloseIncidentController" extensions="BMCServiceDesk.ConsoleRemoteActions" standardStylesheets="false">
+<c:CommonIncludes />
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/closeIncidentPage.js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js" />
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/TypeAhead.css" type="text/css" />
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/CloseForms.css" type="text/css" />
+
+    <script> 
+         Ext.ns("closeIncidentPage");
+         closeIncidentPage.Labels = {
+            labelCloseByEmpty :'{!JSENCODE($Label.CloseByEmpty)}',    
+            labelCloseIncident:'{!JSENCODE($Label.CloseIncident)}',
+            labelSave : '{!JSENCODE($Label.Save)}',
+            labelIncidentCloseError : '{!JSENCODE($Label.IncidentCloseError)}',
+            isUpdateable : {!isUpdateable},
+            insufficentPrivilegeMsg : '{!JSENCODE($Label.InsufficentPrivilegeToAccess)}',
+            TextAreaOverflow: '{!JSENCODE($Label.TextAreaOverflow)}',
+            lblResolutionTitle: '{!JSENCODE($Label.TooltipIncidentCloseResolution)}'
+            }
+            
+         closeIncidentPage.ComponentVars={
+            closedById: '',
+            StatusId: '',
+            categoryId: '',
+            followUp: '',
+            followUpDateTime: '',
+            incidentResolution:'',
+            incidentDescription:'{!$Component.incidentCloseForm.incidentDescription}',
+            closeTasks : '{!$Component.incidentCloseForm.closeTasks}',
+            Description: '{!JSENCODE($ObjectType.Incident__c.fields.incidentDescription__c.label)}',
+            Resolution: '{!JSENCODE($ObjectType.Incident__c.fields.incidentResolution__c.label)}'
+        }
+        
+        var msgvalue='';
+        var showPopupHeader = getUrlParameter('popupHeader');
+        var calledFrom = '{!JSENCODE(CalledFrom)}';
+             
+        if(calledFrom == 'rfconsole' || calledFrom == 'stdform'){           
+             if({!inc.isServiceRequest__c})
+                document.title='{!JSENCODE($Label.Close)}'+': {!JSENCODE($Label.ServiceRequestPrefix)}'+'{!JSENCODE(inc.name)}';
+            else 
+                document.title='{!JSENCODE($Label.Close)}'+': {!JSENCODE($Label.IncidentRecordPrefix)}'+'{!JSENCODE(inc.name)}';
+        }
+        var url = document.URL;
+        var change= false;
+        var SSCategorySearchPage = '{!$Page.StdLayoutCategoryTree}';
+        var SearchPage = '{!$Page.SearchPage}';
+        var orgNamespace ='{!orgNamespace}';
+        var strStatusName ='{!JSENCODE(statusName)}';
+        var strClosedByUserName = '{!JSENCODE(closedByUserName)}';
+        var follwupval=false;
+        var follwupdatetimeval ='';
+        var SDEDateFormat = '{!userDateFormat}';
+        var NONPRINT = '¬';
+    	var LayoutName;
+    	var layoutId;
+        var isServiceRequest = {!IF(inc.isServiceRequest__c,true,false)};
+        var isRFConsoleDetailForm = "true";
+		if(calledFrom && calledFrom == 'stdform'){
+			isRFConsoleDetailForm="false";
+		}else{
+			var dialogArgs = window.dialogArguments;
+			var isMsIE11 = window.location.hash = !!window.MSInputMethodContext; 
+			if(typeof(window.opener) != 'undefined'){
+				   isRFConsoleDetailForm = window.opener.isRFConsoleDetailForm;               
+			}else if(dialogArgs != null && (Ext.isIE || isMsIE11) ) {
+				   isRFConsoleDetailForm = dialogArgs.isRFConsoleDetailForm;               
+			}
+		}
+    	var MultiPageLayoutEnabled = "false";
+    	if('{!JSENCODE(IF(isMultiLayoutEnabled,"true", "false"))}' == "true" && isRFConsoleDetailForm == "true"){    		
+    		MultiPageLayoutEnabled = "true";
+			LayoutName = '{!JSENCODE(inc.rf_fkLayout__r.LayoutKey__c)}';
+			layoutId = LayoutName + NONPRINT + '{!JSENCODE(inc.rf_fkLayout__c)}';
+		}
+		var filterFieldsMap= {};   
+		var filterStr = JSON.parse('{!JSENCODE(filterAPIStr)}');
+		var buisnessServiceId = '{!JSENCODE(inc.FKBusinessService__c)}';
+		var accountId = '{!JSENCODE(inc.FKAccount__c)}';
+		var clientId = '{!JSENCODE(inc.FKClient__c)}';
+		var showRFAccountByDefault = Boolean('{!JSENCODE(IF(showRFAccountByDefault,"true", ""))}');
+		var isFlattenedCmdb = Boolean('{!JSENCODE(IF(isFlattenedCmdb,"true", ""))}');
+		var IncidentSegregationEnabled = Boolean('{!JSENCODE(IF(IncidentSegregationEnabled,"true", ""))}');
+		
+		var searchErrorMsg = '{!JSENCODE($Label.GsErrorMsg)}';
+		var ciId='',serviceId='',offeringId='',staffId = '',closedById='';
+    </script>
+
+           <apex:form id="incidentCloseForm">
+                
+               <apex:outputPanel id="Varpanel">
+                    <script>
+                        var incidentId = '{!inc.id}';
+                        var errorString = '{!JSENCODE(messageString)}';
+                    
+                    </script>
+                </apex:outputPanel>
+                 <apex:outputPanel id="Varpanelforfollowup">
+                    <script>
+                        follwupval = {!categoryfollowUp};
+                        follwupdatetimeval = "{!followupbydatetime}";
+                    </script>
+                </apex:outputPanel>
+                
+                <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+                
+                <apex:actionFunction id="closeIncident" name="closeIncident" action="{!save}" reRender="errorMsgPanel,validationComponent,Varpanel"  oncomplete="assignApexErrorMessage();refreshRelatedPortlets();validateAndCloseWindow(); disableSIMenues();"/>
+               
+                <apex:actionFunction name="setSelectedCategoryNext" action="{!setSelectedCategoryNext}" reRender="Varpanelforfollowup" onComplete="javascript:updateFollowUp();"> 
+                    <apex:param assignTo="{!categoryId}" name="selectedBlurCatId" value=""/>
+                </apex:actionFunction>
+                 
+                <div id="capsule">
+                    <table class="clsMainTable2">
+                        
+                        <tr class="clsRowGreyBg">
+                            <td>
+                                <div id="btnToolbar"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table class="clsTable clsTD90" cellspacing="0" cellpadding="0"> 
+                                    <tr>
+                                        <td>
+    
+                                <apex:inputhidden id="incidentDescription" value="{!inc.BMCServiceDesk__incidentDescription__c}"/>
+                                <apex:repeat value="{!CloseFieldSets}" var="lFS"> 
+                                    <apex:outputPanel rendered="{!NOT(AND(ISBLANK(inc.Id),OR(NOT($ObjectType.BMCServiceDesk__Incident__c.fields[lFS.fieldPath].Updateable),OR(CONTAINS(lFS.fieldPath, 'OwnerId'),CONTAINS(lFS.fieldPath, 'FKOpenBy__c')))))}" > 
+                                    <apex:outputPanel rendered="{!$ObjectType.BMCServiceDesk__Incident__c.fields[lFS].accessible}" >
+                                    <apex:outputPanel rendered="{!NOT(OR(lFS.type=='boolean',lFS.type=='multipicklist',lFS.type=='datetime',lFS.type=='date',CONTAINS(lFS.fieldPath, 'OwnerId')))}" >
+                                   
+                                        <table  cellspacing="0" cellpadding="0" class="rf-table" >
+                                            <tr>
+                                                <td class="rf-inc-label" style="width:130px" >
+                                                    <apex:outputLabel value="{!lFS.label}" rendered="{!AND(OR(NOT(ISBLANK(inc.Id)),$ObjectType.BMCServiceDesk__Incident__c.fields[lFS.fieldPath].Updateable))}"/>
+                                                    <apex:outputLabel value="*" styleClass="RequiredAsterisk" rendered="{!AND($ObjectType.BMCServiceDesk__Incident__c.fields[lFS.fieldPath].Updateable, OR((!$ObjectType.BMCServiceDesk__Incident__c.fields[lFS].nillable),(lFS.required),(lFS.DBRequired)))}"/>
+                                                </td>
+                                                <td class="rf-inc-field" title="{!$ObjectType.Incident__c.fields[lFS].inlineHelpText}">
+                                                    <div class="clsRelativePosition">
+                                                        <apex:inputField id="inputField1" value="{!inc[lFS.fieldPath]}" rendered="{!OR(NOT(CONTAINS($ObjectType.BMCServiceDesk__Incident__c.fields[lFS].type,'reference')),NOT(($ObjectType.BMCServiceDesk__Incident__c.fields[lFS.fieldPath].Updateable)))}"  styleClass="{!lFS.fieldPath}"  required="{!OR(lFS.required, lFS.DBRequired)}" />
+                                                        <script>
+                                                            setFSFieldDetail('{!lFS.fieldPath}', '{!JSENCODE(lFS.Label)}', {!lFS.required}, {!lFS.DBRequired}, '{!$Component.inputField1}','', '{!JSENCODE($ObjectType.Incident__c.fields[lFS.fieldPath].inlineHelpText)}');
+                                                        </script>
+                                                        <apex:outputPanel rendered="{!AND(CONTAINS($ObjectType.BMCServiceDesk__Incident__c.fields[lFS].type,'reference'),($ObjectType.BMCServiceDesk__Incident__c.fields[lFS.fieldPath].Updateable))}">
+                                                            <input type="text" onkeyup="fetchTypeAheadData(this,'{!referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].referenceNameObject}','{!$ObjectType.Incident__c.fields[lFS].name}',event);" onblur="disableDiv('autocompleteDiv')"  value="{!inc[referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].referenceNameField][referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].referenceNameFieldSec]}" id="{!referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].idForName}"  class="clsPanelInputTextbox" />
+                                                            <input type="text" value='{!inc[referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].referenceNameField]}'  id="{!referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].idForId}" style="display:none" />  
+															<apex:outputText value="CRUDFLSCheck#. This input-text is within apex:repeat. Accessible and Updateable check is added at parent output panel level. FLS enforcment not required here" rendered="false" />
+                                                            <apex:inputText value="{!inc[lFS.fieldPath]}" id="referenceId"  required="{!OR(lFS.required, lFS.DBRequired)}" style="display:none" />  <!-- style="display:none"  -->
+                                                            <input type="button" class="lookupIconOn" id="lastnameLookup_Id" onclick="openPopUpForLookupPopup(this,'{!$ObjectType.Incident__c.fields[lFS].name}','{!referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].referenceNameObject}','{!referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].idForId}','{!referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].idForName}');"  />
+                                                            <script>
+                                                            setFSFieldDetail('{!lFS.fieldPath}', '{!JSENCODE(lFS.Label)}', {!lFS.required}, {!lFS.DBRequired},  '{!referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].idForId}', '{!referenceFieldMap[$ObjectType.Incident__c.fields[lFS].name].idForName}', '{!JSENCODE($ObjectType.Incident__c.fields[lFS.fieldPath].inlineHelpText)}');
+                                                        </script>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </td>
+                                                <td  class ="lookupIconTD1">
+                                                    <input type="button" id="textAreaBtn" class="TextboxPopupIcon" onclick="openTextEditorPopup(this,'{!lFS.label}', '32000', '{!$Label.Ok}', '{!$Label.Cancel}',false );" style="{!IF(AND(lFS.type=='textarea',NOT(rtfFields[lFS.fieldPath])),'display:inline','display:none')}" title="{!lFS.label}"/>
+                                                </td>
+                                            </tr>
+                                        </table> 
+                                    <apex:inputtext id="hiddenVar"  title="{!lFS.fieldPath}" rendered="{!CONTAINS(lFS.type,'reference')}" Style="display:none" />
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!lFS.type=='datetime'}" >
+                                      <table  cellspacing="0" cellpadding="0" class="rf-table"  >
+                                            <tr>
+                                                <td class="rf-inc-label" style="width:130px" >
+                                                    <apex:outputLabel value="{!lFS.label}"/>
+                                                    <apex:outputLabel value="*" styleClass="RequiredAsterisk" rendered="{!OR((lFS.required),(lFS.DBRequired))}" />
+                                                </td>
+                                                <td colspan="2" class="{!IF(OR((lFS.required),(lFS.DBRequired)),'rf-inc-date', 'rf-inc-label')}" title="{!$ObjectType.Incident__c.fields[lFS].inlineHelpText}">
+                                                    <apex:inputField value="{!inc[lFS.fieldPath]}" id="datetimeinput1"  required="{!OR(lFS.required, lFS.DBRequired)}" styleClass="clsDateInputTextBox" />
+                                                    
+                                                    <apex:outputPanel rendered="{!AND($ObjectType.BMCServiceDesk__Incident__c.fields[lFS.fieldPath].Updateable, NOT(CONTAINS(lFS.fieldPath, 'closeDateTime__c')))}" >
+                                                    
+                                                        <apex:image id="dateTimePopupImg" styleClass="dateimgcls" value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDateTimePicker('{!$Component.datetimeinput1}');" />
+                                                        <img class="closeIconDis" src="/s.gif" title="{!$Label.Clear}" alt="Clear" onclick="resetDateText('{!$Component.datetimeinput1}');" onmouseout="this.className='closeIconDis'"  onmouseover="this.className='closeIconEnable'; " style="cursor: pointer;" />
+                                                                                    
+                                                    </apex:outputPanel>
+                                                    
+                                                    <script>
+                                                            setFSFieldDetail('{!lFS.fieldPath}', '{!JSENCODE(lFS.Label)}', {!lFS.required}, {!lFS.DBRequired}, '{!$Component.datetimeinput1}','', '{!JSENCODE($ObjectType.Incident__c.fields[lFS.fieldPath].inlineHelpText)}');
+                                                    </script>
+                                                </td>
+                                            </tr>
+                                       </table> 
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!lFS.type=='date'}" >
+                                      <table  cellspacing="0" cellpadding="0" class="rf-table"  >
+                                            <tr>
+                                                <td class="rf-inc-label" style="width:130px" >
+                                                    <apex:outputLabel value="{!lFS.label}"/>
+                                                    <apex:outputLabel value="*" styleClass="RequiredAsterisk" rendered="{!OR((lFS.required),(lFS.DBRequired))}" />
+                                                </td>
+                                                <td colspan="2" class="{!IF(OR((lFS.required),(lFS.DBRequired)),'rf-inc-date', 'rf-inc-label')}" title="{!$ObjectType.Incident__c.fields[lFS].inlineHelpText}">
+                                                    <apex:inputField value="{!inc[lFS.fieldPath]}" id="inputDate1" required="{!OR(lFS.required, lFS.DBRequired)}" styleClass="clsDateInputTextBox"  />
+                                        
+                                                    <apex:outputPanel rendered="{!AND($ObjectType.BMCServiceDesk__Incident__c.fields[lFS.fieldPath].Updateable, NOT(CONTAINS(lFS.fieldPath, 'closeDateTime__c')))}" >
+                                                        
+                                                        <apex:image id="datePopupImg" styleClass="dateimgcls"  value="{!$Resource.BMCServiceDesk__SDEFStyles}/SDEFbuttons/b_calendar_popup.gif" onclick="showDatePicker('{!$Component.inputDate1}');" />
+                                                        <img class="closeIconDis" src="/s.gif" title="{!$Label.Clear}" alt="Clear" onclick="resetDateText('{!$Component.inputDate1}');"  onmouseout="this.className='closeIconDis'"  onmouseover="this.className='closeIconEnable'; " style="cursor: pointer;" />
+                                                     
+                                                    </apex:outputPanel>
+                                                    <script>
+                                                            setFSFieldDetail('{!lFS.fieldPath}', '{!JSENCODE(lFS.Label)}', {!lFS.required}, {!lFS.DBRequired}, '{!$Component.inputDate1}','', '{!JSENCODE($ObjectType.Incident__c.fields[lFS.fieldPath].inlineHelpText)}');
+                                                    </script>
+                                                </td>
+                                            </tr>
+                                       </table> 
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!CONTAINS(lFS.type,'multipicklist')}" >
+                                      <table  cellspacing="0" cellpadding="0" class="rf-table"  >
+                                            <tr>
+                                                <td class="rf-inc-label" style="width:130px" >
+                                                    <apex:outputLabel value="{!lFS.label}"/>
+                                                    <apex:outputLabel value="*" styleClass="RequiredAsterisk" rendered="{!OR((lFS.required),(lFS.DBRequired))}" />
+                                                </td>
+                                                <td colspan="2" class="rf-inc-label" title="{!$ObjectType.Incident__c.fields[lFS].inlineHelpText}">
+                                                    <apex:inputField value="{!inc[lFS.fieldPath]}"  required="{!OR(lFS.required, lFS.DBRequired)}" />
+                                                </td>
+                                            </tr>
+                                       </table> 
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!AND(CONTAINS(lFS.type,'boolean'),NOT(CONTAINS(lFS.fieldPath, 'followUp__c')))}">
+                                            <table  cellspacing="0" cellpadding="0" class="rf-table" >
+                                                <tr>
+                                                    <td class="rf-inc-label" style="width:130px"></td>
+                                                    <td class="rf-inc-field" title="{!$ObjectType.Incident__c.fields[lFS].inlineHelpText}">
+                                                        <apex:inputField value="{!inc[lFS.fieldPath]}" required="{!OR(lFS.required, lFS.DBRequired)}"  />
+                                                    </td>
+                                                        <td class="rf-inc-label" style="padding: 5px 5px 5px 0;"><apex:outputLabel styleClass="rf-inc-checkbox-label" value="{!lFS.label}" /><apex:outputLabel value="*" styleClass="RequiredAsterisk" rendered="{!OR((lFS.required),(lFS.DBRequired))}" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!AND(CONTAINS(lFS.type,'boolean'),CONTAINS(lFS.fieldPath, 'followUp__c'))}">
+                                            <table  cellspacing="0" cellpadding="0" class="rf-table" >
+                                                <tr>
+                                                    <td class="rf-inc-label" style="width:130px"></td>
+                                                    <td class="rf-inc-field">
+                                                        <apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Incident__c.fields.BMCServiceDesk__followUp__c.inlineHelpText}" id="inputField" required="{!OR(lFS.required, lFS.DBRequired)}" value="{!inc.BMCServiceDesk__followUp__c}" onclick="toggleFollowUpDateTime();" styleClass="clsCheckboxInc"/>
+                                                    </td>
+                                                    <td class="rf-inc-label" style="padding: 5px 5px 5px 0;"> <apex:outputLabel styleClass="rf-inc-checkbox-label" value="{!$ObjectType.BMCServiceDesk__Incident__c.fields.BMCServiceDesk__followUp__c.label}"/><apex:outputLabel value="*" styleClass="RequiredAsterisk" rendered="{!OR((lFS.required),(lFS.DBRequired))}" />
+                                                        <script>
+                                                                setFSFieldDetail('{!lFS.fieldPath}', '{!JSENCODE(lFS.Label)}', {!lFS.required}, {!lFS.DBRequired}, '{!$Component.inputField}', '','{!JSENCODE($ObjectType.Incident__c.fields[lFS.fieldPath].inlineHelpText)}');
+                                                        </script>
+                                                    </td>                                                    
+                                                </tr>
+                                            </table>
+                                    </apex:outputPanel>
+                                    
+                                    </apex:outputPanel> 
+                                    </apex:outputPanel> 
+                                </apex:repeat>
+                                <table class="clsTable" cellspacing="0" cellpadding="0" style="margin-left:5px;">
+                                    <tr>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                    <tr><td><div class="div13pxVspacing"></div></td></tr>
+                                        <tr>
+                                           <td class="checkBoxL" colspan="2">
+                                                <apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Incident__c.fields.BMCServiceDesk__closeTasks__c.inlineHelpText}" id="closeTasks" value="{!inc.BMCServiceDesk__closeTasks__c}" styleClass="clsCheckboxInc"/>
+                                                <apex:outputLabel styleClass="checkLabel" value="{!$Label.bmcservicedesk__closelinkedtasks}" rendered="{!$ObjectType.BMCServiceDesk__Incident__c.fields.BMCServiceDesk__closeTasks__c.Accessible}"/> 
+                                            </td>                                                    
+                                        </tr>
+                                        <tr>
+                                           <td class="checkBoxL" colspan="2">
+                                                <apex:outputText value="CRUDFLSCHECK# Both CRUD and FLS check are not required, closeRelatedIncident is part of process which is class level variable and is not bind to any field. This field will only be shown up if User has access of this page." rendered="false" />
+                                                <apex:inputCheckbox id="closechildrenincidents" value="{!closeRelatedIncident}" styleClass="clsCheckboxInc"/>
+                                                <apex:outputLabel styleClass="checkLabel" value="{!$Label.bmcservicedesk__closelinkedincidents}"/> 
+                                            </td>                                                    
+                                        </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="div5pxVspacing"></div>
+                                        </td>
+                                    </tr> 
+                                </table>
+                                
+                                        </td>
+                                        
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr><td><div class="div5pxVspacing"></div></td></tr>
+                    </table>
+                </div>  
+  
+      <apex:outputPanel id="errorMsgPanel"> <!-- Page body in this panel -->
+        <div id="testPanelDiv" style="display:none;">
+        <apex:messages /> 
+        </div>
+     </apex:outputPanel>
+	<div id="parentTypeAheadDiv" />	 
+    </apex:form>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CloseFormCommon.js" />
+	<script src="{!$Resource.SDEFCommonJS}/TypeAhead.js"  type="text/javascript" />
+	<script>
+	 var currentConsole = 'Incident';
+	 var additionalParams = [];
+	 additionalParams['formLayoutId'] = layoutId;
+    _RemotingActions={}
+    _RemotingActions.getLookupFieldData = '{!$RemoteAction.ConsoleRemoteActions.getLookupFieldData}';
+    initiateTypeAhead(typeAheadDivId, 'parentTypeAheadDiv',additionalParams);
+	</script>
+</apex:page>

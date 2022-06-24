@@ -1,0 +1,837 @@
+<apex:page controller="BMCServiceDesk.SLAController" sidebar="false" showHeader="false" contentType="{!contentTypeForIE}">
+    <c:CommonIncludes />
+        <script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/CheckColumn.js"></script>
+    <script>
+        var isQueueBasedTTEnabled = {!isQueueBasedTTEnabled};
+        var labelSaveOLA = '{!JSENCODE($Label.SaveOLA)}';    
+        var slaGrid = null;
+       // var labelServiceLevelAgreement = '';
+       // var labelOperationLevelAgreement = '';
+       // var labelUnderpinningContacts = '';
+        var cm = null;
+        var slaParentId = null;
+        var data = null;
+        var ds = null;
+        var selectedSLAAccodion = ''; 
+        var selectIdForDelete = '';
+        var mainPanel = null;
+        var labelRelatedSLAs = '{!JSENCODE($Label.SLM_RelatedSLAs)}';
+        var labelRelatedOLAs = '{!JSENCODE($Label.SLM_RelatedOLAs)}';  
+        var labelRelatedUCs = '{!JSENCODE($Label.SLM_RelatedUCs)}';
+        var labelInsufficentOperationPrivilege = '{!JSENCODE($Label.StdInsufficentOperationPrivilege)}';
+        var labelAgreementTitle = '{!JSENCODE($ObjectType.ServiceLevelAgreement__c.fields.AgreementTitle__c.label)}'; 
+        var panelAccordion = null, item1 = null;
+        var btnLink,btnUnlink;
+        var rowClickFlag = 0; 
+        var prevSelectedAccordion = '';
+        var btnFlag, labelLinkSLA = '{!JSENCODE($Label.LinkSLA)}',labelUnLinkSLA = '{!JSENCODE($Label.UnLinkSLA)}';
+        var addBtnFlag = 0;
+        var cookieName= 'ConfigureSI'+'{!$User.Id}';
+        var cookieValue;
+        var iFrameSrc ;
+        var isInactive ;
+		taboutPageType='custom';
+        isSLAOwnerLookup = 'false',
+        relatedSLADivWidth = 285;
+		var firstTimeRenderFlag = 0;
+        var isNewRec = true;
+        var businessServiceId;
+		var MilestoneHelpLink="";
+		var listStore;
+		var csvAccountListparam='{!JSENCODE(SLA_Bean.csvAccountID)}';
+		var listData = [];
+		var cleareAccountFieldFlag = {!cleareButtonOn};
+		var isAllAccounts = {!SLA_Bean.SLAObj.toAllAccounts__c};
+		var labelAllAccount='{!JSENCODE($Label.AllAccountsEntitlement)}'; 
+		var labelClearAccountTooltip = '{!JSENCODE($Label.Clear)}';
+		var agreementID = '{!SLA_Bean.SLA_ID}';
+		var isFlattenedCmdb = {!isFlattenedCmdb};
+		var showSelfHelp = parent.showSelfHelp;
+		var isLightningExperience =  '{!isLightningExperience }';
+		var soqlDateClause = '{!JSENCODE(filterClauseDate)}';
+		var cols = new Array(2); 
+		cols[1]='elID'; 
+		cols[0]='Name';
+		var inactiveLblStyle = '';
+		if(window.navigator.userAgent.indexOf('Edge/') > 0) {
+			inactiveLblStyle='display:table-cell';
+		}
+
+	
+    </script>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/SLAPage.js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSCommon.js" id="JSCommon-js"/>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ChangeRequestPage.css" /> 
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CustomViews.css" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SLAPage.css" />
+    
+    <script>
+        function reloadIframe(){
+        	var frame1 = window.frames['SLTframe'];
+        	frame1.pgRefresh();        	
+        }
+        var toEmailRecipientAddress='',
+        	ccEmailRecipientAddress='';
+        var serviceClause = escape('(serviceType__c != \'Offering\')');
+        OperationalTarget = '{!JSENCODE($Label.OperationalTargets)}';
+        var wid = '{!JSENCODE($CurrentPage.parameters.wid)}',           
+            wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}',
+            labelSavedSuccessfully = '{!JSENCODE($Label.SavedSuccessfully)}',
+            labelPM_netwokLatency = '{!JSENCODE($Label.PM_netwokLatency)}',
+            labelCIExpCIExplorer = '{!JSENCODE($Label.CIExpCIExplorer)}',
+            labelConfigurationItemsExplorer = '{!JSENCODE($Label.ConfigurationItemsExplorer)}',
+            labelValidDateTime = '{!JSENCODE($Label.ValidDateTime)}',
+            labelDelete = '{!JSENCODE($Label.Delete)}',
+            labelNew = '{!JSENCODE($Label.New)}',
+            labelSave = '{!JSENCODE($Label.Save)}',
+            labelOK = '{!JSENCODE($Label.OK)}',
+            labelCopy = '{!JSENCODE($Label.Copy)}',
+            labelReset = '{!JSENCODE($Label.Refresh)}',
+            
+            labelPreviousRecord = '{!JSENCODE($Label.PreviousRecord)}',
+            labelNextRecord = '{!JSENCODE($Label.NextRecord)}',
+            labelDragResizeClickCollapse = '{!JSENCODE($Label.DragResizeClickCollapse)}',
+            labelClickToExpand = '{!JSENCODE($Label.ClickToExpand)}',
+            labelMsgNoAccessPerm = '{!JSENCODE($Label.MsgNoAccessPerm)}',
+            labelPM_PageLoad = '{!JSENCODE($Label.PM_PageLoad)}',
+            labelPM_netwokLatency = '{!JSENCODE($Label.PM_netwokLatency)}',
+            labelSelectFrom = '{!JSENCODE($Label.SelectFrom)}', 
+            labelCancel = '{!JSENCODE($Label.Cancel)}',
+            
+            SLAHeader = '{!JSENCODE($ObjectType.ServiceLevelAgreement__c.label)}',
+            labelTooltipSLAInactive = '{!JSENCODE($ObjectType.ServiceLevelAgreement__c.fields.Inactive__c.label)}',
+            labelInactive ='{!JSENCODE($ObjectType.ServiceLevelAgreement__c.fields.Inactive__c.label)}',
+            labelSLADescription='{!JSENCODE($ObjectType.ServiceLevelAgreement__c.fields.Description__c.label)}',
+            labelSLATitle='{!JSENCODE($ObjectType.ServiceLevelAgreement__c.fields.AgreementTitle__C.label)}',
+            SLA_DescriptionComponent = '{!$Component.SLAForm.SLA_Description}',
+            SLA_TitleComponent = '{!$Component.SLAForm.SLA_AgreementTitle}',
+            SLA_AccountNAmeComponent ='{!$Component.SLAForm.Account_id_name}',
+            labelChangeMgmtProcess = '{!JSENCODE($Label.ChangeMgmtProcess)}',
+            ChangeProcess= '{!JSENCODE($Label.ChangeProcess)}',
+            AlignabilityProcessModel = '{!JSENCODE($Label.AlignabilityProcessModel)}',
+            
+            labelServiceTargets = '{!JSENCODE($Label.SLM_ServiceTargets)}',
+            labelGeneralInformation = '{!JSENCODE($Label.SLM_General_Information)}',
+            
+            labelReviewComments='{!$ObjectType.Change_Request__c.fields.Review_Comments__c.label}';
+            
+            profileId = '{!$Profile.Id}',
+            DeletedRecord = '{!JSENCODE($Label.DeleteConfirmMessage)}',
+            Information = '{!JSENCODE($Label.Information)}',
+            SLAFormComponent = '{!$Component.SLAForm}',
+            labelRecordDeleted ='{!JSENCODE($Label.DeletedRecord)}', 
+            TextAreaOverflow = '{!JSENCODE($Label.TextAreaOverflow)}',    
+            modName = '{!JSENCODE($CurrentPage.parameters.moduleName)}',
+            parentWid = '{!JSENCODE($CurrentPage.parameters.parentWid)}',
+            islookup = '{!JSENCODE($CurrentPage.parameters.islookup)}';
+
+        var txtSize;
+        var errormsg = '';
+        var CustomFieldCorrectValueErrorMsg = '{!JSENCODE($Label.CorrectValueErrorMsg)}';
+        var CustomFieldInvalidEmail = '{!JSENCODE($Label.InvalidEmail)}';
+        var CustomFieldCMDBDateError = '{!JSENCODE($Label.CMDBDateError)}';
+        var CustomFieldrequiredFieldMsg = '{!JSENCODE($Label.requiredAllFieldBRActionPage)}';
+        var SLAcopy;
+		var isInactiveTrue = "{!JSENCODE($CurrentPage.parameters.isInactive)}"; 
+        
+         function getModuleName(){
+        var moduleName = '{!JSENCODE($CurrentPage.parameters.moduleName)}';
+        return moduleName;
+    	}
+    	function getParentWid(){
+        var parentWid = '{!JSENCODE($CurrentPage.parameters.parentWid)}';
+        return parentWid;
+    	}
+        function getSDFStylesResPath(){
+            var resPath = '{!$Resource.SDEFStyles}';
+            return resPath;
+        }
+                
+        var taboutFlag = false;
+        
+        function showData(event,onCompleteFunction,whereClause,windownameflag,name){
+        	if(name == 'FKAgreementOwner__c')
+        	{
+        		isSLAOwnerLookup = 'true';
+        	}
+        	else
+        	{
+        		 isSLAOwnerLookup = 'false'; 
+        	}  	
+            if(taboutFlag!=true){
+               if(typeof(onCompleteFunction)!='undefined' && typeof(whereClause)!='undefined'){
+                   if(typeof(windownameflag) != 'undefined'){    
+                       showalldata(event,onCompleteFunction,whereClause,windownameflag);
+                   }else{
+                       showalldata(event,onCompleteFunction,whereClause);
+                   }
+               }
+               else if(typeof(onCompleteFunction)!='undefined' && typeof(whereClause) =='undefined'){
+                   showalldata(event,onCompleteFunction);
+               }else{
+                   showalldata(event);
+               }               
+           }else{
+               if(typeof(onCompleteFunction)!='undefined'){
+                   onCompleteFunction();
+               }
+           }
+        }    
+        
+    </script>
+    <apex:outputPanel id="titlePanel">
+        <script>
+           	SLAcopy = '{!SLAcopyId}';
+        
+        	iFrameSrc='/apex/SIContainerPage?oid='+getSLAId()+'&otype=ServiceLevelAgreement__c&wid='+getWID()+'&stateofIncident=true&isChangeCreatable=true&isInactive='+'{!SLA_Bean.SLAObj.Inactive__c}';;
+       		cookieValue = Ext.util.Cookies.get(cookieName);
+       		isInactive = {!SLA_Bean.SLAObj.Inactive__c};
+       		isAllAccounts = {!SLA_Bean.SLAObj.toAllAccounts__c};
+       		csvAccountListparam='{!JSENCODE(SLA_Bean.csvAccountID)}'; 
+			
+            function getServiceId(){
+            	if(!isFlattenedCmdb){
+                	serviceId=  document.getElementById('{!$Component.SLAForm.BMC_BusinessService__c_id_fkbmc_baseelement__c}').value;
+                }else{
+                	serviceId=  document.getElementById('{!$Component.SLAForm.BMC_BaseElement__c_id_id}').value;
+                }
+                return serviceId;
+            }
+            function getSLAId(){
+                var SLAId = '{!SLA_Bean.SLA_ID}';
+                return SLAId;
+            }
+            function getWID(){
+                return '{!JSENCODE($CurrentPage.parameters.wid)}';
+            }
+            function getID(){
+                return '{!JSENCODE($CurrentPage.parameters.id)}';
+            }
+            function getSaveBtnFlag(){
+                return {!SLA_Bean.saveBtnFlag};
+            }
+             function getRefreshBtnFlag(){
+                return {!SLA_Bean.RefreshBtnFlag};
+            }
+            
+            function getNewBtnFlag(){
+                return {!SLA_Bean.newBtnFlag};
+            }
+            
+            function getDeleteBtnFlag(){
+                return {!SLA_Bean.deleteBtnFlag};
+            }
+            function updateInactive(){
+                if(Ext.getCmp('SLA_inactive__c'))Ext.getCmp('SLA_inactive__c').setValue('{!SLA_Bean.SLAObj.Inactive__c}');
+            }
+            function getIsDirect(){
+                return '{!JSENCODE($CurrentPage.parameters.isDirect)}';
+            }
+
+            function updateList(){
+                window.parent.needsRefresh = true;
+            }
+            function getcopyBtnClicked(){
+            	return '{!copyBtnClicked}';
+            }
+            function AccountFieldJS(){
+            	csvAccountListparam = '';
+                cleareAccountFieldFlag=false;
+            	document.getElementById(SLA_AccountNAmeComponent).value = '';
+            	setCleareAccountBtn();
+            }
+            function updateTitle(){
+            	var copyBtnFlag = '{!copyBtnClicked}';
+           
+                var newTitle = '{!JSENCODE(SLA_Bean.SLAObj.AgreementTitle__c)}';
+                if(copyBtnFlag == 'true' ){
+                    newTitle = '{!JSENCODE($ObjectType.ServiceLevelAgreement__c.label)}';
+                }
+                var slaId = getSLAId(); 
+                var afterSaveMsg = '{!JSENCODE(SLA_Bean.messageString)}';  
+                if(newTitle != '' && newTitle != null && slaId != null && slaId != '' && slaId != 'null' && (afterSaveMsg =='' || afterSaveMsg == labelSavedSuccessfully)){
+                    window.parent.changeTitle(wid,newTitle,newTitle);                   
+                }    
+            }
+                        
+            function handleSave(){
+                window.parent.handleSave(wid, getSLAId());
+                btnFlag = getSaveBtnFlag();
+                slaParentId = getSLAId();
+                if(btnFlag == true && slaParentId != '' && slaParentId != null){
+                    document.images['btnAdd'].src = getSDFStylesResPath()+'/SDEFbuttons/btn_add.png';   
+                }
+                selectIdForDelete = '';	getRelatedSLA(selectedSLAAccodion);
+                if(isQueueBasedTTEnabled && errormsg && errormsg == labelSavedSuccessfully && newAgreementType){
+                   existingAgreementType = newAgreementType ;
+                }
+            }
+            
+            updateTitle();
+            updateInactive();
+           
+        </script>    
+        
+        <script>		
+		function assignApexErrorMessage(){
+			var elem = document.getElementById('apexMessageErrorPanelDiv');
+		        		if(elem != null && elem.firstChild != null){
+		        			var ulList = elem.firstChild;		        			
+		        			var msgvalue = RemedyForceHTMLProcessor.getText(ulList.firstChild);
+		        				var stringFound = msgvalue.indexOf("NoAccessException")
+		        				if (stringFound >= 0)
+		        				{
+		        					Ext.MessageBox.show({ msg: labelInsufficentOperationPrivilege, buttons: Ext.MessageBox.OK});
+		        				}else{
+		        					Ext.MessageBox.show({ msg: msgvalue, buttons: Ext.MessageBox.OK});
+		        				}
+
+		        		}					
+			}
+		
+			function renderAccList(){
+				listData = {!SLA_Bean.accountJSON};
+				initAccountList();
+			}	
+			
+		</script>
+
+        
+    </apex:outputPanel>
+    <apex:outputPanel id="errorId">
+        <script>        
+            errormsg = '{!JSENCODE(SLA_Bean.messageString)}';               
+        </script>
+    </apex:outputPanel>       
+    <apex:outputPanel id="afterSaveId">
+        <script>
+        	
+            var SLACopyID = '{!SLA_Bean.SLAObj.Id}';
+			cleareAccountFieldFlag = {!cleareButtonOn};
+			businessServiceId = '{!JSENCODE(SLA_Bean.SLAObj.FKBusinessService__c)}';
+            function callCopyPage(){
+                var changePageHeader = '{!JSENCODE($ObjectType.ServiceLevelAgreement__c.label)}';
+                window.parent.addTab("SLAPage?copyId=" + SLACopyID,SLAHeader,SLAHeader);
+            }     
+            
+         </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="panelId">
+        <script>
+        	
+            function completeDelete(){
+                if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}'){
+                    showError();
+                }else{
+                    var modName = "{!JSENCODE($CurrentPage.parameters.moduleName)}";  
+                    var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";
+                    /*if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined'){
+                        window.parent.parent.refreshSupportingInformation(parentWid,modName);                       
+                    }else{
+                        updateTitle();
+                    }*/
+                    closeWindow();
+                }
+            }
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="loadData">
+        <script>
+            function loadDataFun(){
+                rowClickFlag = 0;
+                var saveBtnFlag = getSaveBtnFlag();
+                if(mainPanel != null)     
+                    mainPanel.destroy();
+                var copyFlag = getcopyBtnClicked();
+                    
+                if(selectedSLAAccodion.toLowerCase() == 'service level agreement'){
+                	
+                	addBtnFlag = getSLAId();
+                    renderGrid();
+                    ds.loadData({!relatedSLA});                 
+                    mainPanel.render('SLAGridDiv');
+                    if(addBtnFlag == null || addBtnFlag == '' || saveBtnFlag == false || copyFlag == 'true'){
+                    	if(document.images['btnAdd'] != undefined && document.images['btnAdd'] != 'undefined'){
+           					document.images['btnAdd'].src = getSDFStylesResPath()+'/SDEFbuttons/btn_add_disable.png';
+           				}
+           			}
+                }else if(selectedSLAAccodion.toLowerCase() == 'operational level agreement'){
+                	
+                	addBtnFlag = getSLAId();
+                    renderGrid();
+                    ds.loadData({!relatedSLA});                 
+                    mainPanel.render('OLAGridDiv');
+                    if(addBtnFlag == null || addBtnFlag == '' || saveBtnFlag == false || copyFlag == 'true'){
+                    	if(document.images['btnAdd'] != undefined && document.images['btnAdd'] != 'undefined'){
+           					document.images['btnAdd'].src = getSDFStylesResPath()+'/SDEFbuttons/btn_add_disable.png';
+           				}
+           			}
+                }else if(selectedSLAAccodion.toLowerCase() == 'underpinning contract'){
+                	
+                	addBtnFlag = getSLAId();
+                    renderGrid();
+                    ds.loadData({!relatedSLA});                 
+                    mainPanel.render('UCGridDiv');
+                    if(addBtnFlag == null || addBtnFlag == '' || saveBtnFlag == false || copyFlag == 'true'){
+                    	if(document.images['btnAdd'] != undefined && document.images['btnAdd'] != 'undefined'){
+           					document.images['btnAdd'].src = getSDFStylesResPath()+'/SDEFbuttons/btn_add_disable.png';
+           				}	
+           			}                    
+                }
+                
+                 
+            }
+        </script>
+    </apex:outputPanel>
+    <script>
+    //Set reference field values
+	function setReferenceFieldsId(){
+     	<apex:repeat value="{!referenceFieldMap}" var="y">
+			 var referenceFieldIdEle = document.getElementById('{!referenceFieldMap[y].idForId}');
+			 var referenceFieldNameEle = document.getElementById('{!referenceFieldMap[y].idForName}');
+			 if(referenceFieldIdEle!= null && typeof(referenceFieldIdEle) != 'undefined' && referenceFieldIdEle.value != null && referenceFieldIdEle.value != ''){
+						referenceFieldIdEle.nextSibling.nextSibling.previousSibling.value = referenceFieldIdEle.value;
+						referenceFieldNameEle.previousSibling.previousSibling.value = referenceFieldNameEle.value;
+			  }
+		</apex:repeat>
+    }
+    </script>    
+   
+    <apex:form id="SLAForm" onsubmit="setReferenceFieldsId();">  
+		<apex:outputPanel id="apexMessageErrorPanel" >
+			<div id="apexMessageErrorPanelDiv" style="display:none;">
+				<apex:messages />
+			</div>
+		</apex:outputPanel>	
+        <c:TabOutComponent ></c:TabOutComponent> 
+        <c:ValidationComponent errorMsgList="{!SLA_Bean.messageString}" id="validationComponent"></c:ValidationComponent>
+     	
+     <apex:actionFunction name="getRelatedSLA" action="{!getRelatedSLA}" oncomplete="loadDataFun();" rerender="loadData">
+         <apex:param value="" assignTo="{!slaType}" name="slaType"/>
+     </apex:actionFunction>  
+     
+     <apex:actionFunction name="linkSLA" action="{!linkSLA}" oncomplete="loadDataFun();" rerender="loadData">
+         <apex:param value="" assignTo="{!relatedSLAID}" name="relatedSLAID"/>       
+     </apex:actionFunction>
+       
+     <apex:actionFunction name="unlinkSLA" action="{!unlinkSLA}" oncomplete="loadDataFun();" rerender="loadData">
+         <apex:param value="" assignTo="{!selectedSLAIDForDelete}" name="selectedSLAIDForDelete"/>
+     </apex:actionFunction>  
+        <apex:actionFunction action="{!reset}" name="resetSLA" rerender="dataPanel,titlePanel,afterSaveId" oncomplete="updateInactive();handleElemEvent();renderAccList();setCleareAccountBtn();"/>
+    
+        <apex:actionFunction action="{!deleteSLA}" name="deleteSLA" rerender="apexMessageErrorPanel,validationComponent,afterSaveId,errorId" oncomplete="assignApexErrorMessage();completeDelete();updateList();handleElemEvent();"/>
+        
+        <apex:actionFunction name="save" action="{!save}" reRender="apexMessageErrorPanel,validationComponent,titlePanel,afterSaveId,panelId,FieldSetPanel,errorId" onComplete="setSltIframe();waitMsg.hide();assignApexErrorMessage();buttonValidator();siControlBack();showError();enablebtn();updateList();setCleareAccountBtn();handleResetChange();handleSave();handleElemEvent();resetSupportingInformation();">
+            <apex:param assignTo="{!SLA_Bean.SLAObj.Inactive__c}" name="savedName" value=""/>
+            <apex:param assignTo="{!SLA_Bean.csvAccountID}" name="csvAccount" value=""/>   
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!setSelectedBaseElement}" name="setSLAService" rerender="BMC_BusinessService__c_id_instance_name__c,BMC_BaseElement__c_id_name__c,BMC_BusinessService__c_id_fkbmc_baseelement__c,BMC_BaseElement__c_id_id" oncomplete="">
+            <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!setSelectedBusinessHours}" name="setSLASupportHours" rerender="BusinessHours_id_name,BusinessHours_id_id" oncomplete="">
+            <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!setSelectedAgreementOwner}" name="setSLAOwner" rerender="User_id_Username,User_id_id" oncomplete="">
+            <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+        </apex:actionFunction>
+       <apex:actionRegion >
+        <apex:actionFunction action="{!nextBtnHandler}" name="nextSLABtnHandler" rerender="titlePanel,dataPanel,afterSaveId" onComplete="renderSIComponent();handleResetChange();handleElemEvent();handleSave();renderAccList();resetSupportingInformation();reloadSupportInfo();"> 
+            <apex:param assignTo="{!SLA_Bean.tempString}" name="idSetString" value=""/>          
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!previousBtnHandler}" name="previousSLABtnHandler" rerender="titlePanel,dataPanel,afterSaveId" onComplete="renderSIComponent();handleResetChange();handleElemEvent();handleSave();renderAccList();resetSupportingInformation();reloadSupportInfo();"> 
+            <apex:param assignTo="{!SLA_Bean.tempString}" name="idSetString" value=""/>  
+        </apex:actionFunction>
+        </apex:actionRegion>
+        <apex:actionFunction action="{!setSelectedServiceFromTabout}" name="setBusinessServiceFromTabout" reRender="BMC_BusinessService__c_id_instance_name__c,BMC_BaseElement__c_id_name__c,BMC_BusinessService__c_id_fkbmc_baseelement__c,BMC_BaseElement__c_id_id" oncomplete="">  
+	        <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+        </apex:actionFunction>
+        
+         <div id="capsule" class="CapsuleDiv1">
+        <table cellpadding="0" cellspacing="0" class="clsMainTableSI">
+            <tr class="clsRowGreyBg">
+                <td colspan="2">
+                    <div id="btnToolbar"></div>
+                 </td>
+            </tr>
+            <tr>
+                <td>
+                    <apex:outputPanel id="dataPanel">
+                        <table cellpadding="0" cellspacing="0" class="clsTable">  
+                            <tr>
+                                <td class="clsTopAlignment75">
+                                    <apex:outputPanel id="tablePanel">
+                                        <table cellpadding="0" cellspacing="0" class="clsTable">
+                                            <tr>
+                                               <td colspan="3"><div class="div15pxVspacing"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD" style="width:13%;">
+                                                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__AgreementTitle__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                                </td>
+                                                <td class="clsInputTextBoxTD" style="padding-right: 5px; padding-left: 18px;">
+                                                    <apex:inputText disabled="false" title="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__AgreementTitle__c.inlineHelpText}" value="{!SLA_Bean.SLAObj.BMCServiceDesk__AgreementTitle__c}" id="SLA_AgreementTitle" StyleClass="clsInputTextBox"  tabindex="1" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD" >
+                                                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__Description__c.label}"/>
+                                                </td>
+                                                <td class="clsInputTextFieldTDRel" style="padding-left: 18px;">
+                                                    <apex:inputTextArea disabled="false" title="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__Description__c.inlineHelpText}" value="{!SLA_Bean.SLAObj.BMCServiceDesk__Description__c}" id="SLA_Description" StyleClass="clsInputTextFieldRel clsInputTextArea1"  tabindex="2" />
+                                                </td>
+                                                <td class="TextboxPopupIconTD">
+                                                    <div class="TextboxPopupIconDiv">
+                                                        <input type="button" class="TextboxPopupIcon"  onclick="showTextEditor('{!$Component.SLAForm.SLA_Description}', '{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__Description__c.label}',32000, labelOK, labelCancel);" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </apex:outputPanel>
+                                </td>
+                            </tr>
+                        </table>
+                        <table cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td height="10"></td>
+                            </tr>
+                            <tr>
+                                <td style="padding-left: 5px">
+                                    <input type="button" id="GeneralInformationBtn"  class="changeBtnCls" title = "{!$Label.SLM_General_Information}" value="{!$Label.SLM_General_Information}" style="font-weight:bold" onclick="displayActiveTab(this);" />
+                                </td>
+                                <td>
+                                    <input type="button" id="ServiceTargetsBtn"  class="changeBtnCls" title = "{!IF(contains(SLA_Bean.SLAObj.AgreementType__c, 'Operational Level Agreement'), $Label.OperationalTargets, $Label.SLM_ServiceTargets)}" value="{!IF(contains(SLA_Bean.SLAObj.AgreementType__c, 'Operational Level Agreement'), $Label.OperationalTargets, $Label.SLM_ServiceTargets)}" onclick="displayActiveTab(this);"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td height="5"></td>
+                            </tr>
+                        </table>
+                        <div id='SLA_InfoTabPanel' style='padding: 5px 15px 2px 10px;'>
+                            <div id='SLA_GeneralInformationTab' style='border: 1px solid #999999; height: 260px; padding-top: 5px;'>
+                                <table width="375" style='table-layout:fixed; width:390px\9;' >
+                                	
+                                     <tr>
+                                        <td class="clsInputLabelTD clsInputfixedLabelTD">
+                                            <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__AgreementType__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                        </td>
+                                        <td class="clsInputTextBoxTD">
+                                            <apex:inputfield value="{!SLA_Bean.SLAObj.BMCServiceDesk__AgreementType__c}" id="SLA_AgreementType" styleClass="clsSelectList" onchange="updateOLTTtabTitle(this);onAgreementTypeChange();"/>
+                                            <!--  <apex:selectList value="{!SLA_Bean.SLAObj.BMCServiceDesk__AgreementType__c}" id="SLA_AgreementType" title="{!$ObjectType.ServiceLevelAgreement__c.fields.AgreementType__c.inlineHelpText}"  styleClass="clsSelectList" tabindex="3" size="1">
+                                                <apex:selectOptions value="{!AgreementTypes}"></apex:selectOptions>
+                                            </apex:selectList>-->
+                                        </td>
+                                        
+                                        <!--<td class="clsInputTextBoxTD">
+                                            <apex:inputText disabled="false" title="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__AgreementType__c.label}" value="{!SLA_Bean.SLAObj.BMCServiceDesk__AgreementType__c}" id="" StyleClass="clsInputTextBox"  tabindex="3" />
+                                        </td> -->
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD" >
+                                            <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__FKBusinessService__c.label}"/><!-- <span class="clsRequiredBlack">&nbsp;*</span> -->
+                                        </td> 
+                                                              
+                                        <td class="clsInputTextBoxTD">
+                                        	<apex:outputpanel rendered="{!NOT(isFlattenedCmdb)}">                                                
+                                            	<apex:inputText title="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__FKBusinessService__c.inlineHelpText}" id="BMC_BusinessService__c_id_instance_name__c" value="{!SLA_Bean.businessServiceName}" styleClass="clsIdInputTextBox" onblur="showalldata(event,setBusinessServiceFromTabout,escape('(inactive__c = false) And (serviceType__c != \'Offering\') AND FKBMC_BaseElement__r.MarkAsDeleted__c = false '));"/>                         
+                                                <apex:inputhidden id="BMC_BusinessService__c_id_fkbmc_baseelement__c" value="{!SLA_Bean.fkBusinessService}" />
+                                            </apex:outputpanel>
+                                            <apex:outputpanel rendered="{!isFlattenedCmdb}">                                                
+                                            	<apex:inputText title="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__FKBusinessService__c.inlineHelpText}" id="BMC_BaseElement__c_id_name__c" value="{!SLA_Bean.businessServiceName}" styleClass="clsIdInputTextBox" onblur="showalldata(event,setBusinessServiceFromTabout,escape('(inactive__c = false) And (serviceType__c != \'Offering\') AND MarkAsDeleted__c = false '));"/>                         
+                                                <apex:inputhidden id="BMC_BaseElement__c_id_id" value="{!SLA_Bean.fkBusinessService}" />
+                                            </apex:outputpanel>                                              
+                                        </td>
+                                                          
+                                        <td class="lookupIconTD">
+                                            <div class="lookUpIconDiv">                                    
+                                                <input id="businessserviceLookup" type="button" onclick="if(!inProgress){openPopupRF('SearchPage?popupId=BMC_BusinessService&isLookup=true&functionalservices=true&filterClause=' + serviceClause,setSLAService)}" class="lookupIconOn"/>                                        
+                                            </div>
+                                        </td> 
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD" >
+                                            <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__FKAccount__c.label}"/><span class="clsRequiredBlack">&nbsp;</span>
+                                        </td>
+                                                              
+                                        <td class="clsInputTextBoxTD">                                                
+                                            <apex:inputTextArea title="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__FKAccount__c.inlineHelpText}" id="Account_id_name" rows="2" value="{!SLA_Bean.accountName}" styleClass="clsFieldSetMainFormTextBoxAreaForAccount"/>                 
+                                            
+                                        </td>
+                                                          
+                                        <td class="lookupIconTD">
+                                            <div class="lookUpIconDiv">                                    
+                                                <input type="button" id="accountLookup" onclick="if(!inProgress){openPopupWithTitle('AccountSelector?SLAId=' + agreementID + '&isForSLA=true',openAccountSelector, '{!JSENCODE($Label.SLAAccountsSelect)}', 600, 473);}" class="lookupIconOn"/>                                        
+                                            </div>
+                                        </td> 
+                                        <td class="lookupIconTD" >
+                                                <input type="button" id="clearAccountOn" onclick="AccountFieldJS();" class="clearFieldIconOn" title="" style="display:inline; "/>   
+                                                <input type="button" id="clearAccountOff" onclick="" title="" class="clearFieldIconOff" style="display:none;"/>                                      
+                                     
+                                        </td> 
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD" >
+                                            <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__EffectiveFrom__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                        </td>
+                                        <td class="clsInputTextBoxTD" title="{!$ObjectType.ServiceLevelAgreement__c.fields.EffectiveFrom__c.inlineHelpText}">
+                                        	<apex:outputPanel layout="block" id="OuterPanelForEffectiveFrom">
+                                            	<apex:inputField value="{!SLA_Bean.SLAObj.BMCServiceDesk__EffectiveFrom__c}" id="ServiceLevelAgreement__c_id_EffectiveFrom__c" StyleClass="clsInputTextBox" onfocus="datePickerPosition(event);" html-autocomplete="off"/>
+                                            </apex:outputPanel>
+                                            <script>
+                                            	if(getSaveBtnFlag() != true){
+                                            		var theEle = document.getElementById('{!$Component.ServiceLevelAgreement__c_id_EffectiveFrom__c}');
+                                            		theEle.disabled = true;
+                                            		theEle.setAttribute("class","clsCustomInputFieldReadOnly");
+                                            		var theEle = document.getElementById('{!$Component.OuterPanelForEffectiveFrom}');
+                                            		theEle.setAttribute("class","clsOutputPanelReadOnly");
+                                            	}
+                                            </script>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD" >
+                                            <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields.BMCServiceDesk__EffectiveUntil__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                        </td>
+                                        <td class="clsInputTextBoxTD" style="padding-bottom:0px;" title="{!$ObjectType.ServiceLevelAgreement__c.fields.EffectiveUntil__c.inlineHelpText}">
+                                        	<apex:outputPanel layout="block" id="OuterPanelForEffectiveUntil">
+	                                            <apex:inputField value="{!SLA_Bean.SLAObj.BMCServiceDesk__EffectiveUntil__c}" id="SLA_EffectiveUntil__c" StyleClass="clsInputTextBox" onfocus="datePickerPosition(event);" html-autocomplete="off"/>
+                                            </apex:outputPanel>
+                                            <script>
+                                            	if(getSaveBtnFlag() != true){
+                                            		var theEle = document.getElementById('{!$Component.ServiceLevelAgreement__c_id_EffectiveFrom__c}');
+                                            		theEle.disabled = true;
+                                            		theEle.setAttribute("class","clsCustomInputFieldReadOnly");
+                                            		var theEle = document.getElementById('{!$Component.OuterPanelForEffectiveUntil}');
+                                            		theEle.setAttribute("class","clsOutputPanelReadOnly");
+                                            	}
+                                            </script>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <table>
+                                    <!-- FieldSets Implementation -->
+                                    <script>
+                                    	function fieldsetTabout(event, fildApiName){
+                                    		if(fildApiName.toLowerCase()=='fkagreementowner__c'){
+                                    			showalldata(event,'',escape('IsStaffUser__c=true and IsActive=true'));
+                                    		}else{
+                                    			showalldata(event,'','');
+                                    		}
+                                    	}
+                                    </script>
+                                    <tr>
+                                        <td> 
+                                            <apex:repeat value="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.FieldSets.BMCServiceDesk__GeneralInfo}" var="GeneralInfoVar">
+                                                <apex:outputPanel rendered="{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].accessible}" >
+                                                    <apex:outputPanel rendered="{!NOT(CONTAINS($ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].type,'multipicklist'))}" >
+                                                        <apex:outputPanel rendered="{!NOT(CONTAINS($ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].type,'area'))}" >
+                                                            <table width="362" cellspacing="0" cellpadding="0" class="clsFieldSetMainFormTable" >
+                                                                <tr >
+                                                                    <td class="clsFieldSetMainFormLabelTD">{!$ObjectType.ServiceLevelAgreement__c.fields[GeneralInfoVar].label}
+                                                                        <apex:outputPanel rendered="{!fieldIsRequired[GeneralInfoVar]}">
+                                                                            <span class="clsRequiredBlack">*</span>
+                                                                        </apex:outputPanel></td>
+                                                                    <td class="clsFieldSetMainFormTextBoxTD" title="{!$ObjectType.ServiceLevelAgreement__c.fields[GeneralInfoVar].inlineHelpText}" >
+                                                                        <apex:outputPanel rendered="{!CONTAINS($ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].type,'reference')}" id="FieldSetPanel">
+                                                         					<apex:inputText value="{!referenceFieldMap[$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].value}"   style="display:none"/>
+                                                                            <input type="text"  value="{!SLA_Bean.SLAObj[referenceFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].referenceNameField][referenceFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].referenceNameFieldSec]}" id="{!referenceFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].idForName}" onblur="fieldsetTabout(event,'{!$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname}');"  class="clsInputTextBox" />
+                                                                            <input type="text"  value="{!SLA_Bean.SLAObj[GeneralInfoVar]}" id="{!referenceFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].idForId}" style="display:none"/> 
+                                                                            <apex:inputText value="{!SLA_Bean.SLAObj[GeneralInfoVar]}"   id="referenceId" style="display:none"/>
+                                                                            <input type="button" class="lookupIconOn" id="lastnameLookup_Id" style="{!IF(contains($ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].type, "reference"), 'display:inline', 'display:none')}" onclick="if(!inProgress) {openLookupPopup1(this,'{!$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname}','ServiceLevelAgreement__c'); return false;}" />
+							                                             		<script>
+							                                             		var generalInfoEleValue = document.getElementById('{!referenceFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].idForName}').previousSibling.previousSibling.value;
+							                                             		if(generalInfoEleValue  == "" || generalInfoEleValue == null)
+							                                             			document.getElementById('{!referenceFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].idForName}').value = "{!SLA_Bean.SLAObj[referenceFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].referenceNameField][referenceFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].referenceNameFieldSec]}";
+							                                             		else
+							                                             			document.getElementById('{!referenceFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].idForName}').value = generalInfoEleValue; 
+							                                             		</script>                                                                             
+                                                                        </apex:outputPanel>
+                                                                        <apex:outputPanel rendered="{!NOT(CONTAINS($ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].type,'reference'))}">
+                                                                            <apex:inputField value="{!SLA_Bean.SLAObj[GeneralInfoVar]}" rendered="{!NOT(readOnlyMap[GeneralInfoVar])}" styleClass="{!IF(contains($ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].type, "textarea"), 'clsPanelInputTextArea', 'clsFieldSetMainFormTextBox')}" onfocus="datePickerPosition(event);" html-autocomplete="off"/>
+                                                                            <input type="hidden" value="{!SLA_Bean.SLAObj[GeneralInfoVar]}" id="{!allFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].idForName}"  fieldType="Custom" />
+                                                                            
+						                                                    <apex:outputPanel rendered="{!readOnlyMap[GeneralInfoVar]}">						
+						                                                            <apex:outputPanel rendered="{!NOT(OR(CONTAINS($ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].localName, 'closeDateTime__c'),CONTAINS($ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].localName, 'respondedDateTime__c')))}" layout="block" styleClass="clsOutputPanelReadOnly">
+							                                                            <apex:inputField id="readOnlyDate1"  value="{!SLA_Bean.SLAObj[GeneralInfoVar]}" rendered="{!CONTAINS($ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].type,'date')}" styleClass="clsCustomInputFieldReadOnly"  />
+							                                                           	    <script>
+							                                                           	    var htmlElement1 = document.getElementById('{!$Component.readOnlyDate1}');
+							                                                           	    if(htmlElement1 != null && typeof(htmlElement1) != 'undefined')
+							                                                           	    	htmlElement1.disabled=true;</script>                                        
+							                                                            <input type="text" value="{!SLA_Bean.SLAObj[GeneralInfoVar]}"  style="display:{!IF(NOT(CONTAINS($ObjectType.ServiceLevelAgreement__c.fields[GeneralInfoVar].type,'date')),"","none")}"  class="clsCustomInputFieldReadOnly" readonly="true" />                                                    
+																					</apex:outputPanel>
+						
+						                                                    </apex:outputPanel>
+                                                                        </apex:outputPanel>
+                                                                    </td>
+                                                                </tr>           
+                                                            </table>          
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!CONTAINS($ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].type,'area')}">
+                                                            <table width="362" cellspacing="0" cellpadding="0" class="clsFieldSetMainFormTable">
+                                                                <tr>
+                                                                    <td class="clsInputBoldLabelTableFirstRowTD">{!$ObjectType.ServiceLevelAgreement__c.fields[GeneralInfoVar].label}
+                                                                        <apex:outputPanel rendered="{!fieldIsRequired[GeneralInfoVar]}">
+                                                                            <span class="clsRequiredBlack">*</span>
+                                                                        </apex:outputPanel>
+                                                                    </td>
+                                                                    <td colspan="2">&nbsp;</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="clsInputTextAreaTD clsRightPadTD" colspan="2" title="{!$ObjectType.ServiceLevelAgreement__c.fields[GeneralInfoVar].inlineHelpText}">
+                                                                        <div>
+                                                                            <input type="hidden" value="{!SLA_Bean.SLAObj[GeneralInfoVar]}" id="{!textAreaFieldMap[$ObjectType.ServiceLevelAgreement__c.Fields[GeneralInfoVar].localname].idForName}" fieldType="Custom" styleClass="clsInputTextArea" />
+                                                                            <apex:inputTextarea value="{!SLA_Bean.SLAObj[GeneralInfoVar]}" styleClass="clsInputTextArea"  onBlur="validateMe(this,'{!$ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].type}');" id="dormantInputTextareaId"/>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td  style="vertical-align:top;padding-left:3px;padding-left /*\**/: 7px\9;" >                               
+                                                                        <input type="button" id="inputTxtAreaButton" class="TextboxPopupIcon" style="display:inline" onclick="viewTextEditor(this,'{!$ObjectType.ServiceLevelAgreement__c.fields[GeneralInfoVar].label}', '{!$ObjectType.ServiceLevelAgreement__c.fields[GeneralInfoVar].length}', '{!JSENCODE($Label.OK)}', '{!JSENCODE($Label.Cancel)}');"/>
+                                                                    </td>
+                                                                </tr>
+                                                            </table> 
+                                                        </apex:outputPanel>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!(CONTAINS($ObjectType.BMCServiceDesk__ServiceLevelAgreement__c.fields[GeneralInfoVar].type,'multipicklist'))}" >
+                                                        <table  cellspacing="0" cellpadding="0" width="340" >
+                                                            <tr>
+                                                                <td class="clsFieldSetMainFormLabelTD">{!$ObjectType.ServiceLevelAgreement__c.fields[GeneralInfoVar].label}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td   class="multiPickListClsTD" title="{!$ObjectType.ServiceLevelAgreement__c.fields[GeneralInfoVar].inlineHelpText}">
+                                                                    <apex:inputField value="{!SLA_Bean.SLAObj[GeneralInfoVar]}" styleClass="multiPickListCls"/>
+                                                                </td>                
+                                                            </tr>
+                                                        </table> 
+                                                    </apex:outputPanel>
+                                                </apex:outputPanel>                            
+                                            </apex:repeat>        
+                                        </td>
+                                    </tr>
+                                    <!-- END FieldSets Implementation -->                                                                       
+                                </table>
+                            </div>
+                            <div id='SLA_ServiceTargetsTab' style='height: 260px; padding-top: 0px;  border:1px solid #999999; display: none;'>
+                                <iframe id ="SLTframe" name="SLTframe" src="/apex/SearchPage?popupId=SLT&view=list&pgheight=656&wid=1&SLAId={!SLA_Bean.SLA_ID}&TargetType={!SLA_Bean.SLAObj.BMCServiceDesk__AgreementType__c}" width ="100%" style="border:none;" height="260"></iframe>
+                            </div>
+                        </div>     
+                    </apex:outputPanel>
+                </td>
+                <td class="clsTopAlignment25">
+		            <div class="panelCapsule">
+		                <apex:outputPanel id="PanelbarOutputPanel">
+		                <div class="div15pxVspacing"/>
+		                 <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" id="pbarId" >
+		                        <apex:panelBarItem label="{!$Label.bmcservicedesk__slm_relatedslas}" expanded="true" id="changedetail" onenter="selectIdForDelete = '';	selectedSLAAccodion = 'Service Level Agreement';getRelatedSLA(selectedSLAAccodion);" headerClass="panelHeader" contentClass="panelContent">
+		                            <apex:outputPanel >
+		                           		<div id = "SLAGridDiv" ></div>    
+		                            </apex:outputPanel>
+		                        </apex:panelBarItem>
+		                    
+		                     <apex:panelBarItem id="CustomFieldspanelBar" onenter="selectIdForDelete = '';	selectedSLAAccodion = 'Operational Level Agreement';getRelatedSLA(selectedSLAAccodion);" label="{!$Label.bmcservicedesk__slm_relatedolas}" headerClass="panelHeader" contentClass="panelContent">
+		                     	<apex:outputPanel >
+		                            <div id = "OLAGridDiv" ></div>    
+		                        </apex:outputPanel>
+		                     </apex:panelBarItem>
+		                      <apex:panelBarItem id="CustomFieldspanelBar1" onenter="selectIdForDelete = '';	selectedSLAAccodion = 'Underpinning Contract';getRelatedSLA(selectedSLAAccodion);" label="{!$Label.bmcservicedesk__slm_relateducs}" headerClass="panelHeader" contentClass="panelContent">
+		                      <apex:outputPanel >
+		                            <div id = "UCGridDiv" ></div>    
+		                      </apex:outputPanel>
+		                     </apex:panelBarItem>
+		                     </apex:panelBar>
+		              </apex:outputPanel>
+		              </div>
+                </td>
+            </tr>                            
+        </table>
+        </div>
+        <div id="detailsDivSI">
+           <table  class="onDemandSITableCls" id="onDemandSITableId">
+               <tr>
+                  <td id="noSIAvailTD">{!JSENCODE($Label.SIMessageForNewIncident)}</td>
+               </tr>  
+               <tr>
+                   <td id="linkSIAvailTD">
+                   	<table class="SICheckboxLinkInnerTable">
+                   		<tr>
+             	  			<td id="configureSITD">
+              	  				<input type="checkbox" title="{!JSENCODE($Label.ShowSupportingInformation)}" id="configureSIId" onClick="writeCookie();"/>&nbsp;{!JSENCODE($Label.SIMessageForConfiguration)}
+		              	  		
+		              	  	</td>
+		              	</tr>
+		                <tr>
+		               		<td>
+		               			<a id="getSIUrl" href="JavaScript:void(0);" onClick="SIComp(iFrameSrc);" >{!$Label.SIMessageForExistingIncident}</a>
+		                  	</td>
+		                </tr>
+                    </table>
+                   </td>
+               </tr>
+           </table>
+		   <iframe name='SIIframeID' id='SIIframeID'  width='100%' height='100%' frameborder='0' style="display:none"/>
+        </div>
+    </apex:form>
+    <script>
+    var slaId = getSLAId(); 
+	var existingAgreementType;
+	var newAgreementType;
+	var agreementTypePicklist = getAgreementType();
+	function getAgreementType(){
+		return document.getElementById('{!$Component.SLAForm.SLA_AgreementType}');
+	}
+	if(agreementTypePicklist){
+		existingAgreementType = agreementTypePicklist.value;
+		newAgreementType = agreementTypePicklist.value;
+	}
+	var disabled = false;
+	var ConfirmAgreementTypeChange = '{!JSENCODE($Label.ConfirmAgreementTypeChange)}';
+    if(SLAcopy != ''||slaId ==''){
+             disabled = true ;
+             document.getElementById('ServiceTargetsBtn').disabled = true;
+             document.getElementById('ServiceTargetsBtn').style.color='#808080';
+      }
+        
+    
+    function enablebtn(){
+      if(errormsg == labelSavedSuccessfully && disabled == true){
+          document.getElementById('ServiceTargetsBtn').disabled = false ;
+          document.getElementById('ServiceTargetsBtn').style.color = '#004376';
+          }
+    }
+    	// In case of edit SLA set isNewRec = false
+    	var slaId = getSLAId();     	
+    	if(slaId != null && slaId != '' && slaId != 'undefined'){
+           		isNewRec = false;
+        }
+        // In case of new record is saved first time this function will reload SLT list view.
+        if(SLAcopy != ''){
+        	setSltIframe();	
+        }
+        
+   		function setSltIframe(){	
+   			if(isNewRec){
+                var sltList = document.getElementById('SLTframe');
+                var agreementType;
+                if(agreementTypePicklist){
+                	agreementType = agreementTypePicklist.value;
+                 } 
+               
+                if(sltList != null && sltList != 'undefined' ){
+                    if(SLAcopy != ''){
+                        sltList.src = "/apex/SearchPage?popupId=SLT&view=list&pgheight=656&wid=1&TargetType="+agreementType+"&SLAcopy=1&SLAId=" + SLAcopy;
+                    } else {
+                        sltList.src = "/apex/SearchPage?popupId=SLT&view=list&pgheight=656&wid=1&TargetType="+agreementType+"&SLAId=" + getSLAId();                  
+                    }
+                }
+            }
+            // Once iframe is reloaded & record is saved successfully then set isNewRec = false
+            
+            if(slaId != null && slaId != '' && slaId != 'undefined'){
+                isNewRec = false;
+            }
+   		}
+	    converdisabletoreadonly();
+   		
+    </script>
+</apex:page>

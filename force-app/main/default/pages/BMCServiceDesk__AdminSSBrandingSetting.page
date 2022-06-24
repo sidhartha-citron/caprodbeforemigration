@@ -1,0 +1,769 @@
+<apex:page showHeader="false"  Controller="BMCServiceDesk.AdminSSBrandingController" id="thePage" standardStylesheets="false">
+    <c:CommonIncludes />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSSBranding.css" />
+<script>
+var  selectedvalue='{!JSENCODE(themeIndex)}' ;
+var  selectedLabel = '{!JSENCODE(themeLabel)}';
+var  defaultThemeId= '{!JSENCODE(defaultThemeId)}' ;
+var enablesavebtn = {!enablesavebutton};
+var radioName;
+var invalidCompanyURL='{!JSENCODE($Label.InvalidCompanyURL)}';
+var defaultThemeErrorMessage='{!JSENCODE($Label.DefaultThemeSelectionErrorMessage)}';
+var BrandingLable = '{!JSENCODE($Label.Branding)}';
+var colorcode;
+var parentThemeId = '{!JSENCODE(defaultThemeId)}' ;
+var themeComboValue = parentThemeId;
+var errorMessage = '{!JSENCODE(errorMessage)}' ;
+var duplicateThemeName = '{!JSENCODE($Label.ThemeNameValidation)}';
+var newThemeId = '{!JSENCODE(newThemeId)}';
+var Theme_Name_Required = '{!JSENCODE($Label.Theme_Name_Required)}';
+var Theme_Name_Length = '{!JSENCODE($Label.Theme_Name_Length)}';
+
+var isSS3 = {!isSS3};
+
+function selectRemoveRadio0(){
+radioName = document.getElementsByName('{!JSENCODE($Component.BrandingSettingstForm.selectRadio0)}');
+commonRadioSelectFunction();
+}
+
+function selectRemoveRadio1(){
+radioName = document.getElementsByName('{!JSENCODE($Component.BrandingSettingstForm.selectRadio1)}');
+commonRadioSelectFunction();
+}
+function selectRemoveRadio2(){
+radioName = document.getElementsByName('{!JSENCODE($Component.BrandingSettingstForm.selectRadio2)}');
+commonRadioSelectFunction();
+}
+function selectRemoveRadio3(){
+radioName = document.getElementsByName('{!JSENCODE($Component.BrandingSettingstForm.selectRadio3)}');
+commonRadioSelectFunction();
+}
+
+function commonRadioSelectFunction(){
+if(radioName !=null){
+if(Ext.isIE7 || Ext.isIE8){// mean the browser is IE
+radioName[2].checked=true;
+}
+else{
+radioName[1].checked=true;
+}
+
+}
+}
+
+function setParameters() {
+// Set the selected theme Id,  so that its retain when the page is reloaded after save.
+var obj = document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.someparam)}');
+if (obj != null) obj.value = selectedvalue;
+
+// Set the selected theme Label,  so that its retain when the page is reloaded after save.
+var label = document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.labelparam)}');
+if (label != null) label.value = selectedLabel;
+
+}
+
+var SaveBtnHandler = function(button,event) {
+var URLvar = document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.companyURLID)}').value;
+if(URLvar!='')
+{
+    URLvar = httpIntranetUrlCheck(URLvar);
+    if(!URLvar){
+        Ext.Msg.show({
+	    title:BrandingLable,
+            msg: invalidCompanyURL, 
+            buttons: Ext.Msg.OK            
+        });
+        return;
+    }
+}
+
+var chkboxVal= document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.defaultThemeChkbox)}');
+
+if(defaultThemeId == selectedvalue && chkboxVal.checked == false)
+{
+    Ext.Msg.show({
+	    title:BrandingLable,
+            msg: defaultThemeErrorMessage, 
+            buttons: Ext.Msg.OK
+        });
+    chkboxVal.checked = true;
+    return;
+}
+
+setParameters();
+saveSettings();
+
+};
+
+function hideLblError()
+{
+    var lblRequiredError = document.getElementById('ThemeNameRequired');
+    if(lblRequiredError != null && lblRequiredError != undefined && lblRequiredError != '')
+        lblRequiredError.style.display = "none";
+    
+    var errorMessageEle = document.getElementById('errorMessage');
+    if(errorMessageEle) {
+        errorMessageEle.style.display = "none";
+        errorMessageEle.innerText ='';
+    }
+    
+    var lblDuplicateError = document.getElementById('ThemeNameUnique');
+    if(lblDuplicateError != null && lblDuplicateError != undefined && lblDuplicateError != '')
+        lblDuplicateError.style.display = "none";
+        
+        var lblLengthError = document.getElementById('ValidThemeNameRequired');
+    if(lblLengthError != null && lblLengthError != undefined && lblLengthError != '')
+        lblLengthError.style.display = "none";
+}
+function changeTheme(){
+    if(selectedvalue == 'None')
+    {
+        hideLblError();
+        document.getElementById('thePage:PopupForm:popupInnerPanel').style.display = "block";
+        document.getElementById('thePage:PopupForm').style.display = "block";
+		document.getElementById('thePage:PopupForm:popupPanel').style.display = "block";
+        var themeParentCombo = Ext.getCmp('ThemesParentCombo');
+            themeParentCombo.setValue(themeComboValue);
+        renderCombo();
+    }    
+    else
+    {
+setParameters();
+fetchImagesforSelectedTheme();
+}
+}
+function showError(){
+
+  if(errorMessage != '')
+    msg = errorMessage;
+  else
+ msg = '{!JSENCODE(errorMessage)}';
+  
+ Ext.Msg.show({
+            
+            title:BrandingLable,
+            msg: msg,
+            buttons: Ext.Msg.OK            
+       });
+}
+function showSaveConfirm(){
+msg = '{!JSENCODE($Label.savedSuccessfully)}';
+  
+ Ext.Msg.show({
+            
+            title:BrandingLable,
+            msg: msg,
+            buttons: Ext.Msg.OK,
+            width: 300       
+            
+       });
+}
+var ThemesParentCombo;
+function renderCombo()
+{
+    hideLblError();
+    ThemesParentCombo.render('Interface-Themes-Parent');
+}
+
+
+Ext.onReady(function(){
+             var switchToNewUI='{!SwitchToNewUI}'
+            
+            if(isSS3){
+            	document.getElementById('bannerColorBox').style.display="none";
+            }else{
+            	if(switchToNewUI=='true' || switchToNewUI== 'TRUE')
+                {
+                  var obj = document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.selectColorId)}');
+                 var colorcode= obj.value ;
+                document.getElementById('bannerColorBox').style.backgroundColor=colorcode;
+                }else
+                {
+                    document.getElementById('bannerColorBox').style.display="none";
+                }
+            }
+
+            Ext.QuickTips.init();             
+            var SamplePanel = Ext.extend(Ext.Panel, {
+                    renderTo: 'btnToolbar'
+                   
+                });
+                
+           new SamplePanel({
+                    title: '',
+                cls:'toolSpCls',
+                    tbar: [ {
+                        scale: 'medium',
+                        iconCls: 'bmcSave',
+                        tooltipType : 'title',
+                        tooltip: '{!JSENCODE($Label.save)}',
+                        id:'saveId',
+                        listeners: {
+                            mouseover: function(){
+                                this.setIconClass('bmcSaveOn');    
+                             },
+                            mouseout: function(){
+                                this.setIconClass('bmcSave');          
+                            }
+                        }, 
+                        handler:SaveBtnHandler
+                    }]
+                    
+                    });
+                if(!enablesavebtn)
+             {
+           
+                Ext.getCmp('saveId').setDisabled(true);
+             }  
+                  var ThemeArr = new Array();
+                  var ThemeParentArr = new Array();
+                var i=0;
+                 var popupComboIndex = 0;
+               <apex:repeat value="{!dataSourceNameList}" var="dataSourceName"  id="idList">    
+                ThemeArr[i] = new Array(3);
+                ThemeArr[i++][0]='{!JSENCODE(dataSourceName)}';
+              
+              </apex:repeat> 
+              <apex:repeat value="{!parentDataSourceNameList}" var="dataSourceName" id="parentnameList">    
+       
+                   ThemeParentArr[popupComboIndex] = new Array(2);
+                   ThemeParentArr[popupComboIndex++][0]='{!JSENCODE(dataSourceName)}';
+              
+              </apex:repeat>           
+            var i=0;
+            var iscustom=true;
+            var popupComboIndex = 0;
+            <apex:repeat value="{!dataSourceLabelList}" var="dataSourceLabel"  id="nameList"> 
+            
+              var selectId=ThemeArr[i][0];
+              var SourceLabel='{!JSENCODE(dataSourceLabel)}';
+             
+             if((SourceLabel =='{!JSENCODE($Label.createNewTheme)}' && selectId == 'None') || SourceLabel =='{!JSENCODE($Label.BMC_Theme)}' || SourceLabel =='{!JSENCODE($Label.Neutral_Theme)}' ||SourceLabel =='{!JSENCODE($Label.Dark_Yellow_Theme)}' ||SourceLabel =='{!JSENCODE($Label.Deep_Green_Theme)}' ||SourceLabel =='{!JSENCODE($Label.Rich_Red_Theme)}' ||SourceLabel =='{!JSENCODE($Label.Steel_Blue_Theme)}')
+              {
+                 //var temp = ThemeArr[i++][0];
+                    ThemeArr[i][2]=false;
+              }
+              else
+             {
+              ThemeArr[i][2]=true;
+              }
+               ThemeArr[i++][1]=SourceLabel;
+            </apex:repeat>  
+             var i=0;
+            <apex:repeat value="{!dataSourceColorList}" var="dataSourceColor" id="colorList">    
+                
+                ThemeArr[i++][3]='{!JSENCODE(dataSourceColor)}';
+                
+            </apex:repeat> 
+            <apex:repeat value="{!parentDataSourceLabelList}" var="dataSourceLabel" >    
+                ThemeParentArr[popupComboIndex++][1]='{!JSENCODE(dataSourceLabel)}';
+            </apex:repeat>   
+                    // simple array store
+                var tempStore = new Ext.data.ArrayStore({
+                    fields: ['id', 'label1','isCustom','color'],
+                    data : ThemeArr
+                }); 
+                 var tempParentStore = new Ext.data.ArrayStore({
+                    fields: ['id', 'label'],
+                    data : ThemeParentArr
+                }); 
+                   var ThemesCombo = new Ext.form.ComboBox({
+                    renderTo:'Interface-Themes',
+                    width:250,
+                    store: tempStore,
+                    //store:themestore ,
+                    displayField:'label1',
+                    id:'ThemesCombo',
+                    typeAhead: true,
+                    mode: 'local',
+                    triggerAction: 'all',
+                    valueField:'id',
+                    readOnly: true,
+                    forceSelection: true,
+                    emptyText:selectedLabel,
+                 //   emptyText:'Default',
+                    selectOnFocus:true,
+                    editable: false,
+                    tpl: '<tpl for="."><div class="x-combo-list-item"><table style="width:100%"> <td style="width: 70%;">{[Ext.util.Format.htmlEncode(values.label1)]}</td><tpl if="isCustom==true"><td style="width: 30%;text-align:right;"><a onClick="openEditPage(\'{id}\');"  href="" target="_blank">{!JSENCODE($Label.CMDBEdit)}</a></td></tpl></table></div></tpl>',
+                                  
+                    listeners:{
+                            select: function(combo, record, index) {
+                            if(switchToNewUI=='true' || switchToNewUI== 'TRUE')
+                                {
+                                 colorcode=record.get('color');
+                                 var obj = document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.selectColorId)}');
+                                if (obj != null) obj.value = colorcode;
+                                    document.getElementById('bannerColorBox').style.backgroundColor=colorcode; 
+                                }  
+                                  else
+                                  {
+                                      document.getElementById('bannerColorBox').style.display="none"; 
+                                  }
+                           var recID = record.get('id');
+                           
+                                          var text = record.get(combo.displayField);
+                                           selectedvalue = record.get(combo.valueField);
+                                           selectedLabel = record.get(combo.displayField);
+                                           var previousSelectionId = document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.someparam)}');
+                                           if (previousSelectionId != null) {themeComboValue = parentThemeId = previousSelectionId.value; }
+                                           changeTheme();                                
+                                       }
+                            
+                    }
+                   
+                });
+            
+            ThemesParentCombo = new Ext.form.ComboBox({
+               
+                   store: tempParentStore,
+                    displayField:'label',
+                    id:'ThemesParentCombo',
+                    typeAhead: true,
+                    mode: 'local',
+                    triggerAction: 'all',
+                    valueField:'id',
+                    readOnly: true,
+                    forceSelection: true,
+                    emptyText:selectedLabel,
+                    selectOnFocus:true,
+                    editable: false,
+					tpl: '<tpl for="."><div class="x-combo-list-item">{[Ext.util.Format.htmlEncode(values.label)]}</div></tpl>',
+                    listeners:{
+                        select: function(combo, record, index) {
+                            parentThemeId = record.get('id');
+                            
+                            hideLblError();
+                        }
+                    }
+                   
+                });
+               
+               
+            if('{!validationPass}'== 'false'){
+               showError();
+            }  
+            if('{!saveStatus}'== 'true'){
+               showSaveConfirm();
+            }   
+           
+            var chkboxVal= document.getElementById('{!JSENCODE($Component.BrandingSettingstForm.defaultThemeChkbox)}');
+           
+            if(selectedvalue != defaultThemeId)
+            {                
+                //document.getElementById("defaultThemeLabel").style.visibility= "hidden";                                                
+                chkboxVal.checked = false;
+            }
+            else
+            {
+                 //document.getElementById("defaultThemeLabel").style.visibility = "visible";                            
+                 chkboxVal.checked = true;
+            }
+    
+     });
+function openEditPage(editThemeID)
+{
+     
+   window.open('/apex/SSEditThemePage?themeId='+editThemeID);
+}    
+            
+</script>
+
+<apex:form id="BrandingSettingstForm">
+	<div id="btnToolbar"/>
+	<div id="helpDiv" class="clshelpDiv"></div>
+        <table class="MainTableCls" >
+                <tr>
+                    <td colspan="0"><div class="div15pxVspacing"/></td>
+                </tr>
+                
+                <tr>
+                   <td colspan="0">
+                      <table cellspacing="0" cellpadding="0">        
+                         <tr>
+                             <td class="InputLabelCls" style="width: 20%;">
+                                  <apex:outputLabel value="{!$Label.bmcservicedesk__userinterfacetheme}" />    
+                             </td> 
+                             <td style="width: 15%;">
+                                  <div title="{!$Label.TooltipUserInterfaceTheme}" id='Interface-Themes'> </div>                                     
+                                                                   
+                              </td>
+                              <td style="width: 10%;padding-left:15px;">
+                               <input id="bannerColorBox" style="width:20px;" disabled="true"></input>   
+                              </td>
+                              <td>
+                              <div class="div10pxHspacing"/>      
+                              </td>
+                              <td id="defaultThemeLabel" class="standardFontCls" style="width: 25%;">                                  
+                                   <apex:inputCheckbox id="defaultThemeChkbox" value="{!setAsDefault}" style="vertical-align: bottom;"/>&nbsp;
+                                   <apex:outputLabel value="{!$Label.bmcservicedesk__set_as_default}" />                                      
+                             </td>   
+                                          
+                             <td class="standardFontCls" style="width: 30%;">
+                             <a href="JavaScript:void(0);" id="linkAccount" onclick="openPopupWithTitle('AccountSelector?themeid=' + selectedvalue ,'', '{!JSENCODE($Label.SelectAccountsForTheme)}',585, 510);">{!$Label.AssignThemeToAccounts}</a>
+                             </td>
+                                                   
+                                       
+                                                          
+                                       
+                          </tr>
+                       </table>
+                   </td>
+                </tr>
+                
+                   
+                <tr>
+                   <td colspan="0"><div class="div15pxVspacing"/></td>
+                </tr>    
+                
+                <tr>
+                   <td colspan="0">
+                     <div style="padding-left:5px; padding-right:10px;">
+                         <table> 
+                            <tr>
+                               <td colspan="0">
+                                 <table height="100%" width="100%">
+                                      
+                                      <!--for column headers-->
+                                      <tr style="background:url('{!$Resource.SDEFStyles}/SDEFimages/blue_bg.gif') repeat scroll 0 0 transparent; width:275px; line-height: 22px;" > 
+                                           <td class="clsInputLabelTDBranding" width="200px" >
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__brandingsettingslabelimage}"/> 
+                                           </td>
+                                           <td class="clsInputLabelTDBranding" width="350px">
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__brandingsettingslabelimageoptions}"/> 
+                                           </td>
+                                           <td class="clsInputLabelTDBranding" width="250px">
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__brandingsettingslabelreplacementimage}"/> 
+                                           </td>
+                                           <td class="clsInputLabelTDBranding" width="200px" >
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__brandingsettingslabelcurrentimage}"/> 
+                                          </td>
+                                       </tr>
+                                       <!--End of column header rows-->
+                                       
+                                       <!--Start of first row-->
+                                       <tr style="background:#FFFFFF;"> 
+                                           <td class="InputLabelCls" style="padding-right:10px;">
+                                                 <apex:outputLabel value="{!$Label.bmcservicedesk__applicationtitleonloginpage}"/> 
+                                            </td>
+                                            <td class="checkLabelST">
+                                                <apex:selectRadio layout="lineDirection" styleClass="checkLabelST" style="white-space:nowrap;" id="selectRadio0" value="{!loginHeaderImageOptions}">
+                                                <apex:selectOptions value="{!items}"/>
+                                                </apex:selectRadio>
+                                            </td>
+                                            <td style="padding-left:5px;">
+                                                <apex:inputFile fileName="{!attach0.name}" contentType="{!attach0.ContentType}" id="inputfileLoginTitle" style="font-family:arial;height:24px;" fileSize="225000"  value="{!attach0.body}" size="24" onclick="selectRemoveRadio0();" title="{!$Label.bmcservicedesk__brandingsettingsimagetooltip}"/>
+                                              
+                                            </td>
+                                            <td class="clsInputLabelTDBrandingCurrentImage" >
+                                               <apex:outputLabel value="{!attach0Label}"/> 
+                                            </td>
+                                       </tr>
+                                       <!--end of first row-->
+                                       
+                                       <!--Start of second row -->
+                                       <tr style="background:#E9E9E9;" > 
+                                           <td class="InputLabelCls" style="padding-right:10px;">
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__companylogoonloginpage}"/> 
+                                           </td>
+                                           <td class="checkLabelST">
+                                                <apex:selectRadio layout="lineDirection" styleClass="checkLabelST" style="white-space:nowrap;" id="selectRadio1" value="{!logoImageOptions}" >
+                                                <apex:selectOptions value="{!items}"/>
+                                                </apex:selectRadio>
+                                           </td>
+                                           <td style="padding-left:5px;">
+                                                 <apex:inputFile fileName="{!attach1.name}" contentType="{!attach1.ContentType}" id="inputfileLogo" style="font-family:arial;height:24px;" fileSize="225000" value="{!attach1.body}" size="24" onclick="selectRemoveRadio1();" title="{!$Label.bmcservicedesk__brandingsettingsimagetooltip}"/>
+                                           </td>
+                                           <td class="clsInputLabelTDBrandingCurrentImage">
+                                               <apex:outputLabel value="{!attach1Label}"/> 
+                                           </td>
+                                       </tr>
+                                                                            
+                                       <!-- End of Second row-->
+                                       
+                                       <!--Start of third row-->
+                                       <tr style="background:#FFFFFF;" > 
+                                           <td class="InputLabelCls" style="padding-right:10px;">
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__backgroundimageonloginpage}"/> 
+                                           </td>
+                                           <td class="checkLabelST">
+                                                <apex:selectRadio layout="lineDirection" styleClass="checkLabelST"  style="white-space:nowrap;" id="selectRadio2" value="{!backgroundImageOptions}">
+                                                <apex:selectOptions value="{!items}"/>
+                                                </apex:selectRadio>
+                                           </td>
+                                           <td style="padding-left:5px;">
+                                                 <apex:inputFile fileName="{!attach2.name}" contentType="{!attach2.ContentType}" id="inputfileBG" style="font-family:arial;height:24px;" fileSize="225000" value="{!attach2.body}" size="24" onclick="selectRemoveRadio2();" title="{!$Label.bmcservicedesk__brandingsettingsimagetooltip}"/>
+                                           </td>
+                                           <td class="clsInputLabelTDBrandingCurrentImage" >
+                                               <apex:outputLabel value="{!attach2Label}"/> 
+                                           </td>
+                                       </tr>
+                                       <!--End of third row-->
+                                       
+                                       <!--Start of fourth row-->
+                                       <tr style="background:#E9E9E9;" > 
+                                           <td class="InputLabelCls" style="padding-right:10px;">
+                                             <apex:outputLabel value="{!$Label.bmcservicedesk__applicationtitleonbanner}"/> 
+                                           </td>
+                                           <td class="checkLabelST">
+                                                <apex:selectRadio layout="lineDirection" styleClass="checkLabelST"  style="white-space:nowrap;" id="selectRadio3" value="{!bannerHeaderImageOptions}">
+                                                <apex:selectOptions value="{!items}"/>
+                                                </apex:selectRadio>
+                                           </td>
+                                           <td style="padding-left:5px;">
+                                                 <apex:inputFile fileName="{!attach3.name}" contentType="{!attach3.ContentType}" fileSize="{!filesize}" id="inputfileBannerTitle" style="font-family:arial;height:24px;"  value="{!attach3.body}" size="24" onclick="selectRemoveRadio3();" title="{!$Label.bmcservicedesk__brandingsettingsimagetooltip}"/>
+                                           </td>
+                                               <td class="clsInputLabelTDBrandingCurrentImage">
+                                               <apex:outputLabel value="{!attach3Label}"/> 
+                                           </td>
+                                       </tr>
+                                       
+                                     <!--End of fourth row-->  
+                                 </table>  
+                             </td>
+                           </tr>  
+                         </table>   
+                      </div>
+                   </td>
+                </tr>   
+                <tr>
+                   <td colspan="0"><div class="div15pxVspacing"/></td>
+                </tr> 
+                <tr>
+					<td class="clsCompanyDetailTable standardFontCls">
+						 <table>
+							<tr>
+								<td><apex:outputLabel value="{!$Label.bmcservicedesk__companyurl}" /></td>
+								<td><apex:inputText id="companyURLID" value="{!companyURL}" size="57" title="{!$Label.bmcservicedesk__companyurltip}" styleClass="standardFontCls marginHLeft15 height17"/></td>
+							</tr>
+							<tr>
+				                   <td colspan="2"><div class="div10pxVspacing"/></td>
+				            </tr> 
+							<tr>
+								<td><apex:outputLabel value="{!$Label.bmcservicedesk__urltiptext}"/></td>
+								<td><apex:inputText maxlength="200" id="URLTipTextID" value="{!URLTipText}" size="57" title="{!$Label.bmcservicedesk__urltiptexttip}" styleClass="standardFontCls marginHLeft15 height17"/></td>
+							</tr>
+						 </table>
+					</td>
+				</tr>    
+                <tr>
+                   <td colspan="0"><div class="div15pxVspacing"/></td>
+                </tr>     
+                <tr>
+                   <td>    
+                      <table style=" padding-left:8px;">   
+                         <tr>
+                             <td class="clsInputBoldLabelTableFirstRowTD"  style="*padding-left:15px;">
+                                  <apex:outputLabel value="{!$Label.bmcservicedesk__brandingsettingsdisplaylegend}"/> 
+                             </td>
+                          </tr>
+                          <tr>
+                              <td height="100%" width="100%" style="*padding-left:15px;" >
+                                    <apex:image value="{!URLFOR($Resource.BMCServiceDesk__SSjs, themeResourceName)}"/>
+                               </td>
+                          </tr>
+                      </table>
+                   </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="div200pxVspacing"></div>
+                    </td>
+                </tr>                  
+          </table>
+          
+<apex:inputhidden id="someparam" value="{!themeIndex}"/>
+<apex:inputhidden id="labelparam" value="{!themeLabel}"/>
+<apex:inputhidden id="selectColorId" value="{!themeColorCode}"/>
+   <apex:actionFunction action="{!save}" name="saveSettings"/>  
+ 
+   <apex:actionFunction action="{!refreshImagesforSelectedTheme}" name="fetchImagesforSelectedTheme"/>   
+   
+ </apex:form>
+
+ <apex:form id="PopupForm">
+ 
+    <apex:outputPanel id="tstpopup">
+    <apex:outputPanel id="popupPanel" styleClass="popupBackground" layout="block" style="display:none;"/> 
+        <apex:outputPanel id="popupInnerPanel" styleClass="custPopup" layout="block" style="display:none;"> 
+           <div align="right"  style="cursor:pointer;">
+                
+            <apex:image url="{!URLFOR($Resource.BMCServiceDesk__SDEFStyles, 'SDEFbuttons/b_close.png')}" onclick="closePopup();" />
+            
+             </div>
+            <table width="100%"  cellspacing="5" style="padding-top: 30px;" >
+                <tr>
+                <br/>
+                    <td align="right" class="LabelStyle">{!JSENCODE($Label.Copy_From_Theme)}</td>
+                    <td align="left"><div title="{!$Label.TooltipUserInterfaceTheme}" id='Interface-Themes-Parent'> </div> </td>
+                    <td align="right" class="LabelStyle">{!JSENCODE($Label.Enter_Theme_Name)}</td>
+                    <td align="left"><input type="text" id="thName"/> </td>
+                    <td>
+               <input type="button" style="width:auto;" value="{!JSENCODE($Label.Save_Theme)}" onclick="validateCreateThemeJS();" id="inputSaveButton"/>
+                    &nbsp;
+                <input type="button" style="width:auto;" value="{!JSENCODE($Label.Cancel)}" id="inputCancelButton" onclick="closePopup();" />
+                    </td>
+
+                </tr>
+                <tr style="height:1em"></tr>
+                <tr>
+                    <td colspan="5" align="center" class="LabelStyle">
+                        <label style="color:Red !important;display:none;" id="ThemeNameRequired">{!JSENCODE($Label.Theme_Name_Required)}</label>
+                        <label style="color:Red !important;display:none;" id="ThemeNameUnique">{!JSENCODE($Label.ThemeNameValidation)}</label>
+                        <label style="color:Red !important;display:none;" id="ValidThemeNameRequired">{!JSENCODE($Label.Theme_Name_Length)}</label>
+                        <label style="color:Red !important;display:none;" id="errorMessage"></label>
+                    </td>
+                </tr>
+            </table>
+            
+            
+             
+            <br/><br/><br/>
+            <apex:actionfunction name="createThemeJS" action="{!copyTheme}" onComplete="checkErrorOrSuccess();" rerender="ErrorPanel">
+                <apex:param assignTo="{!themeId}" name="themeId" value=""/>
+                <apex:param assignTo="{!themeName}" name="themeName" value=""/>
+            </apex:actionfunction>
+            
+        </apex:outputPanel>
+ 
+   
+    </apex:outputPanel>
+    <apex:outputPanel id="ErrorPanel">
+        
+        <script>
+            newThemeId = '{!JSENCODE(newThemeId)}';
+            errorMessage = '{!JSENCODE(errorMessage)}';
+        </script>
+    </apex:outputPanel>
+        <script>
+        
+        var themeName,nameStatus;
+        function checkNameLength()
+        {
+             themeName = document.getElementById('thName').value.length;
+             if(themeName<=255)
+             {
+                 nameStatus=true;
+             }
+             
+             else
+             {
+                nameStatus=false;
+             }
+             
+        }
+        
+        function validateCreateThemeJS()
+        {
+        
+            checkNameLength();
+            if(nameStatus == true)
+            {
+            var newThemeName; 
+            var themeTxt = document.getElementById('thName');
+            if(themeTxt != null && themeTxt != undefined && themeTxt != '')
+                newThemeName = document.getElementById('thName').value;
+            if(newThemeName != null && newThemeName != undefined && newThemeName != '')
+        {
+				hideLblError();
+                var isDuplicate = 'false';
+                <apex:repeat value="{!parentDataSourceLabelList}" var="dataSourceLabel" >    
+                        var oldTheme = '{!JSENCODE(dataSourceLabel)}';
+						oldTheme = oldTheme.toUpperCase();
+						var newTheme = newThemeName.toUpperCase();
+                        if(newThemeName != null && newThemeName != undefined && newThemeName != '' && oldTheme == newTheme)
+                            isDuplicate = 'true';
+                </apex:repeat>   
+                if(isDuplicate == 'true')
+                {
+                    hideLblError();
+                    var lblError = document.getElementById('ThemeNameUnique');
+                    if(lblError != null && lblError != undefined && lblError != '')
+                        lblError.style.display = "block";
+                    
+                    
+                }
+                else
+            {
+                    createThemeJS(parentThemeId,document.getElementById('thName').value);
+                }
+            }
+            else
+            {
+                hideLblError();
+                var lblError = document.getElementById('ThemeNameRequired');
+                if(lblError != null && lblError != undefined && lblError != '')
+                    lblError.style.display = "block";
+            }
+            }
+            else
+            {
+            hideLblError();
+                var lblError = document.getElementById('ValidThemeNameRequired');
+                if(lblError != null && lblError != undefined && lblError != '')
+                    lblError.style.display = "block";
+              
+            
+            }
+            
+        }
+        function checkErrorOrSuccess()
+        {
+            if(errorMessage == '')
+            {
+				window.location.reload(true);
+                redirectToEditThemePage(newThemeId);
+                closePopup();
+            } else {
+                hideLblError();
+
+                var errorMessageEle = document.getElementById('errorMessage');
+                if(errorMessageEle){ 
+                    errorMessageEle.innerText = errorMessage;
+                    errorMessageEle.style.display = "block";
+                }
+             }
+        }
+        function redirectToEditThemePage(CopiedThemeId)
+        {
+            window.open('/apex/SSEditThemePage?themeId='+CopiedThemeId); 
+        }
+     
+        function closePopup()
+        {
+            hideLblError();
+            document.getElementById('thePage:PopupForm').style.display = "none";
+            document.getElementById('thePage:PopupForm:popupInnerPanel').style.display = "none";
+			document.getElementById('thePage:PopupForm:popupPanel').style.display = "none";
+			var themeCombo = Ext.getCmp('ThemesCombo');
+            themeCombo.setValue(themeComboValue);
+            var thmTxt = document.getElementById('thName');
+            if(thmTxt != null && thmTxt != undefined && thmTxt != '')
+                thmTxt.value = '';
+            if(popUpWindow!=null && popUpWindow!=undefined)
+    			popUpWindow.close(); 
+        }
+            
+        </script>
+
+
+   
+ </apex:form>    
+<script>
+function dpf(f) {
+    var adp = f.adp;
+    if (adp != null) {
+        for (var i = 0;i < adp.length;i++) {
+            try {
+                f.removeChild(adp[i]);
+            }
+            catch (e) {
+                adp[i].parentNode.removeChild(adp[i]);
+            }
+        }
+    }
+}
+var wikiUrl='{!wikiUrl}';
+parent.addHelpOnPage(document.getElementById('helpDiv'),'branding.htm',wikiUrl);
+</script>           
+</apex:page>

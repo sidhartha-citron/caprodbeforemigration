@@ -1,0 +1,90 @@
+<apex:page standardStylesheets="true" showHeader="false">
+    <apex:pageBlock dir="{!If($CurrentPage.parameters.isRTLEnabled=='true' ,'rtl','')}">
+    <script>
+        var currentWindowContext = this.parent; //this page gets loaded as an iframe for multi list in RF console. Thus set the pointer to parent page ie RemedyforceConsole.page
+		var calledFromConsoleListViewPage = true;
+        var isRFHotkeysDisabled = false;
+        var isRfConsole = true;
+        var MultiPageLayout = currentWindowContext.MultiPageLayout;
+        var isOnlyConsoleDashboardEnabled = currentWindowContext.isOnlyConsoleDashboardEnabled; 
+        var isSFSidebarEnabled = currentWindowContext.isSFSidebarEnabled;    
+        var isLightningMode = currentWindowContext.isLightningMode;
+        var NONPRINT = '¬';
+		var isServiceRequest = false;
+		var wikiUrl = currentWindowContext.wikiUrl;
+		var isLightningExperience = currentWindowContext.isLightningExperience;
+		if("{!URLENCODE($CurrentPage.parameters.inctype)}" && "{!URLENCODE($CurrentPage.parameters.inctype)}"=="ServiceRequest")
+            isServiceRequest = true;
+    </script>
+	<style>
+		.x-grid-cell-inner a{
+			color: #333435;
+		}
+		.x-grid-cell-inner a:hover {
+			color: #015ba7;
+		}
+	</style>	
+    <apex:outputPanel rendered="{!$CurrentPage.parameters.isRTLEnabled=='true'}">
+		<style>
+            .x-grid-cell-inner{
+                text-align: right !important;
+                font-size: 14px !important;
+                direction: rtl;
+            }
+            .x-column-header-inner{
+                text-align: right !important;
+            }
+            .rf-view-div{
+                border-bottom-left-radius:5px;
+                border-bottom-right-radius:0px !important;
+            }
+            body{
+                overflow-x:hidden !important;
+            }
+            .rf-ticker-div {
+                padding-right: 0px !important; 
+            }
+            .x-menu-item-icon {
+                display: none;
+            }
+			.rf-filter-col-popup{
+                padding:15.5px !important;
+            }
+            .rf-filter-col-popup-toggle{
+				padding:15.5px !important;
+            }
+            .dateFormat{
+                margin-left:0px !important;
+            }
+             .rf-filter-lookup-icon{
+                margin-left:0px !important;
+            }
+             .rf-filter-btn-div {
+                float: left !important;
+            }
+             .x-column-header-text {
+                margin-right: 25px !important;
+            }
+		</style>
+    </apex:outputPanel>
+    <c:ConsoleComponent ListViewId="{!URLENCODE($CurrentPage.parameters.listVewID)}" ConsoleObjectName="{!URLENCODE($CurrentPage.parameters.objectName)}" isForRFConsoleRequest="true" rendered="true"/>
+        
+    <table  id="rf-table-main" >
+        <tr>
+            <td>
+                <div id="rf-ticker" class="rf-ticker-div"></div>
+            </td> 
+        </tr>
+        <tr>
+            <td style="vertical-align:top;" >
+                <apex:outputPanel >
+					<div id="tabs" class="rf-tab-div" ></div>
+               </apex:outputPanel> 
+            </td>
+        </tr>
+    </table>
+	</apex:pageBlock>    
+	<apex:outputpanel id="filterpanel">
+        <c:FilterComponent FilterObjectName="{!URLENCODE($CurrentPage.parameters.objectName)}" FilterAdditionalInfo="console"/> 
+    </apex:outputpanel>
+</apex:page>

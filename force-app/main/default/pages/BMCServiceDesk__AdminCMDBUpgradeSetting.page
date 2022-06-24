@@ -1,0 +1,567 @@
+<apex:page id="cmdbUI" standardstylesheets="false" showheader="false" controller="BMCServiceDesk.AdminCMDBSettingController">
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminCMDBUpgradeSetting.css" />
+<html>
+<script>
+function getStdFormHelpPath(){
+            var userLanguage = '{!userLanguage}';
+            var showJapaneseHelp = '{!showJapaneseHelp}';
+            var resource;
+            if(userLanguage == 'ja' && showJapaneseHelp.toLowerCase() == 'true'){
+                resource = '{!$Resource.StdFormHelp_JA}';
+            }else{
+                resource = '{!$Resource.StdFormHelp}';
+            }
+            return resource;
+     }
+     
+ function enableCleanData(status)
+ {	
+    if(status!='completed')
+    switchLabel =  CMDBMigrateConfirm1+'<a style="cursor:pointer;color:#015BA7;" onclick="window.open(\'{!migrationErrorLogURL}\')"> <u>'+logs+'</u>.</a>'+migrateLabel; 
+
+     if(document.getElementById('step3Migrate')!=null){ 
+         document.getElementById('step3Migrate').disabled=false;}
+     if(document.getElementById('step4Switch')!=null)
+         document.getElementById('step4Switch').disabled=false;  
+ 	
+ }
+ 
+ function  OpenHelp(){
+     var wikiUrl = '{!wikiUrl}';
+     if(wikiUrl != null && wikiUrl != '' && typeof(wikiUrl) != 'undefined' && isNewContextpage())
+         window.open(wikiUrl);
+     else
+         window.open(helpPath+'/migrating_to_CMDB_2.htm')
+ } 
+    
+    var infoLabel = '{!JSENCODE($Label.Information)}';
+ var showURL='{!showURL}';
+ var CMDBMigrateConfirm1='{!JSENCODE($Label.CMDBMigrateConfirm1)}'
+ var migrateLabel = '{!JSENCODE($Label.UpgradeCMDBto2Migrate)}';
+ var percentageComplete='{!percentageComplete}';
+ var migrationRecordCount='{!migrationRecordCount}';
+ var percentageMigrationComplete='{!percentageMigrationComplete}';
+ var migrationCompletedDate = '{!migrationCompleteDate}';
+ var switchCMDB='{!switchToCMDB}'.toLowerCase();
+ var fileURL ='{!FileDownloadUrl}';
+ var scanLbl ='{!JSENCODE($Label.UpgradeCMDBScan)}';
+ var migrateLbl = '{!JSENCODE($Label.MigrateLbl)}';
+ var hideLBL ='{!JSENCODE($Label.CMDB2HideLbl)}';
+ var completed ='{!JSENCODE($Label.bmcservicedesk__completedscan)}';
+ var status1,switchLabel='{!JSENCODE($Label.CMDBConfirmSwitch)}';
+ var downloadReport='{!JSENCODE($Label.CMDB_Download_ScanRpt)}';
+ var cmdbSwitchLabel = '{!JSENCODE($Label.CMDBSwitchLbl)}';
+ var hideLabel = '{!JSENCODE($Label.CMDBHideMessage)}';
+ var CMDBUpgradeLbl = '{!JSENCODE($Label.CMDBUpgradeLbl)}';
+ var logs = '{!JSENCODE($Label.Logs)}';
+ var CMDBMException = '{!JSENCODE($Label.CMDBMException)}';
+ var CMDBMVerified = '{!JSENCODE($Label.CMDBMVerified)}';
+ var pageLoad='{!pageLoad}';
+ var PageMigrationLoad='{!PageMigrationLoad}'; 
+ var disableVerify = '{!disableVerify}';
+ var helpPath = getStdFormHelpPath();
+ var scanstatus = '{!ScanStatus}';
+var intervalVar;
+var perMigrationComplete = "{!percentageMigrationComplete}";
+</script>
+<table width="100%"  cellspacing="0" cellpadding="0" style="border: 1px solid #AEBAC1;">
+    <tr>
+        <td  class = "configureTrCls" colspan="2" ><div id="header" >{!JSENCODE($Label.CMDBUpgradeLbl)} {!JSENCODE($Label.UpgradeCMDBto2Step0)}</div></td>
+    </tr>
+    <tr>
+    <td width="20%" height ="70%" style="vertical-align:top;border-top: 1px solid #AEBAC1;">
+        <div class="configureDivCls" style="border-right:1px solid #AEBAC1;" >
+            <div><label class="toggle-btn-success" onclick="addClass(this.id);enableDisableBtn('1')"  id="div1" ><input type="radio" name="group3" class="visuallyhidden" />{!JSENCODE($Label.UpgradeCMDBto2Step0)}</label></div>
+            <div><label onclick="addClass(this.id);enableDisableBtn('2');checkscan(status1,scanstatus)" id="div2" class="toggle-btn"><input type="radio" name="group3" class="visuallyhidden" />{!JSENCODE($Label.UpgradeCMDBto2Step1)}</label></div>
+            <div><label onclick="addClass(this.id);enableDisableBtn('3')" id="div3" class="toggle-btn"><input type="radio" name="group3" class="visuallyhidden" />{!JSENCODE($Label.UpgradeCMDBto2Step2)}</label></div>
+            <div><label  id="div32" class="toggle-btn" onclick="addSubclass('32');enableDisableBtn('32')" style="display:none;"><input type="radio" name="group3" class="visuallyhidden" />{!JSENCODE($Label.UpgradeCMDBto2Step32)}</label></div>
+            <div><label  id="div31" class="toggle-btn"  onclick="addSubclass('31');enableDisableBtn('31')" style="display:none;"><input type="radio" name="group3" class="visuallyhidden" />{!JSENCODE($Label.UpgradeCMDBto2Step31)}</label></div>
+
+            <div><label onclick="addClass(this.id);enableDisableBtn('4')" id="div4" class="toggle-btn"><input type="radio" name="group3" class="visuallyhidden" />{!JSENCODE($Label.UpgradeCMDBto2Step3)}</label></div>
+            <div><label onclick="addClass(this.id);enableDisableBtn('5')" id="div5" class="toggle-btn"><input type="radio" name="group3" class="visuallyhidden" />{!JSENCODE($Label.UpgradeCMDB2Step4Intro)}</label></div>
+            <div><label onclick="addClass(this.id);enableDisableBtn('6')" id="div6" class="toggle-btn"><input type="radio" name="group3" class="visuallyhidden" />{!JSENCODE($Label.UpgradeCMDB2Step5Intro)}</label></div>
+            <div><label onclick="addClass(this.id);enableDisableBtn('7')" id="div7" class="toggle-btn"><input type="radio" name="group3" class="visuallyhidden" />{!JSENCODE($Label.UpgradeCMDB2StepAdditionOpt)}</label></div>
+            
+
+        </div>
+        </td>
+        <td width="80%" valign="top" style="border-top: 1px solid #AEBAC1;">
+           
+            <div  class="textClass" id="migrate1">
+           
+                <apex:outputLabel styleClass="outputPanelStyle" value="{!$Label.bmcservicedesk__upgradecmdbto2intro}"/> <a style="display:inline;cursor:pointer;color:#015BA7;" onclick="OpenHelp();"><u>{!JSENCODE($Label.TooltipHelp)}
+				</u></a>
+            </div>
+            
+             <div  class="textClass" style="display:none" id="migrate2" >
+             
+             <apex:outputLabel styleClass="outputPanelStyle" value="{!$Label.bmcservicedesk__upgradecmdbto2step1desc}" />
+             
+              <div style="width:600px;" >
+              <br/>  
+              <input id="step1Scan" class="btnCls" type="button" value="{!JSENCODE($Label.UpgradeCMDBScan)}" onclick="startScan(this);" disabled="true" style="float:left;"/>
+              
+              <apex:outputPanel id="progressBar" style="word-wrap:normal;">
+            				
+                           <div  class="{!IF(percentageComplete==100,"","progress")}" style="{!IF(OR(percentageComplete==null,pageLoad==true),'display:none',false)};width: {!IF(percentageComplete==0,1,percentageComplete*0.5)}%;margin-left:100px; ">
+                                <apex:outputText rendered="{!if(percentageComplete!=100,true,false)}" >{!percentageComplete}%</apex:outputText>
+                            </div>
+                            <span id="migrate1Div" >
+                            <apex:outputText style="{!IF(OR(percentageComplete==null,pageLoad==true),'display:none',false)};font-weight:bold;padding-left:40px;font-size:12px;line-height: 26px;" rendered="{!if(percentageComplete==100,true,false)}" value="{!JSENCODE($Label.bmcservicedesk__completedscan)}"></apex:outputText>
+                             </span>
+                             <script>
+                             	var per = '{!percentageComplete}';
+                             	if(per != '' && (per == '100' || per == 'null') && (showURL==1 || showURL==2 || showURL==3)){ clearInterval(intervalVar);
+                             	}
+                             </script>
+                    </apex:outputPanel>  
+                  </div>  
+                  <br/>
+                <apex:outputPanel id="scanLink">
+                 <br/>
+                 <a style="{!IF(showURL==3,'display:inline','display:none')};cursor:pointer;color:#015BA7;" onclick="window.open('{!FileDownloadUrl}')"><u>{!JSENCODE($Label.LastScanResult)} {!completedDate }</u></a>
+                 <apex:outputText style="font-weight:bold" rendered="{!if(showURL==1,true,false)}" value="{!JSENCODE($Label.bmcservicedesk__upgracecmdbscancompletion)} {!completedDate}: {!JSENCODE($Label.bmcservicedesk__upgradecmdbnocustomization)}"></apex:outputText>
+                 <apex:outputText style="font-weight:bold" rendered="{!if(showURL==2,true,false)}" value="{!JSENCODE($Label.bmcservicedesk__upgracecmdbscancompletion)}  {!completedDate}: {!JSENCODE($Label.bmcservicedesk__upgradecmdbscanerror)}"></apex:outputText>
+                </apex:outputPanel>  
+                </div>
+        <div  class="textClass" style="display:none"  id="migrate3" >
+        
+            <apex:outputLabel styleClass="outputPanelStyle" value="{!JSENCODE($Label.bmcservicedesk__cmdbaddcustomization)}"></apex:outputLabel>
+            <br/><br/>
+            <table>
+            <tr>
+            	<td>
+            	<input disabled="true" type="button" id="automaticStep2" class="btnCls" value="{!JSENCODE($Label.UpgradeCMDBto2Step32)}" onclick="addSubclass('32');"/> 
+            	</td>
+            	<td>
+            	{!JSENCODE($Label.CMDBAutomaticCustomizationInfo)}
+            	</td>
+            </tr>
+            </table>
+            <br/>
+            &nbsp;<input disabled="true" type="button" id="manualStep2" class="btnCls" value="{!JSENCODE($Label.UpgradeCMDBto2Step31)}" onclick="addSubclass('31');"/>
+        </div>
+         <div  class="textClass" style="display:none"  id="migrate32" >
+         <apex:outputLabel styleClass="outputPanelStyle" value="{!JSENCODE($Label.bmcservicedesk__cmdb_automatically_add_customizations)}" ></apex:outputLabel>
+         <br/><br/>
+         <input type="button" class="btnCls" id="step3Automatic" value="{!JSENCODE($Label.CMDB_Add_Custom_Attributes)}"
+         	onclick="openPopUpWindow();  "/>
+         <br/><br/>
+         <apex:outputlabel styleClass="outputPanelStyle" value="{!JSENCODE($Label.bmcservicedesk__cmdb_verify_msg)}"/>
+         <br/><br/>
+         <table width="80%">
+         <tr>
+         <td width="25%">
+             <input disabled="true" type="button" id="step32Verify" class="btnCls" value="{!JSENCODE($Label.CMDBVerifyChanges)}" onclick="verifyAutomatic(this);"/>
+         </td>
+         <td>
+             <div id="progressBar32" style="padding-top:5px;"></div>
+         </td>
+         </tr>
+         </table>
+         <br/>
+           <apex:outputPanel id="verifyAutomaticLink" style="{!IF(isError=='false','display:inline','display:none')};font-weight:bold;" >
+             {!JSENCODE($Label.bmcservicedesk__cmdb2verifyat)} {!verificationCompletedDate}: {!JSENCODE($Label.bmcservicedesk__cmdb2verifymsg)}
+         </apex:outputPanel>
+        <apex:outputPanel style="{!IF(isError=='true','display:inline','display:none')};font-weight:bold" id="verificationAutomaticError" >
+            {!JSENCODE($Label.CMDB2VerifyAt)} {!verificationCompletedDate }: {!JSENCODE($Label.CMDB2VerifyFailure)}  &nbsp;<a style="cursor:pointer;color:#015BA7;" onclick="window.open('{!VerifyFileDownloadUrl}')"><u>{!JSENCODE($Label.Logs)}.</u></a>
+            
+        </apex:outputPanel>
+      </div>
+      <div  class="textClass" style="display:none"  id="migrate31" >
+         <apex:outputLabel styleClass="outputPanelStyle" value="{!JSENCODE($Label.bmcservicedesk__upgradecmdbto2step2desc)}"/> <apex:outputlabel styleClass="outputPanelStyle" value="{!JSENCODE($Label.bmcservicedesk__cmdb_verify_msg)}"></apex:outputlabel>
+         <br/>
+         <br/>
+         <table width="80%">
+         <tr>
+         <td width="25%">
+             <input disabled="true" type="button" id="step2Verify" class="btnCls" value="{!JSENCODE($Label.CMDBVerifyChanges)}" onclick="verifyManualChanges(this);"/>
+         </td>
+         <td>
+             <div id="progressBar2" style="padding-top:5px;padding-left:40px;"></div>
+         </td>
+         </tr>
+         </table>
+         <br/>
+         				
+        <apex:outputPanel id="verifyLink" style="{!IF(isError=='false','display:inline','display:none')};font-weight:bold;">
+             {!JSENCODE($Label.bmcservicedesk__cmdb2verifyat)} {!verificationCompletedDate}: {!JSENCODE($Label.bmcservicedesk__cmdb2verifymsg)}
+         </apex:outputPanel>
+        <apex:outputPanel style="{!IF(isError=='true','display:inline','display:none')};font-weight:bold" id="verificationError">
+            {!JSENCODE($Label.CMDB2VerifyAt)} {!verificationCompletedDate }: {!JSENCODE($Label.CMDB2VerifyFailure)}  &nbsp;<a style="cursor:pointer;color:#015BA7;" onclick="window.open('{!VerifyFileDownloadUrl}')"><u>{!JSENCODE($Label.Logs)}.</u></a>
+            
+        </apex:outputPanel>
+      </div>
+             <div  class="textClass" style="display:none"  id="migrate4" >
+             
+                <apex:outputLabel styleClass="outputPanelStyle" value="{!$Label.bmcservicedesk__upgradecmdbto2step3desc}" /><br/>
+                <br/>
+                <b>{!JSENCODE($Label.Important)}</b> {!JSENCODE($Label.UpgardeCMDBMigrateMsg)} 
+                <div width="600px">
+                <br/>  
+                 <input id="step3Migrate" class="btnCls" type="button" value="{!JSENCODE($Label.MigrateLbl)}" onclick="disableScan();startMigrate();" disabled="true" style="float:left;"/>
+                        <apex:outputpanel id="migrationProgressBar" style="width:420px;word-wrap:normal;">
+                               <script> 
+                                  status1='{!migrationStatus}'; 
+                             	  	if(status1 == 'completed' || status1 == 'stopped'){
+	                             		clearInterval(intervalVar);  
+	                             		if(switchCMDB=='false')
+	                             		enableCleanData(status1); 
+	                             	}
+                               </script>
+                               <div id="migrate3div" class="{!IF(percentageMigrationComplete==100,"","progress")}" style="{!IF(OR(percentageMigrationComplete==null,pageMigrationLoad==true),'display:none',false)};width: {!IF(percentageMigrationComplete==0,1,percentageMigrationComplete*0.5)}%;margin-left:100px;">
+                               <apex:outputText rendered="{!if(percentageMigrationComplete!=100,true,false)}" value="{!percentageMigrationComplete}%"></apex:outputText>
+                               
+                               </div> 
+                                <span id="migrate3div" >
+                               <apex:outputLabel style="padding-left:40px;font-weight:bold;font-size:12px;line-height: 26px;{!IF(OR(percentageMigrationComplete==null,pageMigrationLoad==true),'display:none',false)}" rendered="{!if(AND(migrationRecordCount==0,migrationStatus=='completed'),true,false)}" value="{!JSENCODE($Label.bmcservicedesk__cmdbnorecordsfound)}"></apex:outputLabel>
+                               <apex:outputLabel style="padding-left:40px;font-weight:bold;font-size:12px;line-height: 26px;{!IF(OR(percentageMigrationComplete==null,pageMigrationLoad==true),'display:none',false)}" rendered="{!if(AND(percentageMigrationComplete==100,migrationStatus=='completed',migrationRecordCount>0),true,false)}" value="{!JSENCODE($Label.bmcservicedesk__completedscan)}"></apex:outputLabel>
+                               <apex:outputLabel style="padding-left:40px;font-weight:bold;{!IF(OR(percentageMigrationComplete==null,pageMigrationLoad==true),'display:none',false)}" rendered="{!if(migrationStatus=='stopped',true,false)}" value="{!$Label.bmcservicedesk__completedwitherrors}"></apex:outputLabel>
+                               </span>  
+							   
+                             </apex:outputpanel>
+                             </div>
+                            <br/>
+                <apex:outputpanel id="migrationLink">
+					<br/>
+                    <b><apex:outputText rendered="{!showMigrateURL==1}">{!JSENCODE($Label.MigrateSuccessful)} {!migrationCompleteDate}. {!JSENCODE($Label.PleaseCheck)} <a style="cursor:pointer;color:#015BA7;" onclick="window.open('{!migrationLogURL}')"><u> {!JSENCODE($Label.Logs)}</u></a> {!JSENCODE($Label.For)} {!JSENCODE($Label.MoreDetails)}.</apex:outputText></b>
+                    <b><apex:outputText rendered="{!showMigrateURL==0}">{!JSENCODE($Label.MigrateFailure)} {!migrationCompleteDate}. {!JSENCODE($Label.PleaseCheck)} <a style="cursor:pointer;color:#015BA7;" onclick="window.open('{!migrationErrorLogURL}')"><u> {!JSENCODE($Label.Logs)}</u></a> {!JSENCODE($Label.For)} {!JSENCODE($Label.MoreDetails)}.</apex:outputText></b>
+                    <apex:outputPanel rendered="{!showMigrateURL==0}">
+                    	<script>
+                    	setTimeout(function() {document.getElementById('step3Migrate').disabled = false; },500);
+                    	</script>
+                    </apex:outputPanel>
+                </apex:outputpanel>
+            </div>
+            <div  class="textClass" style="display:none;"  id="migrate5" > 
+            
+                <div class="textStyle" style="display:inline;">
+                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__upgradecmdb2step4desc)}"/>
+                        <br/> <br/>
+                        <table width="80%">
+                        <tr>
+                        <td width="25%">
+                         <input disabled="true" class="btnCls"   id="step4Switch" type="button" value="{!JSENCODE($Label.CMDBSwitchLbl)}" onclick="switch2CMDB(this);"/> 
+                         </td>
+                         <td>
+                         <div id="switchCompleted" style="padding-left:40px;padding-top:5px;"></div>
+                         </td></tr>
+                         </table>
+                </div>
+            </div>
+            <div  class="textClass" style="display:none"  id="migrate6" >
+            
+            <apex:outputLabel styleClass="outputPanelStyle" value="{!JSENCODE($Label.bmcservicedesk__cmdbremovedata)}"></apex:outputLabel>
+            <br/> <br/>
+            <input class="btnCls"   id="step5delete" disabled="true" type="button" value="{!JSENCODE($Label.CMDB2DeleteDataLbl)}" onclick="confirmDelete();"/>
+            <br/> <br/>
+           	<apex:outputpanel id="CleanupPanel">
+           		<script>
+           			if({!IsCleanupFinished}){
+           				clearInterval(intervalVar);
+           			}
+           		</script>
+				<apex:outputpanel id="CleanupInProgress" style="width:420px;word-wrap:normal;" rendered="{!IsCleanupInProgress}">
+				   <apex:outputLabel style="font-weight:bold;font-size:12px;line-height: 26px;" 
+				   		value="{!JSENCODE($Label.bmcservicedesk__cleanupinprogress)}"></apex:outputLabel>					
+				 </apex:outputpanel>             
+				<apex:outputpanel id="CleanupResults" style="width:420px;word-wrap:normal;font-weight:bold;font-size:12px;line-height: 26px;" rendered="{!IsCleanupFinished}">
+				  {!JSENCODE($Label.CleanupResult)}: &nbsp;
+				   <apex:outputLabel style="font-weight:bold;font-size:12px;line-height: 26px;" 
+				   		rendered="{!IsCleanupStopped}" 
+				   		value="{!JSENCODE($Label.bmcservicedesk__cleanupcompletedwitherrors)}"></apex:outputLabel>
+				   <apex:outputLabel style="font-weight:bold;font-size:12px;line-height: 26px;" 
+				   		rendered="{!IsCleanupSuccessfulNoRecords}" 
+				   		value="{!JSENCODE($Label.bmcservicedesk__cmdbcleanupnorecordsfound)}"></apex:outputLabel>
+				   <apex:outputLabel style="font-weight:bold;font-size:12px;line-height: 26px;" 
+				   		rendered="{!IsCleanupSuccessfulWithRecords}" 
+				   		value="{!JSENCODE($Label.bmcservicedesk__cleanupsuccessful)}"></apex:outputLabel>
+				   	<br/>
+				   	<apex:outputpanel rendered="{!IsCleanupStopped}">
+					   	<a href="#" onclick="window.open('{!CleanupErrorLogURL}');">Error logs</a> <br/>
+				   	</apex:outputpanel>
+				   	<a href="#" onclick="window.open('{!CleanupLogURL}');">Success logs</a>
+				   	
+				 </apex:outputpanel>             
+           	</apex:outputpanel>
+            </div>
+            <div  class="textClass" style="display:none"  id="migrate7" >
+             	<input class="btnCls" disabled="true" id="step6hide" type="button" value="{!JSENCODE($Label.CMDB2HideLbl)}" onclick="hideUpgradeTabJS();"/>
+                <br/>  
+ 				<apex:outputLabel styleClass="outputPanelStyle" value="{!$Label.bmcservicedesk__upgradecmdbhideinfo}"/> 
+            </div>
+            <div class = "configureTrCls" style="height:37px;border-top: 1px solid #AEBAC1;padding-left:1%;width:99%;vertical-align:middle !important;display: table;" >
+            <div id="bottomDiv" class="scanDownloadMsg"></div>
+                <div class="scanNxtPrvBtn">
+            <input class="btnCls1" id="next" type="button" style="float:right;" value="{!JSENCODE($Label.Next)}  >"  onclick="nextStep();"/>
+            
+            <input class="btnCls1" id="previous" type="button" style="float:right; display:none;" value="<  {!JSENCODE($Label.Previous)}" disabled="true"  onclick="previousStep();" />
+				</div>
+            </div>
+            
+        </td>
+    </tr>
+    
+</table>
+<apex:outputPanel id="verifyResults">
+<script>
+	var isError = '{!isError}';
+	
+</script>
+</apex:outputPanel>
+<apex:outputPanel id="rerenderBtns">
+<script>
+ showURL={!showURL};
+ 	
+             if('{!percentageComplete}'=='100' && switchCMDB=='false'){
+                   if(showURL==3){
+                       if(document.getElementById('automaticStep2')!=null)
+                           document.getElementById('automaticStep2').disabled=false;
+                       if(document.getElementById('manualStep2')!=null)
+                           document.getElementById('manualStep2').disabled=false;
+					   if(document.getElementById('step2Verify')!=null)
+                           document.getElementById('step2Verify').disabled=false;
+                       if(document.getElementById('step32Verify')!=null)
+                           document.getElementById('step32Verify').disabled=false;
+                   }
+                   else if(showURL==1){
+                        if(document.getElementById('step3Migrate')!=null)
+                           document.getElementById('step3Migrate').disabled=false;
+                   }
+                    if(document.getElementById('step1Scan')!=null)
+                               document.getElementById('step1Scan').disabled=false;
+                   }
+                   function showDownloadHelpText(){
+                        if('{!percentageComplete}'=='100'){
+                           if(showURL==3){
+                             if(document.getElementById('bottomDiv')!=null)  
+                               document.getElementById('bottomDiv').innerHTML=downloadReport;
+                            }
+                        }   
+                   }
+</script>
+</apex:outputPanel>
+<apex:outputpanel id="errorMsgPanel">
+	<script>
+	var errorMessage = "{!JSENCODE(errorMessage)}";
+	</script>
+</apex:outputpanel>
+<script>
+	
+	function checkcmdbScanProgress(){
+			intervalVar=setInterval(function(){
+				checkCmdbScanPercentage();
+			},1000);
+	}
+	function checkMigrationProgress(){
+		intervalVar=setInterval(function(){
+			checkMigrationPercentage();
+		},1000);
+	}
+	function startCleanUpPolling(){
+		intervalVar=setInterval(function(){
+			doPoll();
+		},5000);
+	}
+</script>
+<apex:form >
+	<apex:actionFunction name="startBatch" action="{!checkIfScanningInProgress}" oncomplete="showErrorMessage('scan');" rerender="errorMsgPanel" />
+    <apex:actionFunction name="startCmdbScan" action="{!startBatch}" oncomplete="checkcmdbScanProgress();" rerender="" />
+    <apex:actionFunction name="checkCmdbScanPercentage" action="{!checkPercentage}" rerender="progressBar,scanLink,rerenderBtns" oncomplete="showDownloadHelpText();"/>
+    <apex:actionFunction name="scanDisable" action="{!setscanflag}" oncomplete="disableScan();" />
+    <apex:actionFunction name="checkIfMigrationInProgress" action="{!checkIfMigrationInProgress}" oncomplete="showErrorMessage('migration');" rerender="errorMsgPanel" />
+    <apex:actionFunction name="startMigration" action="{!startMigration}" oncomplete="checkMigrationProgress();" rerender="" />
+    <apex:actionFunction name="checkMigrationPercentage" action="{!checkMigrationPercentage}" rerender="migrationProgressBar,migrationLink" oncomplete=""/>
+    
+    
+    <apex:actionFunction name="checkIfCleanUpInProgress" action="{!checkIfCleanUpInProgress}" oncomplete="showErrorMessage('cleanup');" rerender="errorMsgPanel" />
+    <apex:actionFunction name="startCleanup" action="{!startCleanup}" oncomplete="startCleanUpPolling();" rerender=""/>
+    <apex:actionFunction name="doPoll" action="{!doPoll}" oncomplete="" rerender="CleanupPanel, CleanupInProgress,CleanupResults, rerenderDelete"/>
+    
+    <apex:actionFunction name="switchToCMDB" action="{!switchCMDB}" oncomplete="enableHidebtn();" rerender="rerenderDelete"/>
+        <apex:actionFunction name="verifyChanges" action="{!verifyChanges}" reRender="verificationError,verifyLink,verifyResults" oncomplete="enableMigrateBtn('manual');"/>
+         <apex:actionFunction name="verifyAutomaticChanges" action="{!verifyChanges}" reRender="verificationAutomaticError,verifyAutomaticLink,verifyResults" oncomplete="enableMigrateBtn('auto');"/>
+    <apex:actionFunction name="hideUpgradeTab" action="{!hideUpgradeTab}" rerender="" oncomplete="window.parent.parent.location.reload();"/>
+  </apex:form>
+
+<script>
+function showErrorMessage(actionStep){
+	if(errorMessage != ''){
+        var Ext= parent.Ext;
+		Ext.Msg.show({
+            cls:'messagePopup',
+            title: infoLabel,
+            msg: errorMessage,
+            buttons: Ext.Msg.OK,
+            width: 300,
+            frame:false
+        });
+        if(actionStep == 'scan'){
+			if(document.getElementById('step1Scan')!=null)
+				document.getElementById('step1Scan').disabled=false;
+		}else if(actionStep == 'migration'){
+			if(document.getElementById('step3Migrate')!=null)
+				document.getElementById('step3Migrate').disabled=false;
+		}else if(actionStep == 'cleanup'){
+			if(document.getElementById('step5delete')!=null)
+				document.getElementById('step5delete').disabled=false;
+		}
+	}else{
+		if(actionStep == 'scan'){
+		startCmdbScan();
+		}else if(actionStep == 'migration'){
+			startMigration();
+		}else if(actionStep == 'cleanup'){
+			startCleanup();
+	}
+}
+}
+  
+function openPopUpWindow(){
+  var addAutoFieldsWindow;
+  addAutoFieldsWindow = window.open('cmdb2upgrade_AutoAttrCreate','auto_add_customizations','resizable=no,status=no,help=no,center=yes,top=50, left=50,width=1350,height=635,menubar=no,directories=no,location=no');
+  if(addAutoFieldsWindow.focus) { addAutoFieldsWindow.focus();  }  
+}
+
+function nextStep(){
+var j,i=0;
+document.getElementById('previous').disabled=false;
+	if(document.getElementById('div31').className=='toggle-btn-success'){
+     addSubclass('32');
+    }
+	else if(document.getElementById('div32').className=='toggle-btn-success'){
+		addClass('div4');
+    }
+	else{
+    for(i=1;i<=6;i++){
+        if(document.getElementById('div'+i).className=='toggle-btn-success'){
+          j=i+1;
+          addClass('div'+j); 
+          enableDisableBtn(j);
+          break;
+    
+        }
+     
+     }
+	 }
+
+     if(i==6){
+     document.getElementById('next').disabled=true;
+     }
+       
+    
+}
+
+function previousStep(){
+   var j,i=0;
+    document.getElementById('next').disabled=false;  
+	if(document.getElementById('div31').className=='toggle-btn-success'){
+     addClass('div2');
+    }
+    else if(document.getElementById('div32').className=='toggle-btn-success'){
+     addSubclass('31');
+    }else{
+    for(i=7;i>=2;i--){
+
+        if(document.getElementById('div'+i).className=='toggle-btn-success'){
+          j=i-1;
+          addClass('div'+j);
+          enableDisableBtn(j);
+          break;
+    
+        }
+       
+    }
+	}
+    if(i==2){
+     document.getElementById('previous').disabled=true;
+     }
+       
+
+}
+function enableMigrateBtn(val){
+		 
+		 if(val=='manual'){
+			if(isError=='true'){
+                document.getElementById('progressBar2').innerHTML='<b>'+CMDBMException+'</b>'; 
+				document.getElementById('step2Verify').disabled=false;
+			}
+			else if(isError=='false'){
+                document.getElementById('progressBar2').innerHTML='<b>'+CMDBMVerified+'</b>'; 
+				document.getElementById('step2Verify').disabled=true;
+				scanDisable();
+			}
+          
+		 }else if(val=='auto'){
+			if(isError=='true'){
+                document.getElementById('progressBar32').innerHTML='<b>'+CMDBMException+'</b>'; 
+				document.getElementById('step32Verify').disabled=false;
+			}
+			else if(isError=='false'){
+                document.getElementById('progressBar32').innerHTML='<b>'+CMDBMVerified+'</b>'; 
+				document.getElementById('step32Verify').disabled=true;
+				scanDisable();
+			}
+			
+        }
+			document.getElementById('step3Migrate').disabled=false;
+}
+
+
+ 
+ 
+ function enableDisableBtn(index){
+ 
+ if(index=='1'){
+  document.getElementById('next').style.display='block';
+  document.getElementById('previous').style.display = 'none';
+  document.getElementById('next').disabled=false;
+ }else if(index=='7'){
+  document.getElementById('next').style.display = 'none';
+  document.getElementById('previous').style.display = 'block';
+  document.getElementById('previous').disabled=false;
+ }else{
+     document.getElementById('next').style.display = 'block';
+     document.getElementById('previous').style.display = 'block';
+     document.getElementById('previous').disabled=false;
+     document.getElementById('next').disabled=false;
+  }
+ 
+ }
+
+function confirmDelete(){
+ var Ext= parent.Ext;
+ Ext.Msg.defaultButton = 2;
+       Ext.Msg.show({
+                            cls:'messagePopup',
+                            msg: '{!JSENCODE($Label.CMDBCleanupConfirm)}',
+                            buttons: Ext.Msg.YESNO,
+                            fn: function(button ,event) {
+							    if(button=='yes'){
+							        checkIfCleanUpInProgress(); 
+						        	if(document.getElementById('step5delete')!=null)
+									   document.getElementById('step5delete').disabled=true;
+							     }
+                            },
+                            width: 300,
+                            icon: Ext.MessageBox.Question,
+                            frame:false
+                         });
+}
+
+</script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/AdminCMDBUpgradeSetting.js"></script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"></script>
+
+<apex:outputPanel id="rerenderDelete">
+<script>
+	enableDeleteButton = {!IsDeletedEnabled};
+	
+	if(document.getElementById('step5delete')!=null)
+	   document.getElementById('step5delete').disabled=!enableDeleteButton;
+</script>
+</apex:outputPanel>
+
+</html>
+
+</apex:page>

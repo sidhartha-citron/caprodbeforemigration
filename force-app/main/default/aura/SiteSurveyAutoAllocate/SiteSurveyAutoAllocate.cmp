@@ -1,0 +1,40 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" controller="SurveyAssetAllocationController">
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="quantity" type="Decimal"/>
+    <aura:attribute name="siteSurveyId" type="Id" />
+    <aura:attribute name="surveyProduct" type="SurveyAssetAllocationController.SurveyProduct"/>
+    <aura:attribute name="isDisabled" type="Boolean" default="true" />
+    
+    <lightning:spinner alternativeText="Loading" size="medium" aura:id="theSpinner" class="slds-hide"/>
+    
+    <aura:registerEvent name="cloneEvent" type="c:SurveyAllocationClonedEvent"/>
+    
+    <aura:method name="setProductDetails" action="{!c.setDetails}" description="Method to facilitate Auto Allocation">
+        <aura:attribute name="theProduct" type="SurveyAssetAllocationController.SurveyProduct"/>
+    </aura:method>
+    
+    <div class="slds-hide" aura:id="autoAllocateModal">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-modal--prompt slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-theme--info">
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Site_Survey_Auto_Allocate}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <c:CustomToast aura:id="customToast"/><br/>
+                    
+                    <div class="slds-form-element">
+                        <lightning:input aura:id="quantity" type="number" label="Quantity Per Location" min="1" value="{!v.quantity}" required="true" onchange="{!c.validate}"
+                                         messageWhenValueMissing="{!$Label.c.Site_Survey_Fill_In_Field}" class="slds-required"/>
+                    </div><br/>
+                   
+                </div> 
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" label="{!$Label.c.Site_Survey_Close}" onclick="{!c.closeModal}"/>
+                    <lightning:button variant="brand" label="{!$Label.c.Site_Survey_Auto_Allocate_Button}" onclick="{!c.allocateAction}" disabled="{!v.isDisabled}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+	
+</aura:component>

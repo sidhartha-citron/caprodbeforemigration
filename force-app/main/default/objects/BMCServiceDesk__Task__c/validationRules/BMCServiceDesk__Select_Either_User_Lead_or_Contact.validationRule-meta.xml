@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BMCServiceDesk__Select_Either_User_Lead_or_Contact</fullName>
+    <active>false</active>
+    <errorConditionFormula>IF(
+      (
+            (BMCServiceDesk__FKClient__c != NULL  &amp;&amp;  BMCServiceDesk__FKLead__c == NULL &amp;&amp; BMCServiceDesk__FKContact__c == NULL) ||
+            (BMCServiceDesk__FKClient__c == NULL  &amp;&amp;  BMCServiceDesk__FKLead__c != NULL &amp;&amp; BMCServiceDesk__FKContact__c == NULL) ||
+            (BMCServiceDesk__FKClient__c == NULL  &amp;&amp;  BMCServiceDesk__FKLead__c == NULL &amp;&amp; BMCServiceDesk__FKContact__c != NULL) 
+      ) ||
+      AND(ISNEW(), OR(BMCServiceDesk__FKIncident__c != NULL,
+	  BMCServiceDesk__FKProblem__c != NULL,
+	  BMCServiceDesk__FKRelease__c != NULL))
+      , 
+      false, true)</errorConditionFormula>
+    <errorMessage>To save the task, select a value in any one of the following fields: Client ID, Contact or Lead.</errorMessage>
+</ValidationRule>

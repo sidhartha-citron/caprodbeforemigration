@@ -1,0 +1,511 @@
+<apex:page controller="CTCT2.SignUp_Controller" action="{!InitPage}" sidebar="false" >
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+
+<apex:form >
+
+<style>
+/* Mimics CTCT heading styles */
+h1 {	color:#dB9c1a;	font: normal 165%/125% Tahoma, Arial, Helvetica, sans-serif;	padding:10px 25px 0 25px;}
+.signup-header {    padding-left: 40px;}
+.signup-header span {padding-left: 40px;color:#333333;font:75% Tahoma,Arial,Helvetica,sans-serif;}
+.legend {	color:#357E86;	font-size:120%;	font-weight:bold;	margin-left:44px;	margin-top:15px; text-align:left;}
+
+p {	padding:10px 25px 10px 25px;	line-height: 130%;}
+
+/* Table containing the form fields */
+.fldTable {margin-left:44px;background-color:#FEF3DD;}
+tr.fldTable {vertical-align:top;}
+table.fldTable {padding-left:40px;padding-right:20px;width:550px;}
+.fldHeader {text-align:right;font-weight:bold;padding-bottom:5px;}
+.fldValue {margin-left:20px;padding-left:20px;padding-bottom:5px;}
+span.fldHint {color:#666666; font-size:90%;}
+.mediumWidth {width:200px;}
+
+/* Taken pretty directly from the CTCT Trial page */
+.pwstrength_span {    float:right;    margin:-5px 10px 0;}
+.pwstrength_label {    display:block;    font-size: 80%;    color: #333;}
+.pwstrength_wrapper {	width:80px;    display:block;	white-space: nowrap;	border:#ccc 1px solid;    font-size: 80%;    color: #333;}
+.passwordStrength{    height:16px;}
+.passwordDescription {    padding-left: 6px;    padding-top:2px;}
+.strength0{width: 80px;    background-color: transparent;}.strength1{	width: 5px;    background-color: #ff0000;}.strength2{	width: 30px;    background-color: #ff5f5f;}.strength3{	width: 60px;    background-color: #56e500;}.strength4{	width: 60px;    background-color: #56e500;}.strength5{	width: 80px;    background-color: #4dcd00;}
+
+input.btn-active {color:#FFF;border:1px solid #357e86;background:#419ba5 url({!$Resource.CTCT2__btnactive}) no-repeat;font-size:90%;margin: 0 0 0 2px;padding:.2em;cursor:pointer;}
+
+.error {color:red;font-weight:bold;}
+
+.required {color:red;font-weight:bold;font-size:10pt;padding-right:5px;}
+</style>
+
+	<apex:pageMessages />
+	<br />
+	<h1 class="signup-header">
+		Sign up for your FREE 60-day Constant Contact trial! 
+		<br/><span>No risk. No credit card required. No obligation.</span>
+		<br/>
+		<apex:outputPanel rendered="{!hasFieldError}" >
+			<span style="width:455px;color:red;font-size:80%;padding-left:0px;margin-left:0px;">
+			We encountered some problems processing the form below. Please correct the entries highlighted in red.
+			</span>
+			<br/>
+		</apex:outputPanel>
+		<span style="color:red;font-weight:bold;font-size:10pt;">*</span>
+			<span style="font-size:8pt;padding-left:0px;">Required fields</span>
+	</h1>
+
+	<table style="width:100%;">
+	<tr style="vertical-align:top;"><td style="width:455px;">
+	
+		<table class="fldTable">
+		<col width="150" /><col width="400" />
+		<tr class="fldTable">
+			<td colspan="2"><p class="legend">Tell us about yourself.</p></td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader"><span class="required">*</span>First Name:</td>
+			<td class="fldValue">
+				<apex:inputText value="{!FirstName}" styleClass="mediumWidth" />
+				<br/><apex:outputText value="{!msgFirstName}" rendered="{!errorFirstName}" styleClass="error" />
+			</td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader"><span class="required">*</span>Last Name:</td>
+			<td class="fldValue">
+				<apex:inputText value="{!LastName}" styleClass="mediumWidth" />
+				<br/><apex:outputText value="{!msgLastName}" rendered="{!errorLastName}" styleClass="error" />
+			</td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader"><span class="required">*</span>Organization Name:</td>
+			<td class="fldValue">
+				<apex:inputText value="{!OrgName}" styleClass="mediumWidth" />
+				<br/><apex:outputText value="{!msgOrgName}" rendered="{!errorOrgName}" styleClass="error" />
+			</td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader"><span class="required">*</span>Country Name:</td>
+			<td class="fldValue">
+				<apex:selectList value="{!Country}" size="1">
+					<apex:selectOption itemValue="us" itemLabel="United States" />
+					<apex:selectOption itemValue="ca" itemLabel="Canada" />
+					<apex:selectOption itemDisabled="true" itemValue="--" itemLabel="---------------------------------------" />
+					<apex:selectOptions value="{!SelectOptionsForCountry}" />
+					<apex:actionSupport event="onchange" action="{!noop}" rerender="StateOrProvinceLabel,StateOrProvince" />
+				</apex:selectList>
+				<br/><apex:outputText value="{!msgCountry}" rendered="{!errorCountry}" styleClass="error" />
+			</td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader">
+				<apex:outputPanel id="StateOrProvinceLabel"> 
+					<apex:outputPanel rendered="{!Country='us'}"><span class="required">*</span>State:</apex:outputPanel>
+					<apex:outputPanel rendered="{!Country='ca'}"><span class="required">*</span>Province:</apex:outputPanel>
+				</apex:outputPanel>
+			</td>
+			<td class="fldValue">
+				<apex:outputPanel id="StateOrProvince"> 
+					<apex:outputPanel rendered="{!Country='us'}">
+						<apex:selectList value="{!State}" size="1" >
+							<apex:selectOption itemValue="" itemLabel="Choose State" />
+							<apex:selectOptions value="{!SelectOptionsForState}" />
+						</apex:selectList>
+					</apex:outputPanel>
+					<apex:outputPanel rendered="{!Country='ca'}">
+						<apex:selectList value="{!State}" size="1">
+							<apex:selectOption itemValue="" itemLabel="Choose Province" />
+							<apex:selectOptions value="{!SelectOptionsForProvince}" />
+						</apex:selectList>
+					</apex:outputPanel>
+				</apex:outputPanel>
+				<br/><apex:outputText value="{!msgState}" rendered="{!errorState}" styleClass="error" />
+			</td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader"><span class="required">*</span>Phone Number:</td>
+			<td class="fldValue">
+				<apex:inputText value="{!Phone}" /><br/>
+				<span class="fldHint">So we can get in touch about our free coaching.</span>
+				<br/><apex:outputText value="{!msgPhone}" rendered="{!errorPhone}" styleClass="error" />
+			</td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader"><span class="required">*</span>Email:</td>
+			<td class="fldValue">
+				<apex:inputText value="{!Email}" styleClass="mediumWidth" /><br/>
+				<span class="fldHint">We'll send you an email to confirm your trial.</span>
+				<br/><apex:outputText value="{!msgEmail}" rendered="{!errorEmail}" styleClass="error" />
+			</td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader"> Website:</td>
+			<td class="fldValue">
+				<apex:inputText value="{!Website}" styleClass="mediumWidth" />
+				<br/><apex:outputText value="{!msgWebsite}" rendered="{!errorWebsite}" styleClass="error" />
+			</td>
+		</tr>
+		</table>
+	
+		<br />
+	
+		<table class="fldTable">
+		<col width="150" /><col width="400" />
+		<tr class="fldTable">
+			<td colspan="2"><p class="legend">Choose how you'll sign in to your trial account.</p></td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader"><span class="required">*</span>User Name:</td>
+			<td class="fldValue">
+				<apex:inputText value="{!CTCTUsername}" styleClass="mediumWidth" /><br/>
+				<span class="fldHint">Minimum 6 characters</span>
+				<br/><apex:outputText value="{!msgCTCTUsername}" rendered="{!errorCTCTUsername}" styleClass="error" />
+			</td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader"><span class="required">*</span>Password:</td>
+			<td class="fldValue">
+				<div>
+					<apex:inputSecret value="{!CTCTPassword}"  onKeyUp="passwordStrength(this.value);" styleClass="mediumWidth" />
+	
+	                <div class="pwstrength_span">
+	                    <span class="pwstrength_label">Password Strength</span>
+	                    <div class="pwstrength_wrapper">
+	                    <div name="passwordStrength" class="strength0">
+	                        <div name="passwordDescription"></div>
+	                    </div>
+	
+	                    </div>
+	                 </div>	
+				</div>
+				<span class="fldHint">Minimum 6 characters</span>
+				<div id="passwordtips" class="target"><a id="openPwTips" class="tt pad">Password Tips</a></div>
+				<br/><apex:outputText value="{!msgCTCTPassword}" rendered="{!errorCTCTPassword}" styleClass="error" />
+			</td>
+		</tr>
+		<tr class="fldTable">
+			<td class="fldHeader"><span class="required">*</span>Confirm Password:</td>
+			<td class="fldValue">
+				<apex:inputSecret value="{!ConfirmPassword}" styleClass="mediumWidth"  /><br/>
+				<span class="fldHint">Minimum 6 characters</span>
+				<br/><apex:outputText value="{!msgConfirmPassword}" rendered="{!errorConfirmPassword}" styleClass="error" />
+			</td>
+		</tr>
+		</table>
+	
+		<br />
+	
+		<table class="fldTable" style="background-color:white;">
+		<tr class="fldTable" style="background-color:white;">
+			<td class="fldHeader" colspan="2" style="background-color:white;"> <center>
+				<apex:commandButton styleClass="btn-active" action="{!Save}" value="Start my trial!" /> 
+			</center></td>
+		</tr>
+		</table>
+
+	</td><td style="width:400px;">
+	
+		<style>
+		.mktgheader1 {color:#419BA5;font:bold 130%/115% Arial,Helvetica,sans-serif;padding:10px 25px 5px;}
+		.mktgheader2 {color:#357E86;font:bold 110%/115% Arial,Helvetica,sans-serif;padding:5px 25px;}
+		.mktglist {line-height:125%;list-style:none outside url("{!$Resource.BulletSquareOrange}");
+		           margin-left:5px;padding-bottom:10px;}
+		.mktg {padding: 0px 0px 5px 25px;}
+		</style>
+	
+		<p class="mktgheader1">Your 60-day Free Trial includes:</p>
+		
+		<p class="mktgheader2">EMAIL MARKETING</p>
+		<ul class="mktglist">
+		<li class="mktglist">Unlimited email newsletters</li>
+		<li class="mktglist">400+ professionally designed templates</li>
+		<li class="mktglist"><b>Up to 100 contacts.</b> If you exceed 100 contacts, you'll be prompted to upgrade to a paying account.</li>
+		</ul>
+
+		<p class="mktgheader2">What happens when my FREE trial is over?</p>
+		<ul class="mktglist">
+		<li class="mktglist">You'll still have all of your data and access to reports.</li>
+		<li class="mktglist">You can build your list and create new emails, surveys, or events.</li>
+		<li class="mktglist">You won't be able to send them until you buy the product.</li>
+		<li class="mktglist">Just buy the product and you'll be up and running again.</li>
+		</ul>
+		
+		<p class="mktgheader2">What if I want to cancel?</p>
+		<p class="mktg">		
+		You can cancel at any time — online or by phone. There's no obligation and no contract.
+		</p>
+		<p class="mktg">		
+		So what are you waiting for?<br/>
+		<b>Start your free trial today!</b>
+		</p>	
+
+	</td><td>
+
+	</td></tr>
+	</table>
+
+
+<style>
+#tooltip-includedem-content,
+#tooltip-includedos-content,
+#tooltip-includedevm-content,
+#tooltip-ht-content,
+#tooltip-op-content,
+#tooltip-pc-content,
+#tooltip-ts-content,
+#tooltip-donotsell-content,
+#tooltip-hiddenfees-content,
+#tooltip-passwordtips-content {
+    display:none;
+}
+
+.table-wrapper {
+	border: solid 1px #ccc;
+	margin-top: 10px;
+}
+
+table.tooltip-table {
+	border-collapse:collapse;
+	margin: 1px;
+	margin-bottom: 0px;
+}
+table.tooltip-table td.padding {
+	padding: 5px 10px;
+	background-color: #fff5de;
+}
+table.tooltip-table td.free-acct-feature {
+	background-color: #fcd581;
+	vertical-align: top;
+}
+table.tooltip-table td.paid-acct-feature {
+	background-color: #fcd581;
+	vertical-align: top;
+}
+table.tooltip-table td {
+	border:1px solid #fff;
+	border-collapse:collapse;
+    padding: 10px;
+}
+table.tooltip-table thead tr td h2 {
+	color: #fff;
+	font-size: 200%;
+	padding: 0px;
+}
+table.tooltip-table thead tr td {
+	padding: 5px 10px;
+}
+.tooltipheader {
+	background: #A0CDD2;
+	height:20px;
+	padding:10px 15px 5px 15px;
+		*margin: 2px 1px 2px 2px;
+}
+.tooltipheader h3 {
+	float:left;
+	color:#000;
+	font-size:9pt;
+    padding:0;
+}
+.tt-content.first {
+	padding: 0px 15px 15px;
+	margin:0 auto;
+}
+.tt-content {
+	font-size: 85%;
+	margin:0 auto;
+	min-height: 80px;
+}
+.tt-content strong.heading {
+	color: #357e86;
+	font-size: 120%;
+}
+#main .tt-content p {
+	padding: 10px;
+}
+.tt-content p {
+    line-height:130%;
+    padding:10px;
+}
+.flush {
+	margin-top:0;
+}
+ul {
+	margin:0;
+}
+.small-text {
+	font-size:7pt;
+}
+.caveat {
+	color:#666;
+	font-size:8pt;
+}
+
+/*other related signup styles */
+.account-box {
+	width:280px; 
+	margin:20px 0;
+	border:1px dotted #999999; 
+	padding:20px; 
+	font-size:9pt; 
+	color:#999999;
+}
+a.tt {
+	color: #3E69BD;	
+	text-decoration: underline;
+	cursor:pointer;
+    font-size: 11px;
+}
+.pad {
+    padding-left: 15px;
+}
+.pad2 {
+    padding-left: 30px;
+}
+.pad3 {
+    padding-left: 17px;
+}
+.tt-content a{
+cursor:pointer;
+}
+a.tt:hover {
+	color:#D89C1A;
+	text-decoration:underline;
+}
+a.tt:visited {
+	color:#3E69BD;
+	text-decoration:underline;
+}
+
+.tt-content ul {
+}
+.tt-content ul, .tt-content ul li {
+	list-style:none outside url(http://img.constantcontact.com/lp/images/standard/bv2/bullet_square_teal.gif);
+	padding-bottom:10px;
+	margin-left: 40px;
+    margin-right: 10px;
+	line-height: 125%;
+}
+
+.off-button {
+	cursor:pointer;
+}
+.target {
+	display:inline;
+}
+span.headline {
+    font-size: 110%;
+}
+</style>
+
+
+	<script type="text/javascript">
+	    function passwordStrength(password) {
+	        var desc = new Array();
+            desc[0] = "Too Short";
+            desc[1] = "Too Short";	
+            desc[2] = "Weak";
+            desc[3] = "Good";
+            desc[4] = "Good";
+            desc[5] = "Strong";
+	
+	        var score = 0;
+	        var specials = 0;
+	
+	        //if password bigger than 0 make the score 1
+	        if (password.length > 0) {
+	            score=1;
+	        }
+	
+	        //if password bigger than 5 make the score 2
+	        if (password.length > 5) {
+	            score=2;
+	        }
+	
+	        if (password.length > 7) {
+	            //if password has lowercase, add 1 to specials
+	            if (password.match(/[a-z]/)) { specials++; }
+	            //if password has uppercase, add 1 to specials
+	            if (password.match(/[A-Z]/)) { specials++; }
+	            //if password has digit, add 1 to specials
+	            if (password.match(/\d/)) { specials++; }
+	            //if password has special char, add 1 to specials
+	            if (password.match(/.[!,@#$%^&*?_~(-)]/)) { specials++; }
+	
+	            // if there are 3 of the special cases hit, make the score 4
+	            if (specials > 2) {
+	                score=4;
+	            }
+	
+	            // if all 4 special cases were hit, make the score 5
+	            if (specials > 3) {
+	                score=5;
+	            }
+	        }
+	
+	        document.getElementsByName("passwordDescription")[0].innerHTML = desc[score];
+	
+	        document.getElementsByName("passwordStrength")[0].className = "strength" + score;
+	    }
+
+		function ShowPasswordTips() {
+			ShowMe('dlgPasswordTips');
+			var str = "Remember:\n\n" +
+			          "-  Capitalization matters.\n" +
+			          "-  Don't use your name or username in your password.\n\n" +
+			          "To make your password more secure:\n\n" +
+			          "-  Use 8 or more characters\n" +
+			          "-  Mix capital and lowercase letters and numbers.";
+			//alert(str);
+		}
+	</script>
+
+
+	<style>
+	.pwtip {font-size:8pt; background-color:white;}
+	.pwtip p, .pwtip li {font-size:8pt;}
+	.pwtip p {padding:3px;}
+	</style>
+	<div id="dlgPasswordTips" onMouseOut="HideMe('dlgPasswordTips');" >
+	<div  class="pwtip" style="width:320px;position:absolute;top:425px;left:475px;border:2px ridge gray;padding:0px;">
+		<div class="pwtip" style="padding:3px;padding-bottom:10px;background-color:lightyellow;">
+		<p style="padding-top:0px;"><b>Remember:</b></p>
+		<ul>
+		<li>Capitalization matters.</li>
+		<li>Don't use your name or user name in your password.&nbsp;&nbsp;&nbsp;</li>
+		</ul>
+		<p><b>To make your password more secure:</b></p>
+		<ul>
+		<li>Use 8 or more characters.</li>
+		<li>Mix capital and lowercase letters and numbers.</li>
+		</ul>
+		</div>
+	</div>
+	</div>
+	<script>
+
+	jQuery(document).ready(function() {
+		$('#openPwTips').hover(
+			  function () {
+			    ShowMe('dlgPasswordTips');
+			  }, 
+			  function () {
+			    HideMe('dlgPasswordTips');
+			  }
+		);
+		HideMe('dlgPasswordTips');
+	});
+
+	function ShowMe(id) {
+		var elemDlg = document.getElementById(id);
+		if (elemDlg) {
+			elemDlg.style.visibility = 'visible';
+			elemDlg.style.display = 'block';
+		}
+	}
+	function HideMe(id) {
+		var elemDlg = document.getElementById(id);
+		if (elemDlg) {
+			elemDlg.style.visibility = 'hidden';
+			elemDlg.style.display = 'none';
+		}
+	}
+	</script>
+</apex:form>
+</apex:page>

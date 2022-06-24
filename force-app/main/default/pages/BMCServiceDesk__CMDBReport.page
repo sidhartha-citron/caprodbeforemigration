@@ -1,0 +1,392 @@
+<apex:page controller="BMCServiceDesk.CMDBReportController" standardStylesheets="false" showheader="false" cache="true">
+
+	<html>
+		<head>
+			<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS31}/adapter/ext/ext-base.js"/>
+		    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS31}/ext-all.js"/>
+		    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS31}/examples/ux/ux-all.js"/>
+		    
+		    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/Exporter-all.js" />
+		    
+		    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFExtJS31}/resources/css/ext-all.css" />
+		    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFExtJS31}/examples/ux/css/ux-all.css" />
+		    <link title="aero" rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBTheme.css" media="screen" />
+		    <link title="aero" rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" media="screen" />
+		    <link title="aero" rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBManagerStyles.css" media="screen" />
+		    
+		    <script type="text/javascript">
+		    
+		    	var isReportRendered = {!IsReportRendered};
+		    
+		    	function Submit()
+		    	{
+		    		var result = Ext.getCmp('txtFilterCMDBAtttributeValue').getValue();
+		    		if(result.trim().length == 0 || result.trim().length >= 2)
+					{
+						ApplyFilter();
+			    		document.getElementById('{!$Component.frmCMDBReport.btnRun}').click();
+					}
+					else		    		
+		    		{
+	    				Ext.MessageBox.show({
+			                msg: '{!JSENCODE($Label.GsErrorMsg)}',
+			                buttons: Ext.MessageBox.OK,
+			                icon: Ext.MessageBox.WARNING,
+			                width:300
+						});
+		    		}
+		    	}
+		    	
+		    	function Clearfilter()
+		    	{
+		    		Ext.getCmp('ddlFilterCMDBAtttribute').setValue('');
+					ClearAtttributeValue();
+		    	}
+		    	
+		    	function ClearAtttributeValue()
+		    	{
+		    		Ext.getCmp('txtFilterCMDBAtttributeValue').setValue('');
+		    	}
+		    	
+		    	function ApplyFilter()
+		    	{
+	    			var combobox = Ext.getCmp('ddlFilterCMDBAtttribute');
+	    			var v = combobox.getValue();
+	    			if(v != null && v != undefined &&  v != '')
+	    			{
+		    			var record = combobox.findRecord(combobox.valueField || combobox.displayField, v)
+			    		document.getElementById('{!$Component.frmCMDBReport.txtFilter_CMDBClassAPIName}').value = record.data.CMDBClassAPIName;
+			    		document.getElementById('{!$Component.frmCMDBReport.txtFilter_AttributeAPIName}').value = record.data.CMDBClassAttributeAPIName;
+		    		}
+		    		else
+		    		{
+		    			document.getElementById('{!$Component.frmCMDBReport.txtFilter_CMDBClassAPIName}').value = '';
+			    		document.getElementById('{!$Component.frmCMDBReport.txtFilter_AttributeAPIName}').value = '';
+		    		}
+		    		document.getElementById('{!$Component.frmCMDBReport.txtFilter_AttributeValue}').value = Ext.getCmp('txtFilterCMDBAtttributeValue').getValue() ;
+		    	}
+		    
+			    Ext.onReady(function() {
+			    
+					var newData = {!IF(jsoncontent == null || jsoncontent == '' ,'null',jsoncontent)};
+					
+				    var tb = new Ext.Toolbar({
+				    	id: 'idtoolbar',
+				    	renderTo: 'toolbar',
+				        border: false,
+				        autoWidth:true,
+				        items: [
+				        	{ xtype: 'tbspacer', width: 10 },
+				        	new Ext.Toolbar.TextItem({
+				        	text : "{!JSENCODE($Label.ClassLabel)}"	
+				        	}),
+				        	{ xtype: 'tbspacer', width: 5 },
+				        	new Ext.form.ComboBox({
+				        		scale: 'medium',
+							    typeAhead: true,
+							    triggerAction: 'all',
+							    transform:'{!$Component.frmCMDBReport.ddlCMDBClasses}',
+							    forceSelection:true,
+							    id: 'ddlCMDBCls',
+							    listeners: {
+							    	select : function(combo, record, index)
+							    	{
+							    		Clearfilter();
+							    		Submit();
+							    	}
+							    }
+							}),
+							{ xtype: 'tbspacer', width: 10 },
+							new Ext.Toolbar.Button({
+								iconCls : "bmcCMDBReportRun",
+								handler: Submit,
+								scale: 'medium',
+								tooltipType : 'title',
+    	                        tooltip : '{!JSENCODE($Label.Run)}'
+							}),
+							'-',
+							{
+								iconCls: 'bmcCMDBReportExport',
+								scale: 'medium',
+								listeners: {
+	                                disable: function(){
+	                                    this.setIconClass('bmcCMDBReportExportDisable');    
+	                                },
+	                                enable: function(){
+	                                    this.setIconClass('bmcCMDBReportExport');          
+	                                },
+	                                render: function(f){
+											f.el.dom.title = '{!JSENCODE($Label.Export)}';
+									}
+	                    		},
+	                    		menu: new Ext.menu.Menu({
+										autoWidth : true,
+										showSeparator: false,
+										plain: true,
+										items: [
+											{
+												text : "{!JSENCODE($Label.ExportCSV)}",
+												disabled: {!PageCount} == 0,
+												autoWidth: true,
+												listeners: {
+													'click': function() {
+														document.getElementById('{!$Component.frmCMDBReport.btnExportCSV}').click();
+													}
+												}	                            
+											},
+											{
+												text : "{!JSENCODE($Label.ExportPDF)}",
+												disabled: {!PageCount} == 0,
+												autoWidth: true,
+												listeners: {
+													'click': function() {
+														document.getElementById('{!$Component.frmCMDBReport.btnExportPDF}').click();
+													}
+												}
+											}
+										]
+								})
+							},
+							'-',
+							'->',
+							{ xtype: 'tbspacer', width: 5 },
+				        	new Ext.Toolbar.TextItem({
+				        	text :  "{!IF(PageCount == 0, '0' , NumberOfRecords)} - " + 	{!IF(PageCount == 0, PageCount , PageNumber + 1)} + "/" + {!PageCount}
+				        	}),
+				        	{ xtype: 'tbspacer', width: 5 },
+				        	{
+								xtype : 'box', 
+								autoEl:  
+								{
+									tag: 'img', 
+									src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif', 
+									title:'{!JSENCODE($Label.previousPage)}' 
+								}, 
+								cls:'cursorCls',
+								id:'PreviousPageButton',
+								disabled : ({!IF(PageCount == 0, PageCount , PageNumber)} == 0),
+								listeners : 
+								{ 
+									render: function(f)
+										{
+											f.el.on('click', function()
+											{
+												if({!IF(PageCount == 0, PageCount , PageNumber)} != 0)
+												{
+													var txtPageNumber = document.getElementById('{!$Component.frmCMDBReport.txtPageNumber}'); 
+													txtPageNumber.value = parseInt(txtPageNumber.value) - 1;
+													Submit();
+												}
+											})
+										}
+								}
+							},
+							{
+								xtype : 'box', 
+								autoEl:  
+								{
+									tag: 'img', 
+									src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif', 
+									title:'{!JSENCODE($Label.nextPage)}' 
+								}, 
+								disabled : (({!PageNumber} + 1)  == {!PageCount}) || ({!PageCount} == 0),
+								cls:'cursorCls',
+								id:'NextPageButton',
+								listeners : 
+								{ 
+									render: function(f)
+										{
+											f.el.on('click', function()
+											{
+												if(({!PageNumber} + 1)  != {!PageCount} && ({!PageCount} != 0))
+												{
+													var txtPageNumber = document.getElementById('{!$Component.frmCMDBReport.txtPageNumber}'); 
+													txtPageNumber.value = parseInt(txtPageNumber.value) + 1;
+													Submit();
+												}
+											})
+										}
+								}
+							}
+				        ]
+					});
+					
+					var ddlCMDBCls = Ext.getCmp('ddlCMDBCls');
+					ddlCMDBCls.getStore().sort('text');
+					
+					var tb = new Ext.Toolbar({
+				    	renderTo: 'toolbarFilter',
+				        border: false,
+				        autoWidth:true,
+				        items: [
+				        	{ xtype: 'tbspacer', width: 10 },
+				        	new Ext.Toolbar.TextItem({
+				        		text : "{!JSENCODE($Label.Filter)}"	
+				        	}),
+							'-',
+							{ xtype: 'tbspacer', width: 10 },
+				        	new Ext.Toolbar.TextItem({
+				        		text : "{!JSENCODE($Label.Column)}"	
+				        	}),
+				        	{ xtype: 'tbspacer', width: 5 },
+				        	new Ext.form.ComboBox({
+				        		scale: 'medium',
+							    typeAhead: true,
+							    triggerAction: 'all',
+							    forceSelection:true,
+							    displayField:'CMDBClassAttributeName',
+                    			valueField:'CMDBClassAttributeAPIName',
+                    			value: '{!JSENCODE(Filter_AttributeAPIName)}',
+                    			store: new Ext.data.ArrayStore({
+									fields:['CMDBClassAPIName', 'CMDBClassAttributeName', 'CMDBClassAttributeAPIName', 'dataIndex'],
+									data:  newData.CMDBClassAttributeName,
+									sortInfo: {
+									    field: 'CMDBClassAttributeName',
+									    direction: 'ASC'
+									}
+			                    }),
+							    id: 'ddlFilterCMDBAtttribute',
+							    lastQuery:'',
+							    listeners: {
+							    	select : function(combo, record, index)
+							    	{
+										ClearAtttributeValue();
+							    	}
+							    }
+							}),
+							{ xtype: 'tbspacer', width: 10 },
+							'-',
+							{ xtype: 'tbspacer', width: 10 },
+				        	new Ext.Toolbar.TextItem({
+				        		text : "{!JSENCODE($Label.Value)}"	
+				        	}),
+				        	{ xtype: 'tbspacer', width: 5 },
+							new Ext.form.TextField({
+								scale: 'medium',
+								id: 'txtFilterCMDBAtttributeValue',
+								value: '{!JSENCODE(Filter_AttributeValue)}'
+							}),
+							{ xtype: 'tbspacer', width: 10 },
+							'-',
+							{ xtype: 'tbspacer', width: 10 },
+							new Ext.Toolbar.Button({
+								scale: 'medium',
+								iconCls : "bmcRefresh",
+								tooltipType : 'title',
+                            	tooltip: '{!JSENCODE($Label.Reset)}',
+								handler: Clearfilter
+							})
+				        ]
+					});
+					
+					var v = ddlCMDBCls.getValue();
+					var record = ddlCMDBCls.findRecord(ddlCMDBCls.valueField || ddlCMDBCls.displayField, v);
+					var selectedCMDBText = record.data.text;
+					
+					var group = new Ext.ux.grid.ColumnHeaderGroup({ 
+						rows: [newData.cmdbGroupRow] 
+					});
+					/*
+					var filters = new Ext.ux.grid.GridFilters({
+					    autoReload: false, 
+					    local: true, 
+	    				filters: newData.filters
+	    			});
+					*/
+					var grid = new Ext.grid.GridPanel({
+						id: 'gridReport',
+						enableHdMenu: false,
+				        renderTo: 'grid',
+				        region:'center',
+				        title: "{!JSENCODE($Label.CMDBReports)}: " + selectedCMDBText ,
+				        height: 550,
+				        store: new Ext.data.ArrayStore({
+				            fields: newData.fields,
+				            data: newData.arrData
+				        }),
+				        columns: newData.columns,
+				        viewConfig: {
+				            forceFit: false
+				        },
+				        //plugins: [filters],
+				        layout:'fit'
+				    });
+				    
+				    Ext.EventManager.onWindowResize(function () {
+				    	 Ext.getCmp('gridReport').setWidth(Ext.getCmp('idtoolbar').getWidth());
+				    });				    
+				    document.getElementById('divhidden').style.display = 'none';
+				    
+				    if({!ReportExported} == true)
+                    {
+                        Ext.MessageBox.show({
+                            msg: '{!JSENCODE($Label.CMDBExportMessage)}',
+                            buttons: Ext.MessageBox.OK,
+                            icon: Ext.MessageBox.INFO
+                        });
+                    }else if({!FolderAbsent} == true)
+                    {
+                        Ext.MessageBox.show({
+                            msg: '{!JSENCODE($Label.CMDBExportFolderMissing)}',
+                            buttons: Ext.MessageBox.OK,
+                            icon: Ext.MessageBox.WARNING
+                        });
+                    }
+			    });
+			    
+		    </script>
+		    <style>
+		    
+			.op{
+			    opacity: 0;
+			    -moz-opacity: 0;
+			    filter: alpha(opacity=0);
+			    visibility:hidden;
+			}
+			
+		    td.x-grid3-cell{
+			    border-left: 0px;
+			    padding-right:0px;
+			}
+			
+			.x-grid3-hd-inner {
+			    border-right:0px !important;
+			}
+			
+			.x-grid3-col {
+			        padding-right:0px;
+			}
+			
+			 .x-grid3-col
+			{
+			   
+			    border-color: #b9c3c9;
+			}
+		    </style>
+		</head>
+		<body>
+			<apex:form id="frmCMDBReport" >
+				<apex:inputHidden value="{!SelectedPageNumber}" id="txtPageNumber" />
+				
+				<apex:inputHidden value="{!Filter_CMDBClassAPIName}" id="txtFilter_CMDBClassAPIName" />
+				<apex:inputHidden value="{!Filter_AttributeAPIName}" id="txtFilter_AttributeAPIName" />
+				<apex:inputHidden value="{!Filter_AttributeValue}" id="txtFilter_AttributeValue" />
+				<div id="toolbar"></div>
+				<div id="toolbarFilter"></div>
+				<div id='grid'></div>
+				<div class="op" id='divhidden' >
+					<apex:selectList size="1" value="{!SelectedCMDBClassSelectoption}" id="ddlCMDBClasses" >
+			        	<apex:selectOptions value="{!CMDBClassSelectoptions}"/>
+			    	</apex:selectList>
+			    	<apex:commandButton value="Run" action="{!run}" id="btnRun" />
+			    	<apex:commandButton value="ExportCSV" action="{!ExportCSV}" id="btnExportCSV"  />
+			    	<apex:commandButton value="ExportPDF" action="{!ExportPDF}" id="btnExportPDF"  />
+			    </div>
+			    
+			    <apex:outputtext value="{!Debug}" escape="false" />
+			    
+    		</apex:form>
+					
+		</body>
+	</html>
+</apex:page>

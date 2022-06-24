@@ -1,0 +1,24 @@
+<div class="panel service-target" ng-if="showServiceTarget">
+	<panel-header class="targets-panel-heading" action="hidePanels()" headertext="{{_Labels.modal.serviceTarget}}"></panel-header>
+	
+	<div class="panel-body targets-panel-body">
+		<span ng-if="serviceTargets == undefined || serviceTargets['Records'].length == 0">
+			{{_Labels.modal.noServiceRequestFound}}
+		</span>
+		<table class="detail-table" ng-if="serviceTargets['Records'].length > 0">
+			<thead>
+				<tr>
+					<th ng-repeat="column in serviceTargetFields">{{serviceTargets['ColumnsMap'][namespacePrefix.toLowerCase() + column]['label']}}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="record in serviceTargets['Records']">
+					<td ng-repeat="column in serviceTargetFields">
+						<span class="marginLeft12" ng-if="column == 'status__c'"><img src="{{serviceTargetImg[record[namespacePrefix.toLowerCase() + column]]}}"/></span>
+						<span ng-if="column != 'status__c'">{{record[namespacePrefix.toLowerCase() + column]}}</span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>

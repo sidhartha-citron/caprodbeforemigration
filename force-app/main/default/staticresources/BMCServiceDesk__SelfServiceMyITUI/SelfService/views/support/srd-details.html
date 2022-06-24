@@ -1,0 +1,39 @@
+<div error-panel type="modal"></div>
+
+<div id="support-modal__srd-header-description" tabindex="0" class="support-modal__srd-header-container" ng-show="!supportModel.dataLoading" style="border: 1px solid #d9d9d9;">
+    <div class="support-modal__srd-header-icon {{supportModel.config.icon}}" ng-if="!supportModel.config.image"></div>
+	<div class="support-modal__srd-header-icon" ng-if="supportModel.config.image" >		
+		<img src="{{supportModel.config.image}}" ng-if="supportModel.config.image" class="support-modal__srd-header-icon"/>
+	</div>
+	
+	<h3 ng-class="{'support-modal__srd-header-title':supportModel.srData.SRColumnLayoutForSS3 != 2,'support-modal__srd-header-title_for_2_column':supportModel.srData.SRColumnLayoutForSS3 == 2}" ng-if="supportModel.lightningModule!='createSR'" ng-bind="supportModel.config.Title">		
+	</h3>
+	<h3  class="support-modal__srd-header-title-ellipsis" ng-class="{'support-modal__srd-header-title-ellipsis_for_2_column':supportModel.srData.SRColumnLayoutForSS3 == 2}" title="{{supportModel.config.Title}}"
+		 ng-if="supportModel.lightningModule=='createSR'" ng-bind="supportModel.config.Title">		
+	</h3>
+	<div class="{{supportModel.config.ellipsisClsDescription}}"  ng-click="supportModel.clickedOnDescription()" ng-bind="supportModel.config.description">
+	</div>
+</div>
+
+<script>
+var resourceUrl=$("a[id*='selfServiceResourcesUrl']").attr('href');
+</script>
+<div class="support-modal__srd-questions-container">
+	<ng-form autocomplete="off" name="createSRForm" ng-controller="SrdDetailsController" novalidate>
+		<ng-include src="detailsUrl"></ng-include>
+
+		<div class="modal-footer">
+			<div class="modal-footer__btn-container">
+				<button type="submit" ng-click="createSR($modal,false)" class="btn btn-primary Branding-Right_Panel-default_button Branding-Right_Panel-button_outline" ng-disabled="supportModel.isSrCreating || supportModel.dataLoading || !userModel.permissions.isSubmitTicketOrSRAllowed">
+					{{$root.selfServiceLabels.submit}}
+				</button>
+				<button type="submit" ng-if="supportModel.enableSaveAsDraft && supportModel.lightningModule!='createSR'" ng-click="createSR($modal,true)" class="btn Branding-Right_Panel-button_outline" ng-disabled="supportModel.isSrCreating || supportModel.dataLoading || !userModel.permissions.isSubmitTicketOrSRAllowed">
+					{{$root.selfServiceLabels.SaveDraft}}
+				</button>
+				<button type="button" class="btn Branding-Right_Panel-button_outline" ng-click="cancel()">
+					{{$root.selfServiceLabels.cancel}}
+				</button>
+			</div>
+		</div>
+	</ng-form>
+</div>

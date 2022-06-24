@@ -1,0 +1,104 @@
+<apex:page Controller="BMCServiceDesk.SearchConfigItemController" 	showHeader="false" sidebar="false" standardStylesheets="false" contentType="{!contetnTypeForIE}">
+
+<c:CommonIncludes />
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SkywalkerStyleSheet.css"/>  
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ACDeviceSummarypage.css"/>
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SearchConfigItem.css"/>    
+<link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/StdLayoutCommon.js"/>     
+<script>
+	function reloadParentFromSearchConfig(filterObjectId) {
+    window.opener.parent.location.href = '/'+filterObjectId;
+    window.close();
+	}
+	var tabs;
+	var isACEnable = {!isACConfigEnabled};
+	var isCMDBDiscoveryEnabled = {!isCMDBDiscoveryEnabled};
+	var conditionalHeader = '{!JSENCODE($Label.AssetCore)}';
+	if(isCMDBDiscoveryEnabled)
+		conditionalHeader = '{!JSENCODE($Label.RFDiscovery)}';
+			
+	Ext.ns("SearchConfigurationItem");
+	SearchConfigurationItem.Labels = {
+            	AssetCoreTab: conditionalHeader,
+				RemedyforceTab: '{!JSENCODE($Label.RemedyforceCMDB)}'
+            }
+    //This function is used to set primary CI on configuration item field on incident console detail form
+    function setPrimaryCI(ciId,ciName)
+    {
+    	window.opener.lookupPick2('{!JSENCODE(FormTag)}','{!JSENCODE(TextBox)}_lkid','{!JSENCODE(TextBox)}',ciId,ciName,false);
+    }
+    function reloadIncidentform(){
+    	if(getUrlParameter('isCalledFromConsole')=='true'){
+				if(window.opener.isFocusOnIncidentForm){
+      				window.opener.loadIncidentDetail(getUrlParameter('IncidentID'));
+				}else{
+					window.opener.isNeedToRefreshIncident = true;
+				}
+    	}else{
+    	window.opener.location.href='/'+getUrlParameter('IncidentID');
+    }
+    	window.close();
+    }
+    
+    Ext.onReady(function(){
+    var IncidentID = '{!JSENCODE($CurrentPage.parameters.IncidentID)}';
+    var filterObjectId='{!JSENCODE($CurrentPage.parameters.filterObjectId)}';
+    var txt='{!JSENCODE($CurrentPage.parameters.txt)}';
+	var idValstr='{!JSENCODE($CurrentPage.parameters.idValstr)}';
+    var accountID = '{!JSENCODE($CurrentPage.parameters.accountId)}'; 
+     var isCalledFromConsole ='{!JSENCODE($CurrentPage.parameters.isCalledFromConsole)}'; 
+	 var searchLookUpStr ='{!JSENCODE($CurrentPage.parameters.searchLookUpStr)}';
+	 var frmCiSlideIn = '{!JSENCODE($CurrentPage.parameters.frmCiSlideIn)}';
+	if(isCalledFromConsole=='true' && (accountID == null || accountID == ''))
+    { 
+    	accountID='{!JSENCODE(accountID)}';
+    }
+
+	var sPAGEURL = '/apex/SearchAndLink?txt='+txt+'&filterObjectId='+IncidentID+'&parentName=Incident__c&childName=BMC_BaseElement__c&isLookUp=BMC_BaseElement__c&filterId=active_be&clientId='+filterObjectId+'&accountId='+accountID+'&isCalledFromSearchConfig=true&idValstr='+idValstr+'&searchLookUpStr='+searchLookUpStr+'&frmCiSlideIn='+frmCiSlideIn;
+    var  sHTML = '<iframe id=\"SearchRFCMDBConfigItem\" frameborder=\"0\" src=\"'+ sPAGEURL +'\" style=\"width:100%;height:680px;border-top:1px solid #d9d9d9 !important;\"></iframe>';
+			
+
+	if(isACEnable || isCMDBDiscoveryEnabled)
+	{
+	tabs = new Ext.TabPanel({
+			    region: 'center',
+			    cls:'',
+			    activeTab: 0,
+				renderTo: 'mainTabPanel',
+				resizeTabs : false,
+				items:[
+			    		{
+			    		title:SearchConfigurationItem.Labels.RemedyforceTab,id:'Remedyforce',html:sHTML
+			    		}
+			        ]
+			});
+			
+	sPAGEURL = '/apex/ACSearchConfigItem?IncidentID=' + IncidentID + '&ClientID=' + filterObjectId+'&isCalledFromConsole='+isCalledFromConsole+'&frmCiSlideIn='+frmCiSlideIn;
+	sHTML = '<iframe id=\"SearchAssetCoreConfigItem\" frameborder=\"0\" src=\"'+ sPAGEURL +'\" style=\"width:100%;height:680px;border:none;\"></iframe>';
+	tabs.add({
+				title: SearchConfigurationItem.Labels.AssetCoreTab,
+				id:'AssetCore1',
+				html:sHTML
+			});
+	tabs.doLayout();
+	}
+	else
+	{
+		var mainDiv = document.getElementById('mainTabPanel');
+		var nodeIFrame = document.createElement("iframe");
+		nodeIFrame.setAttribute("id", "SearchAssetCoreConfigItem");
+		nodeIFrame.setAttribute("frameborder", "0");
+		nodeIFrame.setAttribute("src", sPAGEURL);
+		nodeIFrame.setAttribute("style", "width:100%;height:550px;border:none;");
+		while (mainDiv.firstChild) {
+		    mainDiv.removeChild(mainDiv.firstChild);
+		}
+		mainDiv.appendChild(nodeIFrame);
+	}
+});
+	
+</script>
+<title>{!JSENCODE($Label.SearchCI)}</title>
+<div id="mainTabPanel" ></div>
+</apex:page>

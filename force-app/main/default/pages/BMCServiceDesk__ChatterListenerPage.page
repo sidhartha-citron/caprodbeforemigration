@@ -1,0 +1,333 @@
+<apex:page standardStylesheets="false" showHeader="false" sidebar="false" controller="BMCServiceDesk.ChatterListenerController">
+<link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/>
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ChatterListener.css" />
+<style>
+
+.x-nbr .x-tip-tl {
+background-image : url("{!$Resource.ExtJS4_1_3}/resources/themes/images/default/tip/tip-corners.gif") !important;
+}
+.x-nbr .x-tip-tc {
+background-image : url("{!$Resource.ExtJS4_1_3}/resources/themes/images/default/tip/tip-corners.gif") !important;
+}
+.x-nbr .x-tip-tr {
+background-image : url("{!$Resource.ExtJS4_1_3}/resources/themes/images/default/tip/tip-corners.gif") !important;
+}
+
+
+.x-nbr .x-tip-ml {
+background-image : url("{!$Resource.ExtJS4_1_3}/resources/themes/images/default/tip/tip-sides.gif") !important;
+}
+.x-nbr .x-tip-mr {
+background-image : url("{!$Resource.ExtJS4_1_3}/resources/themes/images/default/tip/tip-sides.gif") !important;
+}
+
+
+.x-nbr .x-tip-bl {
+background-image : url("{!$Resource.ExtJS4_1_3}/resources/themes/images/default/tip/tip-corners.gif") !important;
+}
+.x-nbr .x-tip-bc {
+background-image : url("{!$Resource.ExtJS4_1_3}/resources/themes/images/default/tip/tip-corners.gif") !important;
+}
+.x-nbr .x-tip-br {
+background-image : url("{!$Resource.ExtJS4_1_3}/resources/themes/images/default/tip/tip-corners.gif") !important;
+}
+
+
+</style>
+<apex:form id="ChatterIncidenForm">
+
+  <apex:outputPanel id="formPanel">
+    <script>    
+    Ext.QuickTips.init();
+    var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+    var contextmenuheader = '{!JSENCODE($Label.EmailConvContextMenuHeader)}';
+    var chatterListenerCopyFromIncidnetLabel = '{!JSENCODE($Label.CLcopyFromIncident)}';
+    var chatterlistenerNameLabel = '{!JSENCODE($ObjectType.Chatter_Listener__c.Fields.Name.Label)}';
+    var chatterListenerGroupLabel='{!JSENCODE($ObjectType.Chatter_Listener__c.Fields.Chatter_Group__c.Label)}';
+    var chatterListenerKeywordLabel ='{!JSENCODE($ObjectType.Chatter_Listener__c.Fields.Keywords__c.Label)}';
+    var chatterListenerObjectLabel='{!JSENCODE($ObjectType.Chatter_Listener__c.Fields.Object__c.Label)}';
+    var chatterListenerTemplateLabel= '{!JSENCODE($ObjectType.Chatter_Listener__c.Fields.FKTemplate__c.Label)}';
+    var chatterListenerMapChatterUserLabel = '{!JSENCODE($ObjectType.Chatter_Listener__c.Fields.Map_Chatter_User_to__c.Label)}';
+    var chatterListenerAutoReplyUserLabel ='{!JSENCODE($ObjectType.Chatter_Listener__c.Fields.Auto_Reply_User__c.Label)}';
+    var chatterListenerAutoReplyLabel ='{!JSENCODE($ObjectType.Chatter_Listener__c.Fields.Auto_Reply_to_Chatter__c.Label)}';
+    var chatterListenerAtuoFollowLabel ='{!JSENCODE($ObjectType.Chatter_Listener__c.Fields.User_to_Follow_Record__c.Label)}';
+    var chatterListenerPublishOnSaveLabel= '{!JSENCODE($Label.chatterListenerPublishOnSaveLabel)}';
+    var CLTemplateTooltip = '{!JSENCODE($Label.CLTemplateTooltip)}';
+    var CLViewTemplate = '{!JSENCODE($Label.CLViewTemplate)}';
+    var CLHashtags = '{!JSENCODE($Label.CLHashtags)}';
+    var CLMapUserTooltip= '{!JSENCODE($Label.CLMapUserTooltip)}';
+    var CLAutoReplyUserTooltip= '{!JSENCODE($Label.CLAutoReplyUserTooltip)}';
+    var CLAutoReplyTooltip = '{!JSENCODE($Label.CLAutoReplyTooltip)}';
+    var CLAutoFollow = '{!JSENCODE($Label.CLAutoFollow)}';
+    var CLPublishOnSave = '{!JSENCODE($Label.CLPublishOnSave)}';
+    var CopyFromIncidentTooltip = '{!JSENCODE($Label.CopyFromIncidentTooltip)}';
+    var chatterListenerInactive ='{!JSENCODE($Label.Inactive)}';
+    var chatterListenerHeaderName ='{!JSENCODE($ObjectType.Chatter_Listener__c.Label)}';
+    var nameValue = '{!JSENCODE(chatterListenerName)}';
+    var groupIdValue = '{!JSENCODE(groupID)}';
+    var groupName = '{!JSENCODE(groupName)}';
+    var keywordValue ='{!JSENCODE(tag)}';
+    var templateValue ='{!JSENCODE(selectedTemplate)}';
+    var templateIDvalue = '{!selectedTemplateID}';
+    var userIDValue = '{!selectedUserID}';
+    var userRefValue = '{!JSENCODE(userRefID)}';
+    var chatterUserValue = '{!JSENCODE(user)}';
+    var savedSuccessfully = '{!JSENCODE($Label.SavedSuccessfully)}';
+    var lblNew = '{!JSENCODE($Label.New)}';
+	var lblSave=  '{!JSENCODE($Label.Save)}';
+	var lblCopy = '{!JSENCODE($Label.Copy)}';
+	var lblDelete= '{!JSENCODE($Label.Delete)}';
+	var lblReset = '{!JSENCODE($Label.Refresh)}';
+	var lblPreviousRecord = '{!JSENCODE($Label.PreviousRecord)}';
+	var lblNextRecord = '{!JSENCODE($Label.NextRecord)}';
+    var closeWindowMsg = '{!JSENCODE($Label.DeleteConfirmMessage)}';
+    var deleteLabel = '{!JSENCODE($Label.Delete)}';
+    
+    var nameLengthValidation = '{!JSENCODE($Label.nameLengthValidation)}';
+	var keywordLengthLabel =  '{!JSENCODE($Label.keywordLengthLabel)}';
+	var autoReplyLenghtMsg =  '{!JSENCODE($Label.autoReplyLenghtMsg)}';
+	var inactiveConfigLabel =  '{!JSENCODE($Label.inactiveConfigLabel)}';
+	var requiredFieldMsg =  '{!JSENCODE($Label.requiredFieldMsg)}';
+	var duplicateKeywordsLabel =  '{!JSENCODE($Label.duplicateKeywordsLabel)}';
+	var feedEnableLabel =  '{!JSENCODE($Label.feedEnableLabel)}';
+    
+    var autoReplyValue = '{!JSENCODE(autoReply)}';
+    var autofollowValue = {!autoFollow};
+    var inactiveValue = {!inactive};
+    var objfielddata,objFieldStore;
+    var userdata,userStore,groupdata,groupStore;
+    var recordId = '{!JSENCODE(chatterListenerID)}';
+    templateTabHeader = '{!JSENCODE($Label.Navigator_Templates)}';
+    var errorMessage_controller;
+	var isNewRecord = {!isNew};
+    var isCreateable = {!IF(isCreateable,true,false)}; 
+	var isDeletable = {!IF(isDeletable,true,false)}; 
+    var isUpdateable = {!IF(isUpdateable,true,false)}; 
+    var errormsg='';
+    /*if(recordId!='' && recordId!=null)
+    	isNewRecord= false;
+    else
+    	isNewRecord= true;*/
+    var requiredStyle='<html><span class="clsRequiredBlack">&nbsp;*</span></html>';
+    var isFormDirty = false; 
+    var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+	var isToUpdateTitle = '{!JSENCODE($CurrentPage.parameters.isToUpdateTitle)}';
+	
+    function getErrorMessage(){
+    	var error = '{!errorMessage}';
+    	return error;
+    }
+
+	function getSDFStylesResPath(){
+          return '{!$Resource.SDEFStyles}';
+        }
+    function populateFieldStore(){
+        objfielddata = '{!JSENCODE(objectFieldsString)}';
+        eval(objfielddata);
+        objFieldStore = new Ext.data.ArrayStore({
+            id:'objFieldStore',
+            fields:[
+                {name:'name'},
+                {name:'label'}
+            ]
+        });
+        objFieldStore.loadData(objectFieldData);        
+        objFieldStore.sort('label');        
+    }
+    
+    function populateGroupData(){
+        groupdata='{!JSENCODE(groupsData)}';  
+        eval(groupdata);        
+        groupStore = new Ext.data.ArrayStore({
+            id:'groupStore',
+            fields:[
+                {name:'Id'},
+                {name:'label'}
+            ]
+        });
+        groupStore.loadData(groupStoreData);        
+        groupStore.sort('label');        
+        
+        if(!isNewRecord){
+	        if(groupStore.findRecord('Id',groupIdValue) == null){
+	        	groupIdValue='';
+	        	Ext.MessageBox.show({
+                              id:'saveMsg',
+                              width: 250,
+                              msg: '{!JSENCODE($Label.ChatterListenerGroupDeleted1)}'+ groupName +'{!JSENCODE($Label.ChatterListenerGroupDeleted2)}',
+                              buttons: Ext.MessageBox.OK
+                          });
+	        }
+	        else if(groupStore.findExact('label',groupName) == -1){
+	        	Ext.MessageBox.show({
+                              id:'saveMsg',
+                              width: 250,
+                              msg: '{!JSENCODE($Label.ChatterListenerGroupChanged1)}'+groupName+'{!JSENCODE($Label.ChatterListenerGroupChanged2)}'+ groupStore.getAt(groupStore.findExact('Id',groupIdValue)).get('label') +'{!JSENCODE($Label.ChatterListenerGroupChanged3)}',
+                              buttons: Ext.MessageBox.OK
+                          });
+	        }
+        }
+    }
+    function populateUserData(){
+        userdata='{!JSENCODE(userFields)}';   
+        eval(userdata);     
+        userStore = new Ext.data.ArrayStore({
+            id:'userStore',
+            fields:[
+                {name:'Id'},
+                {name:'label'}
+            ]
+        });
+        
+        userStore.loadData(userStoreData);      
+        userStore.sort('label');
+        
+        if(userStore.findRecord('Id',userRefValue) == null){
+        	userRefValue='';
+        } 
+    }
+  function updateTitle(){		
+    	var name = getName();//document.getElementById('CLname').value;		 
+         var newTitle = name;                  
+         window.parent.changeTitle(wid,newTitle,newTitle);              
+         window.parent.needsRefresh = true;
+    }
+        function displayMessage(err){
+        	Ext.MessageBox.alert('',err);
+        }
+        
+var tabOutImg = "{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif";    
+function waitbox(timeout){ 
+	if(parseInt(timeout)>0) setTimeout("waitMsg.hide()", timeout);
+	waitMsg = new Ext.Window({
+		id:'waitboxid',
+		height:100, 
+		width:200, 
+		resizable:false, 
+		closable : false, 
+		header:false,
+		frame:false, 
+		modal:true,
+		shadow :false,
+		style : 'background-color: transparent !important; box-shadow: none !important;border-width: 0px !important;',
+		baseCls: 'waitboxCls',
+		items:[{ 
+			xtype:'panel', 
+			height:100, 
+			width:200,
+			bodyStyle:'background-color:transparent !important;border:none !important;', 
+			html: '<div align="center"><img src="' +  tabOutImg +  '"/></div>' 
+		}] 
+	}); 
+	waitMsg.show();
+}
+		var clickOnSave=false;
+	   function registerSave(){
+	   	if(isFormDirty){
+	   		isFormDirty=false;
+	   		window.parent.registerSave(wid);	   		
+   		}
+	   }
+	   
+
+        function handleChange(){
+            if(!isFormDirty){
+                isFormDirty = true;
+                window.parent.registerChange(wid);
+            }
+        }
+</script>
+</apex:outputPanel>
+    <apex:outputPanel id="errorId">
+        <script>
+           recordId = '{!JSENCODE(chatterListenerID)}';
+           errorMessage_controller = '{!JSENCODE(errorMessage)}';
+           if(errorMessage_controller!= '' && errorMessage_controller!=null){
+               errormsg = errorMessage_controller;
+               errorMessage_controller='';
+               }               
+          function getRecordID(){
+			isNewRecord=false;        	        	
+        	return recordId;
+        }
+		window.parent.handleSave(wid,recordId);
+		</script>
+        </apex:outputPanel>
+        <script>
+        function displayError(){
+            var error='';
+            if(errormsg!='' && errormsg!=null){
+                error = errormsg;
+                errormsg='';
+            }
+            else{
+				if(recordId!='' && recordId.length==18) {
+					window.parent.needsRefresh = true;
+					window.parent.refreshList();
+					window.parent.needsRefresh = false;
+				}
+                error = savedSuccessfully;
+                disableButtons(false);
+                errormsg='';
+            }
+                   
+            Ext.MessageBox.show({
+                              id:'saveMsg',
+                              width: 250,                               
+                              msg: error,
+                              title:'{!JSENCODE($ObjectType.Chatter_Listener__c.LabelPlural)}',
+                              buttons: Ext.MessageBox.OK,
+                                  fn: function(buttonId) {
+							        if (buttonId === "ok") {
+							           clickOnSave=true;
+							        }
+							      }
+                          });
+                          
+            error='';
+                        
+        }
+        </script>
+<apex:actionFunction name="saveConfig" action="{!save}" rerender="errorId,chatterBody,btnToolbar,mainDiv" oncomplete="updateTitle();getRecordID();displayError();waitMsg.hide();registerSave();"> 
+       <apex:param name="name" assignTo="{!chatterListenerName}" value=""/>
+       <apex:param name="groupid" assignTo="{!groupID}" value=""/>   
+       <apex:param name="groupname" assignTo="{!groupName}" value=""/>   
+       <apex:param name="tag" assignTo="{!tag}" value=""/>
+       <apex:param name="obj" assignTo="{!selectedObject}" value=""/>
+       <apex:param name="template" assignTo="{!selectedTemplate}" value=""/>
+       <apex:param name="reference" assignTo="{!userReference}" value=""/>
+       <apex:param name="user" assignTo="{!user}" value=""/>
+       <apex:param name="autoreply" assignTo="{!autoReply}" value=""/>
+       <apex:param name="copyIncFields" assignTo="{!copyFromInc}" value=""/>
+       <apex:param name="autoFollow" assignTo="{!autoFollow}" value=""/>       
+       <apex:param name="publish" assignTo="{!publishOnSave}" value=""/>
+       <apex:param name="UserID" assignTo="{!userID}" value=""/>
+       <apex:param name="TemplateID" assignTo="{!templateID}" value=""/>
+       <apex:param name="inactive" assignTo="{!inactive}" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="copyConfig" action="{!copy}" oncomplete="">
+</apex:actionFunction>
+<apex:actionFunction name="deleteConfig" action="{!deleteCL}" oncomplete="">       
+</apex:actionFunction>
+<apex:actionFunction name="refreshConfig" action="{!refresh}">       
+</apex:actionFunction>
+<apex:actionFunction action="{!nextBtnHandler}" name="nextIncidentBtnHandler" rerender="errorId" oncomplete="displayError();">
+<apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+</apex:actionFunction>
+<apex:actionFunction action="{!previousBtnHandler}" name="previousIncidentBtnHandler" rerender="errorId" oncomplete="displayError();">
+<apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+</apex:actionFunction>
+
+<div id="btnToolbar" class="clsRowGreyBg" style=""></div>	  
+	
+<div id="mainDiv" style=""></div>
+
+
+
+	
+</apex:form>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/JSCommon.js" id="JSCommon-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ChatterListener.js" id="ChatterListener-js"/>
+</apex:page>

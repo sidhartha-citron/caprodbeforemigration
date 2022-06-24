@@ -1,0 +1,254 @@
+<apex:page controller="BMCServiceDesk.CIExplorerSettingsController" ShowHeader="false" standardStylesheets="false">
+	
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/> 
+   <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CIExplorerPage.css" />
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+   
+    <div id="msg">  
+    	
+    </div>
+   <apex:form id="frm">
+      <apex:inputHidden value="{!AvailbaleFields}" id="hiddenAvailableStore"/>
+      <apex:inputHidden value="{!SelectedFieldForTooltip}" id="hiddenSelectedTooltipStore"/>
+      <apex:inputHidden value="{!SelectedFieldLabel}" id="hiddenSelectedLabelStore"/>
+      
+      <apex:actionFunction action="{!save}" name="saveCall" rerender="msg" oncomplete="showMessage('{!JSENCODE($Label.bmcservicedesk__savedsuccessfully)}')">
+      		<apex:param name="selectedToolTipIds" assignTo="{!toolsFieldIds}" value="{!SelectedFieldForTooltip}" />
+      		<apex:param name="selectedLabelIds" assignTo="{!labelFieldIds}" value="{!SelectedFieldLabel}" />
+      		<apex:param name="defaultLineThickness" assignTo="{!defaultValue}" value="{!defaultValue}" />
+      		<apex:param name="updatedLineSettings" assignTo="{!updatedLineSettings}" value="{!updatedLineSettings}" />
+      </apex:actionFunction>
+      <div id="helpdiv">
+      	<span class="d-icon-question_circle" style="display:none;" title="{!$Label.TooltipHelp}" id="helpConsoleList" onclick="window.open(wikiUrl);"></span>
+      </div>
+      <apex:tabPanel switchType="client" selectedTab="fieldSetting" id="theTabPanel" style="margin-top: 22px;" >
+			<apex:tab label="{!JSENCODE($Label.bmcservicedesk__ciexpfieldsettings)}"
+				name="fieldSetting" id="tabOne">
+				<table class="itemSelectorTable">
+					<tr height="40px">
+						<td colspan="2">
+							<div class="fieldForCss">{!JSENCODE($label.CIExpDisplayFieldsFor)}
+								&nbsp;</div>
+							<div id="fieldsForCmb"></div>
+						</td>
+					</tr>
+					<tr>
+						<td class="availableField">
+							{!JSENCODE($label.AvailableFields)}</td>
+						<td>
+							<div class="floatLeft selectedField">{!JSENCODE($Label.SelectedFields)}</div>
+							<div id="maxLbl" class="MaxLbl" style="display: block">
+								&nbsp;({!JSENCODE($label.SRValidationRuleNumberMaximumlbl)}&nbsp; 3)</div>
+						</td>
+					</tr>
+
+					<tr>
+
+						<td colspan="2">
+							<div id="itemselector1"></div>
+						</td>
+
+					</tr>
+				</table>
+			</apex:tab>
+
+			<apex:tab label="{!JSENCODE($Label.bmcservicedesk__ciexplinesettings)}" name="lineSetting" id="tabTwo"> 
+          	 	 <div class="levelDiv" >
+	                  <div class="relationshipLbl">{!JSENCODE($Label.CIExpExpandCIRelationshipsTo)}&nbsp;{!JSENCODE($Label.CIExpSettingsLevel)}</div>
+	                  <div id = "levelCmb"/>
+                  </div>
+                  
+                  <div class = "lblCss">{!JSENCODE($Label.CIExpRelationship)}</div>
+            
+              <div class="arrowDiv" >
+              <table width="100%">
+               <apex:repeat value="{!CiAttributes}" var="attribute">
+             		<tr onclick="openLineSettingPopup('{!attribute.line}','{!attribute.RelationType}','{!attribute.thickness}','{!attribute.color}','{!attribute.id}');" style ="cursor:pointer" >
+	                  <td align="left" class="attributeCSS">{!attribute.id}</td>
+	                  <td align="left">
+	                  <canvas id="{!attribute.id}" width="150px" height="35px" style="margin-left:5px" /> 
+	                     <script>  
+	                      var lineType = "{!attribute.line}";
+	                      var relationType = "{!attribute.RelationType}";
+	                      var thickness= {!attribute.thickness};
+	                      var colorCode = String("#"+"{!attribute.color}");
+	                     
+	                      var myCanvasElement = document.getElementById("{!attribute.id}");
+	                      var context = myCanvasElement.getContext("2d");
+	                      context.beginPath();
+	                     
+	                      if(relationType == 'Undirected' && lineType == 'Solid'){ 
+	                      	    context.strokeStyle=colorCode;                         
+	                            context.lineWidth=thickness;
+	                            context.moveTo(0, 15);
+	                            context.lineTo(140, 15); 
+								if(context.setLineDash){
+									context.lineDashOffset =0;
+									context.setLineDash([0,0]); 
+								}								
+	                            context.stroke();
+	                      }else if(relationType == 'Undirected' && lineType == 'Dotted'){
+	                            context.lineWidth=thickness;
+	                            context.strokeStyle=colorCode;
+	                            context.moveTo(0, 15);
+	                            context.lineTo(140, 15);
+								if(context.setLineDash){
+									context.lineDashOffset =thickness;
+									context.setLineDash([thickness,thickness]);
+								}
+	                            context.stroke();
+	                      }
+	                      else if(relationType == 'RightToLeft' && lineType == 'Dotted'){
+	                           context.strokeStyle=colorCode;
+	                           context.lineWidth=thickness;
+	                           context.moveTo(10, 15);
+	                           context.lineTo(140, 15);  
+							   if(context.setLineDash){
+								   context.lineDashOffset =thickness;
+								   context.setLineDash([thickness,thickness]); 
+							   }							   
+	                           context.stroke();
+	                            
+	                           context.lineWidth = 1;
+	                           context.moveTo(0,15);
+	                           context.lineTo(10,10);
+	                           context.lineTo(10,20); 
+	                           context.fillStyle=colorCode;                  
+	                           context.fill();
+	                           context.stroke();
+	                      }else if(relationType == 'RightToLeft' && lineType == 'Solid'){
+	                           
+	                           context.strokeStyle=colorCode;
+	                           context.lineWidth=thickness;
+	                           context.moveTo(10, 15);
+	                           context.lineTo(140, 15);  
+							   if(context.setLineDash){
+								   context.lineDashOffset =0;
+								   context.setLineDash([0,0]);   
+							   }							   
+	                           context.stroke(); 
+	                           context.lineWidth = 1;
+	                           context.moveTo(0,15);
+	                           context.lineTo(10,10);
+	                           context.lineTo(10,20);
+	                           context.fillStyle=colorCode;                  
+	                           context.fill();
+	                           context.stroke();
+	                      }
+	                      else if(relationType == 'LeftToRight' && lineType == 'Solid'){
+	                         
+	                           context.strokeStyle=colorCode;
+	                           context.lineWidth=thickness;
+	                           context.moveTo(0, 15);
+	                           context.lineTo(130, 15);  
+							   if(context.setLineDash){
+								   context.lineDashOffset =0;
+								   context.setLineDash([0,0]); 
+								}								   
+	                           context.stroke(); 
+	                           context.lineWidth = 1;
+	                           context.moveTo(140,15);
+	                           context.lineTo(130,10);
+	                           context.lineTo(130,20);
+	                           context.fillStyle=colorCode;     
+	                           context.fill();
+	                           context.stroke();
+	                      }else if(relationType == 'LeftToRight' && lineType == 'Dotted'){
+	                           context.strokeStyle=colorCode;
+	                           context.lineWidth=thickness;
+	                           context.moveTo(0, 15);
+	                           context.lineTo(130, 15);  
+							   if(context.setLineDash){
+								   context.lineDashOffset =thickness;
+								   context.setLineDash([thickness,thickness]); 
+								}								   
+	                           context.stroke(); 
+	                           context.lineWidth = 1;
+	                           context.moveTo(140,15);
+	                           context.lineTo(130,10);
+	                           context.lineTo(130,20);
+	                           context.fillStyle=colorCode;     
+	                           context.fill();
+	                           context.stroke();
+	                      }
+	                  </script>
+                     </td>
+                     </tr>
+                 </apex:repeat>
+              </table>
+              </div>
+            
+          </apex:tab>
+          
+      </apex:tabPanel>
+      
+      <div class="btnDiv"> 
+          
+          <input type = "button" id="CIExplorerClose" style="display:none;" value="{!JSENCODE($Label.SSCancel)}" class="bmc-btn-small" onclick="callClose();" title="{!JSENCODE($Label.SSCancel)}" /> 
+          <input type="button"  id="CIExplorerSave" value="{!JSENCODE($Label.Save)}" onclick="callSave()" class="bmc-btn-primary" title="{!JSENCODE($Label.Save)}" />
+        <!-- <input type = "button" id="CIExplorerhelp" value="{!JSENCODE($Label.TooltipHelp)}" class="btnCss" onclick = "callHelp();" title="{!JSENCODE($Label.TooltipHelp)}" /> -->
+      </div>
+  </apex:form>
+    
+   
+    <script>
+        var lbltooltip = '{!JSENCODE($Label.CIExpToolTip)}';
+        var CiSettings = '{!JSENCODE($Label.CIExpCIExplorerSettings)}'+': '+'{!JSENCODE($Label.bmcservicedesk__ciexplinesettings)}';
+        var lblLabel = '{!JSENCODE($Label.CIExpLabel)}';
+        var wikiUrl = '{!wikiUrl}';
+        var defaultLineThickness = '{!defaultLineThickness}';
+        var hiddenAvailableStoreId = document.getElementById("{!$Component.frm.hiddenAvailableStore}");
+        var hiddenSelectedStore = document.getElementById("{!$Component.frm.hiddenSelectedStore}");
+        var hiddenSelectedTooltipStore = document.getElementById("{!$Component.frm.hiddenSelectedTooltipStore}");
+        var hiddenSelectedLabelStore = document.getElementById("{!$Component.frm.hiddenSelectedLabelStore}");
+        var hiddenSelectedInfoPaneStore = document.getElementById("{!$Component.frm.hiddenSelectedInfoPaneStore}");
+        var selectedCombo='';
+        var selectedtooltip,selctedLabel,updatedLineSetting;
+        updatedLineSetting = '';
+        function setAvailableData() {
+            
+            if (hiddenAvailableStoreId != null) {
+                
+                var hiddenAvailableStore = document.getElementById("{!$Component.frm.hiddenAvailableStore}").value;
+               
+                eval(hiddenAvailableStore);
+                
+                dataStore.loadData(availableFieldsList);
+            }
+        }
+         
+         function setSelectedtoolTipData() {
+             if (document.getElementById("{!$Component.frm.hiddenSelectedTooltipStore}") != null) {
+                 hiddenSelectedStore = document.getElementById("{!$Component.frm.hiddenSelectedTooltipStore}").value;
+                 eval(hiddenSelectedStore);
+                 selectedtooltip = selctedFieledSet;
+             }
+         }
+         
+         function setSelectedLabelData() {
+             if (document.getElementById("{!$Component.frm.hiddenSelectedLabelStore}") != null) {
+                 hiddenSelectedStore = document.getElementById("{!$Component.frm.hiddenSelectedLabelStore}").value;
+                 eval(hiddenSelectedStore);
+                 selctedLabel = selctedFieledSet;
+             }
+         }
+	 
+        document.getElementById("CIExplorerSave").disabled = !(window.parent.getIsAllowedtoSave());
+        var dataModified = false;
+		window.onunload = refreshParent;
+		function refreshParent() 
+		{
+		    if(window.parent != null && dataModified) {
+				dataModified = false;
+				window.parent.refreshDiagram();
+		    }
+		}
+       
+    </script>
+      
+   <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+   <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/CIExplorerPageJs.js" />
+   <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/RFCISettingsLayout.js"></script>
+</apex:page>

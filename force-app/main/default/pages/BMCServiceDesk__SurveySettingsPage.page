@@ -1,0 +1,320 @@
+<apex:page controller="BMCServiceDesk.SurveySettingsController" showHeader="false" standardStylesheets="false" action="{!initValues}" id="SurveySettingsPage" >
+
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/SurveySettingsPage.css" id="surveyCSS"/> 
+	<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+
+ <apex:form id="form">
+   	<div id = "btnToolbar"></div>
+   	<div id="helpDiv" class="clshelpDiv"></div>
+   	<apex:outputPanel id="mainPanel"  styleClass="ClsContainer">
+   		<div Class="clsMainContainer">    		
+            <table class="MainDiv" style="width: 80%;">         
+	                <tr>                       
+						<td class="clsInputCheckBox" ><apex:inputCheckbox id="multipleRec" value="{!multipleRec}" style="*margin-left: -4px !important;"/></td>
+						<td><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__allow_multiple_records_to_be_created_for_same_survey_link)}"  styleClass="clsInputCheckBoxLabel" /></td>
+					</tr>
+					<tr><td class="clsTRHeight"></td><td></td></tr>
+					<tr>                       
+						<td class="clsInputCheckBox"  ><apex:inputCheckbox id="overwriteOldSurvey" value="{!overwriteOldSurvey}" style="*margin-left: -4px !important;"/></td>
+						<td><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__discard_old_survey_when_the_record_is_reopened)}"  styleClass="clsInputCheckBoxLabel"/></td> 
+					</tr>
+					<tr><td class="clsTRHeight"></td><td></td></tr>
+					<tr>                       
+						<td class="clsInputCheckBox"  ><apex:inputCheckbox id="displayHelptext" value="{!displayHelptext}" title="{!JSENCODE($Label.bmcservicedesk__display_help_text_tt)}" style="*margin-left: -4px !important;"/></td>
+						<td><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__display_help_text_instead_of_field_labels_for_question_prompt)}"  styleClass="clsInputCheckBoxLabel"/></td> 
+					</tr>
+					<tr><td class="clsTRHeight"></td><td></td></tr>
+					<tr>                       
+						<td class="clsInputCheckBox" ><apex:inputCheckbox id="ssBranding" value="{!ssBranding}" title="{!JSENCODE($Label.bmcservicedesk__apply_self_service_branding_tt)}" style="*margin-left: -4px !important;"/></td>
+						<td><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__apply_self_service_branding)}"  styleClass="clsInputCheckBoxLabel"/></td> 
+					</tr>
+					<tr><td class="clsTRHeight"></td><td></td></tr>
+					<tr>
+						<td colspan="3"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__sectionheaderforincident)}"  styleClass="clsHeader"/>
+						<apex:commandLink value="{!JSENCODE($Label.bmcservicedesk__surveycustomobjects)}" id="customObjects" onclick="parent.openWindow(window.parent.getSetupMenuUrl('CUSTOMOBJECTS')); return false;" styleClass="clsCommandLink"/>
+						<apex:commandLink value="{!JSENCODE($Label.bmcservicedesk__workflowrules)}" id="incidentWorkflow" onclick="parent.openWindow(window.parent.getSetupMenuUrl('WF_RULES')); return false;" styleClass="clsCommandLink"/> 
+						<apex:commandLink value="{!JSENCODE($Label.bmcservicedesk__emailtemplates)}" id="incidentET" onclick="parent.openWindow(window.parent.getSetupMenuUrl('EMAIL_TEMPLATES')); return false;" styleClass="clsCommandLink"/>
+						</td> 
+					</tr>
+					<tr><td class="clsTRHeight"></td><td></td></tr>
+					<tr>
+                        <td colspan="3"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__colorbarconfigheader)}" styleClass="clsHeader"/></td>
+                    </tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    <tr>
+                        <td colspan="3"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__colorbarconfigsubheader)}"/>
+                        <table>
+							<tr><td class="clsTRHeight"></td><td></td></tr>
+                            <tr>
+                                <td style="font-weight: bold;"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__fieldsetfor)}"/>
+                                <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__surveypreviewlinkincident)}"/></td>
+                                <td style="padding-left: 30px;"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__incsurveycolorbar)}"/></td>
+                            </tr>
+                             <tr><td height="1" colspan="2"></td></tr>
+                            <tr>
+                                <td style="font-weight: bold;"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__fieldsetfor)}"/><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__surveypreviewlinksr)}"/></td>
+                                <td style="padding-left: 30px;"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__servicerequestcolorbar)}"/></td> 
+                            </tr>
+                        </table>
+                        </td>
+                    </tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    <tr>
+                        <td colspan = "2" style = "vertical-align: top;width: 30%; border-right: medium solid #C0C0C0;">
+                            
+                            <table style="padding-left:10px; width:100%;">
+                                <tr>
+                            <td colspan="2">
+                            <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__configure_incident_survey)}" styleClass="clsHeader" style="margin-left:10px;vertical-align:top;"/>                 
+                            <img id="incidentIconHelp" src="{!$Resource.Themes}/SSDefaultTheme/images/en_US/SS_Information_16.png" style="height: 16px; width: 16px; margin-left: 3px;"/>
+                            </td>
+                            </tr>
+                             <tr><td height="5" colspan="2"></td></tr>
+                                <tr>
+                                    <td>
+                                        <table style="padding-left:10px;">
+                                          
+                                                                                     
+                                <tr style="display-style: {!IF(iSmallestPickValuesINC == 0,'block','none')}">
+                                    <td colspan="2">
+                                                    <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__addfieldstofieldset)}" rendered="{!iSmallestPickValuesINC == 0}"/>
+                                    </td>
+                                </tr>
+                                <apex:repeat value="{!lstIncidentItems}" var="IncidentItem" rows="{!iSmallestPickValuesINC}" rendered="{!iSmallestPickValuesINC != 0}">
+                                    <tr>
+                                        <td style="width: 100px;">
+                                            <apex:outputLabel value="{!IncidentItem.itemName}"/>
+                                        </td>
+                                        <td>
+                                                    <div id = "inc_Response_{!IncidentItem.itemName}" style = "width: 40px;height: 20px;border: 1px; background: {!IncidentItem.colorCode}; cursor: pointer;" onClick = "openColorPicker(this,event);" title="{!JSENCODE($Label.CIExpClicktoopentheColorSelector)}"/>
+                                        </td>
+                                    </tr>
+                                            <tr><td class="clsTRHeight"></td><td></td></tr>
+                                </apex:repeat>
+                                <tr><td class="clsTRHeight"></td><td></td></tr>
+                                        </table>
+                                    </td>
+                                    <td style = "vertical-align: top;padding-left: 40px;">
+                                        <table>
+                                <tr>
+                                                <td colspan="2" style="padding-bottom: 5px;"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__position_of_legends)}" styleClass="classHeader" rendered="{!iSmallestPickValuesINC != 0}"/></td>
+                                </tr>
+                                <tr>
+                                                <td colspan = "2" style="padding-bottom: 4px;">
+                                                    <apex:inputCheckbox id="incTop" value="{!IncTopLegend}" style="*margin-left: -4px !important;" disabled="{!!bINCHasSameLegend}" rendered="{!iSmallestPickValuesINC != 0}"/> <!--  styleclass="clsInputCheckBox" -->
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__toppanelstring)}"  styleClass="clsInputCheckBoxLabel" rendered="{!iSmallestPickValuesINC != 0}"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding-bottom: 4px;">
+                                                    <apex:inputCheckbox id="incBottom" value="{!IncBottomLegend}" style="*margin-left: -4px !important;" disabled="{!!bINCHasSameLegend}" rendered="{!iSmallestPickValuesINC != 0}"/><!--  styleclass="clsInputCheckBox" -->
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__bottom)}"  styleClass="clsInputCheckBoxLabel" rendered="{!iSmallestPickValuesINC != 0}"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <apex:inputCheckbox id="incBelow" value="{!IncBelowLegend}" style="*margin-left: -4px !important;" rendered="{!iSmallestPickValuesINC != 0}"/>
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__beloweachpicklist)}"  styleClass="clsInputCheckBoxLabel" rendered="{!iSmallestPickValuesINC != 0}"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                                </tr>
+                              </table>
+                        </td>
+                        <td style = "vertical-align: top; width: 30%; padding-left: 20px;">
+                            
+                            <table style="padding-left:10px; width: 100%">
+                                <tr>
+                                <td colspan="2">
+                                <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__configure_service_request_survey)}" styleClass="clsHeader" style="margin-left:10px; vertical-align:top;"/>
+                                <img id="srIconHelp" src="{!$Resource.Themes}/SSDefaultTheme/images/en_US/SS_Information_16.png" style="height: 16px; width: 16px; margin-left: 3px;"/>
+                                </td>
+                                </tr>
+                                    <tr><td height="5" colspan="2"></td></tr>
+                                <tr>
+                                    <td>
+                                        <table style="padding-left:10px;">
+                                          
+                                                                                 
+                                <tr style="display-style: {!IF(iSmallestPickValuesSR == 0,'block','none')}">
+                                    <td colspan="2">
+                                                    <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__addfieldstofieldset)}" rendered="{!iSmallestPickValuesSR == 0}"/>
+                                    </td>
+                                </tr>
+                                <apex:repeat value="{!lstServiceRequestItems}" var="ServiceRequestItem" rows="{!iSmallestPickValuesSR}" rendered="{!iSmallestPickValuesSR!= 0}">
+                                    <tr>
+                                                <td style="width:100px;">
+                                            <apex:outputLabel value="{!ServiceRequestItem.itemName}"/>
+                                        </td>
+                                        <td>
+                                                    <div id = "sr_Response_{!ServiceRequestItem.itemName}" style = "width: 40px;height: 20px;border: 1px; background: {!ServiceRequestItem.colorCode}; cursor: pointer;" onClick = "openColorPicker(this,event);" title="{!JSENCODE($Label.CIExpClicktoopentheColorSelector)}"/>
+                                        </td>
+                                    </tr>
+                                            <tr><td class="clsTRHeight"></td><td></td></tr>
+                                </apex:repeat>
+                                <tr><td class="clsTRHeight"></td><td></td></tr>
+                                        </table>
+                                    </td>
+                                    <td style = "vertical-align: top;padding-left: 40px;">
+                                        <table>
+                                <tr>
+                                                <td colspan="2" style="padding-bottom: 5px;"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__position_of_legends)}" styleClass="classHeader" rendered="{!iSmallestPickValuesSR != 0}"/></td>
+                                </tr>
+                                <tr>
+                                                <td colspan = "2" class="clsInputCheckBox" style="padding-bottom: 4px;">
+                                                    <apex:inputCheckbox id="srTop" value="{!SRTopLegend}" style="*margin-left: -4px !important;" disabled="{!!bSRHasSameLegend}" rendered="{!iSmallestPickValuesSR != 0}"/> <!-- styleclass="clsInputCheckBox" -->
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__toppanelstring)}"  styleClass="clsInputCheckBoxLabel" rendered="{!iSmallestPickValuesSR != 0}"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding-bottom: 4px;">
+                                                    <apex:inputCheckbox id="srBottom" value="{!SRBottomLegend}" style="*margin-left: -4px !important;" disabled="{!!bSRHasSameLegend}" rendered="{!iSmallestPickValuesSR != 0}"/><!-- styleclass="clsInputCheckBox" -->
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__bottom)}" styleClass="clsInputCheckBoxLabel" rendered="{!iSmallestPickValuesSR != 0}"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <apex:inputCheckbox id="srBelow" value="{!SRBelowLegend}" style="*margin-left: -4px !important;" rendered="{!iSmallestPickValuesSR != 0}"/> <!-- styleclass="clsInputCheckBox" -->
+                                        <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__beloweachpicklist)}"  styleClass="clsInputCheckBoxLabel" rendered="{!iSmallestPickValuesSR != 0}"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    <tr>
+						<td colspan="3"><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__sectionheaderforsr)}"  styleClass="clsHeader"/>
+						<apex:commandLink value="{!JSENCODE($Label.bmcservicedesk__surveypreviewlinkincident)}" id="incidentPreview" onclick="parent.openWindow('/apex/SurveyPage?isIncident=true&ispreview=true'); return false;" styleClass="clsCommandLinkPreview"/>
+						<apex:commandLink value="{!JSENCODE($Label.bmcservicedesk__surveypreviewlinksr)}" id="SRPreview" onclick="parent.openWindow('/apex/SurveyPage?isIncident=false&ispreview=true'); return false;" styleClass="clsCommandLinkPreview"/> 
+						</td>
+					</tr>
+			</table>
+  	 		</div>
+	</apex:outputPanel>
+
+    <script>
+    	var message;
+        var saveLabel = '{!JSENCODE($Label.Save)}';
+   		var undoLabel	= '{!JSENCODE($Label.Reset)}';
+   		var waitImg = '{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif';
+   		var SavedSuccessfully = '{!JSENCODE($Label.SavedSuccessfully)}';
+   		var surveyTitle='{!JSINHTMLENCODE($ObjectType.Survey__c.LabelPlural)}';
+        var colorBoxElement;
+        var CurrentLeft;
+        var CurrentTop;
+   		
+		var incTopCompId = '{!JSENCODE($Component.incTop)}';
+		var incBottomCompId = '{!JSENCODE($Component.incBottom)}';
+		var incBelowCompId = '{!JSENCODE($Component.incBelow)}';
+		var srTopCompId = '{!JSENCODE($Component.srTop)}';
+		var srBottomCompId = '{!JSENCODE($Component.srBottom)}';
+		var srBelowCompId = '{!JSENCODE($Component.srBelow)}';
+		var fieldslbl='{!JSENCODE($Label.Fields)}';
+		var NoPicklistAddedlbl='{!JSENCODE($Label.NoPicklistAdded)}';
+		var hasMultipleINCFields = {!hasMultipleINCFields};
+		var hasMultipleSRFields = {!hasMultipleSRFields};
+		
+        var incPicklistFields = '{!JSENCODE(lstIncPicklistFields)}'.replace(new RegExp(',', 'g'),'<br/>');
+		if(incPicklistFields != null && incPicklistFields != '')
+			incPicklistFields = '<b>'+fieldslbl+':</b><br/>'+incPicklistFields;
+		else
+			incPicklistFields=NoPicklistAddedlbl;
+		
+        var srPicklistFields = '{!JSENCODE(lstSRPicklistFields)}'.replace(new RegExp(',', 'g'),'<br/>');
+		if(srPicklistFields != null && srPicklistFields != '')
+			srPicklistFields = '<b>'+fieldslbl+':</b><br/>'+srPicklistFields;
+		else
+			srPicklistFields=NoPicklistAddedlbl;
+			
+        
+		
+        
+   		function afterSave(controllerError){
+   			var errormsg = controllerError;
+   			if(errormsg==''){
+   				showErrorMsg('{!JSENCODE($Label.SavedSuccessfully)}');
+   			}else{ 
+   				showErrorMsg(errormsg);
+   			}
+   		}
+        function openColorPicker(colorBox,event){//CurrentLeft, CurrentTop, id1
+            colorBoxElement = colorBox;
+    		-1!=navigator.appName.indexOf("Microsoft")&&(a=window.event);
+			CurrentLeft=event.screenX;
+			CurrentTop=event.screenY;
+			if ( CurrentLeft < 0 ) { CurrentLeft = 0; };
+			if ( CurrentTop  < 0 ) { CurrentTop  = 0; };
+            win = window.open("/apex/ColorPicker","_blank",'location=1,status=1,scrollbars=0,width=246,height=223,resizable=1');
+            var width = 246;
+            var height = 214;
+            if (Ext.isIE) {
+                height = 242;
+                win.resizeTo(width,height);
+            }else if(Ext.isGecko){
+                height = 230;
+                win.resizeTo(width,height);
+            }else
+                win.resizeTo(width,height);
+            win.moveTo(CurrentLeft, CurrentTop);
+            
+        }
+        
+        function setChangeColor(color){
+            //document.getElementById('color'+eleId).style.backgroundColor = '#'+color;
+            colorBoxElement.style.backgroundColor = '#'+color;
+            //alert(colorBoxElement.style.backgroundColor);
+            //parent.updatedColors.push(picTitle.trim()+'##'+color);
+            //parent.enableSaveButton();
+        }
+   		var wikiUrl = '{!wikiUrl}';
+        parent.addHelpOnPage(document.getElementById('helpDiv'),'survey_settings.htm',wikiUrl);
+    </script>
+   	
+    <apex:actionfunction name="save" action="{!save}" rerender="mainPanel, tooltipPanel" onComplete="waitbox.hide(); afterSave('{!JSENCODE(messageString)}');" >
+        <apex:param name="itemColorList" value="{!itemColorList}" assignTo="{!itemColorList}"/>
+    </apex:actionfunction>
+    <apex:actionfunction name="reset" action="{!initValues}" rerender="mainPanel, tooltipPanel" onComplete="waitbox.hide(); " ></apex:actionfunction>
+   	
+ 	<script type="text/javascript" src="{!$Resource.SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+	<script type="text/javascript" src="{!$Resource.SDEFExtJS}/ext-all.js" id="ext-all-js"/>
+   	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/SurveySettingsPage.js" id="SurveySettingsPage-js"/> 
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>	
+
+	<apex:outputPanel id="tooltipPanel">
+    <script>
+		var inctooltip=Ext.getCmp('incidentIconHelpTooltip');
+		var srctooltip=Ext.getCmp('srIconHelpTooltip');
+		
+		if(inctooltip!=null && typeof(inctooltip) != 'undefined')
+			inctooltip.destroy();
+			
+		if(srctooltip!=null && typeof(srctooltip) != 'undefined')
+			srctooltip.destroy();
+		
+		new Ext.ToolTip({
+            id:'incidentIconHelpTooltip',
+            target: 'incidentIconHelp',
+            html: incPicklistFields,
+            trackMouse: true,
+            anchor: 'top'
+        });
+        
+		new Ext.ToolTip({
+			id:'srIconHelpTooltip',
+			target: 'srIconHelp',
+			html: srPicklistFields,
+			trackMouse: true,
+			anchor: 'top'
+		});
+
+       
+    </script>
+	</apex:outputPanel>
+	</apex:form>    	
+</apex:page>

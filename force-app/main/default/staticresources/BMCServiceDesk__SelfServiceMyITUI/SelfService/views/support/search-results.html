@@ -1,0 +1,120 @@
+<loading-spinner centered="true" if="supportSearchModel.dataLoading"></loading-spinner>
+
+
+<div role="alert" aria-live="polite">
+	<div class="support-results__centerDiv" ng-show="supportSearchModel.nothingFound && !supportSearchModel.dataLoading">
+		<div class="support-results__message" >
+			{{selfServiceLabels.noResults}}
+		</div>
+		<div class="support-results__image" ng-show="$root.isSwitchToEnhancedUI">		
+			<div class="support-results-noresults"></div>
+		</div>
+
+	</div>
+</div>
+<!--<div class="support-results__section" ng-show="(supportSearchModel.howtos.length > 0 || supportSearchModel.rkms.length > 0) && !supportSearchModel.dataLoading">
+	<h4 class="support-results-section__title">{{ selfServiceLabels.rkmResultsTitle }}</h4>
+	<div class="support-request" ng-repeat="item in supportSearchModel.howtos" ng-click="openHowToItem(item)">
+		<div class="support-request__icon i i-icon-SearchResult-RKM"></div>
+		<div class="support-request__title bold-text">{{ item.name }}</div>
+		<div class="support-request__description">{{ item.desc }}</div>
+	</div>
+	<div class="support-request" ng-repeat="item in supportSearchModel.rkms" ng-click="openRkmItem(item)">
+		<div class="support-request__icon i i-icon-SearchResult-RKM"></div>
+		<div class="support-request__rkm-title"
+			 ng-bind-html="item.title" style= "color:#47b9b2fa;">
+		</div>
+		<div class="support-request__description"
+			 ng-bind-html="item.excerpt">
+		</div>
+	</div>
+</div>
+<div class="support-results__section" ng-show="supportSearchModel.srds.length > 0 && !supportSearchModel.dataLoading">
+	<h4 class="support-results-section__title">{{ selfServiceLabels.srdResultsTitle }}</h4>
+	<div class="support-request" ng-repeat="item in supportSearchModel.srds" ng-click="selectSrd(item)">
+		<div class="support-request__icon" >
+				<div class="i i-{{ item.icon }}" ng-if="!item.image"></div>			
+				<img src="/servlet/servlet.FileDownload?file={{item.image}}" ng-if="item.image" class="support-request__icon"/>
+		</div>
+		<div class="support-request__title bold-text">{{ item.name && item.name || item.title }}</div>
+		<div class="support-request__description">{{ item.desc }}</div>
+	</div>
+</div>-->
+<div role="tabpanel" aria-shifttabnavigation="{{supportSearchModel.searchResults.items[0].recordTypeId+'_Section'}}" id="{{supportSearchModel.searchResults.items[0].recordTypeId}}" class="support-results__section" ng-show="supportSearchModel.searchResults.items.length > 0 && !supportSearchModel.dataLoading" style="padding-bottom: 60px;">	
+	<ul aria-listnavigation role="listbox" style="padding:0px;">
+		<li selectable ng-focus="item.selected = true" ng-blur="item.selected = false"  ng-click="openItem(item)" aria-selected="false" tabindex="-1" role="option" class="support-request"  ng-repeat="item in supportSearchModel.searchResults.items" ng-style="$first ? {} : {'border-top' :'1px solid #f2f2f2'}" style="padding: 13px 5px 13px 5px;margin-bottom:0px">
+		<div   ng-if="item.isRkm">
+				<div aria-hidden="true" class="support-request__icon rtl-floatRight" style="width:45px;float:left;padding-left: 10px;">
+				<img class="catalog-item__icon"
+				 src="{{supportSearchModel.moduleIcons.KAFAQ}}"
+				 ng-if="item.recordTypeDevName=='FAQ'"
+				 alt="" />
+				<img class="catalog-item__icon"
+					 src="{{supportSearchModel.moduleIcons.KAHowTo}}"
+					 ng-if="item.recordTypeDevName=='How_To'"
+					 alt="" />
+				<img class="catalog-item__icon"
+					 src="{{supportSearchModel.moduleIcons.KAError}}"
+					 ng-if="item.recordTypeDevName=='Known_Error'"
+					 alt="" />
+				<img class="catalog-item__icon"
+					 src="{{supportSearchModel.moduleIcons.KAProblem}}"
+					 ng-if="item.recordTypeDevName=='Problem_Solution'"
+					 alt="" />	
+				<img class="catalog-item__icon"
+					 src="{{supportSearchModel.moduleIcons.KACustom}}"
+					 ng-if="item.recordTypeDevName!='Problem_Solution' &&
+						item.recordTypeDevName!='How_To' &&
+						item.recordTypeDevName!='Known_Error' && item.recordTypeDevName!='FAQ'"
+					 alt="" />
+			</div>
+			<div class="full-height search-result-data" style="display: table-cell" ng-class="{'SearchPaddingTop-7px': (!item.desc)}"> 
+				<div class="support-request__title support-request__title-search bold-text" style= "color:#47b9b2fa;" ng-bind-html="item.title"></div>
+				<div ng-init="initRequest(item);" class="support-request__description" ng-bind-html="item.desc"></div>
+			</div>
+		</div>
+		<div   ng-if="item.isSFkm">
+			<div aria-hidden="true" class="support-request__icon rtl-floatRight" style="width:45px;float:left;padding-left: 10px;">
+			<img class="catalog-item__icon "
+			 src="{{supportSearchModel.moduleIcons.KASF}}"
+			 alt="" /></div>
+			 <div class="full-height search-result-data" style="display: table-cell"  ng-class="{'SearchPaddingTop-7px': (!item.desc)}"> 
+				<div class="support-request__title support-request__title-search bold-text" style= "color:#47b9b2fa;" ng-bind-html="item.title"></div>
+				<div ng-init="initRequest(item);" class="support-request__description" ng-bind-html="item.desc"></div>
+			</div>
+		</div>
+		<div class="support-request-container-width" ng-if="item.isSrd">
+			<div class="support-request__icon rtl-floatRight" style="width:45px;float:left;padding-left: 10px;">
+				<span class="d-icon-file_atom_o speaker-icon" ng-if="!item.image" aria-hidden="true"></span>			
+				<img ng-src="{{item.image}}" ng-if="item.image" class="support-request__icon"/>
+			</div>
+			<div  ng-class="{'SearchPaddingTop-7px': (!item.desc)}" class="full-height search-result-data" ng-style="item.isRTFDesc == 'true'? {}:{'display': 'table-cell'}">
+				<div style= "color:#47b9b2fa;" class="support-request__title bold-text support-request__title-search ellipsisText" ng-bind-html="item.title" ></div>
+				<request-description data="item"></request-description>
+			</div>
+		</div>
+		<div class="support-request-container-width" ng-if="item.isTmp">
+			<div style="width:45px;float:left;padding-left: 10px;" class="full-height rtl-floatRight">
+				<span class=" d-icon-file_text_o  speaker-icon" aria-hidden="true"></span>
+			</div>
+			<div ng-class="{'SearchPaddingTop-7px': (!item.desc)}" class="full-height search-result-data" style="display: table-cell">
+				<div style= "color:#47b9b2fa;" class="support-request__title support-request__title-search bold-text ellipsisText" ng-bind-html="item.title"></div> 
+				<request-description data="item"></request-description>
+			</div>
+		</div>
+		<div class="support-request-container-width" ng-if="item.isBR" >
+			
+			<div style="width:45px;float:left;padding-left: 10px;" class=" rtl-floatRight full-height">
+				<span class=" d-icon-speaker speaker-icon" aria-hidden="true"></span>
+			</div>
+			<div class="full-height search-result-data" style="display: table-cell">
+				<div  style= "color:#47b9b2fa;" class="support-request__title support-request__title-search bold-text ellipsisText" ng-bind-html="item.title"></div>
+				<request-description data="item"></request-description>
+			</div>
+			 
+			
+		</div>	
+		</li>
+	</ul>
+		
+</div>

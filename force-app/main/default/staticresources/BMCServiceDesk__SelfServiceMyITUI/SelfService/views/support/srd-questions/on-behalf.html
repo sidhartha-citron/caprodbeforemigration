@@ -1,0 +1,105 @@
+<div class="srd-question srd-question-on-behalf clearfix" ng-class="{ 'onBehalfOfContainer2ColumnLayout' : srColumnLayoutForSS3}"> 
+
+	<div ng-show="onBehalfOfEnabled">
+		<span id="onbehalfTitle" class="srd-question-label" style="font-size: 13px;">{{$root.selfServiceLabels.onbehalfTitle}}</span>
+			<div ng-show="fieldsEditMode">
+				<button class="btn_link srd-question-on-behalf__button"
+						ng-click="leaveFieldsEditMode()"
+						type="button">
+				<span class="i-obo-save"></span>
+					{{$root.selfServiceLabels.save}}
+				</button>
+			</div>
+		<span ng-if="!editMode && onBehalfOfEnabled">
+			<button class="btn_link srd-question-on-behalf__button Branding-Right_Panel-hyperlink"
+					type="button"
+					ng-click="enterEditMode()" 
+					aria-describedby="onbehalfTitle">
+					<span aria-label="{{$root.selfServiceLabels.onbehalfTitle}}"></span>{{$root.selfServiceLabels.change}}
+				<span class="d-icon-pencil"></span>
+			</button>
+		</span>
+		<span ng-if="editMode && onBehalfOfEnabled">
+			<button class="btn_link srd-question-on-behalf__button Branding-Right_Panel-hyperlink"
+					ng-if="editMode"					
+					ng-click="leaveEditMode()"
+					type="button">
+				{{$root.selfServiceLabels.cancel}}
+				<span class="d-icon-cross"></span>
+			</button>
+		</span>
+		<loading-spinner class="loading-spinner_obo" if="onBehalfOfEnabled == null" inline="true"></loading-spinner>
+
+		<div id="srd-question-on-behalf-search" class="srd-question-on-behalf-search" ng-show="editMode"  ng-class="{'onBehalfOfTypeahead' : srColumnLayoutForSS3}">
+			<input  id="onBehalfOf__input" role="combobox"  aria-expanded="{{editMode}}" aria-autocomplete="list" aria-haspopup="true" class="srd-question-on-behalf-search-field on-behalf-input default-input_smaller default-input_wide" type="text" ng-model="usersSearchText" ng-blur="clearData('lookupblur')" arrow-selector/>
+
+			<div class="srd-question-on-behalf-search__dropdown" ng-mouseover ="fireBlurEvent = false;" ng-mouseleave="fireBlurEvent = true;" arrow-selector>
+					<div role="listbox" aria-tabindex="-1" style="max-height: 250px;overflow-y: auto;" class="srd-question-reference-container">
+				<div aria-label="{{optionVal.itemName}}"  aria-describedby="extraInfo-{{optionVal.itemId}}" dataid="onBehalfOf__outerDiv-{{$index}}" aria-tabindex="-1" role="option" ng-repeat="optionVal in searchResults"  ng-click="selectOptionVal(optionVal);" ng-attr-id="outerDiv-{{$index}}" ng-mouseover = "selectRow(searchResults.indexOf(optionVal));">
+					<div ng-if="optionVal.itemId == 'toggleButton'">
+						<div class="srd-question-reference__result-item_filterToggleText">
+							<span ng-bind-html="optionVal.itemName">
+							</span>
+							<a ng-click="toggleFilter(optionVal)" class="srd-question-on-behalf-search__result-item_filterToggleLink" ng-bind-html="optionVal.extraInfo"></a>
+						</div>
+					</div>
+		
+					<div ng-if="optionVal.itemId != 'toggleButton'" 
+					ng-class="{'selected': (searchResults.indexOf(optionVal) == selectedRow)}">
+						<div class="rfDPL-user-blade" style="overflow: hidden;">
+							<div class="rfDPL-user-img-container" ng-show="optionVal.photoURL != ''">
+                                    <img src="{{optionVal.photoURL}}" class="rfDPL-user-image" height="30" width="30" aria-hidden="true" />
+							</div>
+							<div class="rfDPL-name-col lookup-user-data">
+								<p class="rfDPL-user-fullname block-with-text-2-lines" ng-class="optionVal.defaultSize != 0?'rfDPL-user-fullname-bold':''">{{htmlUnescape(optionVal.itemName)}}
+								</p>
+								<p class="rfDPL-user-fullname lookupData block-with-text-2-lines" ng-show="optionVal.extraInfo != ''">{{htmlUnescape(optionVal.extraInfo)}}
+								</p>
+								<div ng-attr-id="defaultInfo-{{optionVal.itemId}}">
+									<p ng-repeat="(key, value) in optionVal.defaultInfoList" class="lookupData">
+										<span class="lookupDataLabel userLookupLabel block-with-text-2-lines" ng-show="showLabelsInDefaultLookupView">{{htmlUnescape(key)}}</span>
+										<span class="lookupDataValue block-with-text-2-lines">{{htmlUnescape(value)}}</span>
+									</p>
+									<p ng-repeat="i in getNumber(optionVal.emptyDefaultDataSize) track by $index" class="lookupData">
+										<span class="lookupDataLabel block-with-text-2-lines"></span>
+										<span class="lookupDataValue block-with-text-2-lines"></span>
+									</p>
+								</div>
+								<div ng-attr-id="extraInfo-{{optionVal.itemId}}" ng-show="isAccessibilityMode || !optionVal.showMore " ng-init="isAccessibilityMode ? expandLookupData(optionVal,searchResults.indexOf(optionVal)) : ''">
+									<p ng-repeat="field in optionVal.extraInfoList" class="lookupData" >
+										<span class="lookupDataLabel userLookupLabel block-with-text-2-lines" ng-show="field.showLabel">{{htmlUnescape(field.label)}}</span>
+										<span class="lookupDataValue block-with-text-2-lines">{{htmlUnescape(field.value)}}</span>
+									</p>
+								</div>
+							</div>
+							<div class="lookup-data-icon d-icon-plus" ng-show="optionVal.showMore" ng-click="$event.stopPropagation(); expandLookupData(optionVal,searchResults.indexOf(optionVal));"/>
+							<div class="lookup-data-spinner" ng-if="optionVal.resultsAreLoading">
+								<loading-spinner if="true" inline="true"></loading-spinner>
+							</div>
+							<div class="lookup-data-icon d-icon-minus" ng-attr-id="expand-{{optionVal.itemId}}" ng-show="optionVal.isShowMoreAvailable && !optionVal.showMore" data-index="{{searchResults.indexOf(optionVal)}}" ng-click="$event.stopPropagation();  collapseLookupData(optionVal.itemId,searchResults.indexOf(optionVal));"/>
+						</div>
+					</div>
+				</div>
+			</div>						
+					<div class="srd-question-on-behalf-search__message" ng-if="searchResultsAreLoading">
+						<loading-spinner if="true" inline="true"></loading-spinner>
+						{{$root.selfServiceLabels.searching}}
+					</div>
+					<div class="srd-question-on-behalf-search__message" ng-if="!searchResultsAreLoading && (searchResults.length === 0)">
+						{{$root.selfServiceLabels.noResults}}
+					</div>				
+			</div>
+		</div>
+
+		<div>
+			<span class="srd-question-on-behalf__name" style="margin-left:10px;" ng-if="userId === requestedFor.userId">{{$root.selfServiceLabels.self}}</span>
+			<span class="srd-question-on-behalf__name" style="margin-left:10px" ng-if="userId !== requestedFor.userId">{{htmlUnescape(requestedFor.userName)}}</span>
+			<button class="btn_link srd-question-on-behalf__button"
+					ng-if="selfRequesedFor.userId !== requestedFor.userId"
+					ng-click="resetUserSelection()"
+					type="button">
+					{{$root.selfServiceLabels.reset}}&nbsp;<ins class="d-icon-reply"></ins>				
+			</button>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,1202 @@
+<apex:page id="linkingPage" controller="BMCServiceDesk.SearchAndLinkController" extensions="BMCServiceDesk.ConsoleRemoteActions"  standardStylesheets="true" showHeader="false" sidebar="false" tabStyle="BMCServiceDesk__Change_Request__c">
+	<head>
+                  
+    <link href="{!$Resource.BMCRFSDEFStyles}/Images" />  
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css-4-1-3"/>
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/RFDPLConsoleDetail.css" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="{!$Resource.BMCRFSDEFStyles}/LinkMultipleCIPage.css" /> 
+	<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CMDBManagerStyles_V2.css" />
+	<apex:outputPanel layout="none" rendered="{!$User.UIThemeDisplayed=='PortalDefault'}">
+        <link rel="stylesheet" type="text/css" href="{!$Resource.BMCRFSDEFStyles}/LinkMultipleCIPagePortalOverrides.css" />  
+    </apex:outputPanel>
+	<apex:outputPanel layout="none" rendered="{!If(userLanguage=='iw','true','false')}">
+		<link rel="stylesheet" href="{!$Resource.BMCRFSDEFStyles}/SearchAndLink-RTL.css" type="text/css" />
+    </apex:outputPanel>
+    </head>  
+    <apex:outputPanel layout="none" rendered="{!lightningUI == 'true'}">
+        <c:RFMessagingComponent />    
+    </apex:outputPanel>  
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" />
+    <body onresize="setResultListHeightJS()">
+    <div id="rfDPLReferenceDiv" class="{!IF(AND($CurrentPage.parameters.childName=='Status__c',parentName=='Task__c',lightningUI == 'true'),'widthClass','overflowScrollbar')}"> 
+    <apex:form id="theForm">
+
+        <apex:actionFunction action="{!showAllRecords}" name="showAllRecords" rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();">                        
+            <apex:param assignTo="{!filteredFieldsForMatching}" name="filteredFieldsForMatching" value=""/> 
+            <apex:param assignTo="{!searchText}" name="searchText" value=""/> 
+         </apex:actionFunction>   
+        <apex:actionFunction action="{!reApplyLKFilter}" name="reApplyLKFilter" rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();">
+            <apex:param assignTo="{!filteredFieldsForMatching}" name="filteredFieldsForMatching" value=""/> 
+            <apex:param assignTo="{!searchText}" name="searchText" value=""/> 
+        </apex:actionFunction>    
+        <apex:actionFunction action="{!setResetSelectAll}" name="setResetSelectAll" rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();prepareButtons(); setIdsForLink(null);hideWaitMsgBar();" status="waitMsg" >
+            <apex:param assignTo="{!selectAllCheckBox}" name="selectAllCheckBox" value=""/>           
+        </apex:actionFunction>                    
+        <apex:actionFunction action="{!searchCIs}" name="searchCIs" rerender="thepageblock,messagePanel,noRecordFound" oncomplete="setResultListHeightJS();getErrorAdvancedSearch();" status="{!IF(lightningUI != 'true','waitMsg','')}">
+            <apex:param assignTo="{!searchString}" name="searchString" value=""/>
+            <apex:param assignTo="{!pageSize}" name="pageSize" value=""/>    
+            <apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/>          
+            <apex:param assignTo="{!isCJKChar}" name="isCJKVar" value=""/> 
+            <apex:param assignTo="{!advacnedSearchedString}" name="advacnedSearchedString" value=""/>
+            <apex:param assignTo="{!ClassIdinCriteria}" name="ClassIdinCriteria" value=""/>  
+        </apex:actionFunction>
+		<apex:actionFunction action="{!searchCIsOnRefresh}" name="searchCIsOnRefresh" rerender="thepageblock,messagePanel,noRecordFound" oncomplete="setResultListHeightJS();getErrorAdvancedSearch();" status="{!IF(lightningUI != 'true','waitMsg','')}">
+            <apex:param assignTo="{!searchString}" name="searchString" value=""/>
+            <apex:param assignTo="{!pageSize}" name="pageSize" value=""/>    
+            <apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/>          
+            <apex:param assignTo="{!isCJKChar}" name="isCJKVar" value=""/> 
+            <apex:param assignTo="{!advacnedSearchedString}" name="advacnedSearchedString" value=""/>
+            <apex:param assignTo="{!ClassIdinCriteria}" name="ClassIdinCriteria" value=""/>
+			<apex:param assignTo="{!filteredFieldsForMatching}" name="filteredFieldsForMatching" value=""/> 
+			<apex:param assignTo="{!searchText}" name="searchText" value=""/>
+			<apex:param assignTo="{!filterFlags}" name="filterFlags" value=""/>
+			<apex:param assignTo="{!calledFrom}" name="calledFrom" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction action="{!sortData}" name="sortData" rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();prepareButtons();" status="{!IF(lightningUI != 'true','waitMsg','')}">
+            <apex:param assignTo="{!searchString}" name="searchString" value=""/>
+            <apex:param assignTo="{!pageSize}" name="pageSize" value=""/>
+            <apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/>   
+			<apex:param assignTo="{!isCJKChar}" name="isCJKVar" value=""/> 			
+        </apex:actionFunction>           
+        <apex:actionFunction action="{!link}" name="link"  rerender="thepageblock,linkPanel,messagePanel" oncomplete="oncompleteCall();refreshCIWrapperList();" status="waitMsg">
+            <apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/>
+        </apex:actionFunction>            
+		<apex:actionstatus id="waitMsg">
+            <apex:facet name="start">
+                <div class="waitingSearchDiv" id="el_loading"> 
+                    <div class="waitingHolder">
+                        <ul class="d-loading">
+                            <li class="d-loading__stick d-loading__stick_1"></li>
+                            <li class="d-loading__stick d-loading__stick_2"></li>
+                            <li class="d-loading__stick d-loading__stick_3"></li>
+                            <li class="d-loading__stick d-loading__stick_4"></li>
+                            <li class="d-loading__stick d-loading__stick_5"></li>
+                            <li class="d-loading__stick d-loading__stick_6"></li>
+                            <li class="d-loading__stick d-loading__stick_7"></li>
+                            <li class="d-loading__stick d-loading__stick_8"></li>
+                            <li class="d-loading__stick d-loading__stick_9"></li>
+                            <li class="d-loading__stick d-loading__stick_10"></li>
+                            <li class="d-loading__stick d-loading__stick_11"></li>
+                            <li class="d-loading__stick d-loading__stick_12"></li>
+                        </ul>
+                        <div class="waitingDescription">{!JSENCODE($Label.PleaseWait)}</div>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionstatus>
+        <apex:actionFunction action="{!refreshCIWrapperList}" name="refreshCIWrapperList"  rerender="tableOutputpanel" status="waitMsg" />
+        <apex:actionFunction action="{!first}" name="firstPage"  rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();prepareButtons();" status="{!IF(lightningUI != 'true','waitMsg','')}">
+            <apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/>
+        </apex:actionFunction>            
+        <apex:actionFunction action="{!previous}" name="previousPage"  rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();prepareButtons();" status="{!IF(lightningUI != 'true','waitMsg','')}">
+            <apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/>
+        </apex:actionFunction>            
+        <apex:actionFunction action="{!next}" name="nextPage"  rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();prepareButtons();" status="{!IF(lightningUI != 'true','waitMsg','')}" >   
+			<apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/>
+        </apex:actionFunction>          
+        <apex:actionFunction action="{!last}" name="lastPage"  rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();prepareButtons();" status="{!IF(lightningUI != 'true','waitMsg','')}" >
+            <apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/>
+        </apex:actionFunction>    
+                  
+        <apex:actionFunction action="{!fetchPage}" name="fetchPage" rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();prepareButtons();" status="{!IF(lightningUI != 'true','waitMsg','')}">
+            <apex:param assignTo="{!pageSize}" name="pageSize" value=""/> 
+            <apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/>             
+        </apex:actionFunction>
+        <apex:actionFunction action="{!goToPage}" name="goToPageJS" rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();prepareButtons();" status="{!IF(lightningUI != 'true','waitMsg','')}">
+            <apex:param assignTo="{!currPage}" name="currPage" value=""/>              
+            <apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/> 
+        </apex:actionFunction>
+        <apex:actionFunction action="{!applyFilterOnMaching}" name="applyFilterOnMaching" rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS(); setResetButtons();prepareButtons();" status="waitMsg">                                         
+            <apex:param assignTo="{!filteredFieldsForMatching}" name="filteredFieldsForMatching" value=""/> 
+            <apex:param assignTo="{!searchText}" name="searchText" value=""/> 
+        </apex:actionFunction>
+		<apex:actionFunction action="{!applyCIFilterOnMaching}" name="applyCIFilterOnMaching" rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();getErrorAdvancedSearch();" status="waitMsg">                                         
+            <apex:param assignTo="{!filteredFieldsForMatching}" name="filteredFieldsForMatching" value=""/> 
+            <apex:param assignTo="{!searchText}" name="searchText" value=""/> 
+            <apex:param assignTo="{!advacnedSearchedString}" name="advacnedSearchedString" value=""/>
+            <apex:param assignTo="{!ClassIdinCriteria}" name="ClassIdinCriteria" value=""/>  
+        </apex:actionFunction>
+        <apex:actionFunction action="{!applyInstanceTypeFilter}" name="applyInstanceTypeFilter" rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();hideWaitMsgBar();" status="waitMsg">                                         
+            <apex:param assignTo="{!instanceTypeFilter}" name="instanceTypeFilter" value=""/> 
+            <apex:param assignTo="{!filteredFieldsForMatching}" name="filteredFieldsForMatching" value=""/>
+            <apex:param assignTo="{!searchText}" name="searchText" value=""/>
+            <apex:param assignTo="{!advacnedSearchedString}" name="advacnedSearchedString" value=""/>
+            <apex:param assignTo="{!ClassIdinCriteria}" name="ClassIdinCriteria" value=""/>  
+        </apex:actionFunction>
+        <apex:actionFunction action="{!mergeIncidents}" name="mergeIncidents" rerender="messagePanel" status="waitMsg">
+            <apex:param assignTo="{!selectedId}" name="selectedCIids" value=""/>
+            <apex:param assignTo="{!unSelectedId}" name="unSelectedCIids" value=""/>
+            <apex:param assignTo="{!mergeStatus}" name="mergeStatus" value=""/>
+            <apex:param assignTo="{!linkParent}" name="linkParent" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction action="{!applyFilterProblem}" name="applyFilterProblemAF" rerender="thepageblock,messagePanel" oncomplete="setResultListHeightJS();" status="{!IF(lightningUI != 'true','waitMsg','')}">
+            <apex:param assignTo="{!filterFlags}" name="filterFlags" value=""/> 
+            <apex:param assignTo="{!searchString}" name="searchText" value=""/> 
+        </apex:actionFunction>         
+        <apex:actionFunction action="{!addCustomObjectIdentifier}" name="addCustomObjectIdentifier" rerender="">
+        </apex:actionFunction>          
+
+		<apex:actionFunction action="{!updateNormRule}" name="updateNormRule" rerender="" oncomplete="openNormalizationRule();">
+			<apex:param assignTo="{!SelectedNormRuleID}" name="SelectedNormRuleID" value=""/>
+		</apex:actionFunction>
+        <apex:outputPanel id="linkPanel">            
+            <script>         
+            	var isLightning = {!IF($User.UIThemeDisplayed == 'Theme4d',true,false)};        
+                var noRecordFound = '{!JSENCODE($Component.theForm.noRecordFound)}';   
+                var searchField = '{!JSENCODE($Component.theForm.searchField)}';    
+                var isFromRefresh = false;
+				function oncompleteCall(){
+					showPageMsg();				
+                    document.getElementById('linkButton').disabled = false;                       
+                    if('{!atleastOneSelected}' == 'true'){   
+                       if(getUrlParameter('isCalledFromConsole')=='true')
+                        {	
+                        	window.opener.refreshRelatedLists();
+                        	//auto pop-up for collision detection 
+                        	if(window.opener.parent.isChangeFormFrameLoaded){ // for change request only
+                        		var isCollision='{!isCollision}';
+                        		if(isCollision == 'true'){ //if collision is detected reload change detail form showing the  collision alert
+                                    window.opener.parent.showCollisionMessage();
+                                    if((typeof window.opener.loadChangeDetailsForCollision === "function")){
+                                        window.opener.loadChangeDetailsForCollision();
+                                    }
+	                        	}
+                        	}
+                       	}else{
+                        		if(isLightning && typeof(sforce)!=undefined){
+                        			sforce.one.navigateToSObject(filterObjectId);                       			                        			
+                        		}else{
+                            		if(isCalledFromSearchConfig == 'true'){
+										window.parent.reloadParentFromSearchConfig(filterObjectId);
+									}if(getUrlParameter('isCalledFrom') == 'CMDB'){
+										window.opener.doRefresh();
+									}else{
+                            		window.opener.parent.location.href = '/'+filterObjectId;                                         
+                         		}
+                         }                                      
+                         }                                      
+                        if(isCalledFromSearchConfig != 'true'){
+                        window.close();
+                        }
+                    } 
+                    setResultListHeightJS();                            
+                }           
+                	 
+        		var isFromSR = Boolean('{!JSENCODE(IF(isFromSR,"true", ""))}');
+                var isFromNewCMDBExplorer = {!isFromNewCMDBExplorer};
+                var cmdbExplorerErrorMsg = '';
+                 
+            </script>       
+        </apex:outputPanel>
+        <apex:outputPanel id="messagePanel" styleClass="messageContainer">            
+        	<script>
+        		var enableMerge = {!enableMerge};
+                var selectedIdMap = JSON.parse('{!JSENCODE(selectedIdMapJSON)}');
+        		var ExceptionMsg = '{!JSENCODE(ExceptionMsg)}';
+        		if ({!mergeSuccessful} != null && {!mergeSuccessful}) {
+        			if(getUrlParameter('isCalledFromConsole')=='true'){
+						if(window.opener.isFocusOnRelatedList){
+        		    		window.opener.loadIncidentRelatedList(filterObjectId);
+						}else{
+							window.opener.isNeedToRefreshRelatedList = true;
+						}
+					}else
+					{
+					window.opener.parent.location.href = '/'+'{!filterObjectId}';
+					}
+		           	window.close();
+	           	}
+                var totalNumberOfPages = '{!totalNumberOfPages}'; 
+        	</script>
+			<apex:outputPanel rendered="{!if (resultSize == 0,false,true)}">
+				<apex:pageMessages id="pageMessage" />
+			 </apex:outputPanel>
+			<div id="jsscripterrorId" style="display:none">
+				<div class="d-notification d-notification_error d-notification_content">
+					<div class="d-notification__icon d-icon-left-exclamation_triangle"></div>
+					<div class="d-notification__supporting-text maxWidthNone">
+						<p class="d-notification__item" id="errorDescId" ></p>
+					</div>
+				</div>
+			</div>
+            <apex:outputPanel id="noRecordFound">
+                <apex:outputPanel rendered="{!if(AND(resultSize == 0,lightningUI != 'true'),true,false)}">
+                    <div class="d-notification d-notification_warning d-notification_content" style="margin-top: 5px;margin-left: 10px;"> 
+                        <div class="d-notification__icon d-icon-left-exclamation_circle">
+                        </div>
+                        <div class="d-notification__supporting-text maxWidthNone">
+                            <p class="d-notification__item">
+                                <span><apex:outputLabel value="{!$Label.bmcservicedesk__msgnorecordfoundsearchpage}"/></span>
+                            </p>
+                        </div>
+                    </div>  
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!if(AND(resultSize == 0,lightningUI == 'true'),true,false)}">
+                    <script>
+                        showWarningMSG('{!$Label.bmcservicedesk__msgnorecordfoundsearchpage}');
+                    </script>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <div class="d-notification d-notification_error d-notification_content" id="minTwoChar" style="display: none;margin-top: 5px;margin-left: 10px;"> 
+                <div class="d-notification__icon d-icon-left-exclamation_triangle">
+                </div>
+                <div class="d-notification__supporting-text maxWidthNone">
+                    <p class="d-notification__item">
+                        <span><apex:outputLabel value="{!$Label.bmcservicedesk__gserrormsg}"/></span>
+                    </p>
+                </div>
+            </div>
+        </apex:outputPanel>
+        <script>
+        	var recordCount = '{!recordCount}';
+			var nameVal='';
+        </script>
+        <div id='topdiv' style="padding:{!iF(lightningUI == 'true','8px 0px 0px 10px','unset')}">
+        
+        
+        
+        <div id="toolbarPanel" style="display:{!iF(or(parentName=='Matching',AND(parentName=='BMC_BaseElement__c',isFromCMDB),AND(parentName=='BMC_BaseElement__c',isFromNewCMDBExplorer),AND($CurrentPage.parameters.childName=='KM_KnowledgeArticle__c',OR(parentName=='Incident__c',parentName=='Change_Request__c',parentName=='Problem__c')),AND($CurrentPage.parameters.childName=='BusinessHours',parentName=='BMC_BaseElement__c'),AND($CurrentPage.parameters.childName=='Incident__c',parentName=='Broadcasts__c'),AND($CurrentPage.parameters.childName=='BMC_BaseElement__c', lookUpType == 'FulfillReqLookup' ),AND($CurrentPage.parameters.childName=='BMC_BaseElement__c',OR(parentName=='Incident__c',parentName=='KM_KnowledgeArticle__c',parentName=='Problem__c',parentName=='Release__c',parentName=='Change_Request__c',parentName=='Task__c',parentName=='AdminLocation'),NOT(isFromSS)),AND($CurrentPage.parameters.childName=='Status__c',parentName=='Task__c',lightningUI == 'true'),showCloseOpenFilter),'block','none')}"></div>
+        
+        <table style="{!if (OR(parentName=='Matching',AND(parentName=='BMC_BaseElement__c',isFromCMDB),AND(parentName=='BMC_BaseElement__c',isFromNewCMDBExplorer),AND($CurrentPage.parameters.childName=='KM_KnowledgeArticle__c',OR(parentName=='Incident__c',parentName=='Change_Request__c',parentName=='Problem__c')),AND($CurrentPage.parameters.childName=='BusinessHours',parentName=='BMC_BaseElement__c'),AND($CurrentPage.parameters.childName=='Incident__c',parentName=='Broadcasts__c'),AND($CurrentPage.parameters.childName=='BMC_BaseElement__c', lookUpType == 'FulfillReqLookup'),AND($CurrentPage.parameters.childName=='BMC_BaseElement__c',OR(parentName=='Incident__c',parentName=='KM_KnowledgeArticle__c',parentName=='Problem__c',parentName=='Release__c',parentName=='Change_Request__c',parentName=='Task__c',parentName=='AdminLocation'),NOT(isFromSS)),AND($CurrentPage.parameters.childName=='Status__c',parentName=='Task__c',lightningUI == 'true'),showCloseOpenFilter),'display:none','')};width:100%">  
+            <tr>
+                <td colspan="3" class="top10pxPadding"></td>                 
+            </tr>
+            <tr>   
+                <td id="tdSearch" class="leftright10pxPadding" style="width:60%;">   
+                    <span class="searchtext-input-wrapper">
+                    	<a title="{!$Label.bmcservicedesk__sssearch}" class="rf-icon-search" onclick="beforeSearchCI();" ></a>
+                    	<apex:inputText id="searchField" value="{!searchString}" onkeyup="return searchOnKeyPress(event)" disabled="{!objNotSupported}" styleClass="searchfield-input" size="26" title="{!$Label.bmcservicedesk__sssearch}" html-placeholder="{!$Label.bmcservicedesk__search}" />
+                    	<a id="clearLink" style="width: 1px;" onclick="clearText();return false;" title="{!$Label.Clear}"  class="rf-icon-cross" ></a>
+                    </span>
+                    <span class="separator"></span>
+                    <input type="button" id="goBtn" style=" border: 1px solid rgb(221, 219, 218) !important;" value="{!$Label.GO}" Class="{!IF(lightningUI == 'true','gobtnlightning slds-button-neutral','bmc-btn-primary')}" onclick="beforeSearchCI();" />
+                    <span class="goBtnClass" style="display:{!iF(AND($CurrentPage.parameters.childName=='User',$CurrentPage.parameters.parentName=='Incident__c', $CurrentPage.parameters.isNewIncident=='true' , $CurrentPage.parameters.isCreateNewClientAllowed=='true'),'inline','none')}">
+                        &nbsp;&nbsp;<span class="paginationSeperator"/>&nbsp;&nbsp;&nbsp;
+                        <input type="button" class="btn btnCls" value="{!$Label.CreateNewClient}" id="createNewClientBtn" onclick="createNewClient();" style="border : 1px solid #d9d9d9 !important;" />
+                    </span> 
+                    <script type="text/javascript">
+                    	(function setFocusOnPageInit()
+						{
+							var objSearchField = document.getElementById('{!$Component.searchField}');
+							if(objSearchField) objSearchField.focus();
+						})();
+                    </script>
+                </td>
+                <td class="rf-float-right">
+                    <span>
+                    <apex:outputPanel rendered="{!isServiceLookup}">
+                        <img id="advancedSearch" src="{!$Resource.BMCRFSDEFStyles}/Images/cmdb_icon-advanced-filter.svg" style="height: 17px; width: 17px;margin-top:7px;cursor: pointer;margin-right: 12px;" onclick="openAdvancedSearch();"  />
+                    </apex:outputPanel>
+                    </span>
+                </td>             
+            </tr>
+            <tr>
+                <td colspan="3" class="bottom20pxPadding"></td>                
+            </tr>
+        </table>
+        </div>           
+        <input type="hidden" id="hidMergedIncidents" />
+        <input type="hidden" id="listChild" />
+        <input type="hidden" id="hideParentInc" />
+        <input type="hidden" id="listParent" />
+        <div id="headerMessage" class="headerMessage"></div>
+        <apex:pageBlock id="thepageblock" title="{!IF (lightningUI == 'true','',objectNameLabel + ' ['+ TEXT(resultSize) +']')}">
+			<div id="link" style="display:{!iF(parentName=='Matching','block','none')}"></div> 
+			<apex:outputPanel layout="block" rendered="{!isForNormalizationExcep}" styleclass="MaptoRuleBtnSec">
+				<input type="button" class="btnCls MaptoRuleBtn" value="{!$Label.MapToRule}" id="MapNormRule" onclick="MapAndOpenRule(false);"  disabled="true"/>
+				<input type="button" class="btnCls MaptoRuleBtn" value="{!$Label.MapAndOpenRule}" id="MapAndOpenNormRule" onclick="MapAndOpenRule(true);" disabled="true"/>
+			</apex:outputPanel> 			
+			<apex:outputPanel rendered="{!isOptionalFilter}" >
+			<table height="30" width="100%" >
+			 <tr>
+				<td  style="background-color:#FFFFCC;border-radius:5px;padding-left:10px;">
+					<apex:outputPanel rendered="{!showAllRecordsLink}">
+						{!$Label.ShowAllResultsMsg}
+						<a style="padding-left:10px;" href="javascript:toggleFilter(true)">{!$Label.ShowAllResultsLink}</a>
+					</apex:outputPanel>
+					<apex:outputPanel rendered="{!NOT(showAllRecordsLink)}">
+					{!$Label.ReapplyCriteriaMsg}
+					<a style="padding-left:10px;" href="javascript:toggleFilter(false)">{!$Label.ReapplyCriteriaLink}</a>
+					</apex:outputPanel>
+				</td>	
+             </tr>	
+			 <tr>
+                <td height="5"></td>                
+            </tr>
+			</table>
+           </apex:outputPanel>				
+            <apex:outputPanel id="tableOutputpanel" layout="block" styleclass="container" rendered="{!if (resultSize == 0,false,true)}">                     
+                <apex:pageblockTable id="thepageblocktable" rows="{!pageSize}" value="{!CIWrapperList}" var="c" width="100%">                         
+                    <apex:column id="chkboxColumn" width="25px" rendered="{!NOT(isLookup)}">
+                         <apex:facet name="header">
+							<label class="rf-filter-checkbox" style="{!IF(parentName == 'BMC_BaseElement__c' && childObjectAPIName == 'Change_Request__c','display:none', 'display:inline')}">
+                             <input type="checkbox" id="selectAllcheckBox" value="{!selectAllCheckBox}" style="{!IF(parentName == 'BMC_BaseElement__c' && childObjectAPIName == 'Change_Request__c','display:none', 'display:inline')}" onclick="setResetSelectAllJS(this.checked);"/>
+							 	<span class="rf-checkmark"></span>
+							 </label>
+                              <script>
+                                recordCount = '{!recordCount}';
+                                var selAllChk = '{!selectAllCheckBox}';
+                                if(selAllChk == 'true'){
+                                    document.getElementById("selectAllcheckBox").checked=true;
+                                }
+                                else{
+                                    document.getElementById("selectAllcheckBox").checked=false;
+                                }                                
+                             </script>
+                         </apex:facet>                         
+						<label class="rf-filter-checkbox">
+						 <input type="checkbox" id="checkedone" name="{!c.CIobj.Id}:{!c.sName}" value="{!c.checked}" onclick="return onSelect(this);" style="{!IF(isFromSR,'display:none', 'display:inline')}"/>
+						 	<span class="rf-checkmark"></span>
+						 </label>
+						  <apex:outputpanel rendered="{!isFromSR}"> 
+						<label class="rf-filter-checkbox">
+                         <input type="checkbox" id="checkedFulfill" name="{!c.CIobj.Id}:{!c.CIobj['class__c']}:{!c.CIobj['instanceType__c']}" value="{!c.checked}" onclick="return checkone(this);" style="{!IF(isFromSR,'display:inline', 'display:none')}"/>
+						 	<span class="rf-checkmark"></span>
+						 </label>
+						 <script>
+                                nameVal = "{!c.CIobj.Id}:{!c.CIobj['class__c']}:{!c.CIobj['instanceType__c']}";
+						 </script>
+						 </apex:outputpanel>
+						
+                         <script>
+                            var chk = '{!c.checked}';
+							if(!isFromSR){
+								nameVal = "{!c.CIobj.Id}:{!JSENCODE(c.sName)}";
+							}
+                            if(chk == 'true'){
+                                document.getElementsByName(nameVal)[0].checked=true;
+                            }
+                            else{
+                                document.getElementsByName(nameVal)[0].checked=false;
+                            }                            
+                            if (!{!c.state})
+                                document.getElementsByName(nameVal)[0].disabled = true;
+                            else if ('{!c.parentIncident}' != '' && document.getElementById("hidMergedIncidents").value.indexOf(nameVal) == -1){
+                                document.getElementById("hidMergedIncidents").value += nameVal+',';
+                                document.getElementById("listChild").value += '{!JSENCODE(c.sName)}'+',';
+                            }
+                            else if ({!c.isParentInc}){
+                                document.getElementById("hideParentInc").value += nameVal+',';
+                                document.getElementById("listParent").value += '{!JSENCODE(c.sName)}'+',';
+                            }
+                       </script>                                                   
+                    </apex:column>                
+                    <apex:column rendered="{!NOT(isLookup)}">
+                        <apex:facet name="header">   
+                            <apex:commandLink onclick="sortDataJSFunc();" value="{!firstColumnName}" id="CISort" oncomplete="null" > 
+                            	<apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpression=='Name__c' && sortDirection=='ASC'}">&#9650;</apex:outputPanel>
+                        		<apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpression=='Name__c' && sortDirection!='ASC'}">&#9660;</apex:outputPanel>
+                        	</apex:commandLink>
+                        </apex:facet>       
+                         <apex:outputLink value="#" onclick="openPopupRecord('{!c.CIobj.Id}','{!c.sName}',objAPINm,null,null,null,'{!c.additionalInfo}');">{!c.sName}</apex:outputLink>                     
+                    </apex:column> 
+                    <apex:column rendered="{!if (parentName=='Matching',true,false)}">
+                        <apex:facet name="header">{!JSENCODE($Label.bmcservicedesk__parent)}</apex:facet>
+                        <apex:outputLink value="#" onclick="openPopupRecord('{!JSENCODE(c.parentInc.BMCServiceDesk__FKIncident__c)}','{!JSENCODE(c.parentInc.FKIncident__r.Name)}','Incident__c',null,null,null);">{!JSENCODE(c.parentInc.FKIncident__r.Name)}</apex:outputLink>
+                    </apex:column>                  
+                    <apex:column rendered="{!isLookup}"   ondblclick="if(isBusinessServiceObj) { setIdOnDBClick('{!c.fkObjectId}','{!JSENCODE(c.sName)}');} else { if(!isForNormalizationExcep){setIdOnClick('{!c.CIobj.id}','{!JSENCODE(c.sName)}','{!JSENCODE(c.userEmailId)}');}} callLinkJS1(); ">
+                         <apex:facet name="header">
+                             <apex:commandLink onclick="sortDataJSFunc();" value="{!firstColumnName}" id="CISort1" oncomplete="null"  style="cursor:{!if (listObjectName == 'Profile' || listObjectName == 'UserRole','default','pointer')}"> 
+                            	<apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpression=='Name__c' && sortDirection=='ASC'}">&#9650;</apex:outputPanel>
+                        		<apex:outputPanel styleClass="sortIcon" layout="inline" rendered="{!sortExpression=='Name__c' && sortDirection!='ASC'}">&#9660;</apex:outputPanel>
+                        	</apex:commandLink>
+                        </apex:facet>
+                        
+                     <apex:outputpanel rendered="{!vip}"> <a class="" onclick=" var sName = '{!JSENCODE(c.sName)}'; if(childObjectName == 'User' && texttag == 'SRLookup'){sName = '{!JSENCODE(c.sName)}' + dataSeparator + '{!JSENCODE(c.additionalInfo)}'}else if('{!populateUserFullName}' == 'true'){sName = '{!JSENCODE(c.additionalInfo)}';}if(isBusinessServiceObj){setIdOnDBClick('{!c.fkObjectId}',sName);}else{setIdOnClick('{!c.CIobj.id}',sName,'{!JSENCODE(c.userEmailId)}');}if('{!JSENCODE(TextBox)}' == 'calledFromReport') { setSrcCIIDFromReport('{!c.SrcCIId}');} if('{!JSENCODE(TextBox)}' == 'customLookup'){selectClientAccountDtls('{!c.fkObjectId}','{!JSENCODE(c.fkObjectName)}');}   checkVIPClient({!c.CIobj['VIP__C']}); callLinkJS1();" href="#">{!c.sName}</a>
+                       </apex:outputpanel>
+					   <apex:outputpanel rendered="{!isForNormalizationExcep}"> 
+						<label class="rf-filter-checkbox">
+                           <input type="checkbox"  id = "{!c.CIobj['Id']}" value="true" onclick="enableNormBtn(this,'{!c.CIobj['Id']}','{!c.CIobj['Name']}');" style="margin-right: 5px;" />{!c.sName}
+						 	<span class="rf-checkmark"></span>
+						 </label>
+                       </apex:outputpanel>
+                       <apex:outputpanel rendered="{!not(vip) && not(isForNormalizationExcep) && not(isFromSR)}"> <a class="" onclick=" if(typeof isBusinessServiceObj != undefined && isBusinessServiceObj) { setIdOnDBClick('{!c.fkObjectId}','{!JSENCODE(c.sName)}');}  else { setIdOnClick('{!c.CIobj.id}','{!JSENCODE(c.sName)}','{!JSENCODE(c.userEmailId)}'); } if('{!JSENCODE(TextBox)}' == 'calledFromReport'){ setSrcCIIDFromReport('{!c.SrcCIId}');} if('{!JSENCODE(TextBox)}' == 'customLookup'){selectClientAccountDtls('{!c.fkObjectId}','{!c.fkObjectName}');} callLinkJS1();" href="#">{!c.sName}</a>
+                       </apex:outputpanel>
+						
+                    </apex:column>                      
+                    <apex:repeat value="{!IF(dynamicFieldList== null, CIGridColumns, dynamicFieldList)}" var="f">
+                        <apex:column rendered="{!IF(f == 'BMCServiceDesk__Source__c', true, false)}">
+							<apex:facet name="header">{!$Label.bmcservicedesk__source}</apex:facet>
+							<apex:outputLink value="{!ciURL}{!c.CIobj[f]}" target="_blank">
+								<apex:outputText value="{!c.CIobj['Source_InstanceName__c']}"/> 
+							</apex:outputLink>
+						</apex:column>
+						<apex:column rendered="{!IF(f == 'BMCServiceDesk__Destination__c', true, false)}">
+							<apex:facet name="header">{!$Label.bmcservicedesk__destination}</apex:facet>
+							<apex:outputLink value="{!ciURL}{!c.CIobj[f]}" target="_blank">
+								<apex:outputText value="{!c.CIobj['Destination_InstanceName__c']}"/> 
+							</apex:outputLink>
+						</apex:column>
+						
+						<apex:column rendered="{!NOT(OR(f == 'BMCServiceDesk__name__c' ,f == 'BMCServiceDesk__Source__c',f == 'BMCServiceDesk__Destination__c', f == 'BMCServiceDesk__Destination_InstanceName__c', f == 'BMCServiceDesk__Source_InstanceName__c'))}" value="{!c.CIobj[f]}" />
+                    </apex:repeat>       
+                </apex:pageblockTable> 
+            </apex:outputPanel>
+            <div id="toolbarDiv" class="{!IF(lightningUI == 'true','lightningBorder','border1px')}"  style="display:{!if (resultSize == 0 || listObjectName == 'Profile' || listObjectName == 'UserRole','none','block')}">
+            <div id="innertoolbar"  class="{!IF(lightningUI == 'true','padding8px','padding5px')}">  
+				<div class="leftClass">
+					<apex:outputPanel rendered="{!IF(hasPrevious == true,true,false)}">
+						<span class="d-icon-angles_left firstPageEnableClass {!IF(lightningUI == 'true','blue-color-class','green-color-class')}" title="{!$Label.FirstPage}" onClick="first();"/>&nbsp; 
+						<span class="d-icon-angle_left previousPageEnableClass {!IF(lightningUI == 'true','blue-color-class','green-color-class')}" title="{!$Label.PreviousPage}" onClick="return previous();"/>&nbsp;&nbsp;&nbsp;&nbsp; 
+						<span class="paginationSeperator"/>&nbsp;&nbsp; 
+					</apex:outputPanel>
+					
+					<apex:outputPanel rendered="{!IF(hasPrevious == false,true,false)}">
+							<span class="d-icon-angles_left firstPageDisableClass" title="{!$Label.FirstPage}"/>&nbsp; 
+							<span class="d-icon-angle_left previousPageDisableClass" title="{!$Label.PreviousPage}"/>&nbsp;&nbsp;&nbsp;&nbsp; 
+							<span class="paginationSeperator"/>&nbsp;&nbsp;                                                                                              
+					</apex:outputPanel>            
+					
+					&nbsp;&nbsp;                    
+					
+					{!$Label.Page} &nbsp; <input id="currPage" type="text" name="currentpage" value="{!currentpage}" maxlength="4" size="1" class="left2pxPadding" onkeypress="return goOnKeyPress(event,this.value)"/> &nbsp; {!$Label.Of} &nbsp; {!totalNumberOfPages}
+					
+					
+					&nbsp;&nbsp;                    
+					
+
+						<apex:outputPanel rendered="{!IF(hasNext == true,true,false)}">
+							&nbsp;&nbsp;<span class="paginationSeperator"/>&nbsp;&nbsp;&nbsp;&nbsp;		                                                                                                                                                          
+							  <span class="d-icon-angle_right nextPageEnableClass {!IF(lightningUI == 'true','blue-color-class','green-color-class')}" title="{!$Label.NextPage}" onClick="return next();"/>&nbsp;
+							  <span class="d-icon-angles_right lastPageEnableClass {!IF(lightningUI == 'true','blue-color-class','green-color-class')}" title="{!$Label.LastPage}"   onClick="last();"/>&nbsp;&nbsp;  
+					  </apex:outputPanel>                  
+
+					  <apex:outputPanel rendered="{!IF(hasNext == false,true,false)}">
+							  &nbsp;&nbsp;<span class="paginationSeperator"/>&nbsp;&nbsp;&nbsp;&nbsp;
+							  <span class="d-icon-angle_right nextPageDisableClass" title="{!$Label.NextPage}" />&nbsp;
+							  <span class="d-icon-angles_right lastPageDisableClass" title="{!$Label.LastPage}" />&nbsp;&nbsp;
+					  </apex:outputPanel>
+					  
+					  <apex:outputPanel >
+							  <span class="paginationSeperator"/>&nbsp;&nbsp;
+							  <span class="d-icon-restart {!IF(lightningUI == 'true','blue-color-class','green-color-class')}" title="{!$Label.Refresh}"   onClick="applyRefresh();"/>                            
+					  </apex:outputPanel>
+				</div> 
+                
+				<apex:outputPanel styleClass="{!IF(childObjectAPIName != 'BusinessHours','centreClass', 'rightClass')}">
+					<apex:outputPanel rendered="{!IF(resultSize > 0 && hasPrevious == false && hasNext == true ,true,false)}">			
+						<span >
+							{!$Label.records} 1 - {!pageSize} {!$Label.of}  {!if((resultSize>9999), TEXT(resultSize)+  '+ ',resultSize)}                                        
+						</span >
+					</apex:outputPanel>
+					<apex:outputPanel rendered="{!IF(resultSize > 0 && hasPrevious == false &&  hasNext == false,true,false)}">			
+						<span >                                
+							{!$Label.records} 1 - {!resultSize} {!$Label.of}  {!if((resultSize>9999), TEXT(resultSize)+  '+ ',resultSize)}                                        
+						</span >
+					</apex:outputPanel>
+					<apex:outputPanel rendered="{!IF(resultSize > 0 && hasNext == true && hasPrevious == true,true,false)}">			
+						<span >
+							{!$Label.records} {!((currentpage-1) * pageSize)+1} - {!(currentpage * pageSize)} {!$Label.of}  {!if((resultSize>9999), TEXT(resultSize)+  '+ ',resultSize)}                                        
+						</span> 
+					</apex:outputPanel>
+					<apex:outputPanel rendered="{!IF(resultSize > 0 && hasNext == false && hasPrevious == true,true,false)}">			
+						<span >
+							{!$Label.records} {!((currentpage-1) * pageSize)+1} - {!resultSize} {!$Label.of}  {!if((resultSize>9999), TEXT(resultSize)+  '+ ',resultSize)}                                       
+						</span>                        
+					</apex:outputPanel>
+					<apex:outputPanel rendered="{!IF(resultSize == 0,true,false)}">			
+						<span >
+							{!$Label.cmdblistviewcustnorecordsfound}                           
+						</span >
+					</apex:outputPanel>
+				</apex:outputPanel>  
+				
+	            <apex:outputpanel rendered="{!if(childObjectAPIName != 'BusinessHours',true,false)}">      
+					<div class="rightClass">
+						{!$Label.records_per_page}&nbsp;
+						<apex:selectList id="choosePageSize" value="{!pageSize}" size="1" onchange="fetchPageJS(this.value)" >
+							<apex:selectOptions value="{!availablePageSizes}"/>
+						</apex:selectList>                    
+					</div>
+				</apex:outputpanel>
+                
+          
+        </div>
+        </div>
+        </apex:pageBlock>          
+    </apex:form>   
+	</div>
+	</body>
+    <script>
+		var taskConsole = '{!$Page.TaskConsole}';
+		var incidentConsole = '{!$Page.IncidentConsole}';
+		var StdWorkspacesPage = '{!$Page.StdWorkspacesPage}';
+		var isForNormalizationExcep = {!isForNormalizationExcep};
+	    var parentWindow = '';
+    	if(getUrlParameter('isCalledFromConsole')=='true') {
+            if((window.opener != null) && (window.opener.parent!= null) && (window.opener.location!= null) && (window.opener.location.pathname.toLowerCase().indexOf('relatedlist') > -1)&& (window.opener.parent.parent.addTab != null))
+				parentWindow = window.opener.parent.parent;
+			else if((window.opener != null) && (window.opener.parent!= null) && (window.opener.location!= null) && (window.opener.location.pathname.toLowerCase().indexOf('console') > -1)&& (window.opener.parent.addTab != null))
+				//For Incident Matching Popup
+				parentWindow = window.opener.parent;
+        }
+		var infoLbl = '{!JSENCODE($Label.Information)}';
+		var MultipleCRLinkingInfo = '{!JSENCODE($Label.SelectOnlyOneCRtoLink)}';
+		var objAPINm = '{!JSENCODE(childObjectAPIName)}';
+        var isRFConsoleEnabled = '{!isRFConsoleEnabled}';
+        var isConsoleEnabled = '{!isConsoleEnabled}';
+    	var isLookUp = '{!JSENCODE($CurrentPage.parameters.isLookUp)}';
+		var citype = '{!JSENCODE($CurrentPage.parameters.citype)}';
+        var uiTheme = '{!$User.UIThemeDisplayed}';
+    	var parentName = '{!JSENCODE(parentName)}';
+         var Account="{!JSENCODE($Label.LinkedToAccount)}";
+        var Client ="{!JSENCODE($Label.LinkedToClient)}";
+        var All ="{!JSENCODE($Label.All)}";
+        var warning = "{!JSENCODE($Label.Warning)}";
+        var SelectedValuesWillNotBeRetained = "{!JSENCODE($Label.SelectedValuesWillNotBeRetained)}";
+		var error = "{!JSENCODE($Label.Error)}";
+        var childObjectName ="{!JSENCODE($CurrentPage.parameters.childName)}";
+		var isServiceRequest = '{!JSENCODE($CurrentPage.parameters.isServiceRequest)}';
+		var isFromQV='{!JSENCODE($CurrentPage.parameters.isFromQV)}';
+		var isFromCloseForm='{!JSENCODE($CurrentPage.parameters.isFromCloseForm)}';
+        var isSRDServiceLookup='{!JSENCODE($CurrentPage.parameters.isSRDServiceLookup)}';
+		var isFromEmailPage ='{!JSENCODE($CurrentPage.parameters.fromEmailPage)}';
+		var isFromSS={!isFromSS};
+		var searchRecordsFor='';
+		var isCalledFromSearchConfig = '{!JSENCODE($CurrentPage.parameters.isCalledFromSearchConfig)}';
+        var frmCiSlideIn = '{!JSENCODE($CurrentPage.parameters.frmCiSlideIn)}';
+        var isService = '{!JSENCODE($CurrentPage.parameters.isService)}';
+        var isSRD = '{!JSENCODE($CurrentPage.parameters.isSRD)}';
+        var isInctemplate = '{!JSENCODE($CurrentPage.parameters.isInctemplate)}'
+        var isReqtemplate = '{!JSENCODE($CurrentPage.parameters.isReqtemplate)}'
+        var isServiceOffering = '{!JSENCODE($CurrentPage.parameters.isServiceOffering)}'
+		var isFlattenedCmdb = '{!JSENCODE($CurrentPage.parameters.isFlattenedCmdb)}';
+		var modalType = '{!JSENCODE($CurrentPage.parameters.modalType)}';
+        var isPFT = '{!JSENCODE($CurrentPage.parameters.isPFT)}';
+        var isELKF = '{!JSENCODE($CurrentPage.parameters.isELKF)}';
+        var lightningUI = '{!JSENCODE($CurrentPage.parameters.lightningUI)}';
+		//Kanhaiya
+		var lblAllClasses = '{!JSENCODE($Label.AllClasses)}';
+		var lblAssetClasses = '{!JSENCODE($Label.AssetClasses)}';
+		var lblCIClasses = '{!JSENCODE($Label.CIClasses)}';
+		var lblFilterBy = '{!JSENCODE($Label.ShowClasses)}';
+		var isAssetManagementEnabled = {!isAssetMgtEnabled};
+		var isCIManagementEnabled = {!isCIMgtEnabled};
+		var isApplyInstanceFilter = false;
+		var selectedInstanceTypeFilter = '';
+		var isInstanceTypeFilterShown = isAssetManagementEnabled && isCIManagementEnabled;
+		var pleaseWaitMsg = '{!JSENCODE($Label.PleaseWait)}';
+		var LKFId = '{!JSENCODE($CurrentPage.parameters.idValstr)}';
+		var isLightningExperience = {!IF(isLightningExperience,true,false)};
+		var namespacePrefix = 'BMCServiceDesk__';
+		var displayLinkBtn = true; 
+        var displayFulfillRequestBtn = false;
+        var isLkp = Boolean('{!JSENCODE(IF(isLookup,"true", ""))}'); 
+        var lookUpType = '{!JSENCODE(lookUpType)}';
+		if (parentName == 'Matching' || isLkp || lookUpType =='FulfillReqLookup'){
+			if(isFromSR){
+				displayFulfillRequestBtn=true;
+                displayLinkBtn = false;
+            }
+			else
+				displayLinkBtn = false;
+			
+		}
+		//Kanhaiya
+        if (parentName=='Matching') {
+            
+		    var filterMenus = new Array({!fieldsMatchingIncidents.size});
+			var fieldSize = {!fieldsMatchingIncidents.size};
+			var filterItemLabel = new Array(fieldSize);
+			var filterItemValue = new Array(fieldSize);
+			
+			if (fieldSize > 0) {
+				var i=0;
+			<apex:repeat value="{!fieldsMatchingIncidents}" var="f">
+					filterItemLabel[i] = '{!JSENCODE(f.Label)}';
+					filterItemValue[i] = '{!f}';
+				i++;
+			</apex:repeat>
+			}
+			else {
+				if ('{!clientId}' != '' && '{!categoryId}' != '') {
+					filterItemLabel = new Array(2);
+					filterItemValue = new Array(2);
+					filterItemLabel[0] = '{!JSENCODE($ObjectType.Incident__c.fields.FKClient__c.label)}';
+					filterItemValue[0] = 'FKClient__c';
+					filterItemLabel[1] = '{!JSENCODE($ObjectType.Incident__c.fields.FKCategory__c.label)}';
+					filterItemValue[1] = 'FKCategory__c';
+				}
+				else if ('{!clientId}' != '') {
+					filterItemLabel = new Array(1);
+					filterItemValue = new Array(1);
+					filterItemLabel[0] = '{!JSENCODE($ObjectType.Incident__c.fields.FKClient__c.label)}';
+					filterItemValue[0] = 'FKClient__c';
+				}
+				else if ('{!categoryId}' != '') {
+					filterItemLabel = new Array(1);
+					filterItemValue = new Array(1);
+					filterItemLabel[0] = '{!JSENCODE($ObjectType.Incident__c.fields.FKCategory__c.label)}';
+					filterItemValue[0] = 'FKCategory__c';
+				}
+				else {
+					filterItemLabel = new Array(3);
+					filterItemValue = new Array(3);
+					filterItemLabel[0] = '{!JSENCODE($ObjectType.Incident__c.fields.FKAccount__c.label)}';
+					filterItemValue[0] = 'FKAccount__c';
+					filterItemLabel[1] = '{!JSENCODE($ObjectType.Incident__c.fields.FKClient__c.label)}';
+					filterItemValue[1] = 'FKClient__c';
+					filterItemLabel[2] = '{!JSENCODE($ObjectType.Incident__c.fields.FKCategory__c.label)}';
+					filterItemValue[2] = 'FKCategory__c';
+				}
+			}
+        }
+        if({!objNotSupported}){
+        	var goButton = document.getElementById('goButton');
+            if (goButton != null)
+            	goButton.disabled = true;
+        }
+		var ConfigurationItems = '{!JSENCODE($Label.ConfigurationItems)}';
+        var SDEFStyles = '{!$Resource.SDEFStyles}';
+        var statusValue = '{!objStatus.Name}';
+		var mergeStatus = '{!objStatus.ID}';
+        enableMerge = {!enableMerge};
+        var mergeSuccessful;
+        var filterObjectId = '{!filterObjectId}';
+        function setResetButtons() {
+            //Ext.getCmp('linkBtn').setDisabled(!enableMerge);
+        }
+		var isNewLookup = {!isNewLookup};
+		var lblMatchBy = '{!JSENCODE($Label.MatchBy)}';
+        var lblGoBtn = '{!JSENCODE($Label.GO)}';
+        var lblFilterMenuTooltip  = '{!JSENCODE($Label.Configure_fields_for_Matching_Incidents)}';
+        var lblFilterMenuErrMsg  = '{!JSENCODE($Label.Matching_Incidents_error_msg_for_filter)}';
+        var lblApply  = '{!JSENCODE($Label.Apply)}';
+        var lblChild  = '{!JSENCODE($Label.Child)}';
+        var lblParent  = '{!JSENCODE($Label.bmcservicedesk__parent)}';        
+        var lblLinkasChild  = '{!JSENCODE($Label.LinkasChild)}';
+        var lblLinkasParent  = '{!JSENCODE($Label.LinkasParent)}';
+        var lblUpdatestatusoflinkedrecords  = '{!JSENCODE($Label.Updatestatusoflinkedrecords)}';
+        var lblLinkandupdatestatus  = '{!JSENCODE($Label.Linkandupdatestatus)}';
+        var lblLink  = '{!JSENCODE($Label.Link)}';
+        var lblStatus  = '{!JSENCODE($Label.SetSelectionsTo)}';
+        var lblSearch  = '{!JSENCODE($Label.Search)}';
+        var lblClear  = '{!JSENCODE($Label.Clear)}';
+        var lblOpenItems='{!JSENCODE($Label.OpenItems)}';
+        var lblClosedItems='{!JSENCODE($Label.ClosedItems)}';
+		var lblValidateMinimumCharsSearchPage  = '{!JSENCODE($Label.GsErrorMsg)}';
+        var lblReMergeValidationErrorMsg  = '{!JSENCODE($Label.ReMergeValidationErrorMsg)}';
+        var atleastOneRecord  = '{!JSENCODE($Label.Please_select_at_least_one_record_to_link)}';
+        var functionCalled = 'false';        
+        var selectedCIids='';
+        var unSelectedCIids='';
+        var NewLookUpType = '{!JSENCODE($CurrentPage.parameters.NewLookUpType)}'
+        window.document.title = '{!JSENCODE(windowTitle)}'; 
+        var title = '{!JSENCODE(title)}';   
+        var atleastOneSelected;                 
+        var param = '{!JSENCODE($Component.theForm.thepageblock.tableOutputpanel)}';
+        var param1 = '{!JSENCODE($Component.theForm.messagePanel)}';
+		var pageSizePerPageList = '{!JSENCODE($Component.theForm.thepageblock.choosePageSize)}';
+		var selectedLookUpID='';	
+		var selectedLookUpName = '';
+		var selectedUserEmail = '';
+		var selectedFKLookUpID='';	
+		var selectedFKLookUpName = '';
+        var texttag = '{!JSENCODE(TextBox)}'; 
+        var BMCRFSDEFStylesPath = '{!$Resource.BMCRFSDEFStyles}';
+        var isBusinessServiceObj = {!isBusinessServiceObj}; 
+        var dataSeparator='ф';
+		var lblfilterBy ='{!JSENCODE($Label.FilterBy)}';
+		var isCheckedAccount={!isCheckedAccount},isCheckedClient={!isCheckedClient},isCheckedAll={!isCheckedAll};
+        var filteredFiledForMatchingCI='{!JSENCODE(filteredFieldsForMatching)}';
+        var hasParent = '{!JSENCODE(hasParent)}';
+        var hasParentName = '{!JSENCODE(hasParentName)}';
+        var childCount = '{!childCount}';
+        var lblParentLabel = '{!JSENCODE($Label.ParentLabel)}';
+        var lblParentChildError = '{!JSENCODE($Label.ParentChildError)}';
+        var lblChildLabel = '{!JSENCODE($Label.ChildLabel)}';
+        var lblParentMsg = '{!JSENCODE($Label.ParentMsg)}';
+        var lblChildMsg = '{!JSENCODE($Label.ChildMsg)}';
+		var lblLink = '{!JSENCODE($Label.Link)}';
+		var lblLinkParentError = '{!JSENCODE($Label.linkParentError)}';
+		var lblThe = '{!JSENCODE($Label.The)}';
+        var selectedIds = '';
+        SearchStringVal='{!JSENCODE(searchString)}';       
+        
+        var lblNoRecordFoundMsg = '{!JSENCODE($Label.CMDBListViewCustNoRecordsFound)}';
+        var lblPageRefresh = '{!JSENCODE($Label.Refresh)}';
+        var lblPageNext = '{!JSENCODE($Label.NextPage)}';
+        var lblPageFirst = '{!JSENCODE($Label.FirstPage)}';
+        var lblPageLast = '{!JSENCODE($Label.LastPage)}';
+        var lblPagePrevious = '{!JSENCODE($Label.PreviousPage)}';
+        var lblPage = '{!JSENCODE($Label.Page)}';
+        var lblOf =  '{!JSENCODE($Label.Of)}';
+        var lblRecordsPerPage = '{!JSENCODE($Label.Records_per_page)}';
+		var Ok = "{!JSENCODE($Label.ExtjsMessageOK)}";
+        var Fulfill_Service_Request = "{!JSENCODE($Label.Fulfill_Service_Request)}";
+        var lblActiveItems='{!JSENCODE($Label.ActiveItems)}';
+    	var lblInActiveItems='{!JSENCODE($Label.InactiveItems)}';
+    	var lblRemedyforceAccounts ='{!JSENCODE($Label.RemedyforceAccounts)}';
+        var searchFieldNew='{!JSENCODE($Component.theForm.searchField)}';
+		var pageMessageId='{!JSENCODE($Component.theForm.pageMessage)}';
+        var isServiceLookup = {!isServiceLookup}; 
+        var addFilterName ='{!JSENCODE(addFilterName)}';
+        var userLanguage = '{!JSENCODE(userLanguage)}';
+        var AdvancedSearch = '{!JSENCODE($Label.AdvancedSearch)}';
+		var isOptionalFilter = Boolean('{!JSENCODE(IF(isOptionalFilter,"true", ""))}');
+        function getUrlParameter( param ){
+            param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+            var r1 = "[\\?&]"+param+"=([^&#]*)";
+            var r2 = new RegExp( r1 );
+            var r3 = r2.exec( window.location.href );
+            if( r3 == null ){return ""}
+            else {return r3[1]};
+        }  
+        function  searchCI(strFilterValue,advacnedSearchedString,ClassIdinCriteria){
+			hideAllErrorMessage();
+            var searchString = '';
+        	var searchTextId = document.getElementById('searchTextId');
+            var minTwoChar = document.getElementById('minTwoChar');
+            var noRecordFoundMsg = document.getElementById(noRecordFound);
+        	if (typeof(strFilterValue) !='undefined' && strFilterValue != null &&  strFilterValue !=''){
+	        	searchString = strFilterValue;
+            }else if(searchTextId && childObjectName == 'BMC_BaseElement__c'){
+             	searchString = searchTextId.value;
+            }else{
+                searchString = document.getElementById('{!JSENCODE($Component.theForm.searchField)}').value;               
+            }
+            var isCJK=false;
+			searchString=searchString.trim();
+            if(searchString!='' && searchString.length<2){
+          		isCJK=isCJKChar(searchString);
+                if(noRecordFoundMsg.style.display==''){
+					noRecordFoundMsg.style.display='none';
+				}
+                minTwoChar.style.display="block";
+				return false;
+			}else{
+				minTwoChar.style.display="none";
+          	}	           
+                         
+            var pageSize = document.getElementById('{!JSENCODE($Component.theForm.thepageblock.choosePageSize)}').value;        
+            if(isFromRefresh){
+				isFromRefresh = false;
+				searchCIsOnRefresh(ValidateReserveCharactersForSOSL(searchString),pageSize,selectedCIids,unSelectedCIids,isCJK,advacnedSearchedString,ClassIdinCriteria,'','','','refresh');
+			}else{
+				searchCIs(ValidateReserveCharactersForSOSL(searchString),pageSize,selectedCIids,unSelectedCIids,isCJK,advacnedSearchedString,ClassIdinCriteria);
+			}
+            clearLists();
+        } 
+        
+        function ValidateReserveCharactersForSOSL(value)
+		{
+			var chars = new Array('\\', '?', '&', '|', '!', '{', '}', '[', ']', '(', ')', '^', '~', '*', ':', '"', '+', '-');
+			for(var j = 0 ; j < chars.length; j++)
+			{
+				value = value.split(chars[j]).join('\\'+chars[j]);
+			}	 
+			return value;
+		}
+        function createNewClient(){
+           window.opener.createNewClient();
+           window.close();
+        }     
+        function  sortDataJSFunc(){
+			if('{!JSENCODE(listObjectName)}'=='Profile' || '{!JSENCODE(listObjectName)}'=='UserRole') 
+                return;
+            var searchString;
+			var pageSize;
+			var searchTextObj=document.getElementById('searchTextId');
+			var choosePageSize = document.getElementById('{!JSENCODE($Component.theForm.thepageblock.choosePageSize)}');
+            if ('{!JSENCODE(parentName)}'=='Matching'|| ('{!JSENCODE(parentName)}' == 'Problem__c' &&  '{!JSENCODE($CurrentPage.parameters.childName)}'=='Incident__c')) searchString = searchTextObj.value;
+            else {
+             searchString = document.getElementById('{!JSENCODE($Component.theForm.searchField)}').value || (searchTextObj && searchTextObj.value);
+				if(choosePageSize){
+					pageSize = choosePageSize.value;
+				}
+            } 
+			var isCJK=false;
+			if(searchString){
+                searchString=searchString.trim();
+                if(searchString!='' && searchString.length<2){
+                    isCJK=isCJKChar(searchString);
+                }
+            }
+			if(choosePageSize){
+				pageSize = choosePageSize.value;
+			}
+            if(lightningUI){
+                showLoadingMask();
+            }
+            sortData(searchString,pageSize,selectedCIids,unSelectedCIids,isCJK);   
+            clearLists();                                                    
+        }
+		function clearText(){
+			document.getElementById('{!JSENCODE($Component.theForm.searchField)}').value='';
+			var searchTextId = document.getElementById('searchTextId');
+			if(searchTextId && childObjectName == 'BMC_BaseElement__c')
+				searchTextId.value='';
+            if(!advancedFilterApplied)
+			 searchCI();
+            document.getElementById("clearLink").style.visibility="hidden";
+		}
+		function enableClearBtn(){
+			var searchString = document.getElementById('{!JSENCODE($Component.theForm.searchField)}').value;
+		 	if(searchString!=null && searchString!='undefined' && searchString !=''){
+                document.getElementById("clearLink").style.visibility="visible";
+		 	}
+		}
+		function selectClientAccountDtls(accountId, accountName){
+			selectedFKLookUpID= accountId;	
+			selectedFKLookUpName = accountName;
+		}
+		function setIdOnClick(sId,sName,sEmailId){
+            selectedLookUpID = sId;
+            selectedLookUpName = sName;
+            if(isFromEmailPage)
+            	selectedUserEmail = sEmailId;
+			if(parentName == 'Task__c' && childObjectName == 'Status__c' && lightningUI == 'true' && sId){
+                sId = sId+dataSeparator+sName;
+            } 
+            if(sId!= null && sId!= '' && window.parent.onCompleteFunction!=null){
+		        window.parent.onCompleteFunction(sId); 
+	        }
+        }
+        function setIdOnDBClick(sId,sName){
+        	selectedLookUpID = sId;
+            selectedLookUpName = sName;
+			if(isFromCloseForm == 'true' || isSRDServiceLookup == 'true'){
+			   window.opener.setPopUpValue(selectedLookUpID , selectedLookUpName);
+               window.close();
+			}else if(frmCiSlideIn && frmCiSlideIn=='true'){
+				window.parent.opener.setPrimaryCI(selectedLookUpID,selectedLookUpName);
+				window.parent.close();
+			}else if(isFromQV == 'true'){
+			   window.opener.setLookUpField('{!JSENCODE(TextBox)}',selectedLookUpID , selectedLookUpName);
+               window.close();
+            }else if(selectedLookUpID != ''&& texttag != 'SRLookup'){
+            	if (window.opener == null) {
+                     if(isSRD=='true')
+                    {
+                        var win = window.parent;
+                        if(isService=='true')
+                        {   
+							win.document.getElementById('thePage:ReqDefForm:BMC_BaseElement__c_id_name__c').setAttribute('value',selectedLookUpName);
+		                    win.document.getElementById('thePage:ReqDefForm:BMC_BaseElement__c_id_id').value = selectedLookUpID;
+                            win.clearOffering();
+                        }
+                        else if(isServiceOffering=='true')
+                        {                               
+                               if(isFlattenedCmdb=='false')
+                               {
+                                win.getElementById('thePage.ReqDefForm.BMC_BusinessService__c_id_instance_name__c').value = selectedLookUpName
+                                win.getElementById('thePage.ReqDefForm.BMC_BusinessService__c_id_fkbmc_baseelement__c').value = selectedLookUpID;
+                               }
+                                win.document.getElementById('thePage:ReqDefForm:BMC_BaseElement__c_id_name__c__x_1').value = selectedLookUpName;
+                                win.document.getElementById('thePage:ReqDefForm:BMC_BaseElement__c_id_id__x_1').value = selectedLookUpID;
+                                win.setBusiOffering();
+                        }
+
+                         else if(isInctemplate=='true')
+                         {
+                             win.document.getElementById('thePage:ReqDefForm:SYSTemplate__c_id__inc_name').value = selectedLookUpName;
+                             win.document.getElementById('thePage:ReqDefForm:SYSTemplate__c_id_id').value = selectedLookUpID;
+                         }
+                         else if(isReqtemplate=='true')
+                         {
+                             win.document.getElementById('thePage:ReqDefForm:SYSTemplate__c_id_name').value = selectedLookUpName;
+                             win.document.getElementById('thePage:ReqDefForm:SYSTemplate__c_id_id').value = selectedLookUpID;
+                             win.setServiceRequestTemplate(selectedLookUpID);
+                         }else if(isELKF == 'true'){
+                             win.setLookupCriteriaID(selectedLookUpID,selectedLookUpName);
+                         }
+						modalType = modalType.trim();
+						win.rfPopUpClose(modalType);
+                    }
+                else{
+            		    var win = window.parent;
+            	    	win.document.getElementById('statusLookUpId-inputEl').value = selectedLookUpName;
+            		    win.mergeStatus = selectedLookUpID;
+                        win.popUpWindow.close();
+                    }
+            	}
+            	else {
+                    if(texttag == 'customLookup'){
+                        window.opener.clientfields(selectedLookUpID , selectedLookUpName);
+                		window.close();
+                	}else{
+						window.opener.lookupPick2('{!JSENCODE(FormTag)}','{!JSENCODE(TextBox)}_lkid','{!JSENCODE(TextBox)}',selectedLookUpID,selectedLookUpName, false);
+                        if(isLookUp=='Contact'){
+                            if (parentName == 'Incident__c')
+                            	window.opener.contactFieldId = selectedLookUpID;
+                            else if (parentName == 'Task__c') 
+                                window.opener.contactFieldId = selectedLookUpID;
+                        }
+                        if(isLookUp=='Account'){
+                            if( parentName == 'Incident__c')
+                            	window.opener.isAccountByClient = false;
+                            window.opener.accountFieldId = selectedLookUpID;
+                        }
+                        if('{!JSENCODE($CurrentPage.parameters.type)}' =='service'){
+                            window.opener.buisnessServiceId = selectedLookUpID;
+                        }
+					}
+				}  
+			}
+        }
+        
+        var srcCIID;
+        function setSrcCIIDFromReport(tempSrcCIID){
+            srcCIID = tempSrcCIID;
+        }
+        
+		function checkVIPClient(isVIP)
+        {
+        	var IsOOTBUserField=isVIP;
+	        if(texttag != undefined && texttag !='customLookup' &&!isBusinessServiceObj && window.opener.isConsoleUI != undefined && window.opener.isConsoleUI == true  ){
+	        	IsOOTBUserField=false;
+	        } 
+	        if(window.opener.VIPClientIcon!=undefined){
+				window.opener.VIPClientIcon(IsOOTBUserField);
+			}
+       }
+      
+      
+		function callLinkJS1(){
+			if(isForNormalizationExcep || (parentName == 'Task__c' && childObjectName == 'Status__c' && lightningUI == 'true')){
+				return ;
+			}
+			
+            var linkButton = document.getElementById('linkButton');
+            if (linkButton != null)
+            	linkButton.disabled = true;
+			if(isFromQV == 'true'){
+			   window.opener.setLookUpField('{!JSENCODE(TextBox)}',selectedLookUpID , selectedLookUpName);
+               window.close();
+            }else if(isFromCloseForm == 'true'){
+			   window.opener.setPopUpValue(selectedLookUpID , selectedLookUpName);
+               window.close();
+			}else if(frmCiSlideIn && frmCiSlideIn=='true'){
+				window.parent.opener.setPrimaryCI(selectedLookUpID,selectedLookUpName);
+				window.parent.close();
+			}else if(childObjectName && childObjectName.toLowerCase()== "businesshours"){
+                if(typeof(window.parent) != 'undefined' && window.parent != null){
+                    window.opener.setPopUpValue(selectedLookUpID , selectedLookUpName);
+                }
+                window.close();
+            }else if(isFromEmailPage){
+        		var addressType =  '{!JSENCODE($CurrentPage.parameters.addressType)}';
+        		window.opener.setValueAsEmailAddress(selectedUserEmail, addressType);
+        		window.close();
+            }else if(parentName == 'Normalization'){
+            	if(typeof(window.parent) != null && typeof(window.parent) != 'undefined')
+            		window.parent.setMasterValue(selectedLookUpName);
+            }else if(selectedLookUpID!=undefined && selectedLookUpID!=null && selectedLookUpID != ''){
+				if(isCalledFromSearchConfig == 'true' && parentName == 'Incident__c' && childObjectName == 'BMC_BaseElement__c') {
+						window.parent.setPrimaryCI(selectedLookUpID,selectedLookUpName);
+						window.parent.reloadIncidentform();
+				}
+                else if (window.opener == null) {
+            		if(isLookUp == 'BMC_BaseElement__c' && citype == 'location'){
+						if(typeof(window.parent) != 'undefined' && window.parent != null){
+							window.parent.setPopUpValue(selectedLookUpID,selectedLookUpName);
+							window.parent.closePopup();
+						}
+					}
+                    else{                        
+                         if(isSRD=='true')
+						{
+                        var win = window.parent;
+                        if(isService=='true')
+                        {      win.document.getElementById('thePage:ReqDefForm:BMC_BaseElement__c_id_name__c').value = selectedLookUpName;       
+		                      win.document.getElementById('thePage:ReqDefForm:BMC_BaseElement__c_id_id').value = selectedLookUpID;
+                              win.clearOffering();
+                        }
+                        else if(isServiceOffering=='true')
+                        {                               
+                               if(isFlattenedCmdb=='false')
+                               {
+                                win.getElementById('thePage.ReqDefForm.BMC_BusinessService__c_id_instance_name__c').value = selectedLookUpName
+                                win.getElementById('thePage.ReqDefForm.BMC_BusinessService__c_id_fkbmc_baseelement__c').value = selectedLookUpID;
+                               }
+                                win.document.getElementById('thePage:ReqDefForm:BMC_BaseElement__c_id_name__c__x_1').value = selectedLookUpName;
+                                win.document.getElementById('thePage:ReqDefForm:BMC_BaseElement__c_id_id__x_1').value = selectedLookUpID;
+                                win.setBusiOffering();
+                        }
+
+                         else if(isInctemplate=='true')
+                         {
+                             win.document.getElementById('thePage:ReqDefForm:SYSTemplate__c_id__inc_name').value = selectedLookUpName;
+                             win.document.getElementById('thePage:ReqDefForm:SYSTemplate__c_id_id').value = selectedLookUpID;
+                         }
+                         else if(isReqtemplate=='true')
+                         {
+                             win.document.getElementById('thePage:ReqDefForm:SYSTemplate__c_id_name').value = selectedLookUpName;
+                             win.document.getElementById('thePage:ReqDefForm:SYSTemplate__c_id_id').value = selectedLookUpID;
+                             win.setServiceRequestTemplate(selectedLookUpID);
+                         }else if(isELKF == 'true'){
+                             win.setLookupCriteriaID(selectedLookUpID,selectedLookUpName);
+                         }
+                         
+                        win.rfPopUpClose(modalType);
+						}
+					else{
+							var win = window.parent;
+							win.document.getElementById('statusLookUpId-inputEl').value = selectedLookUpName;
+							win.mergeStatus = selectedLookUpID;
+							win.popUpWindow.close();
+						}
+                    }
+            	}
+            	else if ('{!JSENCODE(TextBox)}' == 'modelattrlookup') {
+            		window.opener.document.getElementById('thePage:modelForm:inputTxt').value = selectedLookUpName;
+            		window.opener.document.getElementById('referenceID').value = selectedLookUpID;
+					window.opener.lookupSelectedValue = selectedLookUpName;
+                    window.opener.lookupSelectedId = selectedLookUpID;
+            		window.close();
+            	} else if (parentName == 'AdminSSIncident' && childObjectName == 'SRM_RequestDefinition__c'){
+					window.opener.setPopUpValue(selectedLookUpID,selectedLookUpName);
+					window.close();
+                }
+            	else{
+                    if(texttag == 'customLookup'){
+                     var linkIncidentFromChat ="{!JSENCODE($CurrentPage.parameters.linkIncidentFromChat)}";
+                    
+                    	if(linkIncidentFromChat == 'true'){
+                    	var linkIncidentAndActionData = [];
+                    	linkIncidentAndActionData[0] = selectedLookUpID ;
+                    	linkIncidentAndActionData[1] = selectedLookUpName;
+                    	linkIncidentAndActionData[2] = 'true';
+                    	
+                		 window.opener.ChatAction_Link(linkIncidentAndActionData);
+                		 window.close();
+                		}else{
+                        window.opener.clientfields(selectedLookUpID , selectedLookUpName, selectedFKLookUpID, selectedFKLookUpName);
+                         	
+                		window.close();
+                    }    
+                    }else if(texttag =='statusLookUpId-inputEl'){
+                        var win = window.opener;
+                        win.document.getElementById('statusLookUpId-inputEl').value = selectedLookUpName;
+                        win.mergeStatus = selectedLookUpID;
+                        window.close();
+                        
+                    }else if(texttag =='SRLookup')
+                    {
+                        var idname=selectedLookUpID+dataSeparator+selectedLookUpName;
+                        window.opener.lookupValue(idname);
+                        window.close();   
+                    }else if(texttag =='calledFromReport'){                
+                        window.open('/apex/CMDBManager?cmdbRecordId='+srcCIID+'&isCalledFromReport=true');
+                    }else if(texttag =='changelookupValues'){
+                        var opener = window.dialogArguments; 
+                        if(opener != null && typeof(opener) != 'undefined') 
+                               opener.changelookupValues(selectedLookUpID,selectedLookUpName);
+                        else
+                         window.opener.changelookupValues(selectedLookUpID,selectedLookUpName);
+                         window.close();
+                    }else if(texttag =='selectlookupValues'){
+                        window.opener.setReferenceToVal(selectedLookUpID + dataSeparator + selectedLookUpName);
+                        window.close();
+                    }
+                    
+                    else{
+                    	if(isLookUp=='SYSTemplate__c')
+                    	{
+							if(parentName == 'Incident__c' || parentName == 'Task__c' || parentName == 'Change_Request__c'){
+								window.opener.applyTemplateToRecord(selectedLookUpID,selectedLookUpName);
+								window.close();
+               				}
+               				else{
+								// it should be set before calling vf remoting function for applying template.
+								window.opener.lookupPick2('{!JSENCODE(FormTag)}','{!JSENCODE(TextBox)}_lkid','{!JSENCODE(TextBox)}',selectedLookUpID,selectedLookUpName, false);
+								window.opener.applyTemplateToRecord(selectedLookUpID);
+								window.close();
+							}
+               			} else {
+               				// it should be set before calling vf remoting function for applying template.
+							window.opener.lookupPick2('{!JSENCODE(FormTag)}','{!JSENCODE(TextBox)}_lkid','{!JSENCODE(TextBox)}',selectedLookUpID,selectedLookUpName, false);
+							window.close();
+               			}
+                        if(isLookUp=='Contact'){
+                            if (parentName == 'Incident__c')
+                            	window.opener.contactFieldId = selectedLookUpID;
+                            else if (parentName == 'Task__c') 
+                                window.opener.contactFieldId = selectedLookUpID;
+                        }
+                        if(isLookUp=='Account'){
+                            if( parentName == 'Incident__c'){
+                            	window.opener.isAccountByClient = false;
+                            	if(window.opener.checkSmartSuggestionHandler)
+	                            	window.opener.checkSmartSuggestionHandler('FKAccount__c');
+                            }
+                            
+                            window.opener.accountFieldId = selectedLookUpID;
+                        }else if(isLookUp == 'SRM_RequestDefinition__c'){
+						  window.opener.setReqDefId(selectedLookUpID);
+						}
+                        if('{!JSENCODE($CurrentPage.parameters.type)}' =='service'){
+                            window.opener.buisnessServiceId = selectedLookUpID;
+                        }
+                        
+                    	
+                    }
+                }
+            }else if(isLookUp == 'fklocation__c'){
+            	var strSelectedId = '';
+            	if(document.getElementById("selectAllcheckBox").checked){
+            		for(var i=0; i < Ext.select('#checkedone').elements.length; i++){
+            			strSelectedId += Ext.select('#checkedone').elements[i].name+'==';
+            		}
+            	}else if( selectedCIids != ''){
+            		strSelectedId = selectedCIids;
+            	}
+            	if(strSelectedId != '')
+            		window.parent.setPopUpVar(strSelectedId,unSelectedCIids);
+            	window.parent.popUpWindow.close();
+            }else if(isFromNewCMDBExplorer){
+                var windowOpener = window.opener;
+                if(selectedCIids != ''){
+                    windowOpener.changeId = selectedCIids.split(':')[0];
+                }else{
+                    var selectedIdMapObj = Object.keys(selectedIdMap);
+                    if(selectedIdMapObj.length == 1){
+                        windowOpener.changeId = selectedIdMapObj[0];
+                    }else{
+                        cmdbExplorerErrorMsg = atleastOneRecord;
+                        hideAllErrorMessage();
+                        showPageMsg();
+                        return;
+                    }
+                }
+                windowOpener.createLinkToExistingCR();
+                window.close();
+            }else{
+                link(selectedCIids,unSelectedCIids);
+            }   
+			clearLists();	
+            if(window.opener){            	
+                var lookupFieldDom = window.opener.document.getElementById('{!JSENCODE(TextBox)}');                
+                if(lookupFieldDom){
+                    var fieldapiname = lookupFieldDom.getAttribute('rf-fieldapiname');                    
+                    if(fieldapiname){
+                        var tooltipDom = window.opener.document.getElementById('rf-tooltip'+fieldapiname);                        
+                        if(tooltipDom){
+                            tooltipDom.setAttribute('style','display:inline');
+						}
+                    }
+                }
+            }
+
+        }
+        setResultListHeightJS();
+		if(navigator.userAgent.toLowerCase().indexOf("msie") > -1){
+			document.getElementById('tdSearch').style.width = '40%';
+		}
+	</script>
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/HTML_ENCODE_DECODE.js" />	
+	<apex:includeScript value="{!$Resource.BMCServiceDesk__BMCRFCommonJS}/LinkMultipleCIPage.js"/>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/OpenPopupRecordUtility.js"/>
+</apex:page>

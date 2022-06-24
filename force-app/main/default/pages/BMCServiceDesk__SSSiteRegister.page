@@ -1,0 +1,269 @@
+<apex:page id="ssRegisterPage" controller="BMCServiceDesk.SSUserController" sidebar="false" showHeader="false" standardStylesheets="false">
+<head><title><apex:outputText value="{!$Label.bmcservicedesk__ssbrowsertitle}"/></title></head>
+<script>
+
+function showHelpText(evt)
+{
+	switch(evt) {
+	case 'userFirstName':
+			displayHelpText("{!JSENCODE($Label.SSFirstNameHelpText)}");
+		break;
+	case 'userLastName':
+			displayHelpText('{!JSENCODE($Label.SSLastNameHelpText)}');	    
+		break;
+	case 'userEmail':
+			displayHelpText('{!JSENCODE($Label.SSEmailAddressHelpText)}');	    
+		break;
+	case 'userName':
+			displayHelpText('{!JSENCODE($Label.SSUserNameHelpText)}');	    
+		break;
+	case 'userPassword':
+			displayHelpText('{!JSENCODE($Label.SSPasswordHelpText)}');	    
+		break;
+	case 'userConfirmPassword':
+			displayHelpText('{!JSENCODE($Label.SSConfirmPasswordHelpText)}');	    
+		break;
+	case 'userTimeZone':
+			displayHelpText('{!JSENCODE($Label.SSTimeZoneHelpText)}');    
+		break;
+	case 'userLocale':
+			displayHelpText('{!JSENCODE($Label.SSLocaleHelpText)}');	    
+		break;
+	case 'userLanguage':
+			displayHelpText('{!JSENCODE($Label.SSLanguageHelpText)}');	    
+		break;
+	case 'userStreet':
+			displayHelpText('{!JSENCODE($Label.SSStreetHelpText)}');	    
+		break;
+	case 'userCity':
+			displayHelpText('{!JSENCODE($Label.SSCityHelpText)}');	    
+		break;
+	case 'userStateProvince':
+			displayHelpText('{!JSENCODE($Label.SSStateProvinceHelpText)}');	    
+		break;
+	case 'userPostalCode':
+			displayHelpText('{!JSENCODE($Label.SSZipPostalCodeHelpText)}');	    
+		break;
+	case 'userCountry':
+			displayHelpText('{!JSENCODE($Label.SSCountryHelpText)}');	    
+		break;			
+	case 'userPhone':
+			displayHelpText('{!JSENCODE($Label.SSPhoneHelpText)}');	
+		
+	}	
+		
+}
+
+function displayHelpText(helpTxt)
+{
+	document.getElementById('{!$Component.ssRegisterPage.SSUserTemplate.siteRegisterForm.helpText}').value = helpTxt;
+}
+
+function copyEmail(ctrl)
+{
+	document.getElementById('{!$Component.ssRegisterPage.SSUserTemplate.siteRegisterForm.userNameValue.}').value = ctrl.value;
+}
+
+
+</script>
+    <apex:composition template="BMCServiceDesk__SSUserTemplate">
+    <apex:define name="body">
+            	<apex:outputPanel id="breadCrumbPanel">
+				<div class="ext-gecko ext-gecko3 x-border-ssbclayout-ct">
+					<table width="100%">
+					<tr>
+					<td valign="top" align="left">
+					<apex:outputLink value="{!$Page.BMCServiceDesk__SSSiteLogin}" id="homeLink" style="font-weight:bold;" styleClass="clsCmdLink">
+						<apex:outputText value="{!$Label.bmcservicedesk__sslogin}" styleClass="sshomebcStyle"/> 
+					</apex:outputLink>
+						<apex:outputText value=" > " styleClass="sshomebcStyle" style="margin-right:-8px; margin-left:-10px;"/>
+					<apex:outputLink value="#" id="registerLink" style="font-weight:bold;" styleClass="clsCmdLink">	
+						<apex:outputText value="{!$Label.bmcservicedesk__ssregistration}" styleClass="sshomebcStyle"/>
+					</apex:outputLink>	
+					</td>
+					<td valign="top" align="right">
+						<apex:outputText value="{!TodayDate}" styleClass="sshomebcStyle" style="font-weight:bold;" escape="false" />
+					</td>	
+					</tr>
+					</table>
+				</div>        
+				</apex:outputPanel>    
+	<apex:outputPanel id="siteRegisterPanel">
+	<div class="ext-gecko ext-gecko3 x-border-ssbodylayout-ct divBgColor" id="divBg">	
+	<apex:form id="siteRegisterForm" forceSSL="true">
+	<table>
+	<tr>
+		<td colspan="3"><div class="div15pxVspacing"/></td>
+	</tr>
+	<tr>
+		<td colspan="3"><div class="div15pxVspacing"/></td>
+	</tr>
+	<tr>
+	<td><div class="div15pxHspacing"/></td>
+	<td>
+    <div id="panel-basic"></div>            
+	</td>
+	</tr>
+	</table>
+
+					<div id="cnt">
+					<table class="tableBgWhite" cellspacing="0">
+						<tr class="sshomeLoginResetBgStyle trHeight">
+							<td valign="top" align="center" width="160px"></td>
+							<td valign="top" align="left" width="782px" colspan="2"><apex:outputText rendered="{!IF(!ISNULL(displayMessage),true,false)}"
+								style="color:Red;font-family:Tahoma,MS sans-serif;font-size:13px;" value="{!displayMessage}" /> <apex:PageMessages rendered="{!IF(!ISNULL(displayMessage),false,true)}"></apex:PageMessages>
+							</td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.FirstName.label}"
+								styleClass="fontClsLabel" styleClass="fontClsLabel" /><span
+								style="">*</span></td>
+							<td valign="center" align="left" width="40px"><apex:inputText id="userFirstNameValue" value="{!userFirstName}"
+								onfocus="showHelpText('userFirstName');" styleClass="txtBoxCls" />
+							</td>
+							<td rowspan="14"><apex:inputTextArea value="{!dummy}"
+                                id="helpText" styleClass="clsInputTxtArea" readonly="true" /></td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.LastName.label}" styleClass="fontClsLabel"
+								styleClass="fontClsLabel" /><span style="">*</span></td>
+							<td valign="center" align="left" width="40px"><apex:inputText id="userLastNameValue" value="{!userLastName}"
+								onfocus="showHelpText('userLastName');" styleClass="txtBoxCls" />
+							</td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.Email.label}" styleClass="fontClsLabel"
+								styleClass="fontClsLabel" /><span style="">*</span></td>
+							<td valign="center" align="left" width="40px"><apex:inputText id="userEmailValue" value="{!userEmail}"
+								onfocus="showHelpText('userEmail');" styleClass="txtBoxCls"
+								onblur="copyEmail(this);" /></td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.UserName.label}" styleClass="fontClsLabel"
+								styleClass="fontClsLabel" /><span style="">*</span></td>
+							<td valign="center" align="left" width="40px"><apex:inputText id="userNameValue" value="{!userName}"
+								onfocus="showHelpText('userName');" styleClass="txtBoxCls" /></td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$Label.bmcservicedesk__sspassword}" styleClass="fontClsLabel"
+								styleClass="fontClsLabel" /><span style="">*</span></td>
+							<td valign="center" align="left" width="40px"><apex:inputSecret id="userPasswordValue" value="{!userPassword}"
+								onfocus="showHelpText('userPassword');" styleClass="txtBoxCls" />
+							</td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="160px"><apex:outputText value="{!$Label.bmcservicedesk__ssconfirmpassword}"
+								styleClass="fontClsLabel" styleClass="fontClsLabel" /><span
+								style="">*</span></td>
+							<td valign="center" align="left" width="40px"><apex:inputSecret id="userConfirmPasswordValue" value="{!userConfirmPassword}"
+								onfocus="showHelpText('userConfirmPassword');"
+								styleClass="txtBoxCls" /></td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.TimeZoneSidKey.label}" styleClass="fontClsLabel"
+								styleClass="fontClsLabel" /><span style="">*</span></td>
+							<td valign="center" align="left" width="40px"><apex:selectList value="{!userTimeZone}" size="1"
+								onfocus="showHelpText('userTimeZone');" styleClass="comboBoxCls">
+								<apex:selectOptions value="{!timeZoneList}" />
+							</apex:selectList></td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.LocaleSidKey.label}" styleClass="fontClsLabel"
+								styleClass="fontClsLabel" /><span style="">*</span></td>
+							<td valign="center" align="left" width="40px"><apex:selectList value="{!userLocale}" size="1"
+								onfocus="showHelpText('userLocale');" styleClass="comboBoxCls">
+								<apex:selectOptions value="{!localeList}" />
+							</apex:selectList></td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.LanguageLocaleKey.label}" styleClass="fontClsLabel"
+								styleClass="fontClsLabel" /><span style="">*</span></td>
+							<td valign="center" align="left" width="40px"><apex:selectList value="{!userLanguage}" size="1"
+								onfocus="showHelpText('userLanguage');" styleClass="comboBoxCls">
+								<apex:selectOptions value="{!languageList}" />
+							</apex:selectList></td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.Phone.label}" styleClass="fontClsLabel"
+								styleClass="fontClsLabel" /><span style="">*</span></td>
+							<td valign="center" align="left" width="40px"><apex:inputText id="phoneValue" value="{!userPhone}"
+								onfocus="showHelpText('userPhone');" styleClass="txtBoxCls" /></td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.Street.label}" styleClass="fontClsLabel"
+								styleClass="fontClsLabel" /></td>
+							<td valign="center" align="left" width="40px"><apex:inputText id="userStreetValue" value="{!userStreet}"
+								onfocus="showHelpText('userStreet');" styleClass="txtBoxCls" />
+							</td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.City.label}" styleClass="fontClsLabel"
+								styleClass="fontClsLabel" /></td>
+							<td valign="center" align="left" width="40px"><apex:inputText id="userCityValue" value="{!userCity}"
+								onfocus="showHelpText('userCity');" styleClass="txtBoxCls" /></td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.State.label}"
+								styleClass="fontClsLabel" styleClass="fontClsLabel" /></td>
+							<td valign="center" align="left" width="40px"><apex:inputText id="userStateProvinceValue" value="{!userStateProvince}"
+								onfocus="showHelpText('userStateProvince');"
+								styleClass="txtBoxCls" /></td>
+						</tr>
+						<tr class="trHeight">
+							<td valign="center" align="left" width="120px"><apex:outputText value="{!$ObjectType.User.fields.PostalCode.label}"
+								styleClass="fontClsLabel" styleClass="fontClsLabel" /></td>
+							<td valign="center" align="left" width="40px"><apex:inputText id="userPostalCodeValue" value="{!userPostalCode}"
+								onfocus="showHelpText('userPostalCode');" styleClass="txtBoxCls" />
+							</td>
+						</tr>
+						<tr height="15px">
+							<td colspan="3"></td>
+						</tr>
+						<tr class="trBgColor">
+							<td valign="top" align="left" colspan="3"><apex:commandButton value="{!$Label.bmcservicedesk__sssubmit}" action="{!registerUser}"
+								styleClass="btnGrey" title="{!$Label.bmcservicedesk__sssubmit}" /> <apex:commandButton value="{!$Label.bmcservicedesk__sscancel}" action="{!loginPage}"
+								styleClass="btnGrey" title="{!$Label.bmcservicedesk__sscancel}" /></td>
+						</tr>
+					</table>
+					</div>
+
+
+				</apex:form>
+	</div>
+	</apex:outputPanel>
+	</apex:define>
+	</apex:composition>
+	
+	<script>
+		 Ext.onReady(function(){
+ 
+		 var p = new Ext.Panel({
+							header : true,
+							title: '<div class="ssPanelHeaderIcon userRegisterPanelHeaderIcon"></div><center>{!$Label.SSNewUserRegistration}</center>',
+							width : '100%',
+							renderTo:'panel-basic',
+							border : true,
+							collapsible : false,
+							contentEl:'cnt',
+							cls:'ssPanelBorder'
+						});
+		 
+		 
+		 });
+	</script>
+	 <style>
+                  @media screen and (-webkit-min-device-pixel-ratio:0) {
+                   .userRegisterPanelHeaderIcon{
+                       position:absolute;
+                        top:25px;
+                   }
+                  .x-panel-header-text{
+                     position:absolute
+                     top:35px;
+                     line-height:2;
+                   }
+            
+               }
+                
+    </style>  
+</apex:page>

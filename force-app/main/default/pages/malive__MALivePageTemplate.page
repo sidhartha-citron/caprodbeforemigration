@@ -1,0 +1,407 @@
+<!--
+    This template provides top header with buttons,
+    sidebar if necessary,
+    and notifications at top of page.
+    Additionally this loads jQuery, moment, notify, aljs, sidebar & malive utilities libraries
+    and lightning, MA styles, and MA UI CSS
+-->
+<apex:page >
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnythingLiveSummary,'plugins/jquery/jquery.min.js')}"></script>
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnythingLiveSummary,'plugins/moment/moment-with-locales.min.js')}"></script>
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnythingLiveSummary,'js/ma.sidebar.js')}"></script><!-- sidebar nav -->
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnythingLiveSummary,'js/malive.cardbuilder.js')}"></script><!-- simple slds card creator -->
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnythingLiveSummary,'plugins/notify/notify.min.js')}"></script><!-- jQuery Notify (growl messages) -->
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnythingLiveSummary,'plugins/growl/jquery.growl.js')}"></script><!-- jQuery Notify (growl messages) -->
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnythingLiveSummary,'js/malive.utilities.js')}"></script>
+    <script type='text/javascript' src="{!URLFOR($Resource.MapAnythingLiveSummary,'plugins/aljs/jquery.aljs-all.min.js')}"></script>
+
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.MapAnythingLiveSummary,'styles/styles.css')}" /><!--iconfont-->
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.MapAnythingLiveSummary,'styles/css/ma-ui.css')}" /><!--css shared across all MA Live visualforce pages-->
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.MapAnythingLiveSummary,'styles/css/growl/jquery.growl.css')}" /><!--css for growl notifications (Should be styled with SLDS next) -->
+
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        .bodyDiv .outerNoSidebar {
+            padding-bottom: 0;
+        }
+
+        .noSidebarCell, .sidebarCell .fixed {
+            padding: 0px;
+        }
+
+        /*.notifyjs-foo-base {
+            opacity: 0.85;
+            width: 200px;
+            background: #F5F5F5;
+            padding: 5px;
+            border-radius: 10px;
+        }*/
+
+        .notifyjs-corner {
+            left: auto!important;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .notifyjs-corner .notifyjs-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .notifyjs-corner .notifyjs-wrapper .notifyjs-container {
+            width: auto;
+            padding: 2px 18px;
+        }
+
+        .notifyjs-corner .notifyjs-wrapper .notifyjs-container .notifyjs-bootstrap-base {
+            white-space: normal;
+            overflow: hidden;
+        }
+
+        .notifyjs-foo-base .title {
+            width: 100px;
+            float: left;
+            margin: 10px 0 0 10px;
+            text-align: right;
+        }
+
+        .notifyjs-foo-base .buttons {
+            width: 70px;
+            float: right;
+            font-size: 9px;
+            padding: 5px;
+            margin: 2px;
+        }
+
+        .notifyjs-foo-base button {
+            font-size: 9px;
+            padding: 5px;
+            margin: 2px;
+            width: 60px;
+        }
+
+     /* slds brand band */
+        .slds-scope .slds-brand-band::before {
+            z-index: 0;
+        }
+
+        .slds-scope .slds-brand-band::after {
+            z-index: 0;
+        }
+
+        .slds-scope .slds-page-header {
+            z-index: 1;
+        }
+
+        #content-wrapper {
+            z-index: 1;
+            background-color: #fff;
+            border-radius: 0 0 4px 4px;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #content-wrapper #maBodyContent {
+            overflow: scroll;
+        }
+
+        body .bodyDiv, .slds-scope .slds-brand-band {
+            background-color: rgba(176, 196, 223, 1.0) !important;
+        };
+
+        .slds-brand-band {
+            min-height: 100%;
+        }
+
+        .slds-scope.noSidebarCell .slds-brand-band {
+            height: calc(100vh - 205px);
+        }
+
+        .ma-modals {
+            position: absolute;
+        }
+
+        .ma-modals .slds-modal__content, .ma-modals .slds-modal__content form, .ma-modals .slds-modal__content form .slds-form, .ma-modals .slds-modal__content form .slds-form > .slds-grid {
+            height: 100%;
+            overflow-y: hidden;
+        }
+
+        #datemodal .slds-modal__content {
+            overflow-y: scroll;
+        }
+
+        .ma-modals .slds-modal__content form .slds-form > .slds-grid #maBodyContent {
+            overflow-y: scroll;
+        }
+
+        .slds-datepicker td.slds-is-selected-multi + .slds-is-selected-multi > .slds-day:before {
+            -webkit-transform: translateX(-0.5rem);
+        }
+
+    </style>
+
+    <apex:slds />
+
+    <div class="slds-brand slds-brand-band slds-brand-band_medium slds-template_bottom-magnet slds-p-around_medium">
+        <!-- begin page header -->
+        <div id="maPageHeader" class="slds-page-header slds-has-bottom-magnet">
+            <div class="slds-grid">
+                <div class="slds-col slds-has-flexi-truncate">
+                    <div class="slds-media slds-no-space slds-grow">
+                        <div class="slds-media__figure">
+                            <span id="liveLogoPageHeaderIcon" class="slds-icon_container">
+                                <span class="slds-icon ma-icon ma-icon-live-logo"></span>
+                            </span>
+                        </div>
+                        <div class="slds-media__body">
+                            <p class="slds-line-height_reset"><apex:insert name="title" /></p>
+                            <h1 class="slds-page-header__title slds-m-right_small slds-align-middle slds-truncate"><apex:insert name="subtitle" /></h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-col slds-no-flex slds-grid slds-align-top">
+                    <apex:insert name="headerButtons" />
+                </div>
+            </div>
+        </div>
+        <!-- end page header -->
+
+
+        <div class="slds-grid" id="content-wrapper">
+            <div class="slds-col">
+                <!-- begin body content -->
+                <div id="maBodyContent">
+                    <apex:insert name="body" />
+                </div>
+                <!-- end body content -->
+            </div>
+        </div>
+    </div><!-- end slds-scope -->
+
+
+    <script>
+
+        function logNotification(title, message, type) {
+            /*
+            console.log('notification');
+            console.log(title);
+            console.log(message);
+            console.log(type);
+            */
+        }
+
+        function displayNotification(title, message, type) {
+            logNotification(title, message, type);
+            if(title == null) {
+                $.notify(message, type);
+            }
+            else {
+                $.notify({
+                    title: title,
+                    button: 'Confirm'
+                }, {
+                    style: 'foo',
+                    autoHide: false,
+                    clickToHide: false
+                });
+            }
+        }
+
+
+
+        $(function() {
+
+            /* data example to pass in:
+                var PageTemplateSettings = {
+                    sectionRef: 'sidebar-1'
+                    menuItems:[
+                        {label: 'Dashboard', isActive: false, div: 'dashboard-div'},
+                        {label: 'Details',
+                            nested: [
+                                {label: 'Details', isActive: false, div: 'details-div'},
+                                {label: 'Devices', isActive: true, div: 'devices-div'},
+                                {label: 'Events', isActive: false, div: 'events-div'},
+                            ]
+                        },
+                        {label: 'Errors', isActive: false, div: 'errors-div'},
+                    ]
+                };
+            */
+            if (typeof PageTemplateSettings !== 'undefined') { // Creates Sidebar Nav
+
+                var maLiveNav = new MASidebarNav(PageTemplateSettings);
+
+            }
+
+
+            function getNotifyStyle(messageType) {
+                return "<div>" +
+                            "<div class='ma-notification-icon'>" +
+                                "<span class='ma-icon ma-icon-" + messageType + "'></span>" +
+                            "</div>" +
+                            "<div class='ma-notification-content'>" +
+                                "<h2 class='slds-text-heading_small'><span data-notify-text/></h2>" +
+                            "</div>" +
+                            "<div>" +
+                                "<button class='ma-notification-close-button'>" +
+                                    "<span class='ma-icon ma-icon-close'></span>" +
+                                "</button>" +
+                            "</div>" +
+                        "</div>";
+            }
+
+            $.notify.defaults({
+                elementPosition: 'top center',
+                globalPosition: 'top center'
+            });
+
+            // notify slds classes
+            $.notify.addStyle('foo', {
+              html:
+                "<div>" +
+                  "<div class='clearfix'>" +
+                    "<div class='title' data-notify-html='title'/>" +
+                    "<div class='buttons'>" +
+                      "<button class='no'>Cancel</button>" +
+                      "<button class='yes' data-notify-text='button'></button>" +
+                    "</div>" +
+                  "</div>" +
+                "</div>"
+            });
+
+            $.notify.addStyle('slds', {
+                html: getNotifyStyle('info')
+            });
+
+            $.notify.addStyle('slds-success', {
+                html: getNotifyStyle('success')
+            });
+
+            $.notify.addStyle('slds-warning', {
+                html: getNotifyStyle('warning')
+            });
+
+            $.notify.addStyle('slds-error', {
+                html: getNotifyStyle('error')
+            });
+
+            //listen for click events from this style
+            $('.notifyjs-foo-base .no').on('click', function() {
+                //programmatically trigger propogating hide event
+                $(this).trigger('notify-hide');
+            });
+            $('.notifyjs-foo-base .yes').on('click', function() {
+                //show button text
+                alert($(this).text() + " clicked!");
+                //hide notification
+                $(this).trigger('notify-hide');
+            });
+
+
+        });
+
+
+    </script>
+
+
+    <!-- relocated to own js library -->
+         <!--           //slds-grid -- prepend
+                //console.log('begin creation of sidebar');
+
+                var sideBarNav = '<div><nav id="maVerticalNav" class="slds-nav-vertical slds-nav-vertical_shade"><ul>';
+                var MALiveTemplate = {
+                    displaySection: function(sectionId) {
+                        //loop over all divs and hide them
+                        $('.ma-body-content').removeClass('is-active');
+                        $('#' + sectionId).addClass('is-active');
+                    }
+                }
+
+
+                for (var menuItemIndex = 0; menuItemIndex < PageTemplateSettings.menuItems.length; menuItemIndex++) {
+                    if (PageTemplateSettings.menuItems[menuItemIndex].nested) {
+                        sideBarNav += '<li class="slds-nav-vertical__item slds-nested-nav-item-is-active">';
+                        sideBarNav += '<div class="slds-nested-nav-item_header">' +  PageTemplateSettings.menuItems[menuItemIndex].label + '</div>';
+                        sideBarNav += '<ul class="slds-nested-nav-vertical">';
+
+                        for (var nestedMenuItemIndex = 0; nestedMenuItemIndex < PageTemplateSettings.menuItems[menuItemIndex].nested.length; nestedMenuItemIndex++) {
+                            sideBarNav += '<li>';
+                            sideBarNav += '<a href="javascript:void(0);" ' +  (PageTemplateSettings.menuItems[menuItemIndex].nested[nestedMenuItemIndex].isActive ? ' class="nav-items slds-is-active" ' : ' class="nav-items" ')  + ' div-ref="' + PageTemplateSettings.menuItems[menuItemIndex].nested[nestedMenuItemIndex].div + '">';
+                            sideBarNav += '<div class="indicator-dot"></div>';
+                            sideBarNav += PageTemplateSettings.menuItems[menuItemIndex].nested[nestedMenuItemIndex].label;
+                            sideBarNav += '</a>';
+
+                            /* inner nav test section. Derek would need to custom style correctly
+                            if (PageTemplateSettings.menuItems[menuItemIndex].nested[nestedMenuItemIndex].nested) {
+                                sideBarNav += '<ul class="slds-is-nested"><ul class="slds-is-nested"><ul class="slds-is-nested"><ul class="slds-is-nested slds-list_dotted">';
+                                for (var innerNestedMenuItemIndex = 0; innerNestedMenuItemIndex < PageTemplateSettings.menuItems[menuItemIndex].nested[nestedMenuItemIndex].nested.length; innerNestedMenuItemIndex++) {
+                                    sideBarNav += '<li>';
+                                    sideBarNav += '<div class="indicator-dot"></div>';
+                                    sideBarNav += PageTemplateSettings.menuItems[menuItemIndex].nested[nestedMenuItemIndex].nested[innerNestedMenuItemIndex].label;
+                                    sideBarNav += '</li>';
+                                }
+                                sideBarNav += '</ul></ul></ul></ul>';
+                            }*/
+
+                            sideBarNav += '</li>';
+
+                            if (PageTemplateSettings.menuItems[menuItemIndex].nested[nestedMenuItemIndex].isActive) {
+                                MALiveTemplate.displaySection(PageTemplateSettings.menuItems[menuItemIndex].nested[nestedMenuItemIndex].div);
+                            }
+                        }
+
+                        sideBarNav += '</ul>';
+                        sideBarNav += '</li>';
+                    }
+                    else {
+                        sideBarNav += '<li class="slds-nav-vertical__item';
+                        if (PageTemplateSettings.menuItems[menuItemIndex].isActive) {
+                            MALiveTemplate.displaySection(PageTemplateSettings.menuItems[menuItemIndex].div);
+                        sideBarNav += ' slds-is-active';
+                        }
+                        sideBarNav += '">';
+                        sideBarNav += '<a href="javascript:void(0);" class="slds-nav-vertical__action nav-items" div-ref="' + PageTemplateSettings.menuItems[menuItemIndex].div + '">' + PageTemplateSettings.menuItems[menuItemIndex].label + '</a>';
+                        sideBarNav += '</li>';
+
+                    }
+                }
+
+                sideBarNav += '</ul></nav></div>';
+
+                $('#content-wrapper').prepend(sideBarNav);
+
+
+                $("a.nav-items").click(function() {
+
+                    MALiveTemplate.displaySection($(this).attr("div-ref"));
+
+                    $('a.slds-is-active').removeClass('slds-is-active');
+                    $('li.slds-nested-nav-item-is-active').removeClass('slds-nested-nav-item-is-active');
+                    $(this).closest("li.slds-nav-vertical__item").addClass("slds-nested-nav-item-is-active");
+                    if($(this).has("div")) {
+                        $(this).addClass('slds-is-active');
+                    }
+                });
+
+                if (PageTemplateSettings.onComplete) {
+                    if (typeof(PageTemplateSettings.onComplete) === "function") {
+                        PageTemplateSettings.onComplete();
+                    }
+                }
+
+                //console.log('completed creation of sidebar');
+
+            }
+            else {
+                //console.log('PageTemplateSettings not defined');
+            } -->
+
+
+</apex:page>

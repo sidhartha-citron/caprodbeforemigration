@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Shipping_Address_Validation</fullName>
+    <active>true</active>
+    <description>If Account has operating hours, Shipping country should be canada and shipping state should valid two letter province codes by Canada Post</description>
+    <errorConditionFormula>AND (
+OR(ShippingCountry = &quot;CA&quot;, ShippingCountry=&quot;CAN&quot;, ShippingCountry=&quot;CANADA&quot;, ShippingCountry=&quot;Canada&quot;, ShippingCountry=&quot;canada&quot;, ShippingCountry=&quot;ca&quot;, ShippingCountry=&quot;Ca&quot;, ShippingCountry=&quot;can&quot;, ShippingCountry=&quot;Can&quot;),
+OR(NOT( ISBLANK( OperatingHoursId ) )),
+OR(
+LEN(ShippingState) &lt; 2,
+NOT(
+CONTAINS(&quot;AB:BC:MB:NB:NL:NT:NS:NU:ON:PE:QC:SK:YT&quot;, ShippingState)
+)))</errorConditionFormula>
+    <errorDisplayField>ShippingState</errorDisplayField>
+    <errorMessage>Shipping State must be valid two letter province codes by Canada Post</errorMessage>
+</ValidationRule>

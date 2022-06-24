@@ -1,0 +1,41 @@
+<apex:page controller="BMCServiceDesk.ChatterPostsConfigController" showHeader="false" standardStylesheets="false" >
+    <c:CommonIncludes />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/Knowledge.css" />
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.ChatterCSS}/chatterpostsconfig.css" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ChatterPostsConfig.js" />
+
+<body id="bodyContents">	
+		<script>
+			var Labels={};
+			Labels.ChatterGroup = '{!$Label.ChatterGroup}';
+			Labels.PCG_SelectChatterGroup = '{!$Label.PCG_SelectChatterGroup}';
+			Labels.PriorityWindowHeaderSearchPage = '{!$Label.PriorityHeader}';
+			Labels.ImpactWindowHeaderSearchPage = '{!$Label.Navigator_Impact}';
+			Labels.UrgencyWindowHeaderSearchPage = '{!$Label.Urgency}';
+			Labels.PCG_EnableFeature = '{!$Label.PCG_EnableFeature}';
+			var sdef_styles_path = '{!$Resource.SDEFStyles}';
+		</script>
+
+	<apex:outputPanel rendered="{!ShowIncidentChatterPosts}" >
+		<script>
+			ShowIncidentChatterPosts = true;
+			chatterGroupsData = {!ChatterGroupsJson};	
+			IncidentChatterPostsGridData = {!IncidentChatterPostsJson};
+		</script>
+	</apex:outputPanel>
+
+	<apex:form id="form">
+		<apex:outputPanel id="setIncidentChatterPostsData" rendered="ShowIncidentChatterPosts">
+			<script>
+				IncidentChatterPostsGridData = {!IncidentChatterPostsJson};
+			</script>
+		</apex:outputPanel>
+		
+		<apex:actionFunction name="saveToServer" action="{!Save}" reRender="ShowIncidentChatterPosts" onComplete="parent.window.isComplete()">
+			<apex:param assignTo="{!IncidentChatterPostsJson}" name="IncidentChatterPostsData" value=""/>
+		</apex:actionFunction>
+		
+		<div id="contentDiv"></div>
+	</apex:form>
+</body>
+</apex:page>

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>X24_Hour_Service_Appointment_Notification</fullName>
+        <ccEmails>donotreply@citronhygiene.com</ccEmails>
+        <description>24 Hour Service Appointment Notification</description>
+        <protected>false</protected>
+        <recipients>
+            <field>ContactId</field>
+            <type>contactLookup</type>
+        </recipients>
+        <senderAddress>customersuccess@citronhygiene.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>Field_Service_Related_Templates/X24_Hour_Service_Appointment_Notification</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>Email_Sent</fullName>
+        <field>Email_Sent__c</field>
+        <literalValue>1</literalValue>
+        <name>Email Sent</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Set_Pest_Emergency_Notification_to_True</fullName>
+        <field>Send_Pest_Emergency_Dispatch_Not__c</field>
+        <literalValue>0</literalValue>
+        <name>Set Pest Emergency Notification to True</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Set_Trigger_Dis_notification_to_true</fullName>
+        <field>Trigger_Dispatch_notification__c</field>
+        <literalValue>1</literalValue>
+        <name>Set Trigger Dis notification to true</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <rules>
+        <fullName>24 Hour Schedule Notification</fullName>
+        <active>true</active>
+        <criteriaItems>
+            <field>ServiceAppointment.Require_24_Hour_Notification__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>ServiceAppointment.Status</field>
+            <operation>equals</operation>
+            <value>Dispatched</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>ServiceAppointment.Email_Sent__c</field>
+            <operation>notEqual</operation>
+            <value>True</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>ServiceAppointment.Line_Of_Business__c</field>
+            <operation>notEqual</operation>
+            <value>Pest Control</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+        <workflowTimeTriggers>
+            <actions>
+                <name>Email_Sent</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <offsetFromField>ServiceAppointment.Customer_Notification_Time__c</offsetFromField>
+            <timeLength>-24</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+    </rules>
+    <rules>
+        <fullName>48 Hour Schedule Notification</fullName>
+        <active>true</active>
+        <criteriaItems>
+            <field>ServiceAppointment.Require_48_Hour_Notification__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>ServiceAppointment.Status</field>
+            <operation>equals</operation>
+            <value>Dispatched</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>ServiceAppointment.Email_Sent__c</field>
+            <operation>notEqual</operation>
+            <value>True</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>ServiceAppointment.Line_Of_Business__c</field>
+            <operation>notEqual</operation>
+            <value>Pest Control</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+        <workflowTimeTriggers>
+            <actions>
+                <name>Email_Sent</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <offsetFromField>ServiceAppointment.Customer_Notification_Time__c</offsetFromField>
+            <timeLength>-48</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+    </rules>
+    <rules>
+        <fullName>Send Pest Emergency Dispatch Notification2</fullName>
+        <active>true</active>
+        <criteriaItems>
+            <field>ServiceAppointment.Trigger_Dispatch_notification__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+        <workflowTimeTriggers>
+            <actions>
+                <name>Set_Pest_Emergency_Notification_to_True</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <offsetFromField>ServiceAppointment.Pest_Emergency_Notification_Date_Time__c</offsetFromField>
+            <timeLength>1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+    </rules>
+    <rules>
+        <fullName>Set Trigger Dispatch notification to true</fullName>
+        <actions>
+            <name>Set_Trigger_Dis_notification_to_true</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <formula>AND( 
+ISPICKVAL( Line_Of_Business__c , &apos;Pest Control&apos;), 
+FSL__Emergency__c = true, 
+OR( 
+AND( 
+ISNEW(), 
+ISPICKVAL( Status , &apos;Dispatched&apos;) 
+), 
+AND( 
+NOT(ISNEW()), 
+ISPICKVAL(Status , &apos;Dispatched&apos;), 
+ISCHANGED(Status) 
+),	
+OR( 
+AND( 
+ISCHANGED(SchedStartTime), 
+NOT(ISBLANK(PRIORVALUE(SchedStartTime))), 
+NOT(ISNEW()) 
+), 
+AND( 
+ISCHANGED(SchedEndTime), 
+NOT(ISBLANK(PRIORVALUE(SchedEndTime))), 
+NOT(ISNEW()) 
+) 
+) 
+) 
+)</formula>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <tasks>
+        <fullName>Service_Appointment_24_Hour_Notification_Sent</fullName>
+        <assignedToType>owner</assignedToType>
+        <dueDateOffset>0</dueDateOffset>
+        <notifyAssignee>false</notifyAssignee>
+        <priority>Normal</priority>
+        <protected>false</protected>
+        <status>Completed</status>
+        <subject>Service Appointment 24 Hour Notification Sent</subject>
+    </tasks>
+    <tasks>
+        <fullName>Service_Appointment_48_Hour_Notification_Sent</fullName>
+        <assignedToType>owner</assignedToType>
+        <dueDateOffset>0</dueDateOffset>
+        <notifyAssignee>false</notifyAssignee>
+        <priority>Normal</priority>
+        <protected>false</protected>
+        <status>Completed</status>
+        <subject>Service Appointment 48 Hour Notification Sent</subject>
+    </tasks>
+</Workflow>

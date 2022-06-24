@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>isHygiene_LifeSafety_DueNextWeek__c</fullName>
+    <externalId>false</externalId>
+    <formula>(TEXT( Line_Of_Business__c )  =  $Setup.Field_Service_Settings__c.Life_Safety_LOB__c  || TEXT( Line_Of_Business__c )  =  $Setup.Field_Service_Settings__c.Hygiene_LOB__c)
+&amp;&amp; NOT(isInstallation__c) 
+&amp;&amp; NOT(isDelivery__c)  
+&amp;&amp; NOT(FSL__Emergency__c)
+&amp;&amp; NOT(ISPICKVAL(Status, &quot;Missed Service&quot;))
+
+&amp;&amp; 
+ 
+IF(WEEKDAY( DATEVALUE(NOW()) ) = 2, DueDate &gt;= NOW()+ 6 &amp;&amp; DueDate &lt;= NOW()+ 12, 
+ IF(WEEKDAY( DATEVALUE(NOW()) ) = 3, DueDate &gt;= NOW()+ 5 &amp;&amp; DueDate &lt;= NOW()+ 11, 
+ IF(WEEKDAY( DATEVALUE(NOW()) ) = 4, DueDate &gt;= NOW()+ 4 &amp;&amp; DueDate &lt;= NOW()+ 10, 
+ IF(WEEKDAY( DATEVALUE(NOW()) ) = 5, DueDate &gt;= NOW()+ 3 &amp;&amp; DueDate &lt;= NOW()+ 9, 
+ IF(WEEKDAY( DATEVALUE(NOW()) ) = 6, DueDate &gt;= NOW()+ 2 &amp;&amp; DueDate &lt;= NOW()+ 8,
+ IF(WEEKDAY( DATEVALUE(NOW()) ) = 7, DueDate &gt;= NOW()+ 1 &amp;&amp; DueDate &lt;= NOW()+ 7,
+ FALSE) ) ) ) ))</formula>
+    <label>isHygiene/LifeSafety (DueNextWeek)</label>
+    <trackHistory>false</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

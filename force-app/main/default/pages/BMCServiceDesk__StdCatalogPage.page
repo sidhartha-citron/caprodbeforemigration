@@ -1,0 +1,300 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.NavigatorController" action="{!OOTBData}" cache="true" standardStylesheets="false" contentType="{!contetnTypeForIE}" >
+<head>
+      <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>  
+      <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/stdcalalog.css" />
+      <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Portal.css" />  
+             
+</head>
+<body>
+<style>
+ .bgtop{
+    white-space: nowrap;
+ }
+ .homeStyle{
+    padding-right:6px;
+ }
+ .x-toolbar {
+    background-color: rgb(51, 79, 103); !important;       
+}
+.x-tool {
+    margin-top: 0px; !important;
+}
+</style>
+<title>{!$Label.WelcomeToSDE}</title>
+<c:CommonIncludes2 />
+
+<apex:form id="skywalkerForm">
+<c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/Portal.js" />
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/PortalColumn.js" />
+   
+      <script type="text/javascript" src="{!$Resource.SDEFExtJS}/ex/ux/Portlet.js"/>
+   
+   
+     
+   
+    
+    <apex:outputPanel >
+        <script>
+			var taskConsole = '{!$Page.TaskConsole}';
+			var incidentConsole = '{!$Page.IncidentConsole}';
+            var isLightningExperience = {!isLightningExperience}; //lightning changes
+            var nameSpace = '{!nameSpace}';
+			var wikiUrl='{!wikiUrl}'; 
+            // std layout chages ---
+            var prefix = '{!JSENCODE(objPrefix )}';
+            // end --          
+            var stdLayout =  '{!JSENCODE($CurrentPage.parameters.standardLayout)}';
+            userLanguage = '{!userLanguage}';   
+            var showJapaneseHelp = '{!showJapaneseHelp}';  
+            var labelGlobalSearch = '{!JSENCODE($Label.GlobalSearch)}',
+            
+            labelChangeRequests = '{!JSENCODE($Label.ChangeRequests)}',
+            labelIncident = '{!JSENCODE($Label.Incident)}',
+            labelBroadcast = '{!JSENCODE($Label.Broadcast1)}',
+            labelProblem = '{!JSENCODE($Label.Problem)}',
+            labelTask = '{!JSENCODE($Label.Task)}',
+            
+            labelTabScrollerLeft = '{!JSENCODE($Label.TabScrollerLeft)}',
+            labelTabScrollerRight = '{!JSENCODE($Label.TabScrollerRight)}', 
+            labelQuickViewEditor = '{!JSENCODE($Label.QuickViewEditor)}',
+            labelCloseTab = '{!JSENCODE($Label.CloseTab)}', 
+            labelCloseTabLabel = '{!JSENCODE($Label.CloseTabLabel)}',
+            labelInformation = '{!JSENCODE($Label.Information)}',         
+            labelQVDragToDashboard = '{!JSENCODE($Label.QVDragToDashboard)}',
+            labelEditFolder = '{!JSENCODE($Label.EditFolder)}',
+            labelvalidateFolderNameSkyWalkerPage = '{!JSENCODE($Label.ValidateFolderNameSkyWalkerPage)}',  
+            labelQVFolderLengthValidation = '{!JSENCODE($Label.QVFolderLengthValidation)}',
+            labelSelectedQueryDeletedMessage = '{!JSENCODE($Label.SelectedQueryDeletedMessage)}', 
+            labelWarning = '{!JSENCODE($Label.Warning)}',
+            labeldeleteFolderHavingSystemQuery = '{!JSENCODE($Label.DeleteFolderHavingSystemQuery)}', 
+            labelQueryNameExisting = '{!JSENCODE($Label.QueryNameExisting)}',
+            labelAddFolder = '{!JSENCODE($Label.AddFolder)}',
+            labelvalidateFolderNameSkyWalkerPage = '{!JSENCODE($Label.ValidateFolderNameSkyWalkerPage)}',
+            labelvalidateSelectionOfFolderSkyWalkerPage = '{!JSENCODE($Label.ValidateSelectionOfFolderSkyWalkerPage)}',
+            labelDelete = '{!JSENCODE($Label.Delete)}',
+            labeldeleteSelectedFolderSkyWalkerPage = '{!JSENCODE($Label.DeleteSelectedFolderSkyWalkerPage)}', 
+            labelNewQuickView = '{!JSENCODE($Label.NewQuickView)}',
+            labeldeleteSelectedQuerySkyWalkerPage = '{!JSENCODE($Label.DeleteSelectedQuerySkyWalkerPage)}',
+            labelvalidateQueryPasteSkyWalkerPage = '{!JSENCODE($Label.ValidateQueryPasteSkyWalkerPage)}',
+            labelConfirmHomePage = '{!JSENCODE($Label.ConfirmHomePage)}',
+            labelHomeLink = '{!JSENCODE($Label.HomeLink)}',
+            labelAddQuery = '{!JSENCODE($Label.AddQuery)}',
+            
+            labelEnterQVname = '{!JSENCODE($Label.ValidateQueryNameSkyWalkerPage)}',
+            labelvalidateQueryNameSkyWalkerPage = '{!JSENCODE($Label.ValidateQueryNameSkyWalkerPage)}',
+            labelReenterQVName = '{!JSENCODE($Label.ReenterQVName)}';
+            
+            labelnewQuery = '{!JSENCODE($Label.NewQuery)}',
+            labeleditQVQuery = '{!JSENCODE($Label.EditQVQuery)}',
+            labelcutQuery = '{!JSENCODE($Label.CutQuery)}',
+            labelcopyQuery = '{!JSENCODE($Label.CopyQuery)}',
+            labelpasteQuery = '{!JSENCODE($Label.PasteQuery)}',
+            labeldeleteQuery = '{!JSENCODE($Label.DeleteQuery)}',
+            labeldeleteFolder = '{!JSENCODE($Label.DeleteFolder)}', 
+            labelsidebarToolTip = '{!JSENCODE($Label.SidebarToolTip)}',
+            labelpreviousPortlet = '{!JSENCODE($Label.PreviousPortlet)}',
+            labelnextPortlet = '{!JSENCODE($Label.NextPortlet)}',
+            labelWorkspaces = '{!JSENCODE($Label.Workspaces)}',
+            labelCatalog = '{!JSENCODE($Label.Catalog)}',
+            labelQVDragToFolder = '{!JSENCODE($Label.QVDragToFolder)}',
+            labelrestrictQVs = '{!JSENCODE($Label.restrictQVs)}',
+            labelrestrictCustomQVs = '{!JSENCODE($Label.restrictCustomQVs)}',
+            labelrestrictSystemQVs = '{!JSENCODE($Label.restrictSystemQVs)}',
+            labelConfiguration = '{!JSENCODE($Label.Configuration)}',
+            labelMyDashboardTitle = '{!JSENCODE($Label.MyDashboardTitle)}',
+            labelTooltipCollapseSidebar = '{!JSENCODE($Label.TooltipCollapseSidebar)}',
+            labelTooltipExpandSidebar = '{!JSENCODE($Label.TooltipExpandSidebar)}',
+            labelTooltipCollapseNavigator = '{!JSENCODE($Label.TooltipCollapseNavigator)}',
+            labelTooltipExpandNavigator = '{!JSENCODE($Label.TooltipExpandNavigator)}',
+            labelSSContactUs = '{!JSENCODE($Label.SSContactUs)}',
+            labelAboutServiceDeskExpressonForceCom = '{!JSENCODE($Label.AboutServiceDeskExpressonForceCom)}',
+            labelService_Desk_Express_on_Force_com_Help = '{!JSENCODE($Label.Service_Desk_Express_on_Force_com_Help)}',
+            labelSSContactUs = '{!JSENCODE($Label.SSContactUs)}',
+            labelAddSidebarContentHeader = '{!JSENCODE($Label.AddSidebarContentHeader)}';
+            var resSDEFStylesPath = '{!$Resource.SDEFStyles}',
+            pageGroupFeedPage = '{!$Page.GroupFeedPage}',
+            newsFeedVal = {!newsFeed},
+            isUserSAval = {!isUserSA},
+            portletHasPrevVal = '{!portletHasPrev}',
+            portletHasNextval = '{!portletHasNext}',
+            userFirstName = '{!JSENCODE($User.FirstName)}',
+            userlastName = '{!JSENCODE($User.LastName)}',
+            userName = '{!JSENCODE(userName)}',
+            AlignabilityProcessModel = '{!JSENCODE($Label.AlignabilityProcessModel)}',
+            jsonStringVal = {!jsonString},
+            spChar = '¬';
+            var BMCVideoLinkLabel = Ext.util.Format.ellipsis("{!JSENCODE($Label.BMCVideoLink)}",36);
+            var labelWelcome = '{!JSENCODE($Label.SDEHomeWelcome)}',
+            labelSetup = '{!JSENCODE($Label.SDEHomeSetup)}',
+            labelHelp = '{!JSENCODE($Label.TooltipHelp)}',
+            labelLogout = '{!JSENCODE($Label.SDEHomeLogout)}',
+            chatterFeedLabel = '{!JSENCODE($Label.Navigator_ChatterFeed)}',
+            incidentLabel = '{!JSENCODE($Label.Navigator_Incidents)}';
+            
+            var BMCVideoLinkLabeltooltip = '{!JSENCODE($Label.BMCVideoLink)}';
+            var formAssignment = '{!JSENCODE(formAssignment)}';
+            var Navigator_ConfigurationItems = '{!JSENCODE($Label.ConfigurationItems)}';	
+            
+            function repeatNodePageReference(){
+                <apex:repeat value="{!nodePageReferences}" var="nodeReference">
+                    nodePageReferences["{!JSENCODE(nodeReference.name)}"] = "{!JSENCODE(nodeReference.BMCServiceDesk__PageReference__c)}"
+                </apex:repeat>
+            }
+            function quickViewJsonFeedRoot(){
+                <apex:outputText value="CRUDFLSCHECK# Both CRUD & FLS check are not required (SYSQVFolder__c is a metadata object)" rendered="false"/> 
+                return <apex:outputText value="{!quickViewJsonFeed}"/>;
+            }
+            
+        </script>
+    </apex:outputPanel>
+    
+    <apex:outputPanel id="editpanel">
+        <script>
+            var tree = Ext.getCmp('QVToolbar');
+            if (tree != null) {        
+                var root = new Ext.tree.AsyncTreeNode({
+                    text :'', 
+                    expanded: true,
+                    children: <apex:outputText value="{!quickViewJsonFeed}"/>
+                });     
+                tree.setRootNode(root);
+                tree.getRootNode().reload();
+                tree.render();
+            }
+        </script>
+    </apex:outputPanel>    
+    <apex:actionFunction name="refreshTree" action="{!refreshTree}" rerender="editpanel"/>
+    <apex:actionFunction name="newQueryHandler1" action="{!newQueryHandler}">
+        <apex:param assignTo="{!selectedNode}" name="selectedNode" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction action="{!deleteFolder}" name="deleteFolder" rerender="renderErrorMsg" onComplete="loadTreeAfterDelete();">
+        <apex:param assignTo="{!selectedNode}" name="selectedNode" value=""/>
+    </apex:actionFunction>   
+    <apex:actionFunction action="{!editQuery}" name="editQuery" rerender="editQueryPanel" >
+        <apex:param assignTo="{!selectedNode}" name="selectedNode" value=""/>
+    </apex:actionFunction> 
+    <apex:actionFunction action="{!deleteQuery}" name="deleteQuery" rerender="xyz" onComplete="loadTreeAfterDeleteQuery();">
+        <apex:param assignTo="{!selectedNode}" name="selectedNode" value=""/>
+    </apex:actionFunction>      
+    <apex:actionFunction action="{!addFolder}" name="addFolder" rerender="addFolderPanel" >
+        <apex:param assignTo="{!selectedNode}" name="selectedNode" value=""/>
+    </apex:actionFunction>            
+    <apex:actionFunction action="{!pasteQuery}" name="pasteQuery" rerender="copyQueryPanel" >
+        <apex:param assignTo="{!selectedNode}" name="selectedNode" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction action="{!editFolderName}" name="editFolderName" rerender="editpanel" >
+        <apex:param assignTo="{!selectedNode}" name="selectedNode" value=""/>
+    </apex:actionFunction>   
+    <apex:actionFunction action="{!cutQuery}" name="cutQuery" rerender="copyQueryPanel" >
+        <apex:param assignTo="{!selectedNode}" name="selectedNode" value=""/>
+    </apex:actionFunction>   
+    <apex:actionFunction action="{!showDashboard}" name="showDashboard" rerender="dummyPanel"/>
+    <apex:actionFunction action="{!UpdatePropSysStage}" name="UpdatePropSysStage" rerender="resetJsonString" onComplete="PortletBtnComplete();">
+    <apex:param assignTo="{!screenHeight}" name="scrHeight" value=""/>
+    </apex:actionfunction>
+    
+    <apex:actionFunction name="nextPortlet" action="{!nextPortlet}" rerender="resetJsonString" onComplete="PortletBtnComplete();"/>
+    <apex:actionFunction name="backPortlet" action="{!backPortlet}" rerender="resetJsonString" onComplete="PortletBtnComplete();"/>
+    <apex:actionFunction name="refreshPage" action="{!refreshPage}"/>
+    <input type="hidden" id="qryPageRef" name="qryPageRef" value="" />
+    <input type="hidden" id="strFolderName" name="strFolderName" value="{!strFolderName}" />
+    <input type="hidden" id="strQueryName" name="strQueryName" value="{!strQueryName}" />
+    <input type="hidden" id="queryIdforCopy" name="queryIdforCopy" value="{!queryIdforCopy}" />
+    <input type="hidden" id="queryIdforCut" name="queryIdforCut" value="{!queryIdforCut}" />
+    <!-- input type="hidden" id="queryIdforRemove" name="queryIdforRemove" value="{!queryIdforRemove}" / --> 
+    <input type="hidden" id="ownerId" name="ownerId" value="{!ownerId}" />
+    <apex:outputPanel id="addFolderPanel">
+    <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script> 
+     <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/stdcatalog.js"/>
+    <script>
+		var isConsoleEnabled = '{!isConsoleEnabled}';
+		var isRFConsoleEnabled = '{!isRFConsoleEnabled}';   
+        var folderId="{!addedFolderId}";
+        addFolderJS(folderId);            
+    </script>
+ </apex:outputPanel>
+  <apex:outputPanel id="editQueryPanel">
+    <script>
+            var validQueryId ="{!isValidQuery}";
+            editQueryJS(validQueryId);
+    </script>
+ </apex:outputPanel>
+   <apex:outputPanel id="copyQueryPanel">
+        <script>
+            var isToShowMsg="{!isQueryInFolder}";
+            idForQuery="{!addedQueryId}";
+            var userProfileId="{!userProfileId}";
+            copyQueryJS(isToShowMsg,idForQuery,userProfileId);
+        </script>
+     </apex:outputPanel>
+    <apex:actionFunction action="{!resetJsonString}" name="resetJsonString" rerender="resetJsonString" onComplete="addPortletComponent()" /> 
+    </apex:form>
+    <apex:outputPanel id="xyz"/>
+    <apex:outputPanel id="resetJsonString" >
+        <script>
+            jsonStringVal = {!jsonString} ;
+            function addPortletComponent(){
+                var hasPreviousPort = '{!portletHasPrev}';
+                var hasNextPort = '{!portletHasNext}';
+                Ext.getCmp('portletNextBtn').setDisabled((hasNextPort=='false'));
+                Ext.getCmp('portletPrevBtn').setDisabled((hasPreviousPort=='false'));                       
+                var MyComp =Ext.getCmp('navview');
+                MyComp.findById('portalContent').add({xtype:'panel',id:'eastPanel',height:5,bodyStyle:{"background-color":"#334f67","border":"none"}});
+                <apex:outputText value="CRUDFLSCHECK# Both CRUD & FLS check are not required (SYSUsersPortletsConfig__c is a metadata object)" rendered="false"/> 
+                MyComp.findById('portalContent').add(<apex:outputText escape="false" value="{!jsonString}"/>);
+                MyComp.doLayout();
+            }
+            
+            
+            function refreshActionItemsPortlet(wid, pagelbl){
+                if(typeof(window.frames.ActionItemsiFrame) != 'undefined' && window.frames.ActionItemsiFrame != 'undefined'){
+                    if(typeof(window.frames.ActionItemsiFrame.FetchActionItemsDataJS) != 'undefined' && window.frames.ActionItemsiFrame.FetchActionItemsDataJS != 'undefined')
+                        window.frames.ActionItemsiFrame.FetchActionItemsDataJS(pagelbl);
+                }   
+            }
+        </script>
+    </apex:outputPanel>
+    <apex:outputPanel id="renderErrorMsg">
+        <script>
+            errorMessge="{!messageString}";
+        </script>       
+    </apex:outputPanel>
+    
+    <!-- Std Layout changes --->
+    <apex:form >
+    <apex:actionFunction action="{!getKeyPrefix}" name="getObjectPrefixJS" reRender="openEditWindowPanel" oncomplete="CreateNewRecord();">
+        <apex:param assignTo="{!sourceObjectName}" name="objName" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction action="{!getKeyPrefix}" name="getObjectPrefixForListView" reRender="openEditWindowPanel" oncomplete="openListView();">
+        <apex:param assignTo="{!sourceObjectName}" name="objName" value=""/>
+    </apex:actionFunction>
+    <apex:outputPanel id="openEditWindowPanel" >
+        <script>
+            prefix = '{!JSENCODE(objPrefix )}';         
+        </script>
+    </apex:outputPanel>
+    <script>
+        function CreateNewRecord(){
+            if(prefix != null && prefix != ''){
+                window.open('/'+prefix+'/e');
+            }
+        }
+        
+        function openListView(){
+            if(prefix != null && prefix != ''){
+                window.open('/'+prefix);
+            }
+        }
+    </script>
+	<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+    </apex:form>
+    
+   
+    
+    
+    
+    
+    <!-- End -->
+</body> 
+</apex:page>

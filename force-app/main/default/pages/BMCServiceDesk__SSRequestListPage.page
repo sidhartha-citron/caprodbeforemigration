@@ -1,0 +1,212 @@
+<apex:page id="SSRequestListPage" controller="BMCServiceDesk.SSRequestListController"  sidebar="false"  showHeader="false" standardStylesheets="false" >
+<div id="themeDiv"></div> 
+<head> 
+    <title>{!HTMLENCODE($Label.SSBrowserTitle)}</title>
+
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" />
+    
+<style>
+.msgBoxCls {
+    background-color: transparent !important;
+    border: medium none !important;
+    box-shadow: 0 0 0 transparent !important;
+}
+
+.msgBoxBodyCls {
+    background-color: #FFFFFF !important;
+    border: medium none !important;
+    box-shadow: 0 0 0 #FFFFFF !important;
+}
+#ssMyRequestsGridPanel{
+    border-bottom-style:solid !important;
+    border-bottom-color: #99BCE8;
+    border-bottom-width: 1px !important;
+
+}
+#ssMyRequestsGridPanel .x-window-default {
+    background-color: transparent !important;
+    border: medium none !important;
+    box-shadow: 0 0 0 transparent !important;
+    border-color: transparent !important;
+    background-image: none !important;
+}
+
+#waitMsgId div .x-nbr .x-window-default-ml, .x-nbr .x-window-default-bl
+{
+	background-image: none !important;
+}
+
+#waitMsgId * .x-window-tc, * .x-window-ml, .x-window-ml, * .x-window-mr, * .x-window-tl, .x-window-tl, * .x-window-bl, .x-window-bl,  * .x-window-tr, * .x-window-br, * .x-window-bc, .x-tool {
+    background-image: none !important;
+}
+#taskListGridPanel-splitter{
+    background-color:white !important;  
+}
+.styleFirstCol .x-column-header,.x-column-header-first{ 
+    padding-left: 5px; 
+} 
+.styleFirstCol .x-grid-cell-first{
+	padding-left: 5px; 
+}
+</style>
+
+</head>
+<body>   
+<div id="divRequestListGrid"></div>
+
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+<script type="text/javascript">
+    var incidentStatusPage ='{!JSENCODE($Page.SSIncidentStatus)}';
+    var errorMessage = '';
+    var showLoadingImgFunction = '{!$Resource.SDEFExtJS}';
+    var displayMsg= '{!JSENCODE($Label.NoRecordsFound)}';
+    var emptyMsg= '{!JSENCODE($Label.NoRecordsFound)}';
+    var displayRec= '{!JSENCODE($Label.GridPagerDisplayRecText)}';
+    var displayOf= '{!JSENCODE($Label.Of)}';
+    var beforePageTextMsg= '{!JSENCODE($Label.Page)}';
+   
+    var stateLabel =  '{!JSENCODE($Label.State)}';
+    var SSHomeMyRequestsColumnHeaderStatus =  '{!JSENCODE($Label.SSApprovalStatus)}';
+   
+    var selectedStatusfield;
+    var selectedStatefield;
+    var selectedAccfield;
+    var oldSearchText;
+    
+    var sortNumberAsc = true;
+    var sortClientIDAsc = true;
+    var sortSubmittedAsc = true;
+    var sortStatusAsc = true;
+    var myData;
+    
+    var setHeaderImgFunction = '{!$Resource.SDEFStyles}';
+    
+    GridState = {Start: 0,End: 0, PageSize: 0, TotalPages: 0, CurrentPage: 1, TotalRecords: 0, ViewFilterID:'', SortBy:'Name', SortDirection: 'desc', SearchStr: ''}
+
+    var validatinerrmsg='{!JSENCODE($Label.GsErrorMsg)}';
+     
+    var pageUrl = "{!$Page.SSIncidentCustom}";
+    var orgNamespace='{!JSENCODE(orgNamespace)}';
+
+    var IncidentID = "{!JSENCODE($CurrentPage.parameters.inc)}";
+    var statusData = [{!statusList}];
+    var hasOthersRecords = {!hasOthersRecords};
+    var showState = {!showState};
+    var showStatus = {!showStatus};
+    if(!showState){
+     stateLabel='';
+     }
+    if(!showStatus){
+         SSHomeMyRequestsColumnHeaderStatus  = '';
+     }
+    var stateId = '{!JSENCODE(stateId)}';
+    var statusId = '{!JSENCODE(statusId)}';
+    var FirstPage = '{!JSENCODE($Label.FirstPage)}';
+    var PreviousPage = '{!JSENCODE($Label.PreviousPage)}';
+    var NextPage = '{!JSENCODE($Label.NextPage)}';
+    var LastPage = '{!JSENCODE($Label.LastPage)}';
+    var mspAdminView = '{!JSENCODE($Label.mspAdminView)}';    
+    var sssearchtext = '{!JSENCODE($Label.SSSearchText)}';    
+    var SSSelf = '{!JSENCODE($Label.SSSelf)}';
+    var accountServiceRequest = '{!accountServiceRequest}';
+    var ssuserview = '{!JSENCODE($Label.ssuserview)}';
+    var ssstateview = '{!JSENCODE($Label.ssstateview)}';
+    var ssstatusView = '{!JSENCODE($Label.ssstatusView)}';    
+    var ssIncidentForm;
+    var isComponent = "{!JSENCODE($CurrentPage.parameters.isComponent)}";
+    var serviceRequestForm = '{!$Page.SelfServiceIncidentCustom}';
+    var formAssigned = '{!customform}';
+    if(formAssigned=='STD'){
+        ssIncidentForm = '{!$Page.SelfServiceIncident}';
+    }else if(formAssigned=='CUSTOM'){
+        ssIncidentForm = '{!$Page.SelfServiceIncidentCustom}';
+    }else{
+        ssIncidentForm = '{!$Page.SSTicketLayout}';
+    }
+    
+     var All = '{!JSENCODE($Label.All)}';
+     var Open = '{!JSENCODE($Label.Opened)}';
+     var Close = '{!JSENCODE($Label.Closed)}'; 
+     
+    var labelConfirmHomepage = '{!JSENCODE($Label.ConfirmHomePage)}',
+    labelHomeLink = '{!JSENCODE($Label.HomeLink)}';
+    var showPerformanceIcon = 'false';
+    
+    var SSMyServiceRequestSearchTooltip = '{!JSENCODE($Label.SSMyServiceRequestSearchTooltip)}';
+    var SSSearch= '{!JSENCODE($Label.SSSearch)}';
+    var SSReset='{!JSENCODE($Label.Reset)}';
+    var SSClear='{!JSENCODE($Label.Clear)}';
+
+    myData = [{!myHelpRequestData}];
+	Ext.Array.forEach(myData, function(arr){
+		for(i=0;i<arr.length;i++)
+			arr[i] = Ext.util.Format.htmlEncode(arr[i]);
+	});
+    var storeColumnList=[{!storeColumnList}];
+	var gridColumnList=[{!gridColumnList}];
+	
+    GridState.PageSize = {!requestSetController.PageSize};
+    GridState.CurrentPage = {!requestSetController.PageNumber};
+    GridState.TotalRecords = {!requestSetController.ResultSize};
+    GridState.TotalPages = {!totalPages};
+ 
+ 	GridState.Start = (GridState.CurrentPage * GridState.PageSize) - (GridState.PageSize - 1);
+	GridState.End = GridState.CurrentPage * GridState.PageSize;
+ 	if (GridState.End > GridState.TotalRecords)
+		GridState.End=GridState.TotalRecords;
+
+	function renderRecord(value, p, record) {
+	    return Ext.String.format(
+	    	'<a href="#" style="color:black;" onclick="openRecordTab(\'{1}\',\'{2}\')">{0}</a>',
+	    	value,
+	    	record.data.serviceRequest,
+	    	record.data.Id
+	    );
+	}
+
+	function renderStringToHTML(value, p, record){
+		return Ext.htmlDecode(value);
+	}
+
+    Ext.Loader.setConfig({ enabled: true });
+
+    Ext.require([
+        'Ext.grid.*',
+        'Ext.data.*',
+        'Ext.util.*',
+        'Ext.state.*',
+        'Ext.toolbar.Paging',
+        'Ext.ModelManager',
+        'Ext.tip.QuickTipManager'
+    ]);
+
+    var showTaskChkbox = {!showTaskChkbox};
+	var taskcolumnsString;
+    var taskFieldsString;
+	var taskData;
+	var taskDetails = '{!JSENCODE($Label.TaskDetails)}';
+	function showNoteTip(value, metadata, record){
+		metadata.tdAttr = 'data-qtip="' + Ext.String.htmlEncode(value) + '"';
+	    return value;
+	}
+	if(showTaskChkbox){
+	    taskcolumnsString = {!taskcolumnsString};
+	    taskfieldsString = {!taskfieldsString};
+		taskData = [];
+    }
+	
+    var _getRequestListPageRecords = "{!$RemoteAction.SSRequestListController.GetPageRecordsForGrid}";
+    var _getStatusBasedOnState = "{!$RemoteAction.SSRequestListController.GetStatusBasedOnState}";
+	var _getTasksRecords = "{!$RemoteAction.SSRequestListController.getTasksRecords}";
+	var isRFHotkeysDisabled = {!isRFHotkeysDisabled};
+</script>
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+<script src="{!$Resource.SSjs}/src/SSRequestListPage.js" />
+<script type="text/javascript">         
+        var colorCodeList = '{!JSENCODE(themeColorCodeString)}'; 
+        var content = '{!JSENCODE(dynamicStyle)}';
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+</script>
+<script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" />
+</body>
+</apex:page>

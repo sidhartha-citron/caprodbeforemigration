@@ -1,0 +1,272 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.AccountSelector" extensions="BMCServiceDesk.UpdateAccountBranding"> 
+<c:CommonIncludes />
+<script>
+function getUrlParameter( param ){
+	param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");;
+	var r1 = "[\\?&]"+param+"=([^&#]*)";
+	var r2 = new RegExp( r1 );
+	var r3 = r2.exec( window.location.href );
+	if( r3 == null ){return ""}
+	else {return r3[1]};
+}
+var isLightningAction = {!IF(isLightningAction,true,false)};
+</script>
+
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AccountSelector.css" />
+<link href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" rel="stylesheet" />
+<div id="dataStores">
+
+</div>
+<apex:form id="theForm">
+<apex:actionFunction action="{!getSearchAccounts}"
+    name="getSearchAccounts"
+    rerender="EntitlementScript" oncomplete="loadLeftData();">
+    <apex:param assignTo="{!searchText}" name="searchstring" value="" />
+    <apex:param assignTo="{!accRightStoreData}" name="rightData" value="" />
+    <apex:param assignTo="{!resetPageNumber}" name="resetPageNumber" value="" />
+</apex:actionFunction>  
+<apex:actionFunction action="{!nextAccounts}" 
+    name="nextAccounts"
+    rerender="EntitlementScript" oncomplete="loadLeftData();">  
+    <apex:param assignTo="{!accRightStoreData}" name="rightData" value="" />          
+</apex:actionFunction>
+<apex:actionFunction action="{!prevAccounts}"
+    name="prevAccounts"
+    rerender="EntitlementScript" oncomplete="loadLeftData();">            
+    <apex:param assignTo="{!accRightStoreData}" name="rightData" value="" />
+</apex:actionFunction>      
+ <apex:actionFunction name="saveKAInfo" action="{!saveKAInfo}"  rerender="EntitlementScript" oncomplete="postMessageToLightningComponent()">
+     <apex:param assignTo="{!selectedAccountsForKA}" name="selectedAccountsForKA" value="" />
+     <apex:param assignTo="{!displayInSS}" name="displayInSS" value="" />
+ </apex:actionFunction>  
+<div class="{!IF(isLightningAction,'rf-lightning-experience','')}">
+<table width="100%" class="clsMainTable" cellspacing="0" cellpadding="0" border="0">
+	<tr>
+	<apex:outputpanel id="ForSLADiv" rendered="{!IF(allAccount == 'true',true , false)}">
+	
+			<table class="clsRadioButtonPanel">
+				    <tr>
+			             <td  colspan="3" class="clsPanelInputCheckboxTDSSLAAccount">
+						 <input type="radio" name="selectRadio" value="AllAccounts" id="selectRadio:0" onChange="radioAllAccounts();" onClick="radioAllAccounts();"/>
+							<label for="selectRadio:0" class="clsPanelCheckBoxLabel">{!$Label.AgreementToAllAccounts}</label>
+			              </td>
+			        </tr>
+			         <tr>
+			               <td  colspan="3" class="clsPanelInputCheckboxTDSSLAAccount">
+								<input type="radio" name="selectRadio" value="SelectedAccounts" id="selectRadio:1" onClick="radioSelectedAccounts();"/>
+								<label for="selectRadio:1" class="clsPanelCheckBoxLabel">{!$Label.AgreementToSelectedAccounts}</label>
+			                </td>
+			         </tr>
+			  </table>
+	</apex:outputpanel>
+	</tr>
+	<tr>
+    
+    <apex:outputpanel id="ForKADiv" rendered="{!isForKA}">
+            <table class="clsRadioButtonPanel rf-lightning-label">
+					<apex:outputPanel rendered="{!isLightningAction}">
+						<tr>
+							<td colspan="3" class="clsPanelInputCheckboxTDSSLAAccount rf-lightning-label">
+								<input type="checkbox" name="DisplayInSS" id="DisplayInSS" />
+								<label class="clsPanelCheckBoxLabel rf-lightning-label">{!JSENCODE($ObjectType.KM_KnowledgeArticle__c.fields.Visible_in_Self_Service__c.Label)}</label>
+							</td>
+							
+						</tr>
+					</apex:outputPanel>
+                    <tr>
+                        <td colspan="3" style="padding-left:10px;" class="clsBoldInputLabelTD rf-lightning-label">
+                            <label class="rf-lightning-label">{!$Label.VisibleTo}</label>
+                        </td>
+                    </tr>
+                    <tr>
+                         <td  colspan="3" class="clsPanelInputCheckboxTDSSLAAccount rf-lightning-label">
+                         <input type="radio" name="selectRadio" value="AllAccounts" id="selectRadio:0" onChange="radioAllAccounts();" onClick="radioAllAccounts();"/>
+                            <label for="selectRadio:0" class="clsPanelCheckBoxLabel rf-lightning-label">{!$Label.AllAccountsEntitlement}</label>
+                          </td>
+                    </tr>
+                     <tr>
+                           <td  colspan="3" class="clsPanelInputCheckboxTDSSLAAccount rf-lightning-label">
+                                <input type="radio" name="selectRadio" value="SelectedAccounts" id="selectRadio:1" onClick="radioSelectedAccounts();"/>
+                                <label for="selectRadio:1" class="clsPanelCheckBoxLabel rf-lightning-label">{!$Label.bmcservicedesk__selectedaccounts}</label>
+                            </td>
+                     </tr>
+              </table>
+    </apex:outputpanel>
+    
+    </tr>
+	<tr><td align="left">	<div id="toolbar" > </div>	</td></tr>
+	<tr>
+        <table style="padding-left:15px;padding-top: 5px;">
+            <tr>
+                <td width="227px" class="clsBoldInputLabelTD rf-lightning-label">
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__availableaccounts}"/>
+                </td>
+                <td class="clsBoldInputLabelTD rf-lightning-label">
+                    <apex:outputLabel value="{!$Label.bmcservicedesk__selectedaccounts}"  />
+                </td>
+            </tr>
+        </table>
+    </tr>
+	<tr> <td align="center"><div id="listView" style="padding-left:15px;width:431px;"> </div></td> </tr>	
+     <tr class="row-gray">
+		<td>
+			<table cellspacing="0" cellpadding="0" border="0">
+				<tr><td colspan="2"><div class="div10pxVspacing"/></td></tr>
+				<tr>
+				<td ><div class="div10pxHspacing"/></td>
+				<td colspan="2">
+                    <input type="button" id="Okbtn"  value="{!$Label.Ok}" onClick="onOKClick()"  class="bgBtnGreySLAAccount rf-lightning-button-neutral"/ >
+                    <input type="button" id= "Savebtn"  value="{!$Label.Apply}" onclick="onSaveClick()" class="bgBtnGreySLAAccount rf-lightning-button-neutral"/>
+					<span class="qvwidth5px"/>
+     	 			<input type="button"  value="{!$Label.Cancel}" onclick="onCancelClick()" class="bgBtnGreySLAAccount rf-lightning-button-neutral"/>
+				</td>
+				</tr>
+				<tr><td colspan="2"><div class="div10pxVspacing"/></td></tr>
+			</table>
+		</td>
+	</tr>
+</table> 
+</div>
+</apex:form>
+<script>
+//Define all the variables
+var themeid = '{!JSENCODE(themeid)}';
+var isForAllAccount = '{!JSENCODE(allAccount)}';
+var isForKA = {!isForKA};
+var labelAvailableAccounts = '{!JSENCODE($Label.AvailableAccounts)}';
+var labelSelectedAccounts = '{!JSENCODE($Label.SelectedAccounts)}';
+var labelSrch = '{!JSENCODE($Label.search)}';
+var labelRefresh = '{!JSENCODE($Label.Reset)}';
+var labelPrevious = '{!JSENCODE($Label.PreviousPage)}';
+var labelNext = '{!JSENCODE($Label.NextPage)}';
+var labelMinChar = '{!JSENCODE($Label.GsErrorMsg)}';
+var labelNoRecord = '{!JSENCODE($Label.MsgNoRecordFoundSearchPage)}';
+var labelQuestion = '{!JSENCODE($Label.Question)}';
+var labelWarning = '{!JSENCODE($Label.Warning)}';
+var labelError = '{!JSENCODE($Label.Error)}';
+var labelInfo = '{!JSENCODE($Label.Information)}';
+var LabelApply = '{!JSENCODE($Label.Apply)}';
+var orgNamespace = '{!orgNamespace}';
+var DisplayKAtoAccounts = '{!JSENCODE($Label.DisplayKAtoAccounts)}';
+var LinkMaximum100Accounts = '{!JSENCODE($Label.LinkMaximum100Accounts)}';
+var ManageSelfServiceAccess =   '{!JSENCODE($Label.ManageSelfServiceAccess)}';
+var showsavebutton;
+var labelErr1 = '{!JSENCODE($Label.SelectAtLeastOne)}';
+if(isForKA)
+  document.title = DisplayKAtoAccounts;  
+
+//---------------------------------------------
+if(themeid != null && themeid != '')
+    showsavebutton = true; 
+//Get the right side data from parent-----------
+var cols = new Array(3); 
+cols[1]='elID'; 
+cols[0]='Name';
+cols[2]='display';
+
+var reader = new Ext.data.ArrayReader({}, cols);
+var rightListData=[];
+var tempRightStore = new Ext.data.Store({
+    reader: reader
+});
+
+if(themeid == null || themeid == '')
+{    
+	if(!getUrlParameter('stdForm')){
+		tempRightStore = window.parent.listStore;
+		
+	}
+	else{
+	
+	
+		if(getUrlParameter('isFromConsole')){
+			var cols = new Array(2); 
+	    	cols[1]='elID'; 
+	    	cols[0]='Name';
+	       	var reader = new window.parent.Ext.data.ArrayReader({}, cols);
+		    var listStore = new window.parent.Ext.data.Store({
+		        reader: reader, data: window.opener.listData,
+		        sortInfo: {
+		            field: 'Name',
+		            direction: 'ASC' 
+		        }
+		    });
+			tempRightStore = listStore;
+		}else{
+			if( typeof(window.opener) != 'undefined' && window.opener != null){
+				if(isForKA && window.opener.csvAccountListparam.toLowerCase() == 'all accounts')
+                    tempRightStore = '';     
+				else
+					tempRightStore = window.opener.listStore;
+            }
+		}
+		
+	}
+	
+	var rightArray = tempRightStore.data;
+    if(rightArray != '' && rightArray != undefined && rightArray != null)
+    {
+	for(i=0;i < rightArray.length;i++){	
+		tempArr = new Array(3)
+	    tempArr[0] = tempRightStore.getAt(i).get('elID');
+	    tempArr[1] = tempRightStore.getAt(i).get('Name');
+	    if(tempRightStore.getAt(i).get('Name').length > 30) {
+			tempArr[2] = Ext.util.Format.htmlEncode(tempRightStore.getAt(i).get('Name').substr(0, 30) + '...');
+		} else {
+			tempArr[2] = Ext.util.Format.htmlEncode(tempRightStore.getAt(i).get('Name'));
+		}	
+	    rightListData.push(tempArr);       
+	}	
+   } 
+}
+//----------------------------------------------------   
+
+//----------------------------------------------------	
+if(showsavebutton){
+    document.getElementById("Okbtn").style.display="none";
+}
+else{
+    document.getElementById("Savebtn").style.display="none";
+    if(isForKA)
+        document.getElementById("Okbtn").value = LabelApply;
+}
+//-------------------------------------------------------
+function getSDFStylesResPath(){
+    var resPath = '{!$Resource.SDEFStyles}';
+    return resPath;
+}
+//-------------------------------------------------------
+if(isLightningAction ){
+    document.getElementById('DisplayInSS').checked ={!IF(displayInSS,true,false)};
+}
+</script>
+<apex:outputPanel id="EntitlementScript">
+<script>
+if(themeid == null || themeid == ''){
+	accRightStoreData = rightListData;		
+}
+else{        
+	accRightStoreData = [{!rightDataList}];
+	//document.getElementById("toolbar").style.display="none";
+}
+//accRightStoreData = rightListData;
+//alert('accRightStoreData=============='+accRightStoreData);
+accLeftStoreData = [{!leftDataList}];
+if(isLightningAction){	
+	var selectedAccountsForKA = "{!JSENCODE(selectedAccountsForKA)}";
+    accRightStoreData= [{!rightDataList}]; 
+}
+function getPreFirstBtn(){
+    var preFirstBtn = !{!IF(paginator.hasPrevious,'true','false')};                       
+    return preFirstBtn;
+}
+function getNextLastBtn(){
+    var nextLastBtn = !{!IF(paginator.hasNext,'true','false')};          
+    return nextLastBtn;
+}
+</script>
+</apex:outputPanel>
+
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AppAdminItemselector.js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AccountSelector.js"/>
+</apex:page>

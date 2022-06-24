@@ -1,0 +1,78 @@
+<apex:page controller="BMCServiceDesk.AdminSelfServiceController" showHeader="false" standardStylesheets="false" action="{!AdminMobileConfigInit}" id="pg">
+<c:CommonIncludes />
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSelfService.css"/>
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+<apex:form id="form" >
+	<div id="btnToolbar"/>
+	<div id="helpDiv" class="clshelpDiv"></div>
+	<apex:outPutPanel id="mainPanel">
+	<table class = "mainPanel" >
+	
+		<tr>
+          	<td  title="{!$Label.TooltipEnableMobileAccess}">
+              	<apex:inputCheckbox id="enableMobileAccess" value="{!selfServiceBean.Enable_Mobile_Access}" onClick="enableMobile()" styleclass="clsCheckBoxLabel"/>
+                  <apex:outputLabel value="{!$Label.bmcservicedesk__enablemobileaccess}" />
+			</td> 
+		</tr>
+		<tr><td class = "div5pxHspacing" ></td></tr>
+		<tr>
+			<td>
+				<table>
+                   	<tr>                                                            
+                       	<td  >
+                           	<apex:outputLabel value="{!$Label.bmcservicedesk__organizationid}" />
+						</td>
+                         <td>
+                         	<input type="text" title="{!$Label.TooltipOrganizationID}" id="orgId" maxlength="18" Class="clstextBox" disabled="disabled"  value="{!$Organization.Id}"/>
+						</td>
+                     </tr>
+                     <tr><td height="5px"></td></tr>
+                    <tr>                                 
+	                  	<td >
+	                       	<apex:outputLabel value="{!$Label.bmcservicedesk__portalid}" />
+						</td>
+	                    <td>
+	                       	<apex:inputText id="PortalIdval" title="{!$Label.bmcservicedesk__tooltipenterportalid}" maxlength="18" styleClass="clstextBox"  value="{!portalId}"/>
+						</td>
+					</tr>
+                </table>
+               </td>
+		</tr>
+	  
+	</table>
+	</apex:outPutPanel>
+	<apex:outputPanel id="msg">
+         <script>                          
+            var message = '{!JSINHTMLENCODE(messageString)}';               
+         </script>
+   </apex:outputPanel>
+	<apex:actionFunction name="save" action="{!mobileConfigSave}" reRender="msg" oncomplete="waitMsg.hide();showErrorMsg();" />                  
+    <apex:actionFunction name="reset" action="{!mobileConfigReset}" rerender="mainPanel" /> 
+</apex:form>
+<script type="text/javascript">
+	var saveLabel='{!JSENCODE($Label.Save)}';
+    var undoDefaultSettingPageLabel='{!JSENCODE($Label.Reset)}';
+    var mobleConfiLabel = '{!JSENCODE($Label.MobileConfiguration)}';
+    var PortalIdvalvar='{!JSENCODE($Component.pg.form.PortalIdval)}';
+    var enableMobileAccessvar='{!JSENCODE($Component.pg.form.enableMobileAccess)}';
+    var isMobileSettingsForFreshOrg = {!isMobileSettingsForFreshOrg} ? 'TRUE' : 'FALSE';
+    function showErrorMsg(){
+              
+         if(message!=null && message !=''){                                
+             Ext.MessageBox.show({                                
+                 title: '{!JSENCODE($Label.AdminMobile)}',
+                 msg:message ,
+                 width:300,
+                 buttons: Ext.MessageBox.OK
+             });
+        }
+    }
+    
+    if(isMobileSettingsForFreshOrg == 'FALSE'){ 
+    	document.getElementById('helpDiv').style.display='none';
+    }
+   var wikiUrl='{!wikiUrl}';
+   parent.addHelpOnPage(document.getElementById('helpDiv'),'mobile_SS_settings.htm',wikiUrl);
+</script>
+ <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminMobileConfiguration.js"/>     
+</apex:page>

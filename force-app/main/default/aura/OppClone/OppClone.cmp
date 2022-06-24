@@ -1,0 +1,172 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="OppCloneController">
+    <aura:attribute name="oppId" type="String"/>
+    
+    <aura:attribute name="records" type="Account[]" access="private"/>
+	<aura:attribute name="successes" type="OppCloneController.CloneResult[]" access="private"/>
+    <aura:attribute name="failures" type="OppCloneController.CloneResult[]" access="private"/>
+    <aura:attribute name="setStage" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="isCloning" type="Boolean" default="false" access="private"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/> 
+    <aura:handler event="c:AddRecordsEvt" action="{!c.handleAddRecords}"/>
+    
+	<div class="slds-card__body slds-text-title_caps slds-align_absolute-center slds-m-bottom_medium" style="margin-left:75px;" >
+        Clone Opp to Following Accts
+    </div>
+    
+    <div class="slds-is-relative">
+        <div class="{!if(v.isCloning,'slds-show overlay','slds-hide')}">
+        	<div class="slds-is-relative" style="height: 20%;">
+            	<div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+                    <span class="slds-assistive-text">Loading</span>
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+              	</div>
+            </div>
+        </div>
+        
+        <div class="border slds-m-bottom_large">
+            <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_fixed-layout">
+                <thead>
+                    <tr class="slds-text-title_caps">
+                        <th scope="col" class="slds-cell-wrap"></th>
+                        <th scope="col" class="slds-cell-wrap"><div>Account Name</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div>Parent Account</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">Accpac Account #</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">Recurring SO</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">On Hold</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">Shipping Address</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">Type</div></th>
+                        <th scope="col" class="slds-cell-wrap"><div class="slds-align_absolute-center">Owner</div></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <aura:iteration items="{!v.records}" var="rec" indexVar="index">
+                        <tr>
+                            <td>
+                                <div class="slds-align_absolute-center">
+                                    <lightning:button name="{!index}" label="Remove" onclick="{!c.remove}"/>
+                                </div>
+                            </td>
+                            <td class=" slds-cell-wrap slds-truncate">
+                                <div>
+                                    <ui:outputText value="{!rec.Name}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div >
+                                    <ui:outputText value="{!rec.Parent.Name}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:outputText value="{!rec.AccPac_Account__c}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:outputCheckBox value="{!rec.Recurring_SO__c}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:outputCheckBox value="{!rec.On_Hold__c}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center slds-truncate">
+                                    <ui:outputText value="{!rec.ShippingAddress}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:outputText value="{!rec.Type}"/>
+                                </div>
+                            </td>
+                            <td class="slds-cell-wrap">
+                                <div class="slds-align_absolute-center">
+                                    <ui:outputText value="{!rec.Owner.Name}"/>
+                                </div>
+                            </td>
+                        </tr>
+                    </aura:iteration>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="slds-m-bottom_small" style="margin-left:75px;">
+            <div class="slds-m-bottom_medium">
+                <ui:inputCheckBox value="{!v.setStage}" label="Set StageName to 'Proposal'" class="checkboxSettings" labelClass="slds-m-right_small"/>
+            </div>
+            <lightning:button value="Clone" label="Clone" class="slds-button slds-button_brand" onclick="{!c.doClone}"/>
+        </div>
+    </div>
+    
+    <div aura:id="resultsModal" class="slds-hide" style="height: 640px;">
+      <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+          <header class="slds-modal__header">
+            <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Clone Results</h2>
+          </header>
+          <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+            <div class="slds-m-bottom_medium">
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_fixed-layout">
+                    <tr class="slds-text-title_caps">
+                        <th scope="col" class="slds-cell-wrap" colspan="2"><div>Successes</div></th>
+                    </tr>
+                    <tbody>
+                        <aura:iteration items="{!v.successes}" var="success" indexVar="i">
+                            <tr>
+                                <td class="slds-col slds-size_1-of-12">
+                                    <div>
+                                        {!i + 1}.
+                                    </div>
+                                </td>
+                                <td class="slds-col slds-size_11-of-12">
+                                    <div>
+                                        <a href="{!'/one/one.app?#/sObject/'+ success.opp.Id + '/view'}" target="_blank"><ui:outputText value="{!success.acct.Name}"/></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_fixed-layout">
+                    <tr class="slds-text-title_caps">
+                        <th scope="col" class="slds-cell-wrap" colspan="3"><div>Failures</div></th>
+                    </tr>
+                    <tbody>
+                        <aura:iteration items="{!v.failures}" var="failure" indexVar="i">
+                            <tr>
+                                <td class="slds-col slds-size_1-of-12">
+                                    <div>
+                                        {!i + 1}.
+                                    </div>
+                                </td>
+                                <td class="slds-col slds-size_5-of-12 slds-cell-wrap">
+                                    <div>
+                                        <ui:outputText value="{!failure.acct.Name}"/>
+                                    </div>
+                                </td>
+                                <td class="slds-col slds-size_6-of-12 slds-cell-wrap">
+                                    <div>
+                                        <ui:outputText value="{!failure.msg}"/>
+                                    </div>
+                                </td>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+            </div>
+          </div>
+          <footer class="slds-modal__footer">
+            <button class="slds-button slds-button_neutral" onclick="{!c.closeModal}">Close</button>
+          </footer>
+        </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+            
+</aura:component>

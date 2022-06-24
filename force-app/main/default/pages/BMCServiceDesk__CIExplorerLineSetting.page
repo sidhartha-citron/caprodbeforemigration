@@ -1,0 +1,89 @@
+<apex:page ShowHeader="false" standardStylesheets="false">
+    
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/>
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/bmc-dpl-common.css" type="text/css" />
+    <link rel="stylesheet" href="{!$Resource.Salesforce1}/SelfService/DPLLibraries/css/Salesforce-Font.css" type="text/css" />
+    <link rel="stylesheet" href="{!URLFOR($Resource.Salesforce1, 'SelfService/DPLLibraries/css/dpl-iconfont.css')}" type="text/css" /> 
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/CIExplorerLineSetting.css" type="text/css" /> 
+    
+    <div class = "relationship"> {!JSENCODE($label.CIExpRelationship)}:&nbsp;{!HTMLENCODE($CurrentPage.parameters.type)}</div>
+    <table width="500px"  id="lineTable">
+        <tr>
+            <td >
+            <div class="tdLabel">
+                 {!JSENCODE($label.CIExpLineDirection)}
+             </div>
+                <div id = "lineDirection" width="110px" />
+            </td>
+            <td >
+            	<div class="tdLabel">
+                {!JSENCODE($label.CIExpLineStyle)}
+           		</div>
+                <div id = "lineStyle" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+             <div class="tdLabel">
+                {!JSENCODE($label.CIExpLineThickness)}
+                </div>
+                <div id = "lineThickness" width="110px"/>
+            </td>
+            <td class="trLabeltd2">
+	             <div class="tdLabel">
+	                {!JSENCODE($label.CIExpLineColor)}
+	            </div>
+                <div class="tdLabel">
+                  <input id="colorTxt" class="x-form-text" onchange="changeColor()"/>
+                  <input type = "button" id="colorBtn" class="color {pickerPosition:'left'} colorBtn"  onchange="populateColorCodes();" disabled="true"/>
+                </div>
+            </td>
+        </tr>
+        <tr>
+          
+            <td colspan="4">
+           		
+                <canvas id="drawLine"></canvas>
+                 
+                    <div class="BtnCSS" >
+                    <hr class="hrLine"></hr>
+                       <input type="button" value="{!JSENCODE($Label.Cancel)}" class="bmc-btn-small" onclick="callCancel();" style="margin-right:7px"/>
+                        <input type="button" value="{!JSENCODE($Label.Ok)}" onclick="callOk();" class="bmc-btn-primary" /> 
+                        
+                    </div>
+               
+            </td>
+          
+        </tr>
+        
+    </table>
+     
+    <script>
+    	//All labels variable
+        var lineDirection_left = '{!JSENCODE($label.CIExpLeftToRight)}';
+        var lineDirection_right = '{!JSENCODE($label.CIExpRightToLeft)}';
+        var lineDirection_Notdirectional = '{!JSENCODE($label.CIExpNonDirectional)}';
+        var lineStyle_solid = '{!JSENCODE($label.CIExpSolid)}';
+        var lineStyle_Dotted = '{!JSENCODE($label.CIExpDotted)}';
+        
+        //Get Parameter from urls
+         var lineStyle  	=   '{!JSENCODE($CurrentPage.parameters.lineStyle)}';
+         var linetype  		=   '{!JSENCODE($CurrentPage.parameters.type)}';
+         var lineDirection  =   '{!JSENCODE($CurrentPage.parameters.lineDirection)}';
+         var lineThickness  =   '{!JSENCODE($CurrentPage.parameters.lineThickness)}';
+         var lineColor 		=   '{!JSENCODE($CurrentPage.parameters.lineColor)}';
+        
+        //Setting all combobox store data
+        var lineThicknessCombodata = [{"name":"1"},{"name":"2"},{"name":"3"},{"name":"4"},{"name":"5"},{"name":"6"},{"name":"7"},{"name":"8"},{"name":"9"},{"name":"10"}];
+        var lineDirectionCombodata = [{"name":lineDirection_Notdirectional,"value":"Undirected"},{"name":lineDirection_right,"value":"RightToLeft"},{"name":lineDirection_left, "value":"LeftToRight"}];
+        var lineStyleComboData = [{"name":lineStyle_solid,"value":"Solid"},{"name":lineStyle_Dotted,"value":"Dotted"}];
+        
+        var relationType = lineDirection;
+        var thickness= lineThickness;
+        var themeInvalidColorCodeMessage = '{!JSENCODE($Label.ThemeInvalidColorCodeMessage)}';
+    </script>
+
+<script type="text/javascript" src="{!$Resource.SDEFCommonJS}/CIExplorerLineSetting.js"></script>
+<script type="text/javascript" src="{!$Resource.jscolor}/jscolor.js"></script>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+</apex:page>

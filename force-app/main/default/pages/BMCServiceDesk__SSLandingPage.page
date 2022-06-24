@@ -1,0 +1,305 @@
+<apex:page sidebar="false" showHeader="false"  controller="BMCServiceDesk.SSLandingController" extensions="BMCServiceDesk.JSRemoteActions,BMCServiceDesk.ChatService" standardStylesheets="false">
+<head><title>{!HTMLENCODE($Label.SSBrowserTitle)}</title><link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" /><div id="themeDiv"></div></head>
+  <style>
+     .overlap{position:absolute; opacity:0.4; height:100%; width:100%; display:block; z-index: 9999999; opacity:0;background-color: white} 
+    .x-btn-inner{padding-left : 0px !important;}
+    .tileLinkCls  {padding-left : 0px !important;}
+    #rf-tile-dec-text {padding-bottom :10px !important;}
+    .chatText{color:white;font:bold 13px Arial;}
+ </style> 
+    
+ <!--[if IE 8]>
+    <style type="text/css">
+        #rf-tile-dec-text {padding-bottom :10px !important; width: 354px !important;} 
+ </style>
+<![endif]-->
+<script>
+    var enableWalkthroughFlow = parent.enableWalkthroughFlow;
+    var wikiHelpUrlList = [];
+    <apex:repeat value="{!wikiHelpUrlList}" var="urlValue">
+      wikiHelpUrlList.push('{!JSENCODE(urlValue)}');
+    </apex:repeat>    
+  </script>
+ <div id="previewDiv" style="display:none;" class="overlap"></div>  
+ <table  id="rf-table-main" tabindex="-1" >
+    <tr style="display:{!IF(IsBannerHide , 'None', '')}" >
+     
+            <td colspan="2" class="{!IF(showSSBanner,'rf-banner-td-on','rf-banner-td-off')} ">
+         <apex:outputPanel styleClass="rf-top-banner-div" layout="block" rendered="{!showSSBanner}" >
+            <a href="javascript:void(0)" onClick="openWindow();" tabindex="0"  style="{!IF(companyURL!='','cursor:pointer','cursor:default')}" id="bmcLink" >
+               <apex:image alt="{!companyURL}" title="{!URLTipText}" value="{!URLFOR($Resource.BMCServiceDesk__SSThemes,staticResource+'/SDEFimages/remedyforce-standard-logo.gif')}" rendered="{!NOT(customBannerHeaderImageVisible)}"/>
+               <apex:image title="{!URLTipText}" url="/servlet/servlet.FileDownload?file={!bannerHeaderId}" rendered="{!customBannerHeaderImageVisible}" />
+             </a>
+             <apex:outputText value="{!$Label.bmcservicedesk__sswelcome}, {!userName}"  styleClass="rf-welcome-user" /> 
+         </apex:outputPanel>
+         <div id="rf-ticker"  class="rf-ticker-div" tabindex="-1" >
+           <table width="100%" border="0" cellpadding="0" cellspacing="0" height="35" tabindex="-1">
+            <tr>
+                <td width="1%" tabindex="-1">
+                    <img tabindex="0" id="view-brd-msg" src="{!$Resource.SSThemes}/SSDefaultTheme/SDEFicons/img_trans.png" class="sprite-ViewBroadcasts24" title="{!$Label.viewBroadcast} (Ctrl+Alt+B)" onkeydown="openBroadcastWindowOnEnter(event);" onclick="showBroadcast();"/>
+                </td>
+                <td tabindex="-1">
+					<span id="broadcast-ticker-parentSpan" style="visibility:{!IF(ssTickerVisible,'visible','hidden')}"/>
+                </td>
+                <td tabindex="-1"  class="cart-icon-td" style="{!IF(showCartBtn, 'display:block;', 'display:none')}">
+                     <img id="cartBtn" onclick="showCart();" tabindex="0" src="{!$Resource.SSThemes}/SSDefaultTheme/SDEFicons/img_trans.png" onkeydown="openMyCart(event);" style="float:right;cursor:pointer;"/>
+                    
+                </td>
+                <td class="ticker-grp-td"  tabindex="-1" id="view-quickLink-td" style="display:none"> 
+                    <span id="quickLinks" tabindex="0" Class="rf-banner-link QuickLinkdownarrow" title="{!$Label.QuickLinkSettings} (Ctrl+Alt+Q)" onkeydown="showQuickLinks(event);">
+                       <img id="view-quick-link" src="{!$Resource.SSThemes}/SSDefaultTheme/SDEFicons/img_trans.png" class="sprite-QuickLinks24" />
+                    </span> 
+                </td>
+                <td class="ticker-grp-td" tabindex="-1">
+                  <span tabindex="0" id="moreOptions" Class="rf-banner-link QuickLinkdownarrow" style="{!IF(OR(showSSBanner,showMyProfile), '', 'display:none')}" title="{!$Label.SSMoreoptions} (Ctrl+Alt+H)" onkeydown="showMoreOptions(event);"> 
+                        <img id="view-more-links" src="{!$Resource.SSThemes}/SSDefaultTheme/SDEFicons/img_trans.png" class="sprite-MoreOptions24" />
+                 </span> 
+                 <span tabindex="0" id="helpIcon" style="{!IF(showMyProfile, 'display:none', IF(showSSBanner,'display:none', ''))}"  title="{!$Label.SSHelp} (Ctrl+Alt+H)" >
+                        <img id="view-more-links" src="{!$Resource.SSThemes}/SSDefaultTheme/SDEFicons/img_trans.png" class="sprite-Help24" onclick="openHelp();"/>
+                 </span>
+                </td>
+                
+            </tr>
+           </table>
+           </div>
+        </td>
+   </tr>
+    <tr>
+        <td style="vertical-align:top;" tabindex="-1" >
+            <div id="tabs" class="rf-tab-div" tabindex="-1"></div>
+        </td>
+       
+    </tr>
+</table>
+<div id="right-tab-widget" class="{!IF(IsComponent,'rf-right-component','rf-right-widget')}" tabindex="-1" style="display:{!IF(isRightPanelDataPresent,'block','none')};width: 97%;">
+    <div id="right-tab-header" class="rf-tab-header" tabindex="-1"/>
+    <div id="right-subtab-KA" class="rf-subtab-KA" style="display: {!if(AND(showKAonLoad,isKaPresent),'block','none')};" tabindex="-1" />
+    <div id="right-tab-content" style="width: 100%; height: 90%;border: none;"/>
+    <div id="right-tab-morecontent"  style = 'display : none;width: 95%;'>
+        <span id="popularLinkText" styleClass="popular-link-label" ><b> Loading....</b></span>
+    </div>
+    
+    
+</div>
+<apex:outputPanel id="chatPanel" layout="block" rendered="{!(AND(showChat,NOT(IsComponent)))}">
+    <c:ChatComponent />
+    <script>
+        var remedyforceChat = '{!JSENCODE($Label.Chat_Header)}';
+    </script> 
+    <div id="startChat" class="rf-ticker-div startChatContainer"  onclick="chat(remedyforceChat ,true,false);">
+        <apex:outputText value="{!$Label.bmcservicedesk__chat_header}" styleClass="chatText"/>
+    </div>
+</apex:outputPanel>
+<script type="text/javascript" src="{!$Resource.ExtJS4_1_3}/ext-all.js"></script>
+
+<script type="text/javascript"> 
+        var colorCodeList = '{!JSENCODE(themeColorCodeString)}'; 
+        var isPreview = {!isPreview};
+        var param = '{!JSENCODE($CurrentPage.parameters.previewList)}';
+        var previewColorList ='';
+        if(param!="")
+        {
+            previewColorList = Ext.JSON.decode('{!JSENCODE($CurrentPage.parameters.previewList)}',true);          
+                      
+        }
+        
+        var previewTokenConstant = 'token';  
+        if(isPreview )
+        {	
+        	colorCodeList = '';
+            if(previewColorList!=null && previewColorList!='')
+            {
+                var isPresent = true;
+                var iColorCount=0;
+                for(var colorCode in previewColorList){
+                    var preColorCode = previewColorList[previewTokenConstant+(iColorCount+1)];
+                    if(preColorCode!= undefined && preColorCode!='')
+                    {
+                        colorCodeList += preColorCode+',';                  
+                    }
+                    iColorCount++;
+                }    
+                colorCodeList = colorCodeList.slice(0, -1);       
+            }
+        }
+        var content = '{!JSENCODE(dynamicStyle)}'; 
+        var baseCSSURL =  '{!URLFOR($Resource.SSThemes, 'SSTemplateTheme')}';
+</script>
+<script src="{!$Resource.SSjs}/SSApplyDynamicCSS.js" /> 
+<script>
+var isCalledFromLink = "{!JSENCODE($CurrentPage.parameters.isCalledFromLink)}"; 
+var isKAHasPriority = {!knowledgePriority};
+var showcartbtn = {!showCartBtn};
+var rightPanelTabData = {!lstRightPanel};
+	if(rightPanelTabData.length>0){
+		for (var i=0;i < rightPanelTabData.length; i++){
+			rightPanelTabData[i].description=replaceSFJsonEncodeChar(rightPanelTabData[i].description);
+		}
+	}
+	function replaceSFJsonEncodeChar(val){
+	 	if(val !=null && val!='' && val!=undefined){
+	 		val = val.replace(/\\\\/g, "\/~\/~")
+	 					.replace(/\\n/g, "\n")
+	 					.replace(/\/~\/~/g, "\\")
+	 					.replace(/\\u003C/g, '<')
+	 					.replace(/\\u003E/g, '>')
+	 					.replace(/\\\//g, "\/")
+						.replace(/\\\\/g, "\\")
+						.replace(/\\'/g, "'")
+						.replace(/\\"/g, "\"");
+	 	}
+	 	return val;
+	 }
+			
+var tileDataSrc = {!TileData};
+var isRightPanelDataPresent = {!isRightPanelDataPresent};
+var ssChatterPage = '{!$Page.SSChatterPage}';
+var ssBrowsePage = '{!$Page.SSBrowsePage}';
+var ssAboutusURL = "{!$Page.AboutUs}";
+var ssRequestlistPage= '{!$Page.SSRequestListPage}';
+var ssIncidentForm;
+var incidentCustomform;
+var userLanguage = '{!userLanguage}';  
+var showJapaneseHelp = '{!showJapaneseHelp}';
+incidentCustomform = '{!customform}';
+if(incidentCustomform == 'STD'){
+    ssIncidentForm = '{!$Page.SelfServiceIncident}';
+}else if(incidentCustomform == 'CUSTOM'){
+    ssIncidentForm = '{!$Page.SelfServiceIncidentCustom}';
+}else{
+    ssIncidentForm = '{!$Page.SSTicketLayout}';
+}
+var serviceRequestForm = '{!$Page.SelfServiceIncidentCustom}';
+var showSRPreview = {!showSRPreview};
+var isStdLayout='{!JSENCODE(standardLayout)}';
+var broadcastPage = '{!$Page.BroadcastWidgetPage}';
+var cartPage = '{!$Page.SSCart}';
+var broadcastLabel = '{!JSENCODE($Label.Navigator_Broadcasts)}';
+var ssApprovalListPage = '{!$Page.SSApprovalListPage}';
+var page_SRPreview = '{!$Page.SSServiceRequestPreview}';
+var ssKMArticlePage = '{!$Page.SSKM_ArticleView}';
+var ssContactUs = '{!$Page.SS_ContactUs}';
+var ssMyProfile = '{!$Page.SS_MyProfile}';
+var ssSearchPage = '{!$Page.SelfServiceSearch}';
+var ssSHD = '{!$Page.ServiceHealthDashboard}';
+var incTemplateForContactUs = '{!incTemplateForContactUs}';
+var kaSubTabList={!kaSubTabData};
+var isKAPresent = '{!isKaPresent}';
+var staticResource='{!staticResource}';
+var searchURL = '{!searchURL}';
+var IncidentID = "{!JSENCODE($CurrentPage.parameters.inc)}";
+var recordId = "{!JSENCODE($CurrentPage.parameters.id)}";
+var type = "{!JSENCODE($CurrentPage.parameters.type)}";
+var iscalledFromEmail = "{!JSENCODE($CurrentPage.parameters.iscalledFromEmail)}";  
+var searchparam = "{!JSENCODE($CurrentPage.parameters.keyword)}";
+var RFknowledge ='{!RFknowledge}';
+var ext4Resource = '{!$Resource.ExtJS4_1_3}';
+var url ='{!JSENCODE(companyURL)}';
+var cartItemCount = {!cartItems};
+var logoutUrl='{!$Site.Prefix}/secur/logout.jsp';
+var isShowSSBanner={!showSSBanner};
+var isShowMyProfile={!showMyProfile};
+var displayQuickLinks ={!showQuickLinks};
+var IsComponent = '{!IsComponent}';
+var showChat ='{!showChat}';
+var ShowKnowledgeArticles = '{!ShowKnowledgeArticles}';
+var ShowSearch = '{!ShowSearch}';
+var ShowServiceRequests = '{!ShowServiceRequests}';
+var ShowTickets = '{!ShowTickets}';
+var isRFHotkeysDisabled = {!isRFHotkeysDisabled};
+var isBroadcastVisible = {!ssTickerVisible};
+var isAZERTYKeyBoard = {!isAZERTYKeyBoard};
+
+function openWindow(){
+
+if(url!='')
+window.open(url);
+}
+Ext.ns("SSLandingPage");
+SSLandingPage.Labels = {
+    ssHomeTitle: '{!JSENCODE($Label.SSHome)}',
+    ssRequestlistTitle: '{!JSENCODE($Label.SS_Requestlist)}',
+	ssSHDTitle: '{!JSENCODE($Label.ServiceHealth)}',
+    ssChatterTabTitle :'{!JSENCODE($Label.SS_Chatter)}',
+    ssBrowseFAQ:'{!JSENCODE($Label.SS_BrowseFAQHome)}',
+    ssBrowseSR:'{!JSENCODE($Label.SS_BrowseServiceRequestsHome)}',
+    KMHowTo:'{!JSENCODE($Label.KMHowTo)}',
+    KMFAQ:'{!JSENCODE($Label.KMFAQ)}',
+    KMKnownError:'{!JSENCODE($Label.KMKnownError)}',
+    KMProblemSolution:'{!JSENCODE($Label.KMProblemSolution)}',
+    ssMore :'{!JSENCODE($Label.SSMore)}',
+    ssLess:'{!JSENCODE($Label.Less)}',
+    articlesLabel: '{!JSENCODE($Label.SS_Articles)}',
+    serviceRequestsLabel: '{!JSENCODE($Label.serviceRequestPortletHeader)}',
+    noDataFound:'{!JSENCODE($Label.SS_NoResultsFound)}',
+    SS_SearchText:'{!JSENCODE($Label.SS_SearchText)}',
+    ssIncidentFormTitle:'{!JSENCODE($Label.SSTicket)}'+': '+'{!JSENCODE($Label.New)}',
+    ssApprovalListTitle:'{!JSENCODE($Label.Approvals)}',
+    srPreviewLabel: '{!JSENCODE($Label.ServiceRequestLabel)}',
+    ssContactUsTitle:'{!JSENCODE($Label.SSContactUs)}',
+    ssSSMyProfileTitle:'{!JSENCODE($Label.SSMyProfile)}',
+    ssSearchIntranetTitle:'{!JSENCODE($Label.SSRightSidebarSearchTitle)}',
+    SSSearchIntranetDispMsg:'{!JSENCODE($Label.SSSearchIntranetDispMsg)}',
+    SSSearch:'{!JSENCODE($Label.SSSearch)}',
+    insufficientSearchCharsLabel : '{!JSENCODE($Label.GsErrorMsg)}',
+    SSCancel:'{!JSENCODE($Label.SSCancel)}',
+    SelfServiceSearch:'{!JSENCODE($Label.SelfServiceSearch)}',
+    MyCart:'{!JSENCODE($Label.myCartLabel)}',
+    cartItems:'{!JSENCODE($Label.Items)}',
+    SSHelp:'{!JSENCODE($Label.SSHelp)}',
+    SSAbout:'{!JSENCODE($Label.SSAbout)}',
+    SSLogOut:'{!JSENCODE($Label.SSLogOut)}',
+    AboutServiceDeskExpressonForceCom:'{!JSENCODE($Label.AboutServiceDeskExpressonForceCom)}',
+    tileDirectLinkErrorMsg: '{!JSENCODE($Label.DirectLinkTileErrorMessage)}',
+    kaDirectLinkErrorMsg: '{!JSENCODE($Label.DirectLinkKAErrorMessage)}',
+    srDirectLinkErrorMsg: '{!JSENCODE($Label.DirectLinkSRErrorMessage)}',
+    templateDirectLinkErrorMsg: '{!JSENCODE($Label.DirectLinkTemplateErrorMessage)}',   
+    selfservicesearchfield:'{!JSENCODE($Label.SelfServiceSearchField)}'
+    
+    
+    
+    
+    
+    
+    
+    
+}
+Ext.ns("SSLandingPageComp");
+ SSLandingPageComp.ComponentVars = {
+  FooterLabel: '{!$Component.footerLabelId}',
+  MoreOrLeassLink : '{!$Component.popularLinkText}'
+}
+function getSSThemePath(){
+  var resPath = '{!$Resource.SSThemes}';
+  return resPath;
+}
+
+var tabHeader='';
+
+_RemotingActions={}
+_RemotingActions.fetchPopularData = "{!$RemoteAction.JSRemoteActions.fetchPopularSSData}";
+_RemotingActions.broadcastMsgFunc = "{!$RemoteAction.JSRemoteActions.broadcastMsgFunc}";
+_RemotingActions.incidentDetails ="{!$RemoteAction.JSRemoteActions.incidentDetail}";
+_RemotingActions.QuickLinkDetails ="{!$RemoteAction.JSRemoteActions.getQuickLinks}";
+_RemotingActions.ValidateDirectLink = "{!$RemoteAction.JSRemoteActions.validateDirectLink}";
+_RemotingActions.checkActivatedChatforClient = "{!$RemoteAction.ChatService.checkForChatInitialisationForClient}";
+</script>
+ <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js"></script>
+ <script src="{!$Resource.SSjs}/SSLandingPage.js" />
+ <script>
+    if(isPreview)
+    {
+        if(document.getElementById('previewDiv')!=null)
+        {
+            document.getElementById('previewDiv').style.display = "block";
+        }
+    }    
+    if(isRFHotkeysDisabled){
+		setTitle(document.getElementById('view-brd-msg'),'{!JSENCODE($Label.viewBroadcast)}');   
+		setTitle(document.getElementById('quickLinks'),'{!JSENCODE($Label.QuickLinkSettings)}');    
+		setTitle(document.getElementById('moreOptions'),'{!JSENCODE($Label.SSMoreoptions)}');    
+		setTitle(document.getElementById('helpIcon'),'{!JSENCODE($Label.SSHelp)}');    
+	}   
+ </script>
+ <script type="text/javascript" src="{!$Resource.SDEFCommonJS}/WikiHelp.js"/>
+</apex:page>

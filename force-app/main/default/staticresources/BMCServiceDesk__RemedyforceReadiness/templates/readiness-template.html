@@ -1,0 +1,124 @@
+<div class="rfFeatures">
+	<span ng-repeat="subFeature in subFeatureCompletenessMap">  
+		<div id="accordion">
+			<div class="container">
+				<div class="progressBarContainer">
+					<div id="header">
+						<div id="featureScore">{{subFeature.Score}}%</div>
+						<div id="featureName">{{subFeature.FeatureName}}</div>		
+					</div>
+					<div class="progressBar" data-toggle="modal">  
+						<div id="featureProgress" class="progress" ng-click="setsubFeatureId(subFeature.FeatureName, subFeature.Score)" title="{{rfBadgeDonutTooltip}}">
+							<div id="{{subFeature.id}}" class="progress-bar {{subFeature.class}}" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:0%">			  
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="badge1 poppable" ng-click="onBadgeClick(subFeature.id,subFeature.FeatureName,'1',subFeature.banner1url,subFeature.isFirstBadgeEnabled,subFeature.badge1Name,subFeature.badge1url,subFeature.badgeName)" ng-if="subFeature.badge1url" id="{{subFeature.id + '1'}}">		
+					<img ng-src="{{subFeature.badge1url}}" ng-class="{BadgeDisabled: !subFeature.isFirstBadgeEnabled, SharingDisabled: !isSharingEnabled}" style="height:50px;width:50px;" title="{{getToolTip(subFeature.isFirstBadgeEnabled,subFeature.badge1Name,1)}}" on-error/>
+				</div>
+				<div class="badge2 poppable" ng-click="onBadgeClick(subFeature.id,subFeature.FeatureName,'2',subFeature.banner2url,subFeature.isSecondBadgeEnabled,subFeature.badge2Name,subFeature.badge2url,subFeature.badgeName)" ng-if="subFeature.badge2url" id="{{subFeature.id + '2'}}">
+					<img ng-src="{{subFeature.badge2url}}" ng-class="{BadgeDisabled: !subFeature.isSecondBadgeEnabled,SharingDisabled: !isSharingEnabled}" style="height:50px;width:50px;" title="{{getToolTip(subFeature.isSecondBadgeEnabled,subFeature.badge2Name,2)}}" on-error/>
+				</div>				
+			</div>
+		</div>				
+	</span>	
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modal-lg" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	<div class="modal-dialog-lg modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" id="closeModal" ng-click="closeModalPopup()">&times;</button>
+				<span class="modal-title" id="exampleModalLabel">{{currentSubFeature}}:&nbsp;<b>{{currentSubFeatureScore}}&nbsp;{{pointsLabel}}</b></span>		
+			</div>
+			<div class="modal-body">
+				<div style="clear:both;">
+					<div width="90%">
+						<div class="featuremapId" ng-repeat="subFeatureCriteria in selectedSubFeatureCriteriaMap">
+							<div class="dummyId">
+								<div class="image-flip" style="width:195px;float:left;margin:5px;" ng-MouseLeave="toggleFlip($event)">
+									<div class="mainflip">
+										<div class="frontside">
+											<div class="card card-size">
+												<div class="card-header">
+													<div class="card-header-text" title="{{subFeatureCriteria.subfeatureName}}">{{subFeatureCriteria.subfeatureName}}</div>
+												</div> 
+												<div class="card-body" ng-click="updateCSS($event);">
+													<div class="points">+{{subFeatureCriteria.points}}&nbsp;{{pointsLabel}}</div>
+													<div class="cardDetails">
+														<h4 class="card-title">{{subFeatureCriteria.featureCriteriaDescription}}</h4>
+														<div id="progressContainer">
+															<div class="{{subFeatureCriteria.textCSStyle}}">{{subFeatureCriteria.statusLabel}}</div>
+															<div id="featureCriteriaProgress" class="progress">
+																<div id="{{subFeatureCriteria.subFeatureId}}" class="progress-bar {{subFeatureCriteria.cssStyle}} progress-bar-striped" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:0%">			  
+																</div>
+															</div>
+														</div>							
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="backside">
+											<div class="card card-size">
+												<div class="card-header">
+													<div class="card-header-text" title="{{subFeatureCriteria.subfeatureName}}">{{subFeatureCriteria.subfeatureName}}</div>
+												</div>  
+												<div class="card-body">							
+													<p class="card-text">{{subFeatureCriteria.featureDescription}}</p>							
+												</div>
+												<div class="card-footer">
+													<a href="{{subFeatureCriteria.wikiURL}}" class="btn btn-info btn-md" target="_blank">{{knowMoreLabel}}</a>
+												</div>  
+											</div>
+										</div>
+									</div>
+								</div>	
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Pop-up Modal -->
+<div class="modal fade" id="bmcCommunityPopup" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	<div class="modal-dialog-lg modal-lg" role="document">
+		<div class="modal-content contentHeader">
+			<div class="modal-header">
+				<button type="button" class="close" id="closeBMCCommunityPopup" style="margin-top:7px;" ng-click="closePopup()">&times;</button>
+				<div class="socialButtonWrapper">
+				    <div class="headerImagePadding headerDivPos paddingtop5px">
+						<img class="paddingright15px" src="{{bmcLogo}}">
+				    </div>
+				    <div class="headerDivPos headerImagePadding communityTextDiv">
+						<h3 style="margin:0px !important;" id="headerText">{{labelCommunities}}</h3>
+					</div>
+				</div>		
+			</div>
+			<div class="modal-body popupBackgroundColor height220">
+				<div ng-if="showError == true">
+					<div>
+						<span id="errorPanel"></span><br />
+					</div>
+				</div>
+				<div ng-if="showError == false" class="col-sm-12 padding0px containerDivClass">
+					<div class="col-sm-12 popupTextDiv">
+						<textarea id="inputTextArea" class="popupBackgroundColor popupTextMessage" rows="4" ng-model="bmcCommunitiesMessage.data" onkeyup="allowPost()"/>
+					</div>
+					<div id="imageDiv" class="col-sm-2 padding0px">
+						<img class="sizeClass" ng-if="badgeBannerURL" ng-src="{{badgeBannerURL}}" src="{{badgeBannerURL}}" on-error>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button ng-if="showError == false" id="saveButton" type="button" class="btn btn-primary Branding-Right_Panel-default_button Branding-Right_Panel-button_outline save-btn btn-Orange" ng-click="sendPost();">{{labelPost}}</button>
+				<button ng-if="showError == false" id="cancelButton" type="button" class="btn Branding-Right_Panel-button_outline cancel-btn" ng-click="closePopup();">{{labelCancel}}</button>
+				<button ng-if="showError == true" id="closeButton" type="button" class="btn Branding-Right_Panel-button_outline cancel-btn" ng-click="closePopup();">{{labelClose}}</button>
+			</div>
+		</div>
+	</div>
+</div>

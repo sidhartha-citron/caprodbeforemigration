@@ -1,0 +1,51 @@
+<apex:page showHeader="false" sidebar="false" controller="BMCServiceDesk.AdminMetricCardConfigController">
+<link rel="stylesheet" href="{!$Resource.SDEFStyles}/AdminMetricCardConfig.css" type="text/css" /> 
+ <apex:outputPanel rendered="{!IF( isRTLEnabled , true, false )}" layout="none">
+	<link rel="stylesheet" href="{!$Resource.SDEFStyles}/AdminMetricCardConfig-RTL.css" type="text/css" />
+</apex:outputPanel>
+<apex:includeLightning />
+<c:RFMessagingComponent /> 
+	<style>
+        <apex:outputText value="{!moduleStyles}"></apex:outputText>
+	</style>
+    <div id="LightningComponentid" />    
+    <script>
+        showLoadingMask();
+        function disableAppCSS () {
+            try {
+				var styleSheets = document.styleSheets;
+				for (var i = 0; i < styleSheets.length; i++) {
+					var documentStyleSheet = styleSheets[i];
+					if (documentStyleSheet  && documentStyleSheet.href) {
+						if (documentStyleSheet.href.search(/app.css/) != -1) {
+							documentStyleSheet.disabled = true;
+						}
+					}
+				}
+			} catch (ex) {
+				// do nothing
+			}
+        }
+        var orgNameSpaceWithoutUnderScore = '{!JSENCODE(orgNameSpaceWithoutUnderScore)}';
+	
+        $Lightning.use(orgNameSpaceWithoutUnderScore+":adminMetricCardConfigApp", function() {
+            $Lightning.createComponent(orgNameSpaceWithoutUnderScore+":adminMetricCardConfig",
+            { 
+                vfMsgMethod : createRemoteSite
+            },
+            "LightningComponentid",
+            function(cmp) {
+			disableAppCSS (); 
+            hideLoadingMask();   
+            });
+        });
+        function createRemoteSite() {
+            var remoteSettingName    =   "SalesforceBaseUrl";
+            var URL                  =   "{!JSENCODE(baseUrl)}";
+            var description          =   "Remote site created by BMC Helix Remedyforce";
+            var sessionId            =   "{!JSENCODE($Api.Session_ID)}";
+            var sfHost               =   "{!JSENCODE(sfHost)}";
+            window.parent.createRemoteSiteSetting(remoteSettingName, URL, description, sessionId, sfHost);              
+        }
+    </script>
+</apex:page>

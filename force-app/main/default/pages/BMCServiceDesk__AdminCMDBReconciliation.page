@@ -1,0 +1,163 @@
+<apex:page controller="BMCServiceDesk.AdminCMDBReconciliationController" sidebar="false" showHeader="false" standardStylesheets="false" >
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css"/> 
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" type="text/css"/>
+    <link rel="stylesheet" href="{!$Resource.SDEFStyles}/AdminCMDBReconciliation.css" type="text/css"/>
+    <apex:form id="AdminReconform" style="border-style: solid; border-width: 1px;">
+    	<div id="btnToolbar"/>
+		<table cellspacing="0" cellpadding="0"> 
+    		<tr>
+               <td class="clsInputLabelTD">
+               		<apex:outputpanel layout="block" styleClass="boxConatiner" rendered="{!(!$ObjectType.ReconciliationRule__c.fields.Rule_Name__c.Accessible
+               																				|| !$ObjectType.ReconciliationRule__c.fields.FilterLogic__c.Accessible
+               																				|| !$ObjectType.ReconciliationRule__c.fields.FKCMDB_Class__c.Accessible
+               																				|| !$ObjectType.ReconciliationRule__c.fields.Reconciliation_Criteria__c.Accessible
+               																				|| !$ObjectType.ReconciliationRule__c.fields.Inactive__c.Accessible)}">
+	               		<table >
+	                  		<tr>
+	                  			<td width="40px"><img src="/img/msg_icons/warning24.png"/></td>
+	                    			<td>
+	                          		<apex:outputpanel rendered="{!NOT(isAdminUser)}">
+									<apex:outputLabel value="{!$Label.bmcservicedesk__profilenonsysadminpermission}"/>
+								</apex:outputpanel>
+	                           		<apex:outputpanel rendered="{!isAdminUser}">
+	                           			<apex:outputLabel value="{!$Label.bmcservicedesk__profilesysadminpermission}" />&nbsp;
+									<apex:outputLink value="https://docs.bmc.com/docs/display/REMF/Performing+minimum+post-upgrade+procedures" target="_blank">{!$Label.bmcservicedesk__here}</apex:outputLink>
+	                           			<apex:outputText value="."/>
+								</apex:outputpanel>
+	                    			</td>
+	                   		</tr>
+	                	</table>
+	                    <table>
+							<tr>
+								<td style="height:10px;"></td>
+							</tr>
+	                    </table>
+                    </apex:outputpanel>
+               </td>
+            </tr>
+    	</table>
+        <table style="width:46%;margin-top: 10px;">
+            <tr>
+                <td width="40%">
+                    <div class="fieldLabel">{!JSENCODE($ObjectType.ReconciliationRule__c.fields.Rule_Name__c.label)}*</div>
+                </td>
+                <td width="60%">
+                    <apex:inputText id="ruleName" styleClass="inpFld" value="{!reconRule.BMCServiceDesk__Rule_Name__c}" onChange="markAsDirty();" maxlength="80"/>
+                </td>
+            </tr>
+            <tr id="ClassTypeTableRow">
+                <td width="40%">
+                    <div class="fieldLabel">{!JSENCODE($Label.CMDBClassType)}*</div>
+                </td>
+                <td width="60%">
+                    <div id="CMDBClassType"/>
+                </td>
+            </tr>
+            <tr>
+                <td width="40%">
+                    <div class="fieldLabel">{!JSENCODE($Label.CMDBClassName)}*</div>
+                </td>
+                <td width="60%">
+                    <div id="CMDBClassName"/>
+                </td>
+            </tr>
+		</table>
+		<div class="sectionSeparator"/>
+		<table id="FilterCriteria" style="width:46%"/>
+        <table style="width: 100%; margin-top: 20px;">
+	        <tr>
+	        	<td colspan="2" class="footerLogicFilter">
+	        		<apex:outputLabel value="{!$ObjectType.BMCServiceDesk__ReconciliationRule__c.fields.BMCServiceDesk__FilterLogic__c.label}" for="" style="padding-right:10px;"/>
+					<apex:inputField id="filterLogicId" styleClass="rf-filter-logic" value="{!reconRule.BMCServiceDesk__FilterLogic__c}" onChange="updateFilterLogic();markAsDirty();"/>
+					<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__filterlogicexample)}" for="" style="padding-left:10px;"/>
+	        	</td>
+	        </tr>
+        </table>
+    	<apex:actionFunction action="{!fetchClassFields}" name="fetchClassFields" rerender="refreshFieldsData" oncomplete="ReloadFieldStore();">
+        	<apex:param name="className" assignTo="{!ClassName}" value=""/>  
+    	</apex:actionFunction>
+    	<apex:actionFunction action="{!saveRule}" name="saveRule" rerender="refreshRuleId" oncomplete="postSaveAction();">
+    		<apex:param name="RuleName" assignTo="{!reconRule.BMCServiceDesk__Rule_Name__c}" value=""/>
+            <apex:param name="CMDBClassNameCombo" assignTo="{!reconRule.FKCMDB_Class__c}" value=""/>
+	        <apex:param name="selectedFields" assignTo="{!reconRule.Reconciliation_Criteria__c}" value=""/>
+	        <apex:param name="Inactive" assignTo="{!reconRule.Inactive__c}" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction action="{!DeleteRule}" name="DeleteRule" rerender="" oncomplete="postDeleteAction();"/>
+        <apex:actionFunction action="{!RefreshRule}" name="RefreshRule" rerender="" oncomplete="postDeleteAction();"/>
+    </apex:form>
+    <script>
+    	var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+	    var tooltipNew='{!JSENCODE($Label.New)}';
+		var tooltipSave='{!JSENCODE($Label.Save)}';
+		var tooltipCopy='{!JSENCODE($Label.Copy)}';
+		var tooltipDelete='{!JSENCODE($Label.Delete)}';
+		var tooltipRefresh='{!JSENCODE($Label.Refresh)}';
+		var delCnfrmMsg = '{!JSENCODE($Label.DeleteConfirmMessage)}';
+		var refreshCnfrmMsg = '{!JSENCODE($Label.SF1NavigationWarningMsg)}';
+		var YesLabel = '{!JSENCODE($Label.ExtjsMessageYes)}';
+		var NoLabel = '{!JSENCODE($Label.ExtjsMessageNo)}';
+		var OkLabel = '{!JSENCODE($Label.ExtjsMessageOK)}';
+		var RuleBasedAsset = '{!JSENCODE($Label.RulebasedAsset)}';
+		var labelDeleteRow = '{!JSENCODE($Label.DeleteRow)}';
+		var BasedonCIClass = '{!JSENCODE($Label.BasedonCIClass)}';
+		var CMDBAssetRule = '{!JSENCODE($Label.CMDBAssetRule)}';
+		var NoClassRulesDefined = '{!JSENCODE($Label.NoCriteriaDefined)}';
+		
+		var SDEFStylesResource = '{!$Resource.SDEFStyles}';
+		var inactiveLabel='{!JSENCODE($ObjectType.ReconciliationRule__c.fields.Inactive__c.label)}'; 
+		var headerWinTab = '{!JSENCODE($ObjectType.ReconciliationRule__c.label)}';       
+		var Inactive = {!Inactive};
+		var namespacePrefix = 'BMCServiceDesk__';
+		
+		var CI = '{!JSENCODE($Label.CMDB_TAB_CIs)}';
+        var Asset = '{!JSENCODE($Label.CMDB_TAB_Assets)}';
+        var CIandAsset = '{!JSENCODE($Label.CIAndAsset)}';
+		var isCIManagementEnabled = {!isCIManagementEnabled};
+		var isAssetManagementEnabled = {!isAssetManagementEnabled};
+		var CMDBClassTypeCombo = '{!JSENCODE(CMDBClassType)}';
+		var CMDBClassNameCombo = '{!JSENCODE(ClassName)}';
+		var CMDBClassId = '{!JSENCODE(CMDBClassId)}';
+		
+		var EmptyFieldLabel = '{!JSENCODE($Label.CMDBReconSelectAttribute)}';
+		var ConditionLimit = '{!ConditionLimit}';
+  		var reconCriteria = '{!JSENCODE(reconCriteria)}';
+		
+		var RequiredFieldsEntry = '{!JSENCODE($Label.RequiredFieldsEntry)}';
+		var FilterLogicValidation = '{!JSENCODE($Label.FilterLogicValidation)}';
+		var charactersoverlimit = '{!JSENCODE($Label.charactersoverlimit)}';
+		var SavedSuccessfully = '{!JSENCODE($Label.SavedSuccessfully)}';
+		var FieldAlreadySelected = '{!JSENCODE($Label.Field_Already_Selected)}';
+		var isDeletable = {!$ObjectType.BMCServiceDesk__ReconciliationRule__c.deletable};
+    	var isCreateable = {!$ObjectType.BMCServiceDesk__ReconciliationRule__c.createable};
+    	var isEditable = {!$ObjectType.BMCServiceDesk__ReconciliationRule__c.updateable};
+		
+		function getFilterLogic(){
+        	return document.getElementById('{!$Component.AdminReconform.filterLogicId}');  
+   		}
+   		
+   		function getRuleName(){
+        	return document.getElementById('{!$Component.AdminReconform.ruleName}');  
+   		}
+	</script>
+	<apex:outputpanel id="refreshRuleId">
+	   	<script>
+			var recordId = '{!JSENCODE(reconRule.Id)}';
+			var errorMsg = '{!JSENCODE(errorMsg)}';
+		</script>
+   	</apex:outputpanel>
+   	<apex:outputpanel id="refreshClassData">
+	   	<script>
+			var classStoreData = JSON.parse('{!JSENCODE(classList)}');
+	   	</script>
+   	</apex:outputpanel>
+   	<apex:outputpanel id="refreshFieldsData">
+   		<apex:outputPanel id="fieldsDataPanel">  
+	   	<script>
+	   		var fieldsStoreData = {!fieldStore};
+	   	</script>
+	   	</apex:outputPanel>  
+   	</apex:outputpanel>
+    <script src="{!$Resource.ExtJS4_1_3}/ext-all.js"  type="text/javascript"/>
+    <script src="{!$Resource.SDEFCommonJS}/AdminCMDBReconciliation.js"  type="text/javascript"/>
+    <script src="{!$Resource.SDEFCommonJS}/HTML_ENCODE_DECODE.js" type="text/javascript"/>
+</apex:page>

@@ -1,0 +1,1534 @@
+<apex:page standardstylesheets="false" sidebar="false" controller="maps.SalesforceMaps" title="Salesforce Maps" action="{!StartUpAction}" extensions="maps.RemoteFunctions,maps.TerritoryRemoteFunctions,maps.AdminAJAXResources,maps.MapsCustomActions,maps.AutoAssignmentController,maps.MarkerLayerBuilderController">
+    <!-- SFCM-725 moved to include script to fix SF header breaking google script, please do not change  -->
+    <apex:includeLightning />
+    <apex:includeScript value="{!GoogleURL}/maps/api/js?v=3.47&client=gme-cloudbiltinc&libraries=places,visualization,drawing,geometry"/>
+
+    <script>
+        window.fullcalendarKey = '{!JSENCODE(fullcalendarKey)}';
+        window.advancedFeatureLicenseEnabled = {!advancedFeatureLicenseEnabled};
+        window.liveTrackingFeatureLicenseEnabled = {!liveTrackingFeatureLicenseEnabled};
+    </script>
+    
+    <script>
+        var userSettings = {};
+        var defaultSettings = {};
+        var MARemoting = {
+            Territory: {
+                getTerritoryMarkerLayersBySearchTerm: '{!$RemoteAction.TerritoryRemoteFunctions.getTerritoryMarkerLayersBySearchTerm}',
+                visualizeTerritory: '{!$RemoteAction.TerritoryRemoteFunctions.visualizeTerritory}',
+                getAggregatorKeysBySettingId: '{!$RemoteAction.TerritoryRemoteFunctions.getAggregatorKeysBySettingId}',
+                getTerritoryLayerById: '{!$RemoteAction.TerritoryRemoteFunctions.getTerritoryLayerById}',
+                getTerritoryCardById: '{!$RemoteAction.TerritoryRemoteFunctions.getTerritoryCardById}',
+                getLayerCount: '{!$RemoteAction.TerritoryRemoteFunctions.getLayerCount}',
+                fetchNumberFieldsBySObjectName: '{!$RemoteAction.TerritoryRemoteFunctions.fetchNumberFieldsBySObjectName}',
+                startAggregationById: '{!$RemoteAction.TerritoryRemoteFunctions.startAggregationById}',
+                save: '{!$RemoteAction.TerritoryRemoteFunctions.saveTerritory}',
+                delete: '{!$RemoteAction.TerritoryRemoteFunctions.deleteTerritory}'
+            },
+            CustomActions: {
+                performQuickAction: '{!$RemoteAction.MapsCustomActions.performQuickAction}'
+            },
+            phase_4 : '{!$RemoteAction.RemoteFunctions.GetRecords}',
+            getShapes : '{!$RemoteAction.RemoteFunctions.GetShapeInfo}',
+            placeSearch : '{!$RemoteAction.RemoteFunctions.googleAPISearch}',
+            geocodeRecord : '{!$RemoteAction.RemoteFunctions.geoCodeRecord}',
+            live_phase_4 : '{!$RemoteAction.RemoteFunctions.GetLatestPosition}',
+            live_history: '{!$RemoteAction.RemoteFunctions.GetLiveDeviceHistory}',
+            getDriveProfile : '{!$RemoteAction.RemoteFunctions.getCustomDriveProfile}',
+            get_service_area: '{!$RemoteAction.RemoteFunctions.getServiceArea}',
+            processAJAXRequest : '{!$RemoteAction.RemoteFunctions.processAJAXRequest}',
+            processAJAXRequestReadOnly : '{!$RemoteAction.RemoteFunctions.processAJAXRequestReadOnly}',
+            MapAnythingIORequest : '{!$RemoteAction.RemoteFunctions.MapAnythingIORequest}',
+            getSearchableBaseObjects: '{!$RemoteAction.RemoteFunctions.getSearchableBaseObjects}',
+            searchMAObjectsForRecords : '{!$RemoteAction.RemoteFunctions.searchMAObjectsForRecords}',
+            searchMAObjectsForRecordsSOQL : '{!$RemoteAction.RemoteFunctions.searchMAObjectsForRecordsSOQL}', 
+            validateMABaseObjectTooltips : '{!$RemoteAction.RemoteFunctions.validateMABaseObjectTooltips}',
+            MapAnythingIORequestPOST : '{!$RemoteAction.RemoteFunctions.MapAnythingIORequestPOST}',
+            getRoute: '{!$RemoteAction.RemoteFunctions.getRoute}',
+            getRouteV2: '{!$RemoteAction.RemoteFunctions.getRouteV2}',
+            getCalendarEvents: '{!$RemoteAction.RemoteFunctions.getCalendarEvents}',
+            saveCalendarEvents: '{!$RemoteAction.RemoteFunctions.saveCalendarEvents}',
+            getCalendarShifts: '{!$RemoteAction.RemoteFunctions.getCalendarShifts}',
+            getCalendarResourcesByUserId: '{!$RemoteAction.RemoteFunctions.getCalendarResourcesByUserId}',
+            getSchedulingResourcesBySearchTerm: '{!$RemoteAction.RemoteFunctions.getSchedulingResourcesBySearchTerm}',
+            saveCalendarResources: '{!$RemoteAction.RemoteFunctions.saveCalendarResources}',
+            getShapeGeometry: '{!$RemoteAction.RemoteFunctions.GetShapeGeometry}',
+            AdminStartUpAction: '{!$RemoteAction.AdminAJAXResources.AdminStartUpAction}',
+            getLiveConfigs: '{!$RemoteAction.RemoteFunctions.getLiveConfigs}'
+        }
+    </script>
+    <!-- jQuery-->
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/jquery-3.6.0.min.js')}"></script> 
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/jquery-migrate-3.3.2.min.js')}"></script> 
+
+    <!--[if lte IE 9]>
+        <script type='text/javascript'>window.location = '/apex/Oops?type=UnsupportedBrowser';</script>
+    <![endif]-->
+
+    <script type="text/javascript">
+		if (!!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+            console.log('detected IE11 ... loading polyfills');
+            var head = document.getElementsByTagName('head')[0] || document.body;
+            var script = document.createElement('script');
+            script.src = "{!URLFOR($Resource.Maps3rdPartyPlugins, 'js/polyfill.min.js')}";
+            head.appendChild(script);
+
+            console.log('adding IE style override')
+            var link = document.createElement("link");
+            link.type = "text/css";
+            link.rel = "stylesheet";
+            link.href = "{!URLFOR($Resource.MapsStyles, 'css/ie11.css')}";
+            head.appendChild(link);
+        } else if (!!navigator.userAgent.match(/MSIE 10.0.*/)) {
+            window.location = '/apex/Oops?type=UnsupportedBrowser';
+        }
+	</script>
+
+    <!-- async -->
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'async/async.min.js')}"></script>
+
+    <!-- jsTree -->
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jstree/_lib/jquery.cookie.js')}"></script>
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jstree/jquery.jstree2.js')}"></script>
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'js/proj4.js')}"></script>
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'js/proj4.defs.js')}"></script>
+    <!-- toastr -->
+
+    <!-- EXPORT -->
+    <script type='text/javascript' src="{!URLFOR($Resource.MapsJS, 'exportCSV.js')}"></script>
+
+    <script type="text/javascript" src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'toastr/toastr.min.js')}"></script>
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.Maps3rdPartyPlugins, 'toastr/toastr.min.css')}"></link>
+
+    <link rel="stylesheet" type="text/css" href="{!resourcePaths['MapsStyles']}/Layers/css/Layers.css" />
+
+    <!-- minicolors -->
+    <script type="text/javascript" src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/minicolors/jquery.minicolors.min.js')}"></script>
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/minicolors/jquery.minicolors.css')}"></link>
+
+    <!-- jsColor -->
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jscolor/jscolor.js')}"></script>
+
+    <!-- Lightning Design System 2.9.4 -->
+    <link type="text/css" rel="stylesheet" href="{!resourcePaths['MapsFonts']}/css/salesforce-lightning-design-system.min.css" />
+    
+    <!-- Maps Legacy UI -->
+    <apex:stylesheet value="{!URLFOR($Resource.maps__MapsFonts, 'css/MapAnything.css')}"/>
+
+    <!-- Maps 2.0 UI - uses SASS in static resource -->
+    <link type="text/css" rel="stylesheet" href="{!resourcePaths['MapsStyles']}/styles/css/ma-ui.css" />
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.MapsFonts, 'styles.css')}" />
+
+    <apex:outputPanel layout="none" rendered="{!(PendoEnabled == 'true')}">
+        <script>
+            (function(apiKey){
+                (function(p,e,n,d,o){var v,w,x,y,z;o=p[d]=p[d]||{};o._q=[];
+                v=['initialize','identify','updateOptions','pageLoad'];for(w=0,x=v.length;w<x;++w)(function(m){
+                o[m]=o[m]||function(){o._q[m===v[0]?'unshift':'push']([m].concat([].slice.call(arguments,0)));};})(v[w]);
+                y=e.createElement(n);y.async=!0;y.src='https://cdn.pendo.io/agent/static/'+apiKey+'/pendo.js';
+                z=e.getElementsByTagName(n)[0];z.parentNode.insertBefore(y,z);})(window,document,'script','pendo');
+
+                // Call this whenever information about your visitors becomes available
+                // Please use Strings, Numbers, or Bools for value types.
+                pendo.initialize({
+                    visitor: { 
+                        id: '{!JSENCODE($User.Id)}',
+                        email: '{!JSENCODE($User.Email)}',
+                        firstName: '{!JSENCODE($User.FirstName)}',
+                        lastName: '{!JSENCODE($User.LastName)}',
+                        userName: '{!JSENCODE($User.Username)}',
+                        userAgent: window.navigator.userAgent
+                    },
+
+                    account: { 
+                        id: '{!JSENCODE($Organization.Id)}', // Highly recommended
+                        name: '{!JSENCODE($Organization.Name)}'
+                        // planLevel:    // Optional
+                        // planPrice:    // Optional
+                        // creationDate: // Optional
+
+                        // You can add any additional account level key-values here,
+                        // as long as it's not one of the above reserved names.
+                    }
+                });
+            })('{!JSENCODE(pendoKey)}');
+        </script>
+    </apex:outputPanel>
+
+    <!-- jQuery UI -->
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/jquery-ui.min.js')}"></script>
+    <apex:stylesheet value="{!URLFOR($Resource.maps__Maps3rdPartyPlugins, 'jquery/jquery-ui.css')}"/>
+
+    <!-- Select2 replacing combobox -->
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/select2.full.min.js')}"></script>
+    <apex:stylesheet value="{!URLFOR($Resource.maps__Maps3rdPartyPlugins, 'jquery/select2.min.css')}"></apex:stylesheet>
+
+    <!-- jQuery event.drag -->
+
+    <!-- CryptoJS (https://code.google.com/p/crypto-js/) -->
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'google/cryptojs/core-min.js')}"></script>
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'google/cryptojs/enc-utf16-min.js')}"></script>
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'google/cryptojs/enc-base64-min.js')}"></script>
+
+    <!-- Google Maps -->
+    <script>
+        //fix google maps touch events, forced
+        navigator = navigator || {};
+        if(('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0)) {
+            navigator.msPointerEnabled = true;
+            navigator.msMaxTouchPoints = navigator.msMaxTouchPoints || 2;
+        }
+ 
+    </script>
+
+    <!-- Google Maps - InfoBubble (http://google-maps-utility-library-v3.googlecode.com/svn/trunk/infobubble/examples/example.html) -->
+    <script type='text/javascript' src="{!resourcePaths['Maps3rdPartyPlugins']}/google/infobubble/infobubble.js"></script>
+    <script type='text/javascript'>
+
+        //InfoBubble does not support padding when panning to view.  Adding the padding that MA needs
+        InfoBubble.prototype.panToView = function(offset) {
+
+            //make sure projection and bubble are available
+            var projection = this.getProjection();
+            if (!projection || !this.bubble_) { return; }
+
+            //this is the magic var
+
+            var MAPaddingTop = 65;
+
+            var anchorHeight = this.getAnchorHeight_();
+            var height = this.bubble_.offsetHeight + anchorHeight + MAPaddingTop;
+            var map = this.get('map');
+
+            var mapDiv = map.getDiv();
+            var mapHeight = mapDiv.offsetHeight;
+
+            var latLng = this.getPosition();
+            var centerPos = projection.fromLatLngToContainerPixel(map.getCenter());
+            var pos = projection.fromLatLngToContainerPixel(latLng);
+
+            // Find out how much space at the top is free
+            var spaceTop = centerPos.y - height;
+
+            // Fine out how much space at the bottom is free
+            var spaceBottom = mapHeight - centerPos.y;
+
+            var needsTop = spaceTop < 0;
+            var deltaY = 0;
+
+            if (needsTop) {
+                spaceTop *= -1;
+                deltaY = (spaceTop + spaceBottom) / 2;
+            }
+
+            pos.y -= deltaY;
+            if (offset) {
+                if (offset.x) pos.x += offset.x;
+                if (offset.y) pos.y += offset.y;
+            }
+
+            latLng = projection.fromContainerPixelToLatLng(pos);
+
+            if (map.getCenter() != latLng) {
+                map.panTo(latLng);
+            }
+        };
+
+        InfoBubble.prototype['panToView'] = InfoBubble.prototype.panToView;
+    </script>
+
+    <!-- Google Maps - RichMarker (https://googlemaps.github.io/js-rich-marker/examples/richmarker.html) -->
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'google/richmarker/richmarker.js')}"></script>
+    <script type='text/javascript'>
+
+        //richmarker doesn't support a rightclick event.  adding it
+        RichMarker.prototype.onAdd = function() {
+            if (!this.markerWrapper_) {
+                this.markerWrapper_ = document.createElement('DIV');
+                this.markerWrapper_.style['position'] = 'absolute';
+            }
+
+            if (this.getZIndex()) {
+                this.markerWrapper_.style['zIndex'] = this.getZIndex();
+            }
+
+            this.markerWrapper_.style['display'] = this.getVisible() ? '' : 'none';
+
+            if (!this.markerContent_) {
+                this.markerContent_ = document.createElement('DIV');
+                this.markerWrapper_.appendChild(this.markerContent_);
+
+                var that = this;
+                google.maps.event.addDomListener(this.markerContent_, 'click', function(e) {
+                    google.maps.event.trigger(that, 'click');
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
+                google.maps.event.addDomListener(this.markerContent_, 'mouseover', function(e) {
+                    google.maps.event.trigger(that, 'mouseover');
+                });
+                google.maps.event.addDomListener(this.markerContent_, 'mouseout', function(e) {
+                    google.maps.event.trigger(that, 'mouseout');
+                });
+
+                //adding rightclick event - DK 11/26/14
+                google.maps.event.addDomListener(this.markerContent_, 'contextmenu', function (e) {
+                    google.maps.event.trigger(that, 'rightclick');
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
+            }
+
+            this.ready_ = true;
+            this.content_changed();
+            this.flat_changed();
+            this.draggable_changed();
+
+            var panes = this.getPanes();
+            if (panes) {
+                panes.overlayMouseTarget.appendChild(this.markerWrapper_);
+            }
+
+            google.maps.event.trigger(this, 'ready');
+        };
+        RichMarker.prototype['onAdd'] = RichMarker.prototype.onAdd;
+
+    </script>
+
+    <!-- Google Maps - Marker Cluster Plus (http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclustererplus/examples/advanced_example.html) custom modification on grabbing images from static resource in js file check before updating -->
+    <script>var clusterPrefix = '{!sitePrefix}';</script>
+    <script type='text/javascript'>
+        function ClusterIcon(t, e) { t.getMarkerClusterer().extend(ClusterIcon, google.maps.OverlayView), this.cluster_ = t, this.className_ = t.getMarkerClusterer().getClusterClass(), this.styles_ = e, this.center_ = null, this.div_ = null, this.sums_ = null, this.visible_ = !1, this.setMap(t.getMap()) } function Cluster(t) { this.markerClusterer_ = t, this.map_ = t.getMap(), this.gridSize_ = t.getGridSize(), this.minClusterSize_ = t.getMinimumClusterSize(), this.averageCenter_ = t.getAverageCenter(), this.markers_ = [], this.center_ = null, this.bounds_ = null, this.clusterIcon_ = new ClusterIcon(this, t.getStyles()) } function MarkerClusterer(t, e, r) { this.extend(MarkerClusterer, google.maps.OverlayView), e = e || [], r = r || {}, this.markers_ = [], this.clusters_ = [], this.listeners_ = [], this.activeMap_ = null, this.ready_ = !1, this.gridSize_ = r.gridSize || 60, this.minClusterSize_ = r.minimumClusterSize || 2, this.maxZoom_ = r.maxZoom || null, this.styles_ = r.styles || [], this.title_ = r.title || "", this.zoomOnClick_ = !0, void 0 !== r.zoomOnClick && (this.zoomOnClick_ = r.zoomOnClick), this.averageCenter_ = !1, void 0 !== r.averageCenter && (this.averageCenter_ = r.averageCenter), this.ignoreHidden_ = !1, void 0 !== r.ignoreHidden && (this.ignoreHidden_ = r.ignoreHidden), this.enableRetinaIcons_ = !1, void 0 !== r.enableRetinaIcons && (this.enableRetinaIcons_ = r.enableRetinaIcons), this.imagePath_ = r.imagePath || MarkerClusterer.IMAGE_PATH, this.imageExtension_ = r.imageExtension || MarkerClusterer.IMAGE_EXTENSION, this.imageSizes_ = r.imageSizes || MarkerClusterer.IMAGE_SIZES, this.calculator_ = r.calculator || MarkerClusterer.CALCULATOR, this.batchSize_ = r.batchSize || MarkerClusterer.BATCH_SIZE, this.batchSizeIE_ = r.batchSizeIE || MarkerClusterer.BATCH_SIZE_IE, this.clusterClass_ = r.clusterClass || "cluster", -1 !== navigator.userAgent.toLowerCase().indexOf("msie") && (this.batchSize_ = this.batchSizeIE_), this.setupStyles_(), this.addMarkers(e, !0), this.setMap(t) } ClusterIcon.prototype.onAdd = function () { var t, e, r = this, s = google.maps.version.split("."); s = parseInt(100 * s[0], 10) + parseInt(s[1], 10), this.div_ = document.createElement("div"), this.div_.className = this.className_, this.visible_ && this.show(), this.getPanes().overlayMouseTarget.appendChild(this.div_), this.boundsChangedListener_ = google.maps.event.addListener(this.getMap(), "bounds_changed", function () { e = t }), google.maps.event.addDomListener(this.div_, "mousedown", function () { t = !0, e = !1 }), s >= 332 && google.maps.event.addDomListener(this.div_, "touchstart", function (t) { t.stopPropagation() }), google.maps.event.addDomListener(this.div_, "click", function (s) { if (t = !1, !e) { var i, o, n = r.cluster_.getMarkerClusterer(); google.maps.event.trigger(n, "click", r.cluster_), google.maps.event.trigger(n, "clusterclick", r.cluster_), n.getZoomOnClick() && (o = n.getMaxZoom(), i = r.cluster_.getBounds(), n.getMap().fitBounds(i), setTimeout(function () { n.getMap().fitBounds(i), null !== o && n.getMap().getZoom() > o && n.getMap().setZoom(o + 1) }, 100)), s.cancelBubble = !0, s.stopPropagation && s.stopPropagation() } }), google.maps.event.addDomListener(this.div_, "mouseover", function () { var t = r.cluster_.getMarkerClusterer(); google.maps.event.trigger(t, "mouseover", r.cluster_) }), google.maps.event.addDomListener(this.div_, "mouseout", function () { var t = r.cluster_.getMarkerClusterer(); google.maps.event.trigger(t, "mouseout", r.cluster_) }) }, ClusterIcon.prototype.onRemove = function () { this.div_ && this.div_.parentNode && (this.hide(), google.maps.event.removeListener(this.boundsChangedListener_), google.maps.event.clearInstanceListeners(this.div_), this.div_.parentNode.removeChild(this.div_), this.div_ = null) }, ClusterIcon.prototype.draw = function () { if (this.visible_) { var t = this.getPosFromLatLng_(this.center_); this.div_.style.top = t.y + "px", this.div_.style.left = t.x + "px", this.div_.style.zIndex = google.maps.Marker.MAX_ZINDEX + 1 } }, ClusterIcon.prototype.hide = function () { this.div_ && (this.div_.style.display = "none"), this.visible_ = !1 }, ClusterIcon.prototype.show = function () { if (this.div_) { var t = "", e = this.backgroundPosition_.split(" "), r = parseInt(e[0].replace(/^\s+|\s+$/g, ""), 10), s = parseInt(e[1].replace(/^\s+|\s+$/g, ""), 10), i = this.getPosFromLatLng_(this.center_); this.div_.style.cssText = this.createCss(i), t = "<img src='" + this.url_ + "' style='position: absolute; top: " + s + "px; left: " + r + "px; ", this.cluster_.getMarkerClusterer().enableRetinaIcons_ ? t += "width: " + this.width_ + "px; height: " + this.height_ + "px;" : t += "clip: rect(" + -1 * s + "px, " + (-1 * r + this.width_) + "px, " + (-1 * s + this.height_) + "px, " + -1 * r + "px);", t += "'>", this.div_.innerHTML = t + "<div style='position: absolute;top: " + this.anchorText_[0] + "px;left: " + this.anchorText_[1] + "px;color: " + this.textColor_ + ";font-size: " + this.textSize_ + "px;font-family: " + this.fontFamily_ + ";font-weight: " + this.fontWeight_ + ";font-style: " + this.fontStyle_ + ";text-decoration: " + this.textDecoration_ + ";text-align: center;width: " + this.width_ + "px;line-height:" + this.height_ + "px;'>" + this.sums_.text + "</div>", void 0 === this.sums_.title || "" === this.sums_.title ? this.div_.title = this.cluster_.getMarkerClusterer().getTitle() : this.div_.title = this.sums_.title, this.div_.style.display = "" } this.visible_ = !0 }, ClusterIcon.prototype.useStyle = function (t) { this.sums_ = t; var e = Math.max(0, t.index - 1); e = Math.min(this.styles_.length - 1, e); var r = this.styles_[e]; this.url_ = r.url, this.height_ = r.height, this.width_ = r.width, this.anchorText_ = r.anchorText || [0, 0], this.anchorIcon_ = r.anchorIcon || [parseInt(this.height_ / 2, 10), parseInt(this.width_ / 2, 10)], this.textColor_ = r.textColor || "black", this.textSize_ = r.textSize || 11, this.textDecoration_ = r.textDecoration || "none", this.fontWeight_ = r.fontWeight || "bold", this.fontStyle_ = r.fontStyle || "normal", this.fontFamily_ = r.fontFamily || "Arial,sans-serif", this.backgroundPosition_ = r.backgroundPosition || "0 0" }, ClusterIcon.prototype.setCenter = function (t) { this.center_ = t }, ClusterIcon.prototype.createCss = function (t) { var e = []; return e.push("cursor: pointer;"), e.push("position: absolute; top: " + t.y + "px; left: " + t.x + "px;"), e.push("width: " + this.width_ + "px; height: " + this.height_ + "px;"), e.push("-webkit-user-select: none;"), e.push("-khtml-user-select: none;"), e.push("-moz-user-select: none;"), e.push("-o-user-select: none;"), e.push("user-select: none;"), e.join("") }, ClusterIcon.prototype.getPosFromLatLng_ = function (t) { var e = this.getProjection().fromLatLngToDivPixel(t); return e.x -= this.anchorIcon_[1], e.y -= this.anchorIcon_[0], e.x = parseInt(e.x, 10), e.y = parseInt(e.y, 10), e }, Cluster.prototype.getSize = function () { return this.markers_.length }, Cluster.prototype.getMarkers = function () { return this.markers_ }, Cluster.prototype.getCenter = function () { return this.center_ }, Cluster.prototype.getMap = function () { return this.map_ }, Cluster.prototype.getMarkerClusterer = function () { return this.markerClusterer_ }, Cluster.prototype.getBounds = function () { var t, e = new google.maps.LatLngBounds(this.center_, this.center_), r = this.getMarkers(); for (t = 0; t < r.length; t++)e.extend(r[t].getPosition()); return e }, Cluster.prototype.remove = function () { this.clusterIcon_.setMap(null), this.markers_ = [], delete this.markers_ }, Cluster.prototype.addMarker = function (t) { var e, r, s; if (this.isMarkerAlreadyAdded_(t)) return !1; if (this.center_) { if (this.averageCenter_) { var i = this.markers_.length + 1, o = (this.center_.lat() * (i - 1) + t.getPosition().lat()) / i, n = (this.center_.lng() * (i - 1) + t.getPosition().lng()) / i; this.center_ = new google.maps.LatLng(o, n), this.calculateBounds_() } } else this.center_ = t.getPosition(), this.calculateBounds_(); if (t.isAdded = !0, this.markers_.push(t), r = this.markers_.length, null !== (s = this.markerClusterer_.getMaxZoom()) && this.map_.getZoom() > s) t.getMap() !== this.map_ && t.setMap(this.map_); else if (r < this.minClusterSize_) t.getMap() !== this.map_ && t.setMap(this.map_); else if (r === this.minClusterSize_) for (e = 0; e < r; e++)this.markers_[e].setMap(null); else t.setMap(null); return this.updateIcon_(), !0 }, Cluster.prototype.isMarkerInClusterBounds = function (t) { return this.bounds_.contains(t.getPosition()) }, Cluster.prototype.calculateBounds_ = function () { var t = new google.maps.LatLngBounds(this.center_, this.center_); this.bounds_ = this.markerClusterer_.getExtendedBounds(t) }, Cluster.prototype.updateIcon_ = function () { var t = this.markers_.length, e = this.markerClusterer_.getMaxZoom(); if (null !== e && this.map_.getZoom() > e) this.clusterIcon_.hide(); else if (t < this.minClusterSize_) this.clusterIcon_.hide(); else { var r = this.markerClusterer_.getStyles().length, s = this.markerClusterer_.getCalculator()(this.markers_, r); this.clusterIcon_.setCenter(this.center_), this.clusterIcon_.useStyle(s), this.clusterIcon_.show() } }, Cluster.prototype.isMarkerAlreadyAdded_ = function (t) { var e; if (this.markers_.indexOf) return -1 !== this.markers_.indexOf(t); for (e = 0; e < this.markers_.length; e++)if (t === this.markers_[e]) return !0; return !1 }, MarkerClusterer.prototype.onAdd = function () { var t = this; this.activeMap_ = this.getMap(), this.ready_ = !0, this.repaint(), this.prevZoom_ = this.getMap().getZoom(), this.listeners_ = [google.maps.event.addListener(this.getMap(), "zoom_changed", function () { var t = this.getMap().getZoom(), e = this.getMap().minZoom || 0, r = Math.min(this.getMap().maxZoom || 100, this.getMap().mapTypes[this.getMap().getMapTypeId()].maxZoom); t = Math.min(Math.max(t, e), r), this.prevZoom_ != t && (this.prevZoom_ = t, this.resetViewport_(!1)) }.bind(this)), google.maps.event.addListener(this.getMap(), "idle", function () { t.redraw_() })] }, MarkerClusterer.prototype.onRemove = function () { var t; for (t = 0; t < this.markers_.length; t++)this.markers_[t].getMap() !== this.activeMap_ && this.markers_[t].setMap(this.activeMap_); for (t = 0; t < this.clusters_.length; t++)this.clusters_[t].remove(); for (this.clusters_ = [], t = 0; t < this.listeners_.length; t++)google.maps.event.removeListener(this.listeners_[t]); this.listeners_ = [], this.activeMap_ = null, this.ready_ = !1 }, MarkerClusterer.prototype.draw = function () { }, MarkerClusterer.prototype.setupStyles_ = function () { var t, e; if (!(this.styles_.length > 0)) for (t = 0; t < this.imageSizes_.length; t++)e = this.imageSizes_[t], this.styles_.push({ url: this.imagePath_ + (t + 1) + "." + this.imageExtension_, height: e, width: e }) }, MarkerClusterer.prototype.fitMapToMarkers = function () { var t, e = this.getMarkers(), r = new google.maps.LatLngBounds; for (t = 0; t < e.length; t++)!e[t].getVisible() && this.getIgnoreHidden() || r.extend(e[t].getPosition()); this.getMap().fitBounds(r) }, MarkerClusterer.prototype.getGridSize = function () { return this.gridSize_ }, MarkerClusterer.prototype.setGridSize = function (t) { this.gridSize_ = t }, MarkerClusterer.prototype.getMinimumClusterSize = function () { return this.minClusterSize_ }, MarkerClusterer.prototype.setMinimumClusterSize = function (t) { this.minClusterSize_ = t }, MarkerClusterer.prototype.getMaxZoom = function () { return this.maxZoom_ }, MarkerClusterer.prototype.setMaxZoom = function (t) { this.maxZoom_ = t }, MarkerClusterer.prototype.getStyles = function () { return this.styles_ }, MarkerClusterer.prototype.setStyles = function (t) { this.styles_ = t }, MarkerClusterer.prototype.getTitle = function () { return this.title_ }, MarkerClusterer.prototype.setTitle = function (t) { this.title_ = t }, MarkerClusterer.prototype.getZoomOnClick = function () { return this.zoomOnClick_ }, MarkerClusterer.prototype.setZoomOnClick = function (t) { this.zoomOnClick_ = t }, MarkerClusterer.prototype.getAverageCenter = function () { return this.averageCenter_ }, MarkerClusterer.prototype.setAverageCenter = function (t) { this.averageCenter_ = t }, MarkerClusterer.prototype.getIgnoreHidden = function () { return this.ignoreHidden_ }, MarkerClusterer.prototype.setIgnoreHidden = function (t) { this.ignoreHidden_ = t }, MarkerClusterer.prototype.getEnableRetinaIcons = function () { return this.enableRetinaIcons_ }, MarkerClusterer.prototype.setEnableRetinaIcons = function (t) { this.enableRetinaIcons_ = t }, MarkerClusterer.prototype.getImageExtension = function () { return this.imageExtension_ }, MarkerClusterer.prototype.setImageExtension = function (t) { this.imageExtension_ = t }, MarkerClusterer.prototype.getImagePath = function () { return this.imagePath_ }, MarkerClusterer.prototype.setImagePath = function (t) { this.imagePath_ = t }, MarkerClusterer.prototype.getImageSizes = function () { return this.imageSizes_ }, MarkerClusterer.prototype.setImageSizes = function (t) { this.imageSizes_ = t }, MarkerClusterer.prototype.getCalculator = function () { return this.calculator_ }, MarkerClusterer.prototype.setCalculator = function (t) { this.calculator_ = t }, MarkerClusterer.prototype.getBatchSizeIE = function () { return this.batchSizeIE_ }, MarkerClusterer.prototype.setBatchSizeIE = function (t) { this.batchSizeIE_ = t }, MarkerClusterer.prototype.getClusterClass = function () { return this.clusterClass_ }, MarkerClusterer.prototype.setClusterClass = function (t) { this.clusterClass_ = t }, MarkerClusterer.prototype.getMarkers = function () { return this.markers_ }, MarkerClusterer.prototype.getTotalMarkers = function () { return this.markers_.length }, MarkerClusterer.prototype.getClusters = function () { return this.clusters_ }, MarkerClusterer.prototype.getTotalClusters = function () { return this.clusters_.length }, MarkerClusterer.prototype.addMarker = function (t, e) { this.pushMarkerTo_(t), e || this.redraw_() }, MarkerClusterer.prototype.addMarkers = function (t, e) { var r; for (r in t) t.hasOwnProperty(r) && this.pushMarkerTo_(t[r]); e || this.redraw_() }, MarkerClusterer.prototype.pushMarkerTo_ = function (t) { if (t.getDraggable()) { var e = this; google.maps.event.addListener(t, "dragend", function () { e.ready_ && (this.isAdded = !1, e.repaint()) }) } t.isAdded = !1, this.markers_.push(t) }, MarkerClusterer.prototype.removeMarker = function (t, e) { var r = this.removeMarker_(t); return !e && r && this.repaint(), r }, MarkerClusterer.prototype.removeMarkers = function (t, e) { var r, s, i = !1; for (r = 0; r < t.length; r++)s = this.removeMarker_(t[r]), i = i || s; return !e && i && this.repaint(), i }, MarkerClusterer.prototype.removeMarker_ = function (t) { var e, r = -1; if (this.markers_.indexOf) r = this.markers_.indexOf(t); else for (e = 0; e < this.markers_.length; e++)if (t === this.markers_[e]) { r = e; break } return -1 !== r && (t.setMap(null), this.markers_.splice(r, 1), !0) }, MarkerClusterer.prototype.clearMarkers = function () { this.resetViewport_(!0), this.markers_ = [] }, MarkerClusterer.prototype.repaint = function () { var t = this.clusters_.slice(); this.clusters_ = [], this.resetViewport_(!1), this.redraw_(), setTimeout(function () { var e; for (e = 0; e < t.length; e++)t[e].remove() }, 0) }, MarkerClusterer.prototype.getExtendedBounds = function (t) { var e = this.getProjection(), r = new google.maps.LatLng(t.getNorthEast().lat(), t.getNorthEast().lng()), s = new google.maps.LatLng(t.getSouthWest().lat(), t.getSouthWest().lng()), i = e.fromLatLngToDivPixel(r); i.x += this.gridSize_, i.y -= this.gridSize_; var o = e.fromLatLngToDivPixel(s); o.x -= this.gridSize_, o.y += this.gridSize_; var n = e.fromDivPixelToLatLng(i), a = e.fromDivPixelToLatLng(o); return t.extend(n), t.extend(a), t }, MarkerClusterer.prototype.redraw_ = function () { this.createClusters_(0) }, MarkerClusterer.prototype.resetViewport_ = function (t) { var e, r; for (e = 0; e < this.clusters_.length; e++)this.clusters_[e].remove(); for (this.clusters_ = [], e = 0; e < this.markers_.length; e++)(r = this.markers_[e]).isAdded = !1, t && r.setMap(null) }, MarkerClusterer.prototype.distanceBetweenPoints_ = function (t, e) { var r = (e.lat() - t.lat()) * Math.PI / 180, s = (e.lng() - t.lng()) * Math.PI / 180, i = Math.sin(r / 2) * Math.sin(r / 2) + Math.cos(t.lat() * Math.PI / 180) * Math.cos(e.lat() * Math.PI / 180) * Math.sin(s / 2) * Math.sin(s / 2); return 6371 * (2 * Math.atan2(Math.sqrt(i), Math.sqrt(1 - i))) }, MarkerClusterer.prototype.isMarkerInBounds_ = function (t, e) { return e.contains(t.getPosition()) }, MarkerClusterer.prototype.addToClosestCluster_ = function (t) { var e, r, s, i, o = 4e4, n = null; for (e = 0; e < this.clusters_.length; e++)(i = (s = this.clusters_[e]).getCenter()) && (r = this.distanceBetweenPoints_(i, t.getPosition())) < o && (o = r, n = s); n && n.isMarkerInClusterBounds(t) ? n.addMarker(t) : ((s = new Cluster(this)).addMarker(t), this.clusters_.push(s)) }, MarkerClusterer.prototype.createClusters_ = function (t) { var e, r, s, i = this; if (this.ready_) { 0 === t && (google.maps.event.trigger(this, "clusteringbegin", this), void 0 !== this.timerRefStatic && (clearTimeout(this.timerRefStatic), delete this.timerRefStatic)), s = this.getMap().getZoom() > 3 ? new google.maps.LatLngBounds(this.getMap().getBounds().getSouthWest(), this.getMap().getBounds().getNorthEast()) : new google.maps.LatLngBounds(new google.maps.LatLng(85.02070771743472, -178.48388434375), new google.maps.LatLng(-85.08136444384544, 178.00048865625)); var o = this.getExtendedBounds(s), n = Math.min(t + this.batchSize_, this.markers_.length); for (e = t; e < n; e++)!(r = this.markers_[e]).isAdded && this.isMarkerInBounds_(r, o) && (!this.ignoreHidden_ || this.ignoreHidden_ && r.getVisible()) && this.addToClosestCluster_(r); n < this.markers_.length ? this.timerRefStatic = setTimeout(function () { i.createClusters_(n) }, 0) : (delete this.timerRefStatic, google.maps.event.trigger(this, "clusteringend", this)) } }, MarkerClusterer.prototype.extend = function (t, e) { return function (t) { var e; for (e in t.prototype) this.prototype[e] = t.prototype[e]; return this }.apply(t, [e]) }, MarkerClusterer.CALCULATOR = function (t, e) { for (var r = 0, s = t.length.toString(), i = s; 0 !== i;)i = parseInt(i / 10, 10), r++; return { text: s, index: r = Math.min(r, e), title: "" } }, MarkerClusterer.BATCH_SIZE = 2e3, MarkerClusterer.BATCH_SIZE_IE = 500, MarkerClusterer.IMAGE_PATH ="https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m",MarkerClusterer.IMAGE_EXTENSION="png",MarkerClusterer.IMAGE_SIZES=[53,56,66,78,90];
+
+    </script>
+    <script type='text/javascript'>
+        //markerclusterer doesn't support a rightclick event on clusters.  adding it
+        ClusterIcon.prototype.onAdd = function () {
+            var cClusterIcon = this;
+            var cMouseDownInCluster;
+            var cDraggingMapByCluster;
+            this.div_ = document.createElement("div");
+            this.div_.className = this.className_;
+            if (this.visible_) {
+                this.show();
+            }
+
+            this.getPanes().overlayMouseTarget.appendChild(this.div_);
+
+            // Fix for Issue 157
+            this.boundsChangedListener_ = google.maps.event.addListener(this.getMap(), "bounds_changed", function () {
+                cDraggingMapByCluster = cMouseDownInCluster;
+            });
+
+            google.maps.event.addDomListener(this.div_, "mousedown", function () {
+                cMouseDownInCluster = true;
+                cDraggingMapByCluster = false;
+            });
+
+            google.maps.event.addDomListener(this.div_, "click", function (e) {
+                cMouseDownInCluster = false;
+                if (!cDraggingMapByCluster) {
+                    var theBounds;
+                    var mz;
+                    var mc = cClusterIcon.cluster_.getMarkerClusterer();
+                    /**
+                    * This event is fired when a cluster marker is clicked.
+                    * @name MarkerClusterer#click
+                    * @param {Cluster} c The cluster that was clicked.
+                    * @event
+                    */
+                    google.maps.event.trigger(mc, "click", cClusterIcon.cluster_);
+                    google.maps.event.trigger(mc, "clusterclick", cClusterIcon.cluster_); // deprecated name
+
+                    // The default click handler follows. Disable it by setting
+                    // the zoomOnClick property to false.
+                    if (mc.getZoomOnClick()) {
+                        // Zoom into the cluster.
+                        mz = mc.getMaxZoom();
+                        theBounds = cClusterIcon.cluster_.getBounds();
+                        mc.getMap().fitBounds(theBounds);
+                        // There is a fix for Issue 170 here:
+                        setTimeout(function () {
+                            mc.getMap().fitBounds(theBounds);
+                            // Don't zoom beyond the max zoom level
+                            if (mz !== null && (mc.getMap().getZoom() > mz)) {
+                                mc.getMap().setZoom(mz + 1);
+                            }
+                        }, 100);
+                    }
+
+                    // Prevent event propagation to the map:
+                    e.cancelBubble = true;
+                    if (e.stopPropagation) {
+                        e.stopPropagation();
+                    }
+                }
+            });
+
+            //adding rightclick event handling - DK 11/25/14
+            google.maps.event.addDomListener(this.div_, "contextmenu", function (e)
+            {
+                //trigger rightclick event
+                google.maps.event.trigger(cClusterIcon.cluster_.getMarkerClusterer(), "rightclick", cClusterIcon.cluster_);
+
+                // Prevent event propagation to the map:
+                e.cancelBubble = true;
+                if (e.stopPropagation) { e.stopPropagation(); }
+                if (e.preventDefault) { e.preventDefault(); }
+            });
+
+            google.maps.event.addDomListener(this.div_, "mouseover", function () {
+                var mc = cClusterIcon.cluster_.getMarkerClusterer();
+                /**
+                * This event is fired when the mouse moves over a cluster marker.
+                * @name MarkerClusterer#mouseover
+                * @param {Cluster} c The cluster that the mouse moved over.
+                * @event
+                */
+                google.maps.event.trigger(mc, "mouseover", cClusterIcon.cluster_);
+            });
+
+            google.maps.event.addDomListener(this.div_, "mouseout", function () {
+                var mc = cClusterIcon.cluster_.getMarkerClusterer();
+                /**
+                * This event is fired when the mouse moves out of a cluster marker.
+                * @name MarkerClusterer#mouseout
+                * @param {Cluster} c The cluster that the mouse moved out of.
+                * @event
+                */
+                google.maps.event.trigger(mc, "mouseout", cClusterIcon.cluster_);
+            });
+        };
+
+    </script>
+
+    <!-- Google Maps - KeyDragZoom -->
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'google/keydragzoom/keydragzoom_packed.js')}"></script>
+
+    <!-- Google Maps - geoxml3 (https://code.google.com/p/geoxml3/) -->
+    <script type='text/javascript' src="{!resourcePaths['Maps3rdPartyPlugins']}/google/geoxml3/ZipFile.complete.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['Maps3rdPartyPlugins']}/google/geoxml3/ProjectedOverlay.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['Maps3rdPartyPlugins']}/google/geoxml3/geoxml3.js"></script>
+
+    <!-- Google Maps - Spiderfy (https://github.com/jawj/OverlappingMarkerSpiderfier) -->
+    <script type='text/javascript' src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'google/overlappingmarkerspiderfier/oms.min.js')}"></script>
+
+    <!-- Context Menu (http://medialize.github.io/jQuery-contextMenu/) -->
+    <script type='text/javascript' src="{!resourcePaths['Maps3rdPartyPlugins']}/contextMenu/jquery.contextmenu.js"></script>
+    <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.Maps3rdPartyPlugins, 'contextMenu/jquery.contextMenu.min.css')}" />
+
+    <!-- Colorbox (overlay) -->
+    <script type="text/javascript" src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'colorbox/jquery.colorbox-min.js')}"></script>
+    <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.Maps3rdPartyPlugins, 'colorbox/css4/colorbox.css')}" />
+
+    <!-- Moment (date parsing) -->
+    <script src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/moment.js')}" type="text/javascript"></script>
+    <script src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/moment_tz.js')}" type="text/javascript"></script>
+
+    <!-- Full Calendar -->
+    <script src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'js/fullcalendar.min.js')}" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.MapsStyles, 'css/fullcalendar.min.css')}"></link>
+
+    <!-- Scheduler -->
+    <script src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'js/scheduler.min.js')}" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.MapsStyles, 'css/scheduler.min.css')}"></link>
+
+    <!-- jQuery Multiselect (depends on jQuery UI) -->
+    <script src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/multiselect/jquery.multiselect.min.js')}" type="text/javascript"></script>
+    <script src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/multiselect/jquery.multiselect.filter.js')}" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/multiselect/jquery.multiselect.css')}" />
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/multiselect/jquery.multiselect.filter.css')}" />
+
+    <!-- Combobox -->
+    <script src="{!URLFOR($Resource.Maps3rdPartyPlugins, 'jquery/combobox/jquery.combobox.js')}" type="text/javascript"></script>
+
+    <!-- CSS -->
+    <c:CSSEditQuery />
+    <c:CSSHelperBlue />
+
+    <!-- moving style off page... -->
+    <link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.MapsStyles, 'styles/oldOnPageStyle.css')}" />
+
+	<style>
+        #tabs-nav .ftu-tooltip-arrow.forceWhite::before {
+            border-right: 8px solid #fff;
+        }
+
+        body div#sidebar {
+            width: auto !important;
+            height: auto !important;
+        }
+
+		div#DrawRectangleButton {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, "/images/drawingtools/gt_rectangle.png")}');
+		  background-size: 21px 22px;
+		  background-repeat: no-repeat;
+		  background-position: 7px 7px;
+		}
+
+		div#DrawRectangleButton.activeDrawingTool {
+		  background-color: #237bc5;
+		  background-image: url('{!URLFOR($Resource.MapsStyles, "/images/drawingtools/gt_rectangle_active.png")}');
+		  background-size: 21px 22px;
+		  background-repeat: no-repeat;
+		  background-position: 7px 7px;
+		  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
+		}
+
+		div#DrawCircleButton {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, "images/drawingtools/gt_circle.png")}');
+		  background-size: 18px 22px;
+		  background-repeat: no-repeat;
+		  background-position: 9px 7px;
+		}
+
+		div#DrawCircleButton.activeDrawingTool {
+		  background-color: #237bc5;
+		  background-image: url('{!URLFOR($Resource.MapsStyles, "images/drawingtools/gt_circle_active.png")}');
+		  background-size: 18px 22px;
+		  background-repeat: no-repeat;
+		  background-position: 9px 7px;
+		  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
+		}
+
+		div#DrawPolygonButton {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, "images/drawingtools/gt_polygon.png")}');
+		  background-size: 21px 20px;
+		  background-repeat: no-repeat;
+		  background-position: 8px 8px;
+		}
+
+		div#DrawPolygonButton.activeDrawingTool {
+		  background-color: #237bc5;
+		  background-image: url('{!URLFOR($Resource.MapsStyles, "images/drawingtools/gt_polygon_active.png")}');
+		  background-size: 21px 20px;
+		  background-repeat: no-repeat;
+		  background-position: 8px 8px;
+		  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
+		}
+
+		div#StopDrawingButton {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, "images/drawingtools/gt_hand.png")}');
+		  background-size: 19px 20px;
+		  background-repeat: no-repeat;
+		  background-position: 8px 8px;
+		}
+
+		#StopDrawingButton.activeDrawingTool {
+		  background-color: #237bc5;
+		  background-image: url('{!URLFOR($Resource.MapsStyles, "images/drawingtools/gt_hand_active.png")}');
+		  background-size: 19px 20px;
+		  background-repeat: no-repeat;
+		  background-position: 8px 8px;
+		  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
+		}
+
+
+		/*Map View*/
+
+		td[data-basemaptype="roadmap"] {
+		  background-image:url('{!URLFOR($Resource.MapsStyles, '/images/MapView/roadmap.png')}');
+		  height: 100px;
+		  width: 100px;
+		  vertical-align: bottom;
+		}
+
+		td[data-basemaptype="satellite"] {
+		  background-image:url('{!URLFOR($Resource.MapsStyles, '/images/MapView/Satellite.png')}');
+		  height: 100px;
+		  width: 100px;
+		  vertical-align: bottom;
+		}
+
+		td[data-basemaptype="hybrid"] {
+		  background-image:url('{!URLFOR($Resource.MapsStyles, '/images/MapView/hybrid.png')}');
+		  height: 100px;
+		  width: 100px;
+		  vertical-align: bottom;
+		}
+
+		td[data-basemaptype="terrain"] {
+		  background-image:url('{!URLFOR($Resource.MapsStyles, '/images/MapView/terrain.png')}');
+		  height: 100px;
+		  width: 100px;
+		  vertical-align: bottom;
+		}
+
+		#listview th.listview-col-sortable>span {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, '/images/white_arrows.png')}');
+		  background-repeat: no-repeat;
+		  background-position: 0 0;
+		  width: 10px;
+		  position: absolute;
+		  top: 5px;
+		  right: 3px;
+		  height: 15px;
+		  opacity: 0.7;
+		}
+
+		#listview th.listview-col-sortable.listview-col-sort-asc>span {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, '/images/white_arrows.png')}');
+		  background-repeat: no-repeat;
+		  background-position: 0px -26px;
+		  width: 10px;
+		  position: absolute;
+		  top: 9px;
+		  right: 3px;
+		  height: 10px;
+		  opacity: 1;
+		}
+
+		#listview th.listview-col-sortable.listview-col-sort-desc>span {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, '/images/white_arrows.png')}');
+		  background-repeat: no-repeat;
+		  background-position: 0px -16px;
+		  width: 10px;
+		  position: absolute;
+		  top: 8px;
+		  right: 3px;
+		  height: 10px;
+		  opacity: 1;
+		}
+
+		#listview th.listview-col-sortable>span {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, '/images/white_arrows.png')}');
+		  background-repeat: no-repeat;
+		  background-position: 0 0;
+		  width: 10px;
+		  position: absolute;
+		  top: 5px;
+		  right: 3px;
+		  height: 15px;
+		  opacity: 0.7;
+		}
+
+		#listview th.listview-col-sortable.listview-col-sort-asc>span {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, '/images/white_arrows.png')}');
+		  background-repeat: no-repeat;
+		  background-position: 0px -26px;
+		  width: 10px;
+		  position: absolute;
+		  top: 9px;
+		  right: 3px;
+		  height: 10px;
+		  opacity: 1;
+		}
+
+		#listview th.listview-col-sortable.listview-col-sort-desc>span {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, '/images/white_arrows.png')}');
+		  background-repeat: no-repeat;
+		  background-position: 0px -16px;
+		  width: 10px;
+		  position: absolute;
+		  top: 8px;
+		  right: 3px;
+		  height: 10px;
+		  opacity: 1;
+		}
+
+		#sidebar-content [aria-selected=true]>#tabs-nav-queries {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/ui-icons/Tree_Icons_Small.png')}') no-repeat;
+		  background-position: -81px -41px;
+		}
+
+		#sidebar-content [aria-selected=true]>#tabs-nav-plotted {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/ui-icons/Tree_Icons_Small.png')}') no-repeat;
+		  background-position: -81px 8px;
+		}
+
+		#sidebar-content [aria-selected=true]>#tabs-nav-routes {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/ui-icons/Tree_Icons_Small.png')}') no-repeat;
+		  background-position: -82px -148px;
+		}
+
+		#sidebar-content [aria-selected=true]>#tabs-nav-poi {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/ui-icons/Tree_Icons_Small.png')}') no-repeat;
+		  background-position: -86px -99px;
+		}
+
+		#sidebar-content [aria-selected=false]>#tabs-nav-queries {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/ui-icons/Tree_Icons_Small.png')}') no-repeat;
+		  background-position: 25px -41px;
+		}
+
+		#sidebar-content [aria-selected=false]>#tabs-nav-plotted {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/ui-icons/Tree_Icons_Small.png')}') no-repeat;
+		  background-position: 25px 8px;
+		}
+
+		#sidebar-content [aria-selected=false]>#tabs-nav-routes {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/ui-icons/Tree_Icons_Small.png')}') no-repeat;
+		  background-position: 32px -149px;
+		}
+
+		#sidebar-content [aria-selected=false]>#tabs-nav-poi {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/ui-icons/Tree_Icons_Small.png')}') no-repeat;
+		  background-position: 31px -99px;
+		}
+
+		#SQTree .jstree-star {
+		  padding-right: 20px !important;
+		  background:url('{!URLFOR($Resource.MapsStyles, 'images/star_full.png')}') right top no-repeat !important;
+		}
+
+		#tooltip-content .tabs>div.loading, .infobubble .tabs>div.loading {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/chatterstatus-loader.gif')}') no-repeat center;
+		}
+
+		a.btn.white .btn-dropdown-arrow-blue {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/dropdown_arrow_blue2.png')}") no-repeat scroll 1px 3px transparent;
+		  border-radius: 3px 3px 3px 3px;
+		  display: block;
+		  height: 5px;
+		  margin: 0 0 0 5px;
+		  padding: 3px 1px;
+		  position: absolute;
+		  top: 5px;
+		  right: 5px;
+		  width: 9px;
+		}
+
+        .arcgis-form-element {
+            display: none;
+        }
+
+		#createrecord-loadmask, #createrecordDataLayer-loadmask {
+		  position: absolute;
+		  top: 0;
+		  left: 0;
+		  width: 100%;
+		  height: 100%;
+		  z-index: 99999999;
+		  background: rgba(0, 0, 0, 0.04) url('{!URLFOR($Resource.MapsStyles, 'images/chatterstatus-loader.gif')}') center no-repeat;
+		}
+
+		#cboxLoadingOverlay {
+		  background: white url('{!URLFOR($Resource.MapsStyles, "MapLoadingGif.gif")}') no-repeat center;
+		}
+
+		#Favorites-Tree .jstree li[rel="leaf"]>a>.jstree-icon {
+		  background-image: url("{!URLFOR($Resource.MapsStyles, '/images/ui-icons/favorites.png')}");
+		  background-size: 16px;
+		}
+
+		#PlottedQueriesContainer .PlottedRowUnit .plottinginfo-wrapper .info-icon, #PlottedQueriesContainer .PlottedShapeLayer .info-icon {
+		  position: absolute;
+		  margin-top: 10px;
+		  padding: 0;
+		  left: 10px;
+		  top: 5px;
+		  height: 17px;
+		  width: 17px;
+		  background: transparent url("{!URLFOR($Resource.MapsStyles, '/images/ui-icons/ui-info.png')}") center no-repeat;
+		  background-size: 16px;
+		}
+
+		#PlottedQueriesContainer .PlottedRowUnit .icon .color-box.dynamic {
+		  height: 20px;
+		  width: 30px;
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/dymanic-legend.png')}") center no-repeat;
+		}
+
+		.PlottedRowUnit .plotted-visibile-icon .select-icon.Markers {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/icon_pin17.png')}") center no-repeat;
+		}
+
+		.PlottedRowUnit .plotted-visibile-icon .select-icon.Cluster {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/icon_cluster17.png')}") center no-repeat;
+		}
+
+		.PlottedRowUnit .plotted-visibile-icon .select-icon.Heatmap {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/icon_heatmap17.png')}") center no-repeat;
+		}
+
+		.PlottedRowUnit .plotted-visibile-icon .select-icon.Scatter {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/icon_scatter17.png')}") center no-repeat;
+		}
+
+
+		/* Saved Query Icons */
+
+		.jstree li[rel="SavedQuery"]>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/static-legend2.png')}") !important;
+		}
+
+		.jstree li[rel="SavedQuery"][querytype="Standard-Dynamic"]>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/static-dynamic.png')}") !important;
+		}
+
+		.jstree li[rel="LegendSavedQuery"]>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/dymanic-legend.png')}") !important;
+		}
+
+		.jstree li[rel="LegendSavedQuery"][querytype="Legend-Dynamic"]>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/dynamic-dynamic.png')}") !important;
+		}
+
+		.jstree li[rel="SavedDataLayer"]>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'Layers/img/data_icon.svg')}") !important;
+		}
+
+		#demographic-alert-image {
+		  background-image: url("{!URLFOR($Resource.MapsStyles, 'Layers/img/data_icon.svg')}");
+		  background-repeat: no-repeat;
+		  background-position: center;
+		  height: 40px;
+		  width: 40px;
+		  background-size: 40px 40px;
+		}
+
+		#PlottedQueriesContainer .DataLayer .icon .color-box {
+		  background-image: url("{!URLFOR($Resource.MapsStyles, 'Layers/img/data_icon.svg')}") !important;
+		  background-repeat: no-repeat;
+		  background-position: center;
+		  height: 20px;
+		}
+
+
+		/* Root Folder Icons */
+
+		#SQTree li[nodetype="PersonalRoot"]>a>.jstree-icon, #SQTree li[nodetype="RoleRoot"]>a>.jstree-icon, #SQTree li[nodetype="CorporateRoot"]>a>.jstree-icon, #Favorites-Tree li[rel="Root"]>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/root-folder-closed.png')}") !important;
+		}
+
+		#SQTree li[nodetype="PersonalRoot"].jstree-open>a>.jstree-icon, #SQTree li[nodetype="RoleRoot"].jstree-open>a>.jstree-icon, #SQTree li[nodetype="CorporateRoot"].jstree-open>a>.jstree-icon, #Favorites-Tree li[rel="Root"].jstree-open>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/root-folder.png')}") !important;
+		}
+
+
+		/* Folder Icons */
+
+		#SQTree li[nodetype="PersonalFolder"]>a>.jstree-icon, #SQTree li[nodetype="CorporateFolder"]>a>.jstree-icon, #SQTree li[nodetype="RoleNameFolder"]>a>.jstree-icon, #SQTree li[nodetype="RoleUserFolder"]>a>.jstree-icon, #Favorites-Tree li[rel="Folder"]>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/child-folder-closed.png')}") !important;
+		}
+
+		#SQTree li[nodetype="PersonalFolder"].jstree-open>a>.jstree-icon, #SQTree li[nodetype="CorporateFolder"].jstree-open>a>.jstree-icon, #SQTree li[nodetype="RoleNameFolder"].jstree-open>a>.jstree-icon, #SQTree li[nodetype="RoleUserFolder"].jstree-open>a>.jstree-icon, #Favorites-Tree li[rel="Folder"].jstree-open>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/child-folder.png')}") !important;
+		}
+
+
+		/* Loading Icons */
+
+		#SQTree li[nodetype="PersonalRoot"]>a.jstree-loading>.jstree-icon, #SQTree li[nodetype="RoleRoot"]>a.jstree-loading>.jstree-icon, #SQTree li[nodetype="CorporateRoot"]>a.jstree-loading>.jstree-icon, #Favorites-Tree li[rel="Root"]>a.jstree-loading>.jstree-icon, #SQTree li[nodetype="PersonalFolder"]>a.jstree-loading>.jstree-icon, #SQTree li[nodetype="CorporateFolder"]>a.jstree-loading>.jstree-icon, #SQTree li[nodetype="RoleNameFolder"]>a.jstree-loading>.jstree-icon, #SQTree li[nodetype="RoleUserFolder"]>a.jstree-loading>.jstree-icon, #Favorites-Tree li[rel="Folder"]>a.jstree-loading>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/tree-loader.gif')}") no-repeat !important;
+		}
+
+		#SQTree li[nodetype="PersonalLocation"]>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/favorite_tree_icon.png')}") !important;
+		}
+
+
+		/* Copied from style.css */
+
+		.jstree-default li, .jstree-default ins {
+		  background-image:url("{!URLFOR($Resource.Maps3rdPartyPlugins, 'jstree/themes/default/d.png')}");
+		  background-repeat: no-repeat;
+		  background-color: transparent;
+		}
+
+		#jstree-marker.jstree-default {
+		  background:url("{!URLFOR($Resource.Maps3rdPartyPlugins, 'jstree/themes/default/d.png')}") -55px -65px no-repeat !important;
+		  text-indent: -100px;
+		  z-index: 15;
+		  width: 19px;
+		  height: 19px;
+		}
+
+		#vakata-contextmenu li a span {
+		  background: url('{!URLFOR($Resource.Maps3rdPartyPlugins, '/contextMenu/images/contextmenu-arrow.png')}') no-repeat;
+		  position: relative;
+		  top: 5px;
+		  width: 10px;
+		  height: 10px;
+		  color: transparent;
+		}
+
+		#vakata-dragged.jstree-default .jstree-ok {
+		  width: 19px;
+		  height: 19px;
+		  -moz-border-radius: 0;
+		  -webkit-border-radius: 0;
+		  border-radius: 0;
+		  background:url("{!URLFOR($Resource.Maps3rdPartyPlugins, 'jstree/themes/default/d.png')}") -2px -62px no-repeat !important;
+		}
+
+		#vakata-dragged.jstree-default .jstree-invalid {
+		  width: 19px;
+		  height: 19px;
+		  -moz-border-radius: 0;
+		  -webkit-border-radius: 0;
+		  border-radius: 0;
+		  background:url("{!URLFOR($Resource.Maps3rdPartyPlugins, 'jstree/themes/default/d.png')}") -26px -62px no-repeat !important;
+		}
+
+		.pac-container:after {
+		  content: "";
+		  padding: 1px 1px 1px 0;
+		  height: 16px;
+		  text-align: right;
+		  display: block;
+		  background-image: url("{!URLFOR($Resource.Maps3rdPartyPlugins, 'google/images/powered-by-google-on-white2.png')}");
+		  background-position: right;
+		  background-repeat: no-repeat;
+		  background-size: 104px 16px;
+		}
+
+		.pac-icon {
+		  width: 15px;
+		  height: 20px;
+		  margin-right: 7px;
+		  margin-top: 6px;
+		  display: inline-block;
+		  vertical-align: top;
+		  background-image: url("{!URLFOR($Resource.Maps3rdPartyPlugins, 'google/images/autocomplete-icons.png')}");
+		  background-size: 34px;
+		}
+
+		.tooltip-row.Color td.icon {
+		  background: transparent url("{!URLFOR($Resource.MapsStyles, 'images/SymbolPicker_Mini.png')}") no-repeat;
+		  width: 20px;
+		}
+
+		.tooltipMapBG {
+		  background-image: url('{!URLFOR($Resource.MapsStyles, '/dataLayerBuilder/img/mapSample.png')}');
+		  height: auto;
+		  min-height: 200px;
+		  width: 85% !important;
+		  background-position: top left;
+		  float: left;
+		  padding: 50px;
+        }
+
+		.baseobject-row .data.checked div {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/checkbox-checked-32.png')}') no-repeat center;
+		}
+
+		.baseobject-row .data.unchecked div {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/checkbox-unchecked-32.png')}') no-repeat center;
+		}
+
+		.baseobject-row .data.loading div {
+		  background: transparent url('{!URLFOR($Resource.MapsStyles, 'images/chatter-loader.gif')}') no-repeat center;
+		}
+
+		#SQTree li[rel="SavedTerritory"]>a>.jstree-icon {
+		  background: url("{!URLFOR($Resource.MapsStyles, 'images/ui-icons/boundry_tree_icon.png')}") !important;
+		}
+
+		.boundary-cell:hover .checkbox, .boundary-cell.checked .checkbox {
+		  background: #A6ADBB url('{!URLFOR($Resource.MapsStyles, 'images/ui-icons/ui-ckeck-mark.png')}') no-repeat -11px 1px;
+		  background-size: 22px;
+		}
+
+		.territory-row[data-state="loading"] .territory-row-toggle {
+		  width: 8px;
+		  height: 8px;
+		  background: transparent url("{!URLFOR($Resource.MapsStyles, 'images/chatterstatus-loader.gif')}") no-repeat center;
+		}
+
+		#toast-container .ma-toast-loading {
+		  background-color: #16325c;
+		  background-image: url('{!URLFOR($Resource.MapsStyles, "Mobile/s1Mobile/images/spinners/slds_spinner_inverse.gif")}');
+		  background-size: 30px 30px;
+		}
+
+		#toast-container .toast-warning {
+		  background-color: #e3924a;
+		}
+
+		#toast-container .toast-error {
+		  background-color: #d4504c;
+		}
+
+		#toast-container .toast-success {
+		  background-color: #003c4c;
+		}
+
+		.ui-combobox a .ui-button-icon-primary {
+		  background: transparent url("{!URLFOR($Resource.MapsStyles, 'images/icons/combobox-arrow-16.png')}") no-repeat center !important;
+		}
+
+		#PlottedQueriesContainer .styled-select {
+		  width: 100px;
+		  height: 20px;
+		  overflow: hidden;
+		  background: url("{!URLFOR($Resource.MapsStyles, '/images/icons/combobox-arrow-16.png')}") no-repeat right;
+		  border: 1px solid #ccc;
+		  border-radius: 3px;
+		}
+
+		#permissions-grid-wrapper .ui-combobox a .ui-button-icon-primary {
+		  background: transparent url("{!URLFOR($Resource.MapsStyles, 'images/icons/combobox-arrow-16.png')}") no-repeat center;
+		}
+
+		.tracking-history-content input[id*="cor"]:checked+label:before {
+		  content: '';
+		  background-image: url(/resource/1472208638000/maps__MapAnything/images/check-22.png);
+		  display: block;
+		  position: absolute;
+		  z-index: 99;
+		  background-size: 14px 14px;
+		  width: 14px;
+		  height: 14px;
+		  top: 1px;
+		  left: 1px;
+		  color: #000;
+		}
+
+		.colorIsChecked {
+		  content: '';
+		  background-image: url(/resource/1472208638000/maps__MapAnything/images/check-22.png);
+		  display: block;
+		  position: absolute;
+		  z-index: 99;
+		  background-size: 14px 14px;
+		  width: 14px;
+		  height: 14px;
+		  top: 1px;
+		  left: 1px;
+		  color: #000;
+		}
+
+        /* NEW Event Styles */
+        .new-event-dropdown .slds-dropdown {
+            position: relative;
+        }
+
+        .new-event-dropdown .ma-list li.table-view-cell {
+            padding: 0.5rem 0.75rem;
+            border-botom: 0;
+        }
+
+        #newevent-details-wrapper .ma-form-control-wrap input.ma-input-row {
+            width: 100%;
+        }
+
+        /* Data Layer Buttons */
+
+        #styleSelectWrap .MAbutton:focus,
+        #legendImagePlaceholder .MAbutton:focus {
+            outline: none;
+        }
+
+        /* Live Device Tracking history */
+
+        input[type="time"]::-webkit-inner-spin-button {
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+                
+        /* added 10-29-2020 to limit the number of choices in the time pickers on the Tracking History tooltip tab to 5 */
+        .ui-autocomplete-height {
+            max-height: 100px !important;
+        }
+        </style>
+
+    <c:SFMaps />
+    
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/googleExtensions/ShapeManager.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/googleExtensions/ruler.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/utils.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/ArcGIS.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/ArcGIS.tokenHelpers.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/ArcGIS.plotHelpers.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/ArcGIS.featureLayerHelpers.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/ArcGIS.projectionHelpers.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/ArcGIS.styleHelpers.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/ArcGIS.layerLegendHelpers.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/ArcGIS.click2CreateHelpers.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/ArcGIS.Arcade.js"></script>
+
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/MADemographicsJS.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/MATerritoryLayer.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/MARecordProcessJS.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/MapAnythingPlottingJS.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/JSHelperFunctions.js"></script>
+
+    <div id="ma-vue-root"></div>
+    <script src="{!resourcePaths['VueDesktop']}/build/bundle.js"></script>
+    <link rel="stylesheet" type="text/css" href="{!resourcePaths['VueDesktop']}/build/main.css"></link>
+
+	<!--<script src="{!resourceLocator}/MACheckIn.js"></script>-->
+	<script type='text/javascript' src="{!resourcePaths['MapsJS']}/MALayers.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/MAKMLExportJS.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/MAContextMenu.js"></script>
+	<script type='text/javascript' src="{!resourcePaths['MapsJS']}/MATerritoryBuilder.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/MAFavoriteLocation.js"></script> 
+
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/mapanythingSearch.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/MADemographicLayer.js"></script>
+
+    <script type='text/javascript' src="{!URLFOR($Resource.MapsJS, 'MAShapeProcess.js')}"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/MAMarkerBuilder.js"></script>
+
+    <!-- <script type='text/javascript' src="{!URLFOR($Resource.MapsJS, 'JSActionFramework.js')}"></script> -->
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/JSActionFramework.js"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/MAListView.js"></script>
+
+    <script type='text/javascript' src="{!URLFOR($Resource.MapsJS, 'MACheckIn.js')}"></script>
+    <script type='text/javascript' src="{!resourcePaths['MapsJS']}/JSMapAnything.js"></script>
+    
+  	<script type='text/javascript' src="{!resourcePaths['MapsJS']}/MARoutes.js"></script>
+      
+
+    <c:JSPlotting />
+    <c:Demographics />
+
+    <apex:outputPanel layout="none" rendered="{! $User.UIThemeDisplayed == 'Theme3' }">
+        <style type="text/css">
+            #contentWrapper {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            
+            #phHeaderLogoImage {
+                max-width: none; 
+            }
+
+            .bPageFooter.noTableFooter {
+                padding-top: 6px;
+                margin-bottom: 1px;
+            }
+
+            body .x-btn button, body .btn, body .btnImportant, body .btnDisabled, body .btnCancel, body .menuButton .menuButtonButton, body .menuButton .menuButtonMenu a, body .menuButton .menuButtonMenu input.theOption, h1, h2, h3, h4, h5, h6, html, body, td {
+                font-family: "Salesforce Sans", Arial, sans-serif;
+            }
+        </style> 
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{! $User.UIThemeDisplayed == 'Theme4d' || $User.UIThemeDisplayed == 'Theme4u' }">
+
+    	<style type="text/css">
+		    html body.sfdcBody {
+                width: 100%;
+                overflow-y: hidden;
+            }
+    	</style>
+
+        <script type='text/javascript'>
+            $.ajaxSetup({
+                dataFilter: function (rawData,type)
+                {
+                    try
+                    {
+
+                        if (rawData != undefined  && rawData != '')
+                        {
+                            if (type === 'JSON' || type == 'JSONP' || type=='json' || type =='jsonp')
+                            {
+                                return rawData.replace(/<script.*?>.*?<\/script>/igm, '');
+                            }
+                        }
+                    }
+                    catch (ex)
+                    {
+
+                    }
+                }
+            });
+
+            jQuery.ajaxSetup({
+                dataFilter: function (rawData,type)
+                {
+                    try
+                    {
+
+                        if (rawData != undefined  && rawData != '')
+                        {
+                            if (type === 'JSON' || type == 'JSONP' || type=='json' || type =='jsonp')
+                            {
+                                return rawData.replace(/<script.*?>.*?<\/script>/igm, '');
+                            }
+                        }
+                    }
+                    catch (ex)
+                    {
+
+                    }
+                }
+            });
+
+        </script>
+    </apex:outputPanel>
+
+
+    <script type='text/javascript'>
+
+        // This code needs to be removed once fullcalendar has been updated to the most recent version.
+        jQuery.UNSAFE_restoreLegacyHtmlPrefilter();
+
+        var AJAXRequestDataType = '{!AJAXRequestDataType}';
+
+        var pageSuffix = '{!pageSuffix}';
+        var sitePrefix = '{!$Site.CurrentSiteUrl}'.substring(0, '{!$Site.CurrentSiteUrl}'.length - 1);
+        var namespace = '{!namespace}';
+        var versionNumber = '{!versionNumber}';
+
+        //grab salesforce user locale object
+        var SFLocale = UserContext;
+        var userLocale = SFLocale.locale;
+        var dateFormat = SFLocale.dateFormat;
+        var timeFormat = SFLocale.timeFormat;
+        var dateTimeFormat = SFLocale.dateTimeFormat;
+
+        //POI vars
+        var isDesktopPage = true;
+
+        // polyfill remove function for IE
+        (function() {
+            function remove() { this.parentNode && this.parentNode.removeChild(this); }
+            if (!Element.prototype.remove) Element.prototype.remove = remove;
+            if (Text && !Text.prototype.remove) Text.prototype.remove = remove;
+        })();
+
+
+        $(function () {
+            $.support.cors = true;
+
+            //prototype a 'isInCircle' method
+            try{
+                google.maps.Circle.prototype.contains = function(latLng) {
+                  return this.getBounds().contains(latLng) && google.maps.geometry.spherical.computeDistanceBetween(this.getCenter(), latLng) <= this.getRadius();
+                }
+            }
+            catch(e) {
+                MA.log('could not create google circle prototype');
+            }
+
+
+            //beta testing for checking touch device google maps fix
+            if(MASystem.User.isTouchDevice) {
+                window.navigator.__defineGetter__('userAgent', function () {
+                    return 'Mozilla/5.0 (iPad; CPU OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1';
+                });
+            }
+
+            // arcgis derek
+            // close currently open slds modal
+            $(document).on('click', '.js-close-this-slds-modal', function() {
+                //$('#sldsModalBackDrop').removeClass('slds-backdrop--open');
+                //$(this).closest('.slds-modal').removeClass('slds-fade-in-open');
+                closeThisSLDSModal(this);
+            });
+
+            $(document).on('focus', '#arcGISWebMapPopupURLField', function() {
+                $(this).closest('.slds-form-element--has-hover-tooltip').addClass('hover');
+            });
+
+            $(document).on('blur', '#arcGISWebMapPopupURLField', function() {
+                $(this).closest('.slds-form-element--has-hover-tooltip').removeClass('hover');
+            });
+            
+            /************************************
+            *   Plotted Query Handlers
+            ************************************/
+            //handle clearing bubbles when clicking anywhere (this should probably go somewhere else)
+            $('body').on('click', function () {
+                $('.bubble').remove();
+            });
+
+            //handle clicking to show/hide the legend or empty legend rows
+            $('#PlottedQueriesContainer').on('click', '.legend-showhide', function () {
+                var $button = $(this);
+                var $plottedQuery = $button.closest('.PlottedRowUnit');
+                if ($button.find('.options-text').text() == "{!JSENCODE($Label.Layers_On_The_Map_Hide_Legend)}") {
+                    $button.find('.options-text').text("{!JSENCODE($Label.Layers_On_The_Map_Show_Legend)}");
+                    $button.find('.glyphicon').removeClass('glyphicon-triangle-top').addClass('glyphicon-triangle-bottom');
+                    $plottedQuery.find('.legend, .legend-moreless').hide();
+                }
+                else {
+                    $button.find('.options-text').text("{!JSENCODE($Label.Layers_On_The_Map_Hide_Legend)}");
+                    $button.find('.glyphicon').removeClass('glyphicon-triangle-bottom').addClass('glyphicon-triangle-top');
+                    $plottedQuery.find('.legend').show();
+                    if ($plottedQuery.find('.legend-row.empty').length > 0) {
+                        $plottedQuery.find('.legend-moreless').show();
+                    }
+                }
+            });
+            $('#PlottedQueriesContainer').on('click', '.legend-moreless-text', function () {
+                var $button = $(this);
+                var $plottedQuery = $button.closest('.PlottedRowUnit');
+                var queryData = $plottedQuery.data() || {};
+                if(queryData.markerAssignmentType === 'Dynamic-multiField') {
+                    handleDynamicMultifieldClick($plottedQuery,$button);
+                    return;
+                }
+                if ($button.find('.moreless-text').text() == "{!JSENCODE($Label.MA_Show_All)}") {
+                    $button.find('.moreless-text').text("{!JSENCODE($Label.MA_Show_Less)}");
+                    $button.find('.MAIcon').removeClass('glyphicon-collapse-down').addClass('glyphicon-collapse-up');
+                    $plottedQuery.find('.legend-row').show();
+                    $plottedQuery.find('.legend-row-header').show();
+                    $plottedQuery.find('.legend-row-header').addClass('sectionOpen').removeClass('sectionClosed');
+                    $plottedQuery.find('.legend-row-header .rowDropIcon').addClass('ion-android-arrow-dropdown').removeClass('ion-android-arrow-dropup');
+                }
+                else {
+                    $button.find('.moreless-text').text("{!JSENCODE($Label.MA_Show_All)}");
+                    $button.find('.MAIcon').removeClass('glyphicon-collapse-up').addClass('glyphicon-collapse-down');
+                    $plottedQuery.find('.legend-row.empty').hide();
+                    $plottedQuery.find('.legend-row-header.empty').hide();
+                    $plottedQuery.find('.legend-row-header.empty').removeClass('sectionOpen').addClass('sectionClosed');
+                    $plottedQuery.find('.legend-row-header.empty .rowDropIcon').removeClass('ion-android-arrow-dropdown').addClass('ion-android-arrow-dropup');
+                }
+            });
+
+            $('#PlottedQueriesContainer').on('click', '.legend-moreless-checkbox', function () {
+                var $button = $(this);
+                var $plottedQuery = $button.closest('.PlottedRowUnit');
+                var uncheckAll = $button.find('.iconWrapper').hasClass('checked');
+                if($plottedQuery.hasClass('loading')) {
+                    return;
+                }
+                //loop over rows to get all legendids
+                var isChecked = !uncheckAll;
+                var legendRows = $plottedQuery.find('.legend-row').not('.empty');
+                $button.find('.iconWrapper').removeClass('checked').addClass(' intermediate');
+                var qid = $plottedQuery.attr('qid');
+                //keep track of the rows being toggled
+                Plotting.legendRowSelections[qid] = Plotting.legendRowSelections[qid] || {};
+
+                for(var l = 0, len = legendRows.length; l < len; l++) {
+                    var legendId = legendRows[l].getAttribute('data-id');
+                    Plotting.legendRowSelections[qid][legendId] = isChecked
+
+                }
+                if(uncheckAll) {
+                    //remove checkbox
+                    $plottedQuery.find('.legend-row .legend-checkbox').prop('checked',false);
+                    $plottedQuery.find('.legend-header-checkbox').removeClass('ion-minus-round ion-checkmark-round');
+                }
+                else {
+                    //add checkbox
+                    $plottedQuery.find('.legend-row .legend-checkbox').prop('checked',true);
+                    $plottedQuery.find('.legend-header-checkbox').removeClass('ion-minus-round').addClass('ion-checkmark-round');
+                }
+                Plotting.toggleLegendRow({plottedQuery:$plottedQuery,rows: Plotting.legendRowSelections[qid]}, function () {
+                    Plotting.updateQueryInfo($plottedQuery,function() {
+                        //remove loading
+                        $plottedQuery.removeClass('loading');
+                        $plottedQuery.find('.queryIcon').show();
+                        $plottedQuery.find('.queryLoader').hide();
+                        delete Plotting.legendRowSelections[qid];
+                        if(uncheckAll) {
+                            $button.find('.iconWrapper').removeClass('checked intermediate');
+                        }
+                        else {
+                            $button.find('.iconWrapper').removeClass('intermediate').addClass('checked');
+                        }
+                    });
+
+                    MAListView.DrawTab({ layerId: $plottedQuery.attr('qid'), isSelectedTab: false, isExport: false });
+                });
+            });
+
+            $('#PlottedQueriesContainer').on('click', '.legend-row', function () {
+                var $row = $(this);
+                var $checkbox = $row.find('.legend-checkbox');
+                $checkbox.prop('checked',!$checkbox.prop('checked'));
+                $checkbox.change();
+            });
+
+            //handle clicking on plotted query legend items
+            $('#PlottedQueriesContainer').on('change', '.legend-checkbox', function () {
+                var $legendCheckbox = $(this);
+                var $legendRow = $legendCheckbox.closest('.legend-row');
+                var $plottedQuery = $(this).closest('.PlottedRowUnit');
+
+                //grab some basic info about this legend item
+                var markerMetadata = $plottedQuery.data('markerMetadata');
+                var invertProximity = userSettings.InvertProximity || false;
+                var queryProximityEnabled = ($plottedQuery.data('proximityOptions') && $plottedQuery.data('proximityOptions').enabled);
+                var queryProximityHideMarkers = queryProximityEnabled && $plottedQuery.data('proximityOptions').hideMarkers;
+
+                //update the global check box
+                var legendRows = $plottedQuery.find('.legend-row');
+                var activeRows = $plottedQuery.find('.legend-row .legend-checkbox:checked');
+                var isChecked = $legendCheckbox.prop('checked');
+                if($plottedQuery.hasClass('loading')) {
+                    $legendRow.find('.legend-checkbox').prop('checked',!isChecked);
+                    return;
+                }
+                if(activeRows.length == legendRows.length) {
+                    $plottedQuery.find('.iconWrapper').removeClass('intermediate').addClass('checked');
+                }
+                else if(activeRows.length == 0) {
+                    $plottedQuery.find('.iconWrapper').removeClass('intermediate checked');
+                }
+                else {
+                    $plottedQuery.find('.iconWrapper').removeClass('checked').addClass('intermediate');
+                }
+
+                //check for a section and update that checkbox
+                var sectionId = $legendRow.attr('data-sectionid') || '';
+                var $sectionHeaderRow = $plottedQuery.find('.legend-row-header[data-sectionid="'+sectionId+'"]');
+                var sectionRows = $plottedQuery.find('.legend-row[data-sectionid="'+sectionId+'"]');
+                var activeSectionRows = $plottedQuery.find('.legend-row[data-sectionid="'+sectionId+'"] .legend-checkbox:checked');
+                if(activeSectionRows.length === sectionRows.length) {
+                    //checked
+                    $sectionHeaderRow.find('.legend-header-checkbox').removeClass('ion-minus-round').addClass('ion-checkmark-round');
+                }
+                else if (activeSectionRows.length === 0) {
+                    //unchecked
+                    $sectionHeaderRow.find('.legend-header-checkbox').removeClass('ion-minus-round ion-checkmark-round');
+                }
+                else {
+                    //intermediate
+                    $sectionHeaderRow.find('.legend-header-checkbox').addClass('ion-minus-round').removeClass('ion-checkmark-round');
+                }
+
+
+                var legendId = $legendRow.attr('data-id');
+                var qid = $plottedQuery.attr('qid');
+                //keep track of the rows being toggled
+                Plotting.legendRowSelections[qid] = Plotting.legendRowSelections[qid] || {}
+                Plotting.legendRowSelections[qid][legendId] = isChecked
+
+                //check if we are waiting for a timeout
+                clearTimeout(Plotting.legendRowTimeout);
+                Plotting.legendRowTimeout = setTimeout(function() {
+                    var options = {
+                        plottedQuery : $plottedQuery,
+                        rows : Plotting.legendRowSelections[qid]
+                    }
+                    Plotting.legendRowTimeout = null;
+                    Plotting.toggleLegendRow(options, function () {
+                        Plotting.updateQueryInfo($plottedQuery, function() {
+                            //remove loading
+                            $plottedQuery.removeClass('loading');
+                            $plottedQuery.find('.queryIcon').show();
+                            $plottedQuery.find('.queryLoader').hide();
+                            delete Plotting.legendRowSelections[qid];
+                        });
+
+                        MAListView.DrawTab({ layerId: $plottedQuery.attr('qid'), isSelectedTab: false, isExport: false });
+                    });
+                },500);
+            });
+	        // IE9 fix for jscolor
+	        jscolor.init();
+
+        });
+        // end onready
+
+        /* **********************************
+        *   Search Box Functions
+        **********************************/
+
+        /***************
+        * POI Search
+        ***************/
+        //store variable for paging purposes if map is moved
+        var searchText;
+        var distance;
+        var lat;
+        var lng;
+
+    </script>
+
+    <!-- Controller Communication -->
+    <apex:form >
+        <apex:inputHidden id="serializedDefaultQueries" value="{!serializedDefaultQueries}" />
+        <apex:inputHidden id="serializedOptions" value="{!serializedOptions}" />
+        <apex:inputHidden id="userName" value="{!userName}" />
+    </apex:form>
+
+    <!-- Hidden Export Template -->
+    <div id="HiddenExport" style="display:none;height:0px;overflow:scroll;">
+        <table id="HiddenExportTable" style="display:none;height:0px;overflow:scroll;"></table>
+    </div>
+
+	<div id="shapeBuilderBackdropPositioner" class="slds-scope">
+	    <div id="CreateTerritoryPopupBackdrop" class="slds-backdrop"></div><!-- slds-modal-backdrop--open-->
+	</div>
+
+    <!-- Chatter Post Popup -->
+    <div id="ChatterPostPopup" class="popup_block mass-action-modal slds-scope" style='max-height: 600px;'>
+        <div class="slds-modal__container">
+            <header class="slds-modal__header">
+                <h2 class="slds-text-heading_medium slds-hyphenate">{!JSENCODE($Label.MA_Chatter_Post)}</h2>
+            </header>
+            <div class="slds-modal__content">
+                <!-- Step 1: Content -->
+                <div id='chatterpost-content-wrapper' class='loadmask-wrapper'>
+                    <div class="slds-p-around_medium">
+                        <!-- Header -->
+                        <h4 class="slds-text-title_caps">Step 1: Content</h4>
+                        <!-- Details -->
+                        <table class='grid-blue slds-m-top_small'>
+                            <tr>
+                                <!-- <td>Content</td> -->
+                                <!-- <td><textarea id='chatterpost-content' style='width: 100%; height: 100px; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box;'></textarea></td> -->
+                                <td>
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label" for="chatterpost-content"></label>
+                                        <div class="slds-form-element__control">
+                                            <textarea id="chatterpost-content" class="slds-textarea"></textarea>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <!-- Buttons -->
+                        <span class='link slds-button slds-button_neutral' style='font-size: 10px; line-height: 22px;' onclick="ClosePopupWindow();">{!JSENCODE($Label.MA_Cancel)}</span>
+                        <a class="button1-lightgray slds-button slds-button_brand" onclick="ChatterPost_Finish();">{!JSENCODE($Label.MA_Add_Close)}</a>
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Record Data Layer Popup -->
+    <div id="CreateRecordDataLayerPopup" class="popup_block">
+
+        <!-- Loadmask -->
+        <div id='createrecordDataLayer-loadmask'></div>
+
+        <!-- Step 1 -->
+        <div id='createrecordDataLayer-step1' class='createrecord-step'>
+            <h1>Step 1</h1>
+
+            <div class="overflow" style="max-height:400px; overflow: auto;">
+                <div class='createrecord-formitem'>
+                    <label>What would you like to create?</label>
+                    <select id="createrecordDataLayer-object" onchange="MAData.createRecordFromDataLayer.object_Change();"></select>
+                </div>
+                <div class='createrecord-formitem'>
+                    <label>Select a record type:</label>
+                    <select id='createrecordDataLayer-recordtype'></select>
+                </div>
+            </div>
+
+            <div class='createrecord-buttons'>
+                <button class='slds-button slds-button_neutral createrecordDataLayer-cancel' onclick="MAData.createRecordFromDataLayer.cancel_Record();">Cancel</button>
+                <button class="slds-button slds-button_brand" onclick='MAData.createRecordFromDataLayer.create_step_2();'>Continue</button>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div id='createrecordDataLayer-step2' style="display:none;" class='createrecordDataLayer-step'>
+            <h1>Step 2</h1>
+
+            <div>
+                <label>Fill in the fields below</label>
+                <div class="overflow" style="max-height:400px; overflow: auto;">
+                    <div id='createrecordDataLayer-fieldset'></div>
+                </div>
+                <ul id='createrecordDataLayer-fieldset-errors'></ul>
+            </div>
+
+            <div class='createrecordDataLayer-buttons'>
+                <button class='slds-button slds-button_neutral createrecord-cancel' onclick="MAData.createRecordFromDataLayer.cancel_Record();">Cancel</button>
+                <button class="slds-button slds-button_brand" onclick='MAData.createRecordFromDataLayer.saveDataLayerRecord();'>Finish</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Dynamic Component Overrides -->
+    <apex:repeat value="{!overrideComponentStrings}" var="c">
+        <apex:outputText escape="false" value="{!c}" />
+    </apex:repeat>
+
+</apex:page>

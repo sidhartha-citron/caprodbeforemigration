@@ -1,0 +1,32 @@
+<aura:component implements="force:hasRecordId,flexipage:availableForAllPageTypes" access="global" controller="EDW_AppointmentVisitDateTimeController">
+    <aura:attribute name="serviceAppointments" type="ServiceAppointment[]" />
+    <aura:attribute name="schedulingPolicies" type="FSL__Scheduling_Policy__c[]" />
+    <aura:attribute name="rootUrl" type="String" />
+    <aura:attribute name="isSaveAndFinishDisabled" type="Boolean" />
+    <!--Begin:Shashi:9-11-2019:Allows CS to exit without assigning SA-->
+    <aura:attribute name="isSaveAndExitDisabled" type="Boolean" />
+    <!--End-->
+    <aura:attribute name="doNumberOfResourcesAndServiceAppointmentsMatch" type="Boolean" />
+    
+    <aura:registerEvent name="toastEvent" type="force:showToast"/>
+    <aura:registerEvent name="accordionSectionExpandedEvent" type="c:EDW_AccordionSectionExpandedEvent" />
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}" />
+    <aura:handler name="deleteServiceAppointmentEvent" event="c:EDW_ServiceAppointmentDeletedEvent" action="{!c.doInit}"/>
+    <aura:handler event="c:EDW_ServiceAppointmentResourceAssignedEvent" action="{!c.appointmentAssigned}"/>
+    
+    <aura:method name="retrieveServiceAppointmentsOnWorkOrder" action="{!c.retrieveServiceAppointmentsOnWorkOrder}">
+    	<aura:attribute name="callback" type="Function" />
+    </aura:method>
+    
+    <div class="slds-text-heading_small slds-text-align_center slds-m-bottom_medium ch-font_bold">{!$Label.c.Total_Number_of_Service_Appointments}&nbsp;{!v.serviceAppointments.length}</div>
+    
+    <lightning:accordion aura:id="accordion" class="ch-accordion" onsectiontoggle="{!c.expandedEvent}">
+        <div class="slds-is-relative">
+            <lightning:spinner alternativeText="Loading" size="medium" aura:id="accordionSpinner" class="slds-hide" />
+            <aura:iteration items="{!v.serviceAppointments}" var="sa" indexVar="index">
+                <c:EDW_ServiceAppointmentAccordionItem rootUrl="{!v.rootUrl}" serviceAppointment="{!sa}" schedulingPolicies="{!v.schedulingPolicies}" index="{!index + 1}" max="{!v.serviceAppointments.length}" isServiceAppointmentValidForClosing="{!v.doNumberOfResourcesAndServiceAppointmentsMatch}" />
+            </aura:iteration>
+        </div>
+    </lightning:accordion>
+</aura:component>

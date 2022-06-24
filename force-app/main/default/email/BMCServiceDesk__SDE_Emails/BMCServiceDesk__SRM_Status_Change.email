@@ -1,0 +1,51 @@
+<messaging:emailTemplate subject="Service Request #{!relatedto.Name} status has changed" recipientType="User" relatedToType="BMCServiceDesk__Incident__c">
+<messaging:htmlEmailBody >
+<html>
+   <body>
+   Hello, <br></br>
+<br></br>
+Below are the details of the Service Request number '{!relatedto.Name}':<br/>
+<table border = "0">
+    <tr>
+        <td>Description</td>
+        <td>:</td>
+        <td>{!relatedto.BMCServiceDesk__incidentDescription__c}</td>
+    </tr>    
+    <tr>
+        <td>Owner Name</td>
+        <td>:</td>
+        <td>{!relatedto.Owner.Username}</td>
+    </tr>    
+    <tr>
+        <td>Service</td>
+        <td>:</td>
+        <td>{!relatedto.BMCServiceDesk__FKBusinessService__r.name}</td>
+    </tr>    
+    <tr>
+        <td>Service Request Title</td>
+        <td>:</td>
+        <td>{!relatedto.BMCServiceDesk__FKRequestDefinition__r.name}</td>
+    </tr>
+    <tr>
+        <td>Open Date</td>
+        <td>:</td>
+        <td><apex:outputText value="{0,date,M/d/yyyy h:mm a z}"><apex:param value="{!relatedto.BMCServiceDesk__openDateTime__c}" /></apex:outputText></td>
+    </tr>
+    <tr>
+        <td>Status</td>
+        <td>:</td>
+        <td>{!relatedto.BMCServiceDesk__Status_ID__c}</td>
+    </tr>
+</table>
+<br></br>
+Below are the input details of the Service Request:<br/>
+<c:SRMInputDisplay RequestNumber="{!relatedto.BMCServiceDesk__FKRequestDetail__c}" />
+<br/>
+
+Thank you,<br/>
+Service Desk Team
+
+    </body>
+</html>
+</messaging:htmlEmailBody>
+</messaging:emailTemplate>

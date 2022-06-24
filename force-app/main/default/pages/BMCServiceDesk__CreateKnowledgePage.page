@@ -1,0 +1,167 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.CreateKnowledgeArticleController" standardStylesheets="false" >
+
+<link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ext-all.js" id="ext-all-js"/>
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/CreateKnowledgePage.css" />
+<apex:outputPanel >
+<script>
+var showLoader= new Ext.LoadMask(Ext.getBody(), {msg:''});
+if(navigator.userAgent.indexOf("Safari")!=-1){
+	window.resizeTo(491, 228);
+}
+if(navigator.userAgent.indexOf("Chrome")!=-1){
+	window.resizeTo(491, 230);
+}
+var redirectId;
+var problemId= "{!JSENCODE($CurrentPage.parameters.problemid)}";
+var changeId= "{!JSENCODE($CurrentPage.parameters.changeid)}";
+var incidentid="{!JSENCODE($CurrentPage.parameters.incidentid)}";
+if(problemId != null && problemId.length>0) redirectId = problemId;
+else if(changeId !=null && changeId.length>0) redirectId =changeId;
+else if (incidentid !=null && incidentid.length>0) redirectId =incidentid;  
+
+function CreateBtnHandler() {
+				showLoader.show();
+ 	    		      var val = document.getElementById('{!$Component.CKForm.TitleField}').value;
+ 	    		      var loginBtnEl = document.getElementById('loginBtn');
+ 	    		      if(loginBtnEl!='undefined' && loginBtnEl!=null && loginBtnEl!=''){
+ 	    		      	loginBtnEl.readOnly = true;
+ 	    		      }
+    	        	  if(val==''||val== null){
+						showLoader.hide();
+               			Ext.MessageBox.show({title:'Error', msg:'{!JSENCODE($Label.Enter_Title)}' , buttons: Ext.MessageBox.OK});//Message shown when title is empty
+             	}
+             	else{
+              		createKnowledgeArticle();
+              	}
+           };
+  
+  function CancelBtnHandler() {
+              parent.window.close();
+   };
+    
+    
+</script>
+</apex:outputPanel>
+<apex:form id="CKForm" styleClass="formClass" >
+<div class="div13pxVspacing"></div>
+   <table  cellspacing="0" cellpadding="0" style="" > 
+   	<tr>
+   		<td class="clsInputLabelTD" colspan="2">
+   		<apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__new_knowledge_article)}"  styleClass="title"/>
+   		</td>
+   </tr>
+   <tr>
+  	 <td>
+  	 <div class="div13pxVspacing"></div>
+  	 </td>
+   </tr>
+   <tr>
+        <td class="clsInputLabelTD">
+            <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__KM_KnowledgeArticle__c.fields.BMCServiceDesk__Title__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+        </td>
+             <td class="clsInputTextBoxTD">
+                     <apex:inputText id="TitleField" value="{!knowArticle.BMCServiceDesk__Title__c}" styleClass="clsIdInputTextBox" tabindex="1"  onkeypress="return onEnter(event);"/>
+              </td>
+    </tr>
+    <tr>
+        <td class="clsInputLabelTD" ><apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__type)}" /><span class="clsRequiredBlack">&nbsp;*</span></td>
+             <td styleClass="clsInputTextBoxTD">
+                   <apex:selectList value="{!SelectedType}" size="1" styleClass="clsSelectList">
+                    <apex:selectOptions value="{!RecordTypes}"/>
+                   </apex:selectList>
+              </td>
+    </tr>
+       
+</table>
+<div class="div30pxVspacing"></div>
+<div style="background-color:#dee0e0" align="bottom" class="clsBottomDiv" >
+		<table>
+			<tr class="clsButtonTR" >
+				<td >
+					<input type="button" id="loginBtn" onclick="CreateBtnHandler();" value="{!JSENCODE($Label.Create)}"  class="clsButtonStyle clsPrvBtn bgBtnGrey" />                                          
+				</td>
+				<td >
+					<input type="button" id="cancelButton" onclick="CancelBtnHandler();" value="{!JSENCODE($Label.Cancel)}" class="clsButtonStyle clsPrvBtn bgBtnGrey"/>
+				</td>
+			</tr>
+		</table>
+</div> 
+<apex:outputPanel id="createKnowledgeArticlePanel" >
+<script>
+var showError='{!errorMessage}';
+var knowArticleId='{!knowArticle.ID}';
+</script>
+</apex:outputPanel> 
+<apex:actionFunction name="createKnowledgeArticle" action="{!createKnowledgeArticle}" rerender="createKnowledgeArticlePanel" onComplete="validateAndCreate();" ></apex:actionFunction>
+
+</apex:form> 
+<script>
+
+/**** On pressing enter key Knowledge Article to be created*/
+function onEnter(ev)  {
+        if (window.event && window.event.keyCode == 13 || ev.which == 13) {
+        	CreateBtnHandler();
+            return false;
+         } else {
+              return true;
+         }
+     }
+
+  window.onload = function() {
+  		document.getElementById('{!$Component.CKForm.TitleField}').select();
+		document.title='{!JSENCODE($Label.bmcservicedesk__new_knowledge_article)}';
+	};	
+
+function validateAndCreate(){
+	if(showError.length>0 && showError!=null){
+		showErrorMessage(showError);
+		showError='';
+		showLoader.hide();
+	}
+	else
+    
+    {
+    	var isCalledFromConsole='{!($CurrentPage.parameters.isCalledFromConsole)}';
+    	if(isCalledFromConsole=='true') 
+	{
+				 if(window.opener.isFocusOnRelatedList)
+        	       {
+        	       		
+        	       		if(problemId != null && problemId!='' && problemId!='undefined'){
+        	       			window.opener.loadProblemRelatedList(redirectId);
+        	       		}else if(changeId != null && changeId!='' && changeId!='undefined'){
+        	       			window.opener.loadChangeRelatedList(redirectId);
+        	       		}else{
+        	       			window.opener.loadIncidentRelatedList(redirectId);
+        	       		}        	       
+        	       }
+        	       else
+        	       {
+        	       		window.opener.isNeedToRefreshRelatedList=true;
+        	       		window.opener.refreshRelatedLists();
+        	       }
+	
+              	
+            }else{
+				window.opener.location.href='/'+redirectId;
+		    }
+		window.open('/'+knowArticleId,'_blank', 'status = 1,height = 700, width = 1000,scrollbars=yes,resizable=yes');
+		window.close();	
+	}
+}
+
+function showErrorMessage(msg){
+	alertMsg = Ext.Msg.show({
+					title:'Error',
+					msg: msg,
+					buttons: Ext.Msg.OK,
+					width: 300,       
+					frame:false
+				});
+		return; 
+}  
+</script>
+</apex:page>

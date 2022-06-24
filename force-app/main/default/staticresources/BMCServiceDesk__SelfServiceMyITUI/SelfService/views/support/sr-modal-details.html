@@ -1,0 +1,130 @@
+<div class="sr-modal-body" >
+	<loading-spinner overlay="true" if="srDetailsModalState.srLoading"></loading-spinner>
+		<div ng-if="isRequest" tabindex="0">
+			<div class="support-modal__srd-header-container" ng-show="!srDetailsModalState.srLoading" style="border: 1px solid #d9d9d9;">
+				<div class="support-modal__srd-header-icon {{supportModel.config.icon}}" ng-if="!supportModel.config.image"></div>
+				<div class="support-modal__srd-header-icon" ng-if="supportModel.config.image" >		
+					<img src="{{supportModel.config.image}}" ng-if="supportModel.config.image" class="support-modal__srd-header-icon"/>
+				</div>
+				<div class="floatRightCls floatLeftCls" ng-if="!srDetailsModalState.srLoading && !isDisableEdit && supportModel.config.recordState && srDetailsModalState.isCloseAllowed && isRequest">
+					<button type="button" class="btn Branding-Right_Panel-button_outline" style="color: #00a79d; border-radius: 5px;" ng-click="cancelRequest()">{{ $root.selfServiceLabels.closeServiceRequest }}</button>
+				</div>
+				<h3 ng-class="{'support-modal__srd-header-title': supportModel.srData.SRColumnLayoutForSS3 != 2,'support-modal__srd-header-title_for_2_column_edit':supportModel.srData.SRColumnLayoutForSS3 == 2}" class="rf-sr-header">{{supportModel.config.recordName}}<span ng-if="supportModel.config.recordStateValue" class="rf-separator"></span>{{supportModel.config.recordStateValue}}</h3>
+				<b><div ng-class="{'support-modal__srd-header-description': supportModel.srData.SRColumnLayoutForSS3 != 2,'support-modal__srd-header-description_for_2_column_edit':supportModel.srData.SRColumnLayoutForSS3 == 2}" style="font-size: 14px;margin-top: 5px;" ng-if="supportModel.config.Title" ng-bind="supportModel.config.Title" ></div></b>
+			</div>
+		</div>
+		
+		<div ng-if="isTicket" ng-show="!srDetailsModalState.srLoading" tabindex="0">
+			<div ng-if="incidentDetails" class="support-modal__srd-header-container" style="border: 1px solid #d9d9d9;">
+				<div ng-show="!srDetailsModalState.srLoading">
+					<div class="ticketHeaderFloatCls" ng-class="{'rf-form-header': (!srDetailsModalState.srLoading && !isDisableEdit && incidentDetails.isStateOpen && srDetailsModalState.isCloseAllowed && isTicket)}">
+						<h3 class="rf-ticket-header">{{incidentDetails.requestId}}<span ng-if="incidentDetails.status" class="rf-separator"></span>{{incidentDetails.status}}</h3>
+						<div class="rf-submittedDate" ng-if="incidentDetails.createDate" >
+							<strong>{{$root.selfServiceLabels.submittedDate}}:</strong> {{incidentDetails.createDate}}
+						</div>
+					</div>
+					<div class="floatRightCls floatLeftCls" ng-if="!srDetailsModalState.srLoading && !isDisableEdit && incidentDetails.isStateOpen && srDetailsModalState.isCloseAllowed && isTicket">
+						<button type="button" class="btn Branding-Right_Panel-button_outline" style="color: #00a79d; border-radius: 5px;" ng-click="cancelRequest()">{{ $root.selfServiceLabels.closeIncident }}</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+	<div style="padding:15px; overflow-y: auto;" set-Height="setRelDetailsDivHeight" additional-Param="{{isTicket}}" ng-if="!srDetailsModalState.srLoading">			
+		
+		<div ng-if="dataDetail.type == 'instruction'">
+			<div id="instructionsDiv" aria-tabindex="0" style="width: 100%; border: 1px solid; border-color: #3cb6ce; margin-top: 10px; margin-bottom: 10px; cursor: pointer;">
+				<table style="width: 100%; border-color: #3cb6ce;">
+					<tr>
+						<td style="width: 3%;background-color: #3cb6ce;">
+							<span class="d-icon-exclamation_circle" style="color:#ffffff;width: 30px;font-size: 30px;height: 30px;vertical-align: middle;padding: 10px;"></span>
+						</td>
+						<td style="width: 99%;padding: 10px;">
+							<div class="{{supportModel.config.ellipsisCls}} wrapContents"
+							ng-bind-html="supportModel.config.actualInstr | createAnchors"></div>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		
+		<div ng-if="dataDetail.type == 'comment'">
+			<div class="activity-log__item-content">
+				<div class="activity-log__item-submitter" ng-bind-html="dataDetail.data.Submitter" tabindex="0"></div>
+				<div class="activity-log__item-date" style="margin-top: 10px;" tabindex="0">{{ dataDetail.data.CreatedDate}}</div>
+				<div class="activity-log__item-text wrapContents" style="margin-top: 10px;" tabindex="0">
+					<activity-log-text data="dataDetail.data.Notes" ng-if="dataDetail.data.Notes"></activity-log-text>
+					<activity-log-text data="dataDetail.data.Summary" ng-if="!dataDetail.data.Notes"></activity-log-text>
+				</div>
+			</div>
+		</div>
+		
+		<div ng-if="dataDetail.type == 'approval'">
+			<div style="padding: 10px;">
+				<table style="width: 100%">
+					<tr>
+						<td style="width: 100%">
+							<label style="margin-bottom: 0px; font-weight: bold;">{{$root.selfServiceLabels.Approver}}</label>
+						</td>
+					</tr>
+					<tr style="margin-top: 5px;">
+						<td style="width: 100%; margin-top: 5px;">
+							<label style="margin-bottom: 0px; font-weight: normal;">{{dataDetail.data.approversName}}</label>
+						</td>
+					</tr>
+					<tr style="margin-top: 10px;">
+						<td style="width: 100%; margin-top: 10px;">
+							<label style="margin-bottom: 0px; font-weight: bold;">{{$root.selfServiceLabels.status}}</label>
+						</td>
+					</tr>
+					<tr style="margin-top: 5px;">
+						<td style="width: 100%; margin-top: 5px;">
+							<label style="margin-bottom: 0px; font-weight: normal;">{{dataDetail.data.status}}</label>
+						</td>
+					</tr>
+					<tr style="margin-top: 10px;">
+						<td style="width: 100%; margin-top: 10px;">
+							<label style="margin-bottom: 0px; font-weight: bold;">{{$root.selfServiceLabels.date}}</label>
+						</td>
+					</tr>
+					<tr style="margin-top: 5px;">
+						<td style="width: 100%;">
+							<label style="margin-bottom: 0px; font-weight: normal;">{{dataDetail.data.date}}</label>
+						</td>
+					</tr>
+					<tr style="margin-top: 10px;">
+						<td style="width: 100%; margin-top: 10px;">
+							<label class="wrapContents" style="margin-bottom: 0px; font-weight: bold;">{{$root.selfServiceLabels.Justification}}</label>
+						</td>
+					</tr>
+					<tr style="margin-top: 5px;">
+						<td style="width: 100%; margin-top: 5px;">
+							<label class="wrapContents" style="margin-bottom: 0px; font-weight: normal;">{{dataDetail.data.comment}}</label>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		
+		<div ng-if="dataDetail.type == 'task'">
+			<strong style="margin-bottom: 10px;"><h3>{{dataDetail.data.Name}}</h3></strong>
+			<div ng-repeat="fldName in taskDetails.ApiNameOfFlds" ng-if="fldName != 'Name'">
+				<table style="width:100%; margin-top: 15px;">
+					<tr >
+						<td style="width: 100%;">
+							<label class="wrapContents" style="font-weight: bold;">{{taskDetails.fldLabels[fldName]}}</label>
+						</td>
+					</tr>
+					<tr style="margin-top: 10px;">
+						<td style="width: 100%;">
+							<label class="wrapContents" style="margin-bottom: 0px; font-weight: normal;"  ng-bind-html="(dataDetail.data[fldName])" ng-show="taskDetails.fldTypes[fldName] == 'richtextareafield' || taskDetails.fldTypes[fldName] == 'formulatextfield'"></label>
+							<label class="wrapContents" style="margin-bottom: 0px; font-weight: normal;"  ng-bind="dataDetail.data[fldName]" ng-show="!(taskDetails.fldTypes[fldName] == 'richtextareafield' || taskDetails.fldTypes[fldName] == 'formulatextfield')"></label>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		
+	</div>
+	
+</div>

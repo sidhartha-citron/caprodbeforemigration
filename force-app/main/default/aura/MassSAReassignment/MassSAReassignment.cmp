@@ -1,0 +1,266 @@
+<aura:component controller="customLookUpController" implements="force:appHostable,force:hasRecordId,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global">
+    <!--declare attributes-->
+    <aura:attribute name="selectedRecord" type="sObject" default="{}" description="Use,for store SELECTED sObject Record"/>
+    <aura:attribute name="listOfSearchRecords" type="List" description="Use,for store the list of search records which returns from apex class"/>
+    <aura:attribute name="SearchKeyWord" type="string"/>
+    <aura:attribute name="objectAPIName" type="string" default=""/>
+    <aura:attribute name="IconName" type="string" default=""/>
+    <aura:attribute name="label" type="string" default=""/>
+    <aura:attribute name="Message" type="String" default=""/>
+    <aura:attribute name="oRecord" type="sObject" default=""/>
+    <aura:attribute name="recordId" type="Id" />
+    <aura:attribute name="customListStr" type="string"/>
+    <aura:attribute name="ScheduleStartDate" type="Date"/>
+    <aura:attribute name="HasDateError" type="Boolean"/>
+    <aura:attribute name="DateErrorMessage" type="String"/>
+    <aura:attribute name="HasStatusError" type="Boolean"/>
+    <aura:attribute name="SAStatusErrorMessage" type="String"/>
+    <aura:attribute name="FromMultipleResource" type="Boolean"/>
+    <aura:attribute name="FromMultipleResourceError" type="String"/>
+    <aura:attribute name="FromMultipleDates" type="Boolean"/>
+    <aura:attribute name="FromMultipleDatesError" type="String"/>
+    <aura:attribute name="NonDispatchedStatus" type="Boolean"/>
+    <aura:attribute name="NonDispatchedStatusError" type="String"/>
+    <aura:attribute name="SASizeGreaterThan30" type="Boolean"/>
+    <aura:attribute name="SASizeGreaterThan30Error" type="String"/>
+    <aura:attribute name="IsSuccess" type="Boolean"/>
+    <aura:attribute name="IsSuccessMessage" type="String"/>
+	<aura:attribute name="SACount" type="Integer" />
+    <aura:attribute name="IsInvalidServiceResource" type="Boolean"/>
+    <aura:attribute name="InvalidServiceResourceError" type="String"/>
+	<aura:attribute name="IsBlankDateError" type="Boolean"/>
+    <aura:attribute name="IsBlankDateErrorMessage" type="String"/>
+	
+	
+	<!--FOR SPINNER-->
+	<!--<aura:handler event="aura:waiting" action="{!c.showSpinner}"/>
+	<aura:handler event="aura:doneWaiting" action="{!c.hideSpinner}"/>-->
+	<aura:attribute name="spinner" type="boolean" default="false"/>
+    
+               
+    <!--declare events hendlers-->
+    <aura:handler name="oSelectedRecordEvent" event="c:selectedsObjectRecordEvent" action="{!c.handleComponentEvent}"/> 
+
+    <!-- https://www.lightningdesignsystem.com/components/lookups/ -->
+	
+	<div class="slds-form-element">
+		<div class="slds-text-body_regular">Service Appointment Selected: {!v.SACount}</div>
+	</div>
+	
+     
+    <div onmouseleave="{!c.onblur}" aura:id="searchRes" class="slds-form-element slds-lookup slds-is-close slds-p-top_xx-large slds-size_1-of-4" data-select="single">
+		<div class="slds-form-element">
+			<div class="slds-text-body_regular">Move SAs to this tech:</div>
+	    </div>
+        <label class="slds-form-element__label" for="lookup-348">{!v.label}</label>
+        <!--This part is for display search bar for lookup--> 
+        <div class="slds-form-element__control">
+           
+            <div class="slds-input-has-icon slds-input-has-icon--right">			
+			
+              <lightning:icon class="slds-input__icon slds-show" iconName="utility:search" size="x-small" alternativeText="search"/>
+                <!-- This markup is for when an record is selected -->
+                <div aura:id="lookup-pill" class="slds-pill-container slds-hide">
+                     <lightning:pill class="pillSize" label="{!v.selectedRecord.Name}" name="{!v.selectedRecord.Name}" onremove="{! c.clear }">
+                          <aura:set attribute="media">
+                             <lightning:icon iconName="{!v.IconName}" size="x-small" alternativeText="{!v.IconName}"/>
+                          </aura:set>
+                      </lightning:pill>
+                </div>
+                <div aura:id="lookupField" class="slds-show">
+
+					<ui:inputText updateOn="keyup" keyup="{!c.keyPressController}" class="slds-lookup__search-input slds-input leftPaddingClass" value="{!v.SearchKeyWord}" placeholder="search.."/>
+                </div>  
+            </div>
+        </div>
+        <!--This part is for Display typehead lookup result List--> 
+		<ul style="min-height:40px;margin-top:0px !important" class="slds-listbox slds-listbox_vertical slds-dropdown slds-dropdown_fluid slds-lookup__menu" role="listbox">
+            <lightning:spinner class="slds-hide" variant="brand" size="small" aura:id="mySpinner"/>
+            <center> {!v.Message}</center>
+            <aura:iteration items="{!v.listOfSearchRecords}" var="singleRec">
+               <c:customLookupResult oRecord="{!singleRec}" IconName="{!v.IconName}" RecId="{!singleRec.Id}"/> 
+                
+            </aura:iteration>
+        </ul>     
+    </div>
+	
+	<!--DATE FIELD-->	
+	
+    <div class="slds-p-top_xx-large slds-size_3-of-4" >
+		<div class="slds-form-element">
+			<div class="slds-text-body_regular">Move SAs to this day:</div>
+	    </div>
+			<lightning:input type="date" aura:Id="schStart" Label="Scheduled Start Time" value="{!v.ScheduleStartDate}" /> 	
+    </div> 
+	
+	<!-- <div class="slds-p-top_xx-large" >
+		<div class="slds-form-element">
+			<div class="slds-text-body_regular">New Scheduled Start Date</div>
+	    </div>
+		    <ltng:require styles="{!$Resource.DatePicker}" />
+			<ui:inputDate value="{!v.ScheduleStartDate}" 
+							displayDatePicker="true"
+                            class="slds-size_1-of-4"/> 	
+    </div> -->
+	
+	<!-- BUTTON -->
+    <div class="slds-p-top_xx-large">
+           <button type="button" onclick="{!c.transferSA}" >Move SAs</button> 
+    </div>
+	
+	<!-- SPINNER -->
+	<aura:if isTrue="{!v.spinner}">
+		<div class="slds-spinner_container" >
+        <div class="slds-spinner--brand slds-spinner slds-spinner--large" role="alert">
+            <span class="slds-assistive-text">Loading, Please Wait...</span>
+            <div class="slds-spinner__dot-a"></div>
+            <div class="slds-spinner__dot-b"></div>
+        </div>
+    </div>	
+	</aura:if> 
+		
+	<!--%%%%%%%%%%%%%ERROR MESSAGES START %%%%%%%%%%%%%%%%%-->
+    <aura:if isTrue="{!v.HasDateError}">
+            <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h2 id="header43" class="slds-text-heading--medium">Error</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <!--<p>{!v.DateErrorMessage}</p> -->
+					<aura:unescapedHtml value="{!v.DateErrorMessage}" />
+                </div>
+                <div class="slds-modal__footer">
+                    <button class="slds-button slds-button--neutral" onclick="{!c.dismissDateError}">OK</button>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.FromMultipleResource}">
+            <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h2 id="header43" class="slds-text-heading--medium">Error</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <!--<p>{!v.FromMultipleResourceError}</p> -->
+					<aura:unescapedHtml value="{!v.FromMultipleResourceError}" />
+                </div>
+                <div class="slds-modal__footer">
+                    <button class="slds-button slds-button--neutral" onclick="{!c.dismissMultipleResourceError}">OK</button>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+   </aura:if>
+    
+   <aura:if isTrue="{!v.FromMultipleDates}">
+       <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h2 id="header43" class="slds-text-heading--medium">Error</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <!-- <p>{!v.FromMultipleDatesError}</p> -->
+					<aura:unescapedHtml value="{!v.FromMultipleDatesError}" />
+                </div>
+                <div class="slds-modal__footer">
+                    <button class="slds-button slds-button--neutral" onclick="{!c.dismissMultipleDatesError}">OK</button>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+   </aura:if>
+    
+       <aura:if isTrue="{!v.NonDispatchedStatus}">
+       <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h2 id="header43" class="slds-text-heading--medium">Error</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <!--<p>{!v.NonDispatchedStatusError}</p>-->
+					<aura:unescapedHtml value="{!v.NonDispatchedStatusError}" />
+                </div>
+                <div class="slds-modal__footer">
+                    <button class="slds-button slds-button--neutral" onclick="{!c.dismissNonDispatchedStatusError}">OK</button>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+   </aura:if>
+    
+       <aura:if isTrue="{!v.SASizeGreaterThan30}">
+       <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h2 id="header43" class="slds-text-heading--medium">Error</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <!--<p>{!v.SASizeGreaterThan30Error}</p>-->
+					<aura:unescapedHtml value="{!v.SASizeGreaterThan30Error}" />
+                </div>
+                <div class="slds-modal__footer">
+                    <button class="slds-button slds-button--neutral" onclick="{!c.dismissSASizeGreaterThan30}">OK</button>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+   </aura:if>
+    
+     <aura:if isTrue="{!v.IsSuccess}">
+       <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h2 id="header43" class="slds-text-heading--medium">Result</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <!--<p>{!v.IsSuccessMessage}</p>-->
+                    <b><aura:unescapedHtml value="{!v.IsSuccessMessage}" /></b>
+                </div>
+                              <div class="slds-modal__footer">
+                    <button class="slds-button slds-button--neutral" onclick="{!c.dismissIsSuccessMessage}">OK</button>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+   </aura:if>
+   
+     <aura:if isTrue="{!v.IsInvalidServiceResource}">
+       <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h2 id="header43" class="slds-text-heading--medium">Error</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <!--<p>{!v.InvalidServiceResourceError}</p> -->
+					<aura:unescapedHtml value="{!v.InvalidServiceResourceError}" />
+                </div>
+           		<div class="slds-modal__footer">
+                    <button class="slds-button slds-button--neutral" onclick="{!c.dismissInvalidServiceResourceError}">OK</button>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+   </aura:if> 
+   
+        <aura:if isTrue="{!v.IsBlankDateError}">
+       <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h2 id="header43" class="slds-text-heading--medium">Error</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <p>{!v.IsBlankDateErrorMessage}</p>
+                </div>
+           		<div class="slds-modal__footer">
+                    <button class="slds-button slds-button--neutral" onclick="{!c.dismissNullDateError}">OK</button>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+   </aura:if> 
+    
+</aura:component>

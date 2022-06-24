@@ -1,0 +1,174 @@
+<aura:component implements="force:lightningQuickAction,force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global" controller="VMIReport">
+    <!--VIEW ATTRIBUTES-->
+    <aura:attribute name="isFilterDisable" type="Boolean"/>
+    <aura:attribute name="isDetails" type="Boolean" default="true"/>
+    <aura:attribute name="isshowError" type="Boolean" default="false"/>
+    <aura:attribute name="isResource" type="Boolean" default="true"/>
+    <aura:attribute name="showMessage" type="String" default=""/>
+    <aura:attribute name="presetFilter" type="List" default="[
+                                                             {'label': 'Today', 'value': 'Today'},
+                                                             {'label': 'Tomorrow', 'value': 'Tomorrow'},                                                             
+                                                             {'label': 'This Week', 'value': 'This_Week'},
+                                                             {'label': 'Next Week', 'value': 'Next_Week'},
+                                                             {'label': 'This Month', 'value': 'This_Month'},
+                                                             {'label': 'Custom', 'value': 'Custom'},	                                                              
+                                                             ]"/>
+    <aura:attribute name="statusSA" type="List" default="[
+                                                         {'label': 'ALL', 'value': 'ALL'},
+														 {'label': 'Scheduled', 'value': 'Scheduled'},
+														 {'label': 'Dispatched', 'value': 'Dispatched'},
+														 {'label': 'On Route', 'value': 'On Route'},
+														 {'label': 'On Site', 'value': 'On Site'},
+                                                         {'label': 'In Progress', 'value': 'In Progress'},
+                                                         {'label': 'On Hold', 'value': 'On Hold'},
+                                                         {'label': 'Completed', 'value': 'Completed'},
+                                                         {'label': 'Cannot Complete', 'value': 'Cannot Complete'},
+                                                         {'label': 'Cancelled', 'value': 'Cancelled'},
+                                                         {'label': 'Reschedule', 'value': 'Reschedule'},
+                                                         {'label': 'Missed Service', 'value': 'Missed Service'},
+                                                         {'label': 'Data Error', 'value': 'Data Error'},
+                                                        ]"/>
+    
+    <aura:attribute name="pyLoad" type="VMIReport.PayLoad"/>
+    <aura:attribute name="lineItems" type="VMIReport.LineItem[]"/>
+    
+    <!--VIEW HANDLERS-->
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    <aura:handler event="aura:waiting" action="{!c.waiting}"/> 
+    <aura:handler event="aura:doneWaiting" action="{!c.doneWaiting}"/>
+       
+    <!--VIEW FILTER ELEMENTS-->
+    <div class="slds-box slds-theme_shade">
+        <div class="slds-grid slds-gutters">
+            <div class="slds-col">
+                <span><lightning:input aura:id="txtWoli" type="text" label="WOLI Name" value="VMI Vendor Managed Inventory Service" disabled="true"/></span>
+                <span><lightning:combobox aura:id="preFilter" label="Date Filter" value="Today" options="{!v.presetFilter}" onchange="{!c.handlePFChange}"/></span>
+            </div>
+            <div class="slds-col">
+                <span><lightning:input aura:id="txtResource" type="text" label="Service Resource" value=""/></span>
+                <span><lightning:input aura:id="stDate" type="date"  label="Start Date" name="date" disabled="{!v.isFilterDisable}"/></span>
+            </div>
+            <div class="slds-col">
+                <span><lightning:input aura:id="txtSrvTer" type="text" label="Service Territory" value=""/></span>
+                <span><lightning:input aura:id="enDate" type="date" label="End Date" name="date" disabled="{!v.isFilterDisable}"/></span>
+            </div>
+            <div class="slds-col">
+                <span><lightning:combobox aura:id="saStatus" label="Status" value="Dispatched" options="{!v.statusSA}"/></span>
+            </div>
+        </div><br/>
+        <div class="slds-grid slds-form-element__row">
+            <lightning:button aura:id="APPLY" variant="Neutral" label="Apply Filters" onclick="{!c.applyFilters}" value="APPLY"/>
+            <lightning:button aura:id="HIDE" variant="Neutral" label="Hide Details" onclick="{!c.HideDetails}" value="SHOW" disabled="true"/>
+            <lightning:button aura:id="PRINT" variant="Neutral" label="Print" onclick="{!c.printHandler}" value="Print" disabled="true"/>
+        </div>
+    </div>
+    
+    <br/>
+    
+    <!--VIEW GRID ELEMENTS-->
+    <aura:if isTrue="{!v.isshowError}">
+        <!-- Show the message to ui -->
+        <div class="slds-notify slds-notify_toast slds-theme_error slds-align_absolute-center">
+            <div class="slds-notify__content">
+                <p class="slds-align_absolute-center">{!v.showMessage}</p>                
+            </div>
+        </div>
+    </aura:if>
+    <div class="slds-scrollable" style="height:100%;width:100%" >
+        <table aura:id="1t" class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered">
+            <thead>
+                <tr class="slds-line-height_reset">
+                    <th class="" scope="col" title="Service Resource" >
+                        <div class="slds-truncate" title="Service Resource">Service Resource</div>
+                    </th>
+                    <aura:if isTrue="{!v.isDetails}">
+                        <th class="" scope="col" title="Account Name" >
+                            <div class="slds-truncate" title="Account Name">Account Name</div>
+                        </th>
+                    </aura:if>
+                    <aura:if isTrue="{!v.isDetails}">
+                        <th class="" scope="col" title="Address" >
+                            <div class="slds-truncate" title="Address">Address</div>
+                        </th>
+                    </aura:if>
+                    <aura:if isTrue="{!v.isDetails}">
+                        <th class="" scope="col" title="W.O. No" >
+                            <div class="slds-truncate" title="W.O. No">W.O. No</div>
+                        </th>
+                    </aura:if>
+                    <aura:if isTrue="{!v.isDetails}">
+                        <th class="" scope="col" title="S.A. No" >
+                            <div class="slds-truncate" title="S.A. No">S.A. No</div>
+                        </th>
+                    </aura:if>
+                    <th class="" scope="col" title="VMI Product Name" >
+                        <div class="slds-truncate" title="VMI Product Name">VMI Product Name</div>
+                    </th>
+                    <th class="" scope="col" title="Quantity Per Visit" >
+                        <div class="slds-truncate" title="Quantity Per Visit">Quantity Per Visit</div>
+                    </th>
+                    <th class="" scope="col" title="Par Level" >
+                        <div class="slds-truncate" title="Par Level">Par Level</div>
+                    </th>
+                    <th class="" scope="col" title="Quantity Sold During Last Visit" >
+                        <div class="slds-truncate" title="Quantity Sold During Last Visit">Quantity Sold During Last Visit</div>
+                    </th>
+                </tr>
+            </thead>
+            <aura:iteration items="{!v.lineItems}" var="l">
+                <tbody>
+                    <tr aura:id="{!l.srName}" class="slds-hint-parent">
+                        <td rowspan="{!l.rowCount}" scope="rowgroup" data-label="{!l.srName}">
+                            <div class="slds-truncate" title="{!l.srName}">{!l.srName}</div>
+                        </td>
+                        <aura:if isTrue="{!v.isDetails}">
+                            <td rowspan="{!l.rowCount}" scope="rowgroup" data-label="{!l.acctName}">
+                                <div class="slds-truncate" title="{!l.acctName}">{!l.acctName}</div>
+                            </td>
+                        </aura:if>
+                        <aura:if isTrue="{!v.isDetails}">
+                            <td rowspan="{!l.rowCount}" scope="rowgroup" data-label="{!l.address}">
+                                <div class="slds-truncate" title="{!l.sTer}">{!l.address}</div>
+                            </td>
+                        </aura:if>
+                        <aura:if isTrue="{!v.isDetails}">
+                            <td rowspan="{!l.rowCount}" scope="rowgroup" data-label="{!l.wrkordNo}">
+                                <div class="slds-truncate" title="{!l.woStatus}">{!l.wrkordNo}</div>
+                            </td>
+                        </aura:if>
+                        <aura:if isTrue="{!v.isDetails}">
+                            <td rowspan="{!l.rowCount}" scope="rowgroup" data-label="{!l.saNo}">
+                                <div class="slds-truncate" title="{!l.saStatus}">{!l.saNo}</div>
+                            </td>
+                        </aura:if>
+                    </tr>
+                    <aura:iteration items="{!l.vimList}" var="v">
+                        <tr aura:id="{!l.srName}" class="slds-hint-parent">
+                            <td scope="row" data-label="{!v.vmiProd}" style="border-left: 1px solid rgb(217, 219, 221);">
+                                <div class="slds-truncate" title="{!v.vmiProd}">{!v.vmiProd}</div>
+                            </td>
+                            <td data-label="{!v.Quantity}">
+                                <div class="slds-truncate" title="{!v.Quantity}">{!v.Quantity}</div>
+                            </td>
+                            <td data-label="{!v.parLevel}">
+                                <div class="slds-truncate" title="{!v.parLevel}">{!v.parLevel}</div>
+                            </td>
+                            <td data-label="{!v.QtyLV}">
+                                <div class="slds-truncate" title="{!v.QtyLV}">{!v.QtyLV}</div>
+                            </td>
+                        </tr>
+                    </aura:iteration>
+                </tbody>
+            </aura:iteration>
+        </table>
+    </div>
+    
+    <div class="slds-hide" style="height:25rem" aura:id="spinner" >
+        <div role="status" class="slds-spinner--brand slds-spinner slds-spinner--medium">
+            <span class="slds-assistive-text">Loading</span>
+            <div class="slds-spinner__dot-a"></div>
+            <div class="slds-spinner__dot-b"></div>
+        </div>
+    </div> 
+    
+</aura:component>

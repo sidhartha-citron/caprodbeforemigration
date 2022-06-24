@@ -1,0 +1,132 @@
+<!--
+- @FileName: ServicePlanManager
+- @Description:
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       10/22/2019         Created
+*************************************************************  
+-->
+
+<aura:component description="ServicePlanManager"
+                controller="ServicePlanCtrl"
+                implements="lightning:isUrlAddressable">
+
+    <ltng:require scripts="{!$Resource.LightningUtils}" afterScriptsLoaded="{!c.doInit}" />
+    <lightning:workspaceAPI aura:id="workspace" />
+
+    <aura:attribute name="spinner" type="Boolean" default="false" />
+    <aura:attribute name="permissionLevel" type="String" />
+    <aura:attribute name="accountId" type="String" />
+    <aura:attribute name="dataWrapper" type="Map" />
+    <aura:attribute name="selectedPlan" type="Map" />
+    <aura:attribute name="activeTab" type="String" default="one"/>
+
+    <!--Lightning Data Service-->
+    <aura:attribute name="accountRecord" type="Object" />
+    <aura:attribute name="simpleRecord" type="Map" />
+    <aura:attribute name="recordError" type="String" />
+    <aura:attribute name="fieldsToQuery"
+                    type="List"
+                    default="Name, AccPac_Account__c, Shipping_Suite_Number__c, ShippingStreet, ShippingCity,
+                            ShippingPostalCode" />
+
+    <force:recordData aura:id="recordHandler"
+                      recordId="{!v.accountId}"
+                      fields="{!v.fieldsToQuery}"
+                      targetRecord="{!v.accountRecord}"
+                      targetFields="{!v.simpleRecord}"
+                      targetError="{!v.recordError}"
+                      mode="VIEW"
+    />
+
+    <aura:handler name="change" value="{!v.simpleRecord}" action="{!c.setTabLabel}" />
+    <aura:handler name="ServicePlanManagerRefresh" event="c:ServicePlanManagerRefreshEvt" action="{!c.refresh}" />
+
+    <aura:if isTrue="{!v.permissionLevel != 'None'}">
+        <div class="slds-card" >
+            <div class="slds-grid slds-grid_align-spread slds-theme_shade slds-p-around_medium">
+                <div>
+                    <p class="slds-text-heading_medium">{!$Label.c.SPM_Title}</p>
+                    <p class="slds-text-heading_small"><strong>{!v.simpleRecord.Name}</strong></p>
+                    <p>
+                        <aura:if isTrue="{!v.simpleRecord.AccPac_Account__c != ''}">
+                            {!v.simpleRecord.AccPac_Account__c}<br/>
+                        </aura:if>
+
+                        {!v.simpleRecord.Shipping_Suite_Number__c != '' ? v.simpleRecord.Shipping_Suite_Number__c + ' ' : ''}
+                        {!v.simpleRecord.ShippingStreet != '' ? v.simpleRecord.ShippingStreet + ' ' : ''}
+                        {!v.simpleRecord.ShippingCity != '' ? v.simpleRecord.ShippingCity + ' ' : ''}
+                        {!v.simpleRecord.ShippingPostalCode}
+                    </p>
+                </div>
+                <div>
+                    <lightning:tabset aura:id="tabSet" selectedTabId="one" class="slds-theme_shade">
+                        <lightning:tab
+                                onactive="{!c.handleActive}"
+                                label="{!v.permissionLevel == 'Read/Write' ? $Label.c.SPM_Manage_Service_Plans : $Label.c.SPM_Service_Plans}"
+                                id="one" />
+                        <aura:if isTrue="{!v.permissionLevel == 'Read/Write'}">
+                            <lightning:tab onactive="{!c.handleActive}" label="{!$Label.c.SPM_Create_A_Service_Plan}" id="two" />
+                            <lightning:tab onactive="{!c.handleActive}" label="{!$Label.c.SPM_Auto_Assign_Service_Plans}" id="three" />
+                        </aura:if>
+                        <lightning:tab onactive="{!c.handleActive}" label="{!$Label.c.SPM_Unassigned_Order_Items}" id="four" />
+                    </lightning:tabset>
+                </div>
+                <div>
+                    <lightning:button variant="brand"
+                                      label="Refresh"
+                                      onclick="{!c.refresh}" />
+                </div>
+            </div>
+        </div>
+
+        <div class="slds-card slds-p-around_medium">
+            <aura:if isTrue="{!v.spinner}">
+                <div class="slds-is-relative" style="height:100px;">
+                    <c:Util_LoadingSpinner />
+                </div>
+            </aura:if>
+
+            <div class="{!v.spinner ? 'slds-hide' : 'slds-show'}">
+                <div class="{!v.activeTab == 'one' ? 'slds-show' : 'slds-hide'}">
+                <c:ServicePlanManagerPlanList accountId="{!v.accountId}"
+                                              dataWrapper="{!v.dataWrapper}"
+                                              selectedPlan="{!v.selectedPlan}"
+                                              permissionLevel="{!v.permissionLevel}" />
+                </div>
+
+                <aura:if isTrue="{!v.permissionLevel == 'Read/Write'}">
+                    <div class="{!v.activeTab == 'two' ? 'slds-show' : 'slds-hide'}">
+                        <c:ServicePlanManagerForm aura:id="two"
+                                                  accountId="{!v.accountId}"
+                                                  dataWrapper="{!v.dataWrapper}"
+                                                  permissionLevel="{!v.permissionLevel}" />
+                    </div>
+
+                    <aura:if isTrue="{!v.activeTab == 'three'}">
+                        <c:ServicePlanManagerItemList accountId="{!v.accountId}"
+                                                      dataWrapper="{!v.dataWrapper}"
+                                                      variety="Auto Assign"
+                                                      permissionLevel="{!v.permissionLevel}" />
+                    </aura:if>
+                </aura:if>
+
+                <aura:if isTrue="{!v.activeTab == 'four'}">
+                    <c:ServicePlanManagerItemList accountId="{!v.accountId}"
+                                                  dataWrapper="{!v.dataWrapper}"
+                                                  variety="Unassigned"
+                                                  permissionLevel="{!v.permissionLevel}" />
+                </aura:if>
+            </div>
+        </div>
+
+        <aura:set attribute="else">
+            <div class="slds-card slds-p-around_large slds-align_absolute-center" >
+                <p class="slds-text-color_error">{!$Label.c.SPM_Permission_Error}</p>
+            </div>
+        </aura:set>
+    </aura:if>
+
+</aura:component>

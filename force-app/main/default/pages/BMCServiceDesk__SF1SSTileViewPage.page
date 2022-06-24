@@ -1,0 +1,93 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" applyBodyTag="false" applyHtmlTag="false">
+	
+	<div class="rf-headercls" ng-init="submitTicket = '{!JSENCODE($Label.SubmitTicket)}'; submitaTicket = '{!JSENCODE($Label.SS_IncidentHome)}'">
+		<rf-header  chat-Enable="showChatIcon" actioncss="icon __icon-question_circle helpIcon" action="openHelp()" actionlabel=""  label="{!$Label.Navigator_SelfService}" labelcss="homecss tilHomeCss rf-cm-headerColor"  hidebackbutton='true' ng-hide="isSuperbox"></rf-header>
+		<rf-header  actioncss="headerlabelcls" actionlabel="{{allowSuperboxSubmit ? submitTicket: submitaTicket}}" hidebackbutton='false' action="quickSubmit()" ng-show="isSuperbox && allowSubmitTicket" back-action="exitSuperbox()" disable-action="!isMinCharacters(description)"></rf-header>
+		<rf-header  hidebackbutton='false' ng-show="isSuperbox && !allowSubmitTicket" back-action="exitSuperbox()"></rf-header>
+	</div>
+	
+	<div name="brodCast" class="centerAlignTextParentDiv broadCastDiv" ng-show="!isSuperbox && broadcastobjLst.length > 0" >
+		<div class="d-dropdown" ng-class="{'non-collapsible' : broadcastobj.nonCollapsible}">
+			<table class="d-dropdown-trigger" ng-class="broadcastobj.triggerClass" ng-disabled="broadcastobj.disabled" ng-click="broadcastMenuClick($event);">
+				<tr>
+					<td class="speakertd"> <span class="BROADCASTICON"/> </td>
+					<td class="placeholdertd">
+						<span ng-if="broadcastobj.selected === undefined || broadcastobj.selected.length == 0" class="placeholder">
+							<span id="firstLine" class="placeholderTxt fadein">{{broadcastobj.placeholderFirst}}</span>
+						</span>
+					</td>
+					<td class="__icon-right-angle_down rightangletd" name="iconElement">
+						<span class="badge">{{broadcastobj.broadcastCount}}</span>
+					</td>
+				</tr>
+			</table>
+			<div class="d-dropdown-menu dropdownmenudiv closed">
+				<div ng-if="broadcastobj.loading != true">
+					<div>
+						<ul class="d-dropdown-menu-options-list">
+							<li class="d-dropdown-menu-options-list-item listitemcust" ng-repeat="optionItem in broadcastobjLst">
+								<a class="d-dropdown-menu-options-list-item-option dropdownmenuoptionlink" ng-href="{{optionItem.href}}" ng-class="dropdown.getOptionClass(optionItem)" ng-selected="dropdown.getOptionState(optionItem)" ng-click="dropdown.toggleOptionState(obj, optionItem)">
+									<div>
+										<span class="broadcastTxt"><b>{!$Label.SSBroadcasted}</b>: {{optionItem.postDate}}</span>
+										<span class="broadcastTxtSpace">&nbsp;</span>
+										<span class="broadcastTxt">{{optionItem.titleFirst}}</span>
+									</div>
+								</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="scrollable stopScrollForHomeScrn"  style="top:{{isSuperbox ? '50px': broadcastobjLst.length == 0 ? '50px': '100px'}};padding-top:{{isSuperbox ? '0px': broadcastobjLst.length == 0 ? '17px':'0px'}};">		
+        <div class="superBoxParent" ng-class="isSuperbox ? 'placehoderParentDivSuperbox': 'placehoderParentDivHome'" ng-show="showSuperBoxFlag">
+			<superbox-input
+		   			behalf-of="isOnBehalfOf"
+					input-text="description"
+					input-text-html="superboxhtml"
+					selected-clientid="selectedClientID"
+					focus-action="showSuperbox()"
+					superbox-search="performSearch($event)"
+					object-to-inject=" injectedObject">>
+			</superbox-input>
+		</div>
+		<input id="dummyInput" style="width:0; height:0; opacity:0" type="text" />
+		
+		<div ng-hide="isSuperbox"  class="tileNSubmitTickStyle resizeTileNSubmit">
+			<div ng-class="(broadcastobjLst.length > 0) ? 'tilesParentDivWithBroadCast' : 'tilesParentDiv'" class="resizeForTile" >              
+				<div ng-repeat="tile in tileDataArrayCollection" class="tile" style="padding-bottom:{{broadcastobjLst.length == 0 ? '1.2vh': '1.5vh'}};padding-top:{{broadcastobjLst.length == 0 ? '1.2vh': '1.5vh'}}" ng-click="navigateToPage(tile.shortName)">
+					<div class="tileImage"> <img class="tileImg {{tile.shortName}}" ></img> </div>
+					<div class="tileLabelDiv">
+						<label class="tileLabel" >{{tile.Label}}</label>
+					</div>
+				</div>  
+			</div>
+		</div>
+	
+		<div ng-show="isSuperbox" style="-webkit-transform: initial;">
+			<div ng-swipe-left="swipeEffect('left')" ng-swipe-right="swipeEffect('right')" style="width:100%;display: inline;" >
+				<loading-spinner show-if="Moduleloader" overlay="true" style="top: 160px !important;z-index: 0 !important;"></loading-spinner> 
+				<ul class="d-button-group swipeUl" > 
+					<li ng-click="changeModule(obj.name)" ng-repeat="obj in objList track by $index" class="swipeLi"
+						ng-class="{'active': object == obj.name}" style="width: {{100/ objList.length}}%;"> 
+						<span style="width:100%;"> {{obj.label}} </span>
+					</li>
+				</ul>
+				
+				<div ng-show="showSearchResults">
+					<div ng-repeat="record in records" ng-click="navigateToDetailView(record)" class="sb-cardDiv" >
+						<genericlist  obj="record" fieldmetadata="fieldMetadata" object="object" ></genericlist>
+					</div>
+					<div ng-show="isMinCharacters(description) && records.length == 0" style="text-align:center; padding-top: 10px;"> {!$Label.SSSearchNoRecordsFound} </div>
+					<div class="loadMore" ng-click="loadMore()" ng-show="isLoadMore">
+						<label>{!$Label.ShowMore}</label>
+					</div>
+				</div>		
+			</div>
+		</div>
+	</div>
+	
+	<div id="cover" ng-click="parentDivClick($event);"></div>
+</apex:page>

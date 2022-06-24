@@ -1,0 +1,339 @@
+<apex:page standardStylesheets="false" showHeader="false" controller="BMCServiceDesk.AdminSelfServiceController" action="{!serviceRequestLoader}">
+    
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJS4_1_3}/resources/css/ext-all.css" id="ext-all-css"/> 
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/AdminSSIncident.css" id="incidentCSS"/>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/HelpStyles.css" />
+    <style>    
+    .x-window-header-text {
+        font-size: 12px;
+    }
+    .clsheaderalign {
+        *margin-left: 19px;
+        margin-left: 10px\0/;
+        color: #004376;
+        font-size: 10pt;
+        font-weight: bold;
+        font-family: arial;
+    }
+        .clsmaxheightbtnLabelTD{
+        vertical-align: top;
+        font-family: arial !important;
+        color: #000000;
+        padding-right: 35px;
+        margin: 0px;
+        width: 3%;
+        float:left !important;
+        font-size: 9pt important;
+        white-space: nowrap;      
+        padding-left: 10px;
+    }
+    .clsMaxHeightPixelField {
+        width: 35px;
+        float:left;
+        width:8%;float:left;margin-left:5px;
+        font-family: Arial !important;
+        font-size: 9pt !important;
+        margin-top:7px;
+        padding-left: 1.5em;
+    }
+    .clsProcessMaxHeight {
+        float:left;
+        font-family: Arial !important;
+        font-size: 9pt !important;
+        margin-top:5px;
+        
+    }
+    </style>    
+    <script>
+        var selectedSRFieldSet;
+        var columnCount,columnCountSS3,enableCategoryHierarchyNavigation; 
+        var maxheightdefaultvalue;
+        var labelMaxHeight_Range = '{!JSENCODE($Label.SS_ExpectedRange)}';
+        var labelMaxHeight = '{!JSENCODE($Label.SrdRtfDescMaxHeight)}';
+        var disableSpinner = '{!IF(disableSS2Settings, 'false','true')}';
+            </script>    
+    <apex:form id="form">
+        
+        <div id="toolbar"></div>
+        <div id="helpDiv" class="clshelpDiv"></div>
+        <apex:outputPanel id="mainOutputPanel" styleClass="ClsContainer">   
+        <div id="mainContainer" class="clsMainContainer">
+                <table>
+                    <tr>
+                        <td class="clsInputCheckBox" colspan="2" align="left"><apex:outputLabel value="{!$Label.bmcservicedesk__generalsettings}" styleClass="clsheaderalign" /></td>
+                    </tr>
+                    <tr>
+                        <td class="clsTRHeight"></td>
+                    </tr>
+                    <tr>
+                        <td class="clsInputCheckBox"> 
+                            <apex:inputCheckBox id="serviceRequestCombine" styleClass="indentClass" value="{!selfServiceBean.IncidentandServiceRequestCombined}"  />
+                        </td><td>   
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__incidentandservicerequestcombined}" styleClass="clsInputCheckBoxLabel"/>
+                        </td>
+                    </tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    <apex:outputPanel rendered="{!Not(isFreshInstallWithoutSS2)}" layout="none">
+                    <tr>
+                        <td class="clsInputCheckBox">
+                            <apex:inputCheckBox id="Enable_My_Cart" styleClass="indentClass" disabled="{!disableSS2Settings}"
+                            	value="{!selfServiceBean.Enable_MyCart}"  />
+                        </td><td>
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__enable_my_cart}" 
+                            	styleClass="clsInputCheckBoxLabel {!if(disableSS2Settings,'DisabledLabel','')}"/> 
+                        </td>
+                    </tr>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!OR(isFreshInstallWithoutSS2,disableSS2Settings)}" layout="none">
+					<tr><td class="clsTRHeight"></td><td></td></tr>
+                    <tr>
+                        <td class="clsInputCheckBox">
+                            <apex:inputCheckBox id="EnableSaveAsDraft" styleClass="indentClass"
+                            	value="{!selfServiceBean.Enablesaveasdraft}"  />
+                        </td><td>
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__enablesaveasdraft}" 
+                            	styleClass="clsInputCheckBoxLabel"/> 
+                        </td>
+                    </tr>
+                    </apex:outputPanel>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+					<apex:outputPanel rendered="{!Not(disableSS2Settings)}"
+														layout="none">                    
+                    <tr> 
+                        <td class="clsInputCheckBox">
+                             <apex:inputCheckbox id="Enable_SSPreviewSS2" styleClass="indentClass"
+                             	value="{!enableSSPreview}"/>
+                        </td><td> 
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__enable_preview_of_service_request}" 
+                            styleClass="clsInputCheckBoxLabel"/>  
+                        </td>
+                    </tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    </apex:outputPanel>
+                    <tr>
+                        <td class="clsInputCheckBox" >
+                            <apex:inputCheckBox id="Enable_Editing_submitted_service_request" styleClass="indentClass" value="{!selfServiceBean.Enable_Editing_Of_Submitted_SR}" />
+                        </td><td>
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__enableeditingsubmittedservicerequest}"  styleClass="clsInputCheckBoxLabel"/>  
+                        </td>
+                    </tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    <apex:outputPanel rendered="{!OR(isFreshInstallWithoutSS2,disableSS2Settings)}" layout="none">
+                    <table style="margin-bottom: 10px;"> 
+                        <tr>
+                            <td>
+                                <apex:outputLabel value="{!$Label.bmcservicedesk__ssselectcategorynavigationstyle}" 
+                                styleClass="marginRight20Cls indentClass"/>
+                            </td>
+                             <td>   
+                                <div id="comboNavigationStyle" style=" display:inline-block"/>
+                            </td>
+                        </tr>
+                    </table>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    </apex:outputPanel>
+                    <tr>
+                        <td colspan="2">
+                        <apex:outputLabel value="{!$Label.bmcservicedesk__ssservicerequestcategorytreesettingtitle}" />
+                        <apex:selectRadio value="{!selfServiceBean.Enable_Simplified_Category_Tree}" layout="pageDirection" styleClass="radioCls indentClass">                                 
+                            <apex:selectOption itemValue="False" itemlabel="{!$Label.bmcservicedesk__ssservicerequestcategorytreesettingoption1}"/>
+                            <apex:selectOption itemValue="True" itemlabel="{!$Label.bmcservicedesk__ssservicerequestcategorytreesettingoption2}"/>
+                        </apex:selectRadio>
+                        </td>
+                    </tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    <tr>
+                        <td colspan="3">
+                            <div class="clsProcessMaxHeight indentClass" id="maxHeight" disabled="{!Not(disableSS2Settings)}" style="{!if(disableSS2Settings,'','color:#d9d9d9;')}">{!$Label.SrdRtfDescMaxHeight}</div>
+                            <div class="clsmaxheightbtnLabelTD" id="maxHeightFieldTD" style="margin-top:4px;" disabled="{!Not(disableSS2Settings)}"></div>
+                            <div id="maxHeightLabelTD" class="clsMaxHeightPixelField" disabled="{!Not(disableSS2Settings)}" style="{!if(disableSS2Settings,'','color:#d9d9d9;')}">{!$Label.CMDBListCustomizationPixels}</div>
+                            <!--div class="clsmaxheightbtnLabelTD" id="maxHeightFieldTD" style="margin-top:5px;"  rendered="{!(disableSS2Settings)}"></div-->
+                        </td>
+                    </tr>   
+                </table>
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel id="showAdditionalFeilds" rendered="{!isSSSwitchNewUI}"  styleClass="ClsContainer">
+            <div class="clsMainContainer">
+                <br/>
+                    <table>
+                        <tr>
+                            <td>
+                                <apex:outputLabel styleClass="indentClass" value="{!JSENCODE($Label.bmcservicedesk__selectincidentfieldset)}"/>
+                            </td>
+                        </tr>
+                        <tr><td class="clsTRHeight"></td><td></td></tr>
+                        <tr>
+                            <td>
+                                <div class="indentClass" id="SRFieldSetComboDiv"/>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <table style="{!if(isFreshInstallWithoutSS2,'display:none;','')}"> 
+                        <tr><td class="clsTRHeight"></td><td></td></tr>
+                        <tr>
+                            <td>
+                                <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__displaycolumnforsr)}" 
+                                	styleClass="marginRight20Cls {!if(disableSS2Settings,'DisabledLabel','')} indentClass"/>
+                             </td>
+                             <td>   
+                                <div id="columnComboDiv"/>
+                            </td>
+                        </tr>
+                    </table>
+        			<apex:outputPanel rendered="{!disableSS2Settings}"
+														layout="none">           
+					<table>	
+					<tr><td class="clsTRHeight"></td><td></td></tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+					<tr>
+							<td class="clsInputCheckBox" colspan="2" align="left"><apex:outputLabel value="{!$Label.bmcservicedesk__salesforce1}" styleClass="clsheaderalign" /></td>
+						</tr>
+						<tr>
+							<td class="clsTRHeight"></td>
+						</tr>								         
+					<tr> 
+                        <td class="clsInputCheckBox">
+                             <apex:inputCheckbox id="Enable_SSPreview" 
+                                value="{!enableSSPreview}" styleClass="indentClass"/>
+                        </td><td> 
+                            <apex:outputLabel value="{!$Label.bmcservicedesk__enable_preview_of_service_request}" 
+                            styleClass="clsInputCheckBoxLabel"/>  
+                        </td>
+                    </tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    <tr><td class="clsTRHeight"></td><td></td></tr>
+                    </table>
+					<table>
+						<tr><td class="clsTRHeight"></td></tr>
+						<tr>
+								<td class="clsInputCheckBox" colspan="2" align="left"><apex:outputLabel value="{!$Label.bmcservicedesk__ss3layoutheader}" styleClass="clsheaderalign" /></td>
+						</tr>
+						<tr>
+								<td class="clsTRHeight"></td>
+						</tr>  
+						<tr>
+							<td>    
+                                <apex:outputLabel value="{!JSENCODE($Label.bmcservicedesk__selectcolumnlayout)}" 
+                                    styleClass="marginRight20Cls indentClass"/>
+                            </td>
+							<td>   
+									<div id="columnComboSS3Div" style=" display:inline-block"/>
+                                    <a target="_blank" class="ss3layoutLink">
+									<img id="columnComboSS3Help" src="{!$Resource.Themes}/SSDefaultTheme/images/en_US/SS_Information_16.png" style="height: 16px; width: 16px; margin-left: 3px; margin-bottom: 3px;"/>
+                                    </a>                                    
+							</td>
+						</tr>
+					</table>
+					<table>
+						<tr>
+								<td class="clsTRHeight"></td>
+						</tr>
+						<tr>
+							<td> 
+								<apex:inputCheckBox id="useLftRghtPanelChbxId" value="{!selfServiceBean.useLftRghtPanelFS}"  styleclass="indentClass clsInputCheckBox"/>  
+								<apex:outputLabel value="{!$Label.bmcservicedesk__useleftrightpanelfsforss3}" styleClass="clsInputCheckBoxLabel"/>
+								<a target="_blank" class="ss3layoutLink" >
+								<img id="useLftRghtPanelHelp" src="{!$Resource.Themes}/SSDefaultTheme/images/en_US/SS_Information_16.png" style="height: 16px; width: 16px; margin-left: 3px;"/>
+                                </a>
+							</td>
+						</tr>
+                        
+                        <tr><td style="height:7px"></td><td></td></tr>
+
+                        <tr id="relativePositioningSetting">
+							<td> 
+								<apex:inputCheckBox id="relativePositioningChkBox" value="{!useLeftRightFieldRelativePositioning}"  styleclass="indentClass clsInputCheckBox"/>  
+								<apex:outputLabel id="relativePositioningChkBoxLbl" value="{!$Label.bmcservicedesk__enablerelativepositioning}" styleClass="clsInputCheckBoxLabel"/>
+							</td>
+                        </tr>
+                        
+
+
+                        
+					</table>
+                    </apex:outputPanel>          
+			</div>
+        </apex:outputPanel>
+    <apex:outputPanel id="comboStore">
+        <script>
+             selectedSRFieldSet = '{!JSENCODE(selectedSRFieldSet)}';
+             columnCount = '{!JSENCODE(columnCount)}';
+			 columnCountSS3 = '{!JSENCODE(columnCountSS3)}';
+             maxheightdefaultvalue = '{!JSENCODE(TEXT(selfServiceBean.SRRTFDesc_MaxHeight))}';
+             enableCategoryHierarchyNavigation = '{!JSENCODE(enableCategoryHierarchyNavigation)}';
+        </script>
+    </apex:outputPanel>    
+    <apex:actionFunction name="save" action="{!saveServiceRequest}"  rerender="" onComplete="showMessage('{!messageString}');">
+        <apex:param assignTo="{!selectedSRFieldSet}" name="selectedSRFieldSet" value=""/> 
+        <apex:param assignTo="{!columnCount}" name="columnCount" value=""/>
+        <apex:param assignTo="{!enableCategoryHierarchyNavigation}" name="enableCategoryHierarchyNavigation" value=""/>		
+		<apex:param assignTo="{!columnCountSS3}" name="columnCountSS3" value=""/>		
+        <apex:param assignTo="{!selfServiceBean.SRRTFDesc_MaxHeight}" name="maxheightdefaultvalue" value=""/>
+    </apex:actionFunction>    
+    <apex:actionFunction name="resetHandler" action="{!serviceRequestLoader}"  rerender="mainOutputPanel,comboStore" 
+    onComplete="reloadSRFieldSetDataStore();reloadColumnStore();enableColumnCombo();"/>   
+    </apex:form>    
+    <script>
+                var savelabel               = '{!JSENCODE($Label.Save)}';
+                var refreshLabel            = '{!JSENCODE($Label.Refresh)}'; 
+                var SSSHeaderMsg            = '{!JSENCODE($Label.serviceRequestPortletHeader)}';
+				var SS3SRColumnLayoutInfoTooltip = '{!JSENCODE($Label.SS3SRColumnLayoutInfoTooltip)}';
+                var SS3SRLeftRightFieldPanelInfoTooltip = '{!JSENCODE($Label.SS3SRLeftRightFieldPanelInfoTooltip)}';
+    var newSSUI = '{!isSSSwitchNewUI}';
+        var wikiUrl='{!wikiUrl}';
+    var wikiUrlForSS3Layout = '{!wikiUrlForSS3Layout}';
+    var ss3layouthelpLinks = document.getElementsByClassName("ss3layoutLink");
+    if(typeof ss3layouthelpLinks != 'undefined' && ss3layouthelpLinks.length > 0){        
+		for(var i=0;i <ss3layouthelpLinks.length;i++){
+			ss3layouthelpLinks[i].setAttribute('href',wikiUrlForSS3Layout);
+		}        
+    }
+
+     		var disableSS2Settings='{!IF(disableSS2Settings, 'true','false')}';
+    
+    var tileNav = '{!JSENCODE($Label.ButtonTile)}';
+    var hierarchyNav = '{!JSENCODE($Label.SSNavigationStyleHierarchy)}';
+    var columnLabel = '{!JSENCODE($Label.Column)}'; 
+    var SRFieldSets=JSON.parse('{!SRFieldSets}');    
+    parent.addHelpOnPage(document.getElementById('helpDiv'),'SS_service_request_settings.htm',wikiUrl); 
+    
+    var hideRelativePositioningSetting = '{!hideRelativePositioningSetting}';
+    var relativePositioningChkBox = '{!JSENCODE($Component.form.relativePositioningChkBox)}';
+    var relativePositioningChkBoxLbl = '{!JSENCODE($Component.form.relativePositioningChkBoxLbl)}';
+    </script>
+    <apex:outputPanel id="tooltipPanel">
+		<script>
+			var columnComboSS3TooltipText = Ext.util.Format.htmlEncode(SS3SRColumnLayoutInfoTooltip);//custom label for tooltip
+			var useLftRghtPanelTooltipText = Ext.util.Format.htmlEncode(SS3SRLeftRightFieldPanelInfoTooltip);//custom label for tooltip            
+			var columnComboSS3Tooltip=Ext.getCmp('columnComboSS3Tooltip');
+			var useLftRghtPanelTooltip=Ext.getCmp('useLftRghtPanelTooltip');
+			
+			if(columnComboSS3Tooltip!=null && typeof(columnComboSS3Tooltip) != 'undefined')
+				columnComboSS3Tooltip.destroy();
+				
+			if(useLftRghtPanelTooltip!=null && typeof(useLftRghtPanelTooltip) != 'undefined')
+				useLftRghtPanelTooltip.destroy();
+			
+			new Ext.ToolTip({
+				id:'columnComboSS3Tooltip',
+				target: 'columnComboSS3Help',
+				html: columnComboSS3TooltipText,
+				trackMouse: true,
+				anchor: 'top'
+			});
+			
+			new Ext.ToolTip({
+				id:'useLftRghtPanelTooltip',
+				target: 'useLftRghtPanelHelp',
+				html: useLftRghtPanelTooltipText,
+				trackMouse: true,
+				anchor: 'top'
+			});
+		</script>
+	</apex:outputPanel>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__ExtJS4_1_3}/ext-all.js" id="ext-all-js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/AdminSSServiceRequest.js" id="incident-js"/>
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/WikiHelp.js"/>
+</apex:page>

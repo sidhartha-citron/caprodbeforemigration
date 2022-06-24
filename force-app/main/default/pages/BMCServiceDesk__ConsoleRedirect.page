@@ -1,0 +1,155 @@
+<apex:page showheader="false" sidebar="false" showChat="false" standardStylesheets="false">
+  <style>
+  	.errorCls{
+  		font-family:Arial;
+		color:red;  		
+  	}
+  </style>
+
+    
+  <script type="text/javascript">
+    	var changeCollisionsPageURL = '{!$Page.ChangeCollisions}';
+	    var formulaFieldName = "{!JSENCODE($CurrentPage.Parameters.formulaFieldName)}";
+	    var recordId = "{!JSENCODE($CurrentPage.Parameters.recordId)}";
+	    var historyId = "{!JSENCODE($CurrentPage.Parameters.HistoryId)}";
+	    var actionType = "{!JSENCODE($CurrentPage.Parameters.actionType)}";
+	    var InstanceName = "{!JSENCODE($CurrentPage.Parameters.InstanceName)}";
+		var recordName = "{!JSENCODE($CurrentPage.Parameters.recordName)}";
+		var incType = "{!JSENCODE($CurrentPage.Parameters.incType)}";
+		var CurrentNamespacePrefix = "BMCServiceDesk__";
+		var isLightningExperience = {!IF($CurrentPage.Parameters.uiTheme=='Theme4d',true,false)};
+		var layoutId = "{!JSENCODE($CurrentPage.Parameters.formLayoutId)}";		
+        
+        var formLayoutId;
+        if(layoutId != ''){
+            formLayoutId = layoutId;
+        }
+        
+        
+  </script>
+
+  <apex:outputPanel rendered="{!$CurrentPage.Parameters.formulaFieldName == 'BUTTON'}">
+	<script>	
+		var objectName = "{!JSENCODE($CurrentPage.Parameters.objName)}";
+		var targetObjectName = "{!JSENCODE($CurrentPage.Parameters.targetObjName)}";  
+        var recordState = "{!JSENCODE($CurrentPage.Parameters.recordState)}";
+        var uiAction = "{!JSENCODE($CurrentPage.Parameters.uiAction)}";
+		var popupId = "{!JSENCODE($CurrentPage.Parameters.popupId)}";
+        var filterId = "{!JSENCODE($CurrentPage.Parameters.filterId)}";
+		var broadcastId = "{!JSENCODE($CurrentPage.Parameters.broadcastId)}";
+		var CategoryId = "{!JSENCODE($CurrentPage.Parameters.catId)}";
+		var CategoryName = "{!JSENCODE($CurrentPage.Parameters.catName)}";
+		var knownError = "{!JSENCODE($CurrentPage.Parameters.knownError)}";
+        var addlFilterId = "{!JSENCODE($CurrentPage.Parameters.addlFilterId)}";
+		var filterObjectId = "{!JSENCODE($CurrentPage.Parameters.filterObjectId)}";
+        var accountId = "{!JSENCODE($CurrentPage.Parameters.accountId)}";
+        var description = "{!JSENCODE($CurrentPage.Parameters.description)}";
+
+		var reqDefn = "{!JSENCODE($CurrentPage.Parameters.reqDefn)}";
+        var reqDetail = "{!JSENCODE($CurrentPage.Parameters.reqDetail)}";
+        var ciID = "{!JSENCODE($CurrentPage.Parameters.ciID)}";
+        var incidentId = "{!JSENCODE($CurrentPage.Parameters.incidentId)}";
+        var problemId = "{!JSENCODE($CurrentPage.Parameters.problemId)}";
+        var releaseId = "{!JSENCODE($CurrentPage.Parameters.releaseId)}";
+        var changerequestId = "{!JSENCODE($CurrentPage.Parameters.changerequestId)}";
+        var incidentState = "{!JSENCODE($CurrentPage.Parameters.incidentState)}";
+        var problemState = "{!JSENCODE($CurrentPage.Parameters.problemState)}";
+        var releaseState = "{!JSENCODE($CurrentPage.Parameters.releaseState)}";
+        var changerequestState = "{!JSENCODE($CurrentPage.Parameters.changerequestState)}";
+
+		var clientId = "{!JSENCODE($CurrentPage.Parameters.clientId)}";
+		var baseId =  "{!JSENCODE($CurrentPage.Parameters.baseId)}";
+        var businessService =  "{!JSENCODE($CurrentPage.Parameters.businessService)}";
+		
+        var RFActionLabels = {
+            "InsufficentCreatePrivilege": "{!JSENCODE($Label.insufficentcreateprivilege)}",
+            "InsufficentPrivilegeToAccess": "{!JSENCODE($Label.InsufficentPrivilegeToAccess)}",
+            "PendingIncidentApproval": "{!JSENCODE($Label.PendingIncidentApproval)}",
+            "DontCloseIncident": "{!JSENCODE($Label.dontCloseIncident)}",
+            "StdIncidentRelatedBroadcastsChanges": "{!JSENCODE($Label.StdIncidentRelatedBroadcastsChanges)}",
+            "IncidentIsClosed": "{!JSENCODE($Label.incident_is_closed)}",
+            "TaskIsClosed": "{!JSENCODE($Label.Task_is_Closed)}",
+			"ProblemIsClosed": "{!JSENCODE($Label.problemclosed)}",
+            "CRIsClosed": "{!JSENCODE($Label.CrClosed)}",
+            "IncidentIsAlreadyOpen": "{!JSENCODE($Label.Incident_is_already_Open)}",
+            "TaskIsAlreadyOpen": "{!JSENCODE($Label.Task_is_already_Open)}",
+            "BroadcastOpen": "{!JSENCODE($Label.BroadcastOpen)}",
+            "ProblemOpen": "{!JSENCODE($Label.ProblemOpen)}",
+            "ReleaseAlreadyOpen": "{!JSENCODE($Label.ReleaseAlreadyOpen)}",			
+			"ChangeRequestAlreadyOpen": "{!JSENCODE($Label.CralreadyOpen)}",
+			"broadcastclosed": "{!JSENCODE($Label.broadcastclosed)}",
+            "ReleaseIsClosed": "{!JSENCODE($Label.releaseclosed)}",
+			"CategoryIdInactive": "{!JSENCODE($Label.categoryidinactive)}",
+			"ServiceRequestLabel": "{!JSENCODE($Label.ServiceRequestLabel)}",
+			"NoCategorySelected": "{!JSENCODE($Label.nocategoryselected)}",
+			"category_and_or_description_for_template": "{!JSENCODE($Label.category_and_or_description_for_template)}",
+            "cannot_apply_template" : "{!JSENCODE($Label.cannot_apply_template)}",
+			"Deprecated" : "{!JSENCODE($Label.Deprecated)}"
+        }
+
+        var RFPages = {
+            IncidentStdPage : '{!$Page.StdLayoutBtnToolbarPage}',
+            SearchAndLink : '{!$Page.SearchAndLink}',
+			SearchPage : '{!$Page.SearchPage}',
+            CategoryPage : '{!$Page.StdLayoutCategoryTree}',
+			IncidentConsolePage: '{!$Page.IncidentConsole}',
+            BroadcastConsole: '{!$Page.BroadcastConsole}',
+            TaskConsole: '{!$Page.TaskConsole}',
+            ChangeConsole: '{!$Page.ChangeConsole}',
+			ProblemConsole: '{!$Page.ProblemConsole}',
+            ReleaseConsole: '{!$Page.ReleaseConsole}',
+            StandardNewIncidentPage: '{!URLFOR($Action.BMCServiceDesk__Incident__c.New)}',
+            StandardNewTaskPage: '{!URLFOR($Action.BMCServiceDesk__Task__c.New)}',
+            StandardNewBroadcastsPage: '{!URLFOR($Action.BMCServiceDesk__Broadcasts__c.New)}',
+            StandardNewChangeRequestPage: '{!URLFOR($Action.BMCServiceDesk__Change_Request__c.New)}',
+			StandardNewReleasePage: '{!URLFOR($Action.BMCServiceDesk__Release__c.New)}',
+			StandardNewProblemPage: '{!URLFOR($Action.BMCServiceDesk__Problem__c.New)}',
+			TaskStdExtensionPage : '{!$Page.StdTaskExtension}',
+			ViewAllActions : '{!$Page.ViewAllActions}',
+			CloseIncidentPage : '{!$Page.CloseIncidentPage}',
+			CreateKnowledgePage : '{!$Page.CreateKnowledgePage}',
+			StdBroadcastExtension : '{!$Page.StdBroadcastExtension}',
+			StdProblemExtension : '{!$Page.StdProblemExtension}',
+			StdReleaseExtension : '{!$Page.StdReleaseExtension}',			
+			ChangeSchedule : '{!$Page.ChangeSchedule}',
+			CIExplorerLauncher : '{!$Page.CIExplorerLauncher}',
+			BroadcastClosePage : '{!$Page.BroadcastClosePage}',
+			ComposeEmailPage : '{!$Page.ComposeEmailPage}',
+			ProblemProcMgmtPage : '{!$Page.ProblemProcMgmtPage}',
+			ReleaseProcMgmtPage : '{!$Page.ReleaseProcMgmtPage}',
+			IncProcMgmtPage : '{!$Page.incProcMgmtPage}',
+			SearchConfigItem : '{!$Page.SearchConfigItem}',
+			CloseRelease : '{!$Page.CloseRelease}',
+			CloseChangePage : '{!$Page.CloseChangePage}',
+			CloseProblemPage : '{!$Page.CloseProblemPage}',
+			CloseTask :  '{!$Page.CloseTask}',
+			StdChangeRequestExtensionPage: '{!$Page.StdChangeRequestExtension}',
+            KnowledgeSearchPage : '{!$Page.KnowledgeSearch}',
+            SuggestionPage : '{!$Page.SuggestionPage}',
+			stdlayoutbroadcastaddnotepage : '{!$Page.stdlayoutbroadcastaddnotepage}',
+            StdLayoutChangeRequestAddNotePage : '{!$Page.StdLayoutChangeRequestAddNotePage}',
+            stdlayoutincidentaddnotepage : '{!$Page.stdlayoutincidentaddnotepage}',
+            stdlayoutproblemaddnotepage : '{!$Page.stdlayoutproblemaddnotepage}',
+            stdlayoutreleaseaddnotepage : '{!$Page.stdlayoutreleaseaddnotepage}',
+            stdlayouttaskaddnotepage : '{!$Page.stdlayouttaskaddnotepage}',
+			ReleaseManifest : '{!$Page.ReleaseManifest}',
+			IncidentConsole : '{!$Page.IncidentConsole}',
+			AcActionsStdLayout : '{!$Page.AcActionsStdLayout}',
+			ChangeProcMgmtPage : '{!$Page.ChangeProcMgmtPage}',
+			StdDescriptionResolutionPage : '{!$Page.StdDescriptionResolutionPage}'
+		}
+        var sessionid = "{!$Api.Session_ID}";
+
+  </script>
+	  <apex:outputPanel rendered="{!$CurrentPage.Parameters.uiAction == 'serviceCloudConsole'}">
+		<script src="/support/console/36.0/integration.js" type="text/javascript"></script>
+	  </apex:outputPanel>
+      <script src="/soap/ajax/36.0/connection.js" type="text/javascript"></script>
+      <script src="/soap/ajax/36.0/apex.js" type="text/javascript"></script>
+      <script src="{!$Resource.SDEFCommonJS}/ButtonActions.js"  type="text/javascript" />
+  </apex:outputPanel>
+  	             
+  <apex:outputPanel rendered="{!$CurrentPage.Parameters.formulaFieldName != 'BUTTON'}"><script src="{!$Resource.SDEFCommonJS}/ConsoleRedirect.js"  type="text/javascript" />  			
+  </apex:outputPanel>
+  
+</apex:page>

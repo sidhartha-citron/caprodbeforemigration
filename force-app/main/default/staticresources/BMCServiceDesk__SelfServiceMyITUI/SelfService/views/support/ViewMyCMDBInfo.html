@@ -1,0 +1,68 @@
+<loading-spinner wide="true" if="viewMyAssetsCIModel.dataLoading"></loading-spinner>
+<div class="support-right-col full-height Branding-Right_Panel-activity">
+	<div ng-if="viewMyAssetsCIModel.data.length == 0" class="activity-item-no-reocrd__labels">     
+	  <div >{{selfServiceLabels.noResults}}</div>     
+	</div>
+	<div class="support-right-col__inner support-view_my_cis_assests_container" ng-if="viewMyAssetsCIModel.data.length > 0">
+		<div class="activity-item activity-item_type_request timeline-activity-item cmdb-item" ng-repeat="record in viewMyAssetsCIModel.data">
+			<div  class="activity-item__header" ng-click="showHideDetails(viewMyAssetsCIModel.data.indexOf(record),record);">
+				<div class="activity-item__request-name activity-item__request-ci-name nowrap-line ng-binding ng-scope" title="{{supportModel.decodeText(record.feedText)}}" ng-bind-html="record.feedText">
+				</div>
+				<div ng-repeat="field in record.dynamicFields" class="activity-item__status">
+					<div>
+						<label class="activity-item__labels" >{{field.label}}</label>
+						<label class="activity-item__values" ng-if="field.type != 'TEXTAREA' && field.type != 'RICHTEXTAREA' && field.type != 'FORMULA' && field.type != 'BOOLEAN' && field.type != 'URL' " ng-bind-html="field.value"></label>
+						<label class="activity-item__values" ng-if="field.type == 'URL'" onclick="if (window.event && window.event.stopPropagation) window.event.stopPropagation(); else event.stopPropagation();" ng-bind-html="field.value"></label>
+						<label class="activity-item__values" ng-if="field.type == 'FORMULA'" ng-bind-html="to_trustedHTML(field.value)"></label>
+						<label class="activity-item__values block-with-ellipsis block-with-text" ng-if="field.type == 'TEXTAREA'" ng-bind-html="field.value"></label>
+						<label class="activity-item__values block-with-ellipsis block-with-text" ng-if="field.type == 'RICHTEXTAREA'" ng-bind-html="to_trustedHTML(field.value)"></label>
+						</label>
+						<span ng-if="field.type=='BOOLEAN'"><input type="checkbox" ng-checked="field.value" disabled="disabled"/></span>
+					</div>
+					<loading-spinner centered="true" if="viewMyAssetsCIModel.recordDataLoading && selectedItem.hashKey == record.$$hashKey"></loading-spinner>
+				</div>
+				<div style="width:100%;float:right;" class="float-left-rtl">
+				  <label class="activity-item__values float-left-rtl" style="width:auto; float:right;"><a style="font-size: 10px;" class="Branding-Right_Panel-hyperlink float-left-rtl" ng-attr-id="showDetailsLink-{{record.id}}" ng-show="!record.showMore"ng-click="$event.stopPropagation(); selectedItem.hashKey = record.$$hashKey; record.showMore = true; showDetails(viewMyAssetsCIModel.data.indexOf(record), record); ">{{$root.selfServiceLabels.ShowDetails}}</a>
+				  <a style="font-size: 10px;" class="Branding-Right_Panel-hyperlink" ng-show="record.showMore" ng-attr-id="hideDetailsLink-{{record.id}}" ng-click="$event.stopPropagation(); record.showMore = false; selectedItem.hashKey = '0';">{{$root.selfServiceLabels.HideDetails}}</a></label>
+				</div>
+				<hr style="margin-bottom: 5px;margin-top: 23px;">
+				<div ng-attr-id="extraFields-{{record.id}}" ng-show="record.showMore">
+					<div ng-repeat="field in record.extraFields" class="activity-item__status">
+						<div>
+							<label class="activity-item__labels" >{{field.label}}</label>
+							<label class="activity-item__values" ng-if="field.type != 'TEXTAREA' && field.type != 'RICHTEXTAREA' && field.type != 'FORMULA' && field.type != 'BOOLEAN' && field.type != 'URL' " ng-bind-html="field.value"></label>
+							<label class="activity-item__values" ng-if="field.type == 'URL'" onclick="if (window.event && window.event.stopPropagation) window.event.stopPropagation(); else event.stopPropagation();" ng-bind-html="field.value"></label>
+							<label class="activity-item__values" ng-if="field.type == 'FORMULA'" ng-bind-html="to_trustedHTML(field.value)"></label>
+							<label class="activity-item__values block-with-ellipsis block-with-text" ng-if="field.type == 'TEXTAREA'" ng-bind-html="field.value"></label>
+							<label class="activity-item__values block-with-ellipsis block-with-text" ng-if="field.type == 'RICHTEXTAREA'" ng-bind-html="to_trustedHTML(field.value)"></label>
+							</label>
+							<span ng-if="field.type=='BOOLEAN'"><input type="checkbox" ng-checked="field.value" disabled="disabled"/></span>
+						</div>
+					</div>
+				</div>
+				<hr style="margin-bottom: 5px;margin-top: -5px;">
+				<div class="modal-footer__btn-container">
+					<a style="font-size: 12px; margin-right:1px;" class="Branding-Right_Panel-hyperlink" ng-click="$event.stopPropagation(); openSubmitATicketModel(record.id, supportModel.decodeText(record.feedText))">{{$root.selfServiceLabels.submitATicket}}</a>
+					|
+					<a style="font-size: 12px; margin-left:1px;" class="Branding-Right_Panel-hyperlink" ng-click="$event.stopPropagation(); goToStateReatedTickets('support.relatedTickets.all', record.id, supportModel.decodeText(record.feedText))">{{$root.selfServiceLabels.relatedTickets}}</a>
+				</div>
+			</div>
+		</div>
+		<div ng-if="viewMyAssetsCIModel.data.length > 0">
+			<div class="support-back-link-container profile-back-link profile-page-navigator">
+				<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goToPrevPage()" ng-show="isPreviousEnabled">
+					&#10094; {{ $root.selfServiceLabels.Previous }} 
+				</a>
+			</div>	
+			<div class="support-back-link-container profile-back-link profile-page-navigator" ng-show="isPreviousEnabled || isNextEnabled">
+				{{ $root.selfServiceLabels.Page }} {{currentPageNo}}
+			</div>
+			<div class="support-back-link-container profile-back-link profile-page-navigator profile-page-navigator-next" 
+			>
+				<a class="support-back-link Branding-Right_Panel-hyperlink" ng-click="goToNextPage()" ng-show="isNextEnabled">
+					{{ $root.selfServiceLabels.Next }} &#10095;
+				</a>
+			</div>
+		</div>
+	</div>
+</div>

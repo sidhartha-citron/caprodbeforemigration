@@ -1,0 +1,1 @@
+function isNewContextpage(){var b;if(parent.location==window.location){b=window.parent.location.pathname}else{try{b=window.parent.top.location.pathname}catch(a){b=document.referrer}}if(typeof(b)!=undefined&&b!=null&&b!=""&&b!="/apex/SDEHome"){return true}else{return false}};

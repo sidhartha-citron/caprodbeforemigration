@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Competitors_Required</fullName>
+    <active>false</active>
+    <description>Competitors field requires a value if the Account Type is &apos;Programmer&apos; and Account Record Type is Prospect. PwC-Updated on Feb 15 2018 to exclude Sys Admin Profile to facilitate Data Load.  Updated by Birch Hill Team to be only applicable to Prospects.</description>
+    <errorConditionFormula>AND(ISPICKVAL( Account_Type__c , &quot;Programmer&quot;) , ISPICKVAL(Competitors__c, &quot;&quot;), $User.Id &lt;&gt; &quot;005j000000C24pM&quot;, CASESAFEID($User.ProfileId) &lt;&gt; $Setup.Field_Service_Settings__c.Integration_User_Profile__c, 
+CASESAFEID($User.ProfileId) &lt;&gt; $Setup.Field_Service_Settings__c.System_Administrator_Profile_Id__c, RecordType.Name = &quot;Prospect&quot;)</errorConditionFormula>
+    <errorDisplayField>Competitors__c</errorDisplayField>
+    <errorMessage>Please enter a competitor value.</errorMessage>
+</ValidationRule>

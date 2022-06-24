@@ -1,0 +1,2661 @@
+<apex:page controller="BMCServiceDesk.QVWizardController" showHeader="false" standardStylesheets="false">
+<c:CommonIncludes />    
+<apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS}/ex/ux/CheckColumn.js"/>
+ <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFExtJS31}/src/locale/ext-lang-{!userlocale}.js" />	
+ <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/QVWizard.js"/>  
+<style>
+		.disabledDeleteCls {
+			 background-image: url({!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png) !important; background-repeat: no-repeat;
+			 margin-top:0px;
+			 margin-bottom:0px;
+			 padding-right:6px;
+			 padding-bottom:6px;
+			 margin-left:4px;
+	   }
+	    .disabledBtnClass {
+			width:100%;
+	    }
+	   .addRemoveColCls{
+			background-color:white;
+			background-image:none;
+			border-width:0;
+			border-style: none;
+			border-color:white;
+		}
+		.addRemoveColCls .x-toolbar-left{
+			background-color:white;
+		}
+			
+		.clsBoldInputLabelTDNoPadding{
+			color:#004376;
+			font: bold 11px Tahoma, MS Sans Serif;
+		}
+		.availableGridClsNoHeader .x-grid3-hd-row td{
+            display:none;
+        }
+         .toolSpCls{
+             background-color:red;
+             border:none;
+         }
+         .samplePanelCls {
+              background-color:red;
+             
+         }
+        
+	  .x-combo-list-item {
+		  font-family:Tahoma, MS Sans Serif;
+		  font-size:11px;
+	
+	   }
+		
+	   .x-grid3-hd-row td, .x-grid3-row td, .x-grid3-summary-row td{
+		font-family:Tahoma, MS Sans Serif;
+		font-size:11px;
+	   }
+	 .gridcell-class-even{
+           background-color:#FFFFFF;
+         
+        }
+        .gridcell-class-odd{
+           background-color:#dee0e0;
+         
+        }
+.QvBtnGrey{*margin-bottom: 1px;}
+.ownerLookupCls{z-index:12000 !important;}
+</style>
+    <script>
+	var wikiUrl='{!JSENCODE(wikiUrl)}';
+    var dateFormat = '{!dateFormat}';
+    var listsize = '{!avlDSListsize}';
+      var avlDataSourceData = new Array(listsize);
+      var i=0;
+      var gridInfoMap = {};
+	  var  gridDataTypeInfo = '{!JSENCODE(gridDataTypeInfo)}';
+	  if(gridDataTypeInfo && gridDataTypeInfo!=''){
+			gridInfoMap=JSON.parse(gridDataTypeInfo);
+	  }
+	  var DataTypeLblMap={};
+	  DataTypeLblMap['text']='{!JSENCODE($Label.Text)}';
+	  DataTypeLblMap['textArea']='{!JSENCODE($Label.TextArea)}'; 
+	  DataTypeLblMap['date']= '{!JSENCODE($Label.Date)}';
+	  DataTypeLblMap['combo']= '{!JSENCODE($Label.Boolean)}';
+	  DataTypeLblMap['number']='{!JSENCODE($Label.SSHomeMyRequestsColumnHeaderNumber)}';
+	  DataTypeLblMap['lookUp']='{!JSENCODE($Label.Lookup)}'; 
+	  DataTypeLblMap['picklist']= '{!JSENCODE($Label.Picklist)}';
+	  DataTypeLblMap['PHONE']= '{!JSENCODE($Label.Phone)}';
+	  DataTypeLblMap['PERCENT']='{!JSENCODE($Label.PERCENT)}'; 
+	  DataTypeLblMap['CURRENCY']= '{!JSENCODE($Label.CURRENCY)}';
+    </script>
+    <apex:repeat value="{!avlDatasourceList}" var="avlDatasourceTemp">
+		<apex:repeat value="{!avlDatasourceTemp}" var="avlDatasource">
+		  <script>
+			avlDataSourceData[i] = new Array(2);
+			avlDataSourceData[i][0] ='{!JSENCODE(avlDatasource.datasourceLabel)}';
+			avlDataSourceData[i][1] ='{!JSENCODE(avlDatasource.datasourceAPIName)}' ;      
+			i = i+1;
+		  </script>  
+		</apex:repeat>  
+     </apex:repeat>
+     
+ <script>
+ 	function populatePickList(moduleFieldName){
+       var j = 0;
+	   var pickListArray = new Array();
+	   for(var i=0 ; i < pickListData.length; i++){
+	   		if(pickListData[i][2].toUpperCase().match(moduleFieldName.toUpperCase())){
+               pickListArray[j] = pickListData[i];
+               j = j+1;
+            }
+       } 
+	   //add a blank value to picklist to support all/none functionality
+       var blankEntry = new Array();
+       blankEntry[0] = '';
+       blankEntry[1] = '';
+       blankEntry[2] = pickListArray[0][2];
+       blankEntry[3] = pickListArray[0][3];
+       pickListArray.splice(0,0,blankEntry);// add the blank entry at 1st position*/
+       pickListComboStore.loadData(pickListArray);	
+    }
+    function setPopUpVar(id){
+       if(id!= null && id!= '' && onCompleteFunction!=null){
+            setIdFromPopup(id);
+            onCompleteFunction(id); 
+            
+      }
+   	}
+         
+	  function openPopup(link, onComplete) {
+        onCompleteFunction = onComplete;
+        popUpWindow = new Ext.Window({
+            height: 550,
+            width: 670,
+            modal:true,
+            constrain : true,
+            viewConfig: {forceFit: true},
+            html:'<iframe src =\"\/apex\/'+link+'\" style=\"width:100%;height:100%;border:none\"/>'
+            
+        });
+        popUpWindow.show();
+	}
+
+    function closePopup(){
+       popUpWindow.close(); 
+    }
+   
+    function LookupMap(){
+	      this.sfId = '';
+	      this.sfName ='';
+	      this.fkLabel='';
+	      this.getSfId = function(){
+	        return this.sfId;
+	      };
+	      this.getSfName = function(){
+	       return this.sfName;
+	      };
+	      this.getFKLabel = function(){
+	        return this.fkLabel;
+	      };
+    }
+    var apiName, displaylabel;
+   var isForSelectedOpertaor = false;
+   var lookUpRowIndex = 0;
+   var idNameArray = new Array();
+   var iterator = 0;
+   var ds;   
+   var comboStore;
+   var grid;
+   var queryConditionPanel;
+   var typeEditor;
+   var popupIndex;
+   var idFromPopup = null;// For popup Window
+   var flag = 0;
+   var store;
+   var selDatastore;
+   var selDataSourceData = new Array();
+   var selDatasourceGrid;
+   var fieldsDynamicStore;
+   var fieldsComboStore;
+   var selFieldsGrid;
+   var fieldsEditor;
+    var columnHeaders = new Array(); 
+    var fieldList;
+    var waitMsg =   new Ext.Window({ 
+                                height:100, 
+                                width:200, 
+                                resizable:false, 
+                                closable : false, 
+                                header:false,
+                                frame:false, 
+                                shadow :false, 
+                                modal:true,
+                                items:[{ 
+                                    xtype:'panel', 
+                                    height:100, 
+                                    width:200, 
+                                    bodyStyle:'background-color:transparent;border:none;', 
+                                    html:'<div align="center"><img src="{!$Resource.SDEFExtJS}/resources/images/default/shared/blue-loading.gif" /></div>' 
+                                }] 
+                            });
+  Ext.onReady(function(){
+    Ext.QuickTips.init();
+    Ext.form.Field.prototype.msgTarget = 'side';
+   
+    var avlDatastore =  new Ext.data.Store({
+         reader:new Ext.data.ArrayReader({},[
+             {name:'label'},
+             {name:'apiName'}
+         ]),
+     data:avlDataSourceData,
+     sortInfo: {
+            field: 'label',
+            direction: 'ASC'
+        }
+     });
+    selDatastore = new Ext.data.Store({
+       reader:new Ext.data.ArrayReader({},[
+             {name:'label'},
+             {name:'apiName'}
+         ]),
+     data:selDataSourceData
+    });
+    
+    selDatastore.loadData(selectedDs);
+    
+        
+    /* Data grid for available datasources */
+    var avlDatasourceGrid = new Ext.grid.GridPanel({
+      store:avlDatastore,
+      id:'avlDSGrid',
+      cls:'availableGridCls availableGridClsNoHeader',
+      tooltip: "{!JSENCODE($Label.TooltipQuickViewsWizardQuerypageAvailableDataSources)}",
+      height:169,
+      width:146,
+      viewConfig: {
+        forceFit: true,
+         headersDisabled: true,
+         scrollOffset:0
+      },
+      columns:[
+               {header:'',sortable:true,width:146,dataIndex:'label'},
+               {header:'Name',sortable:true,dataIndex:'apiName',hidden:true}
+              ],
+      stripeRows:false,
+      listeners:{           
+            rowdblclick:function() {
+	            var selectedRows = avlDatasourceGrid.getSelectionModel().getSelections();
+	            var totalSelected =  selectedRows.length + selDatasourceGrid.store.data.length; 
+                if(selectedRows!= null && selectedRows.length>0 && totalSelected < 11){
+	                selDatasourceGrid.store.add(selectedRows);
+			selDatasourceGrid.getView().refresh(); 
+	                selDatasourceGrid.render('selecteddataSourceDiv');
+	                for(var i=0;i<selectedRows.length;i++){
+	                   avlDatasourceGrid.store.remove(selectedRows[i]);
+	                  
+	                }
+	                avlDatasourceGrid.render('availabledataSourceDiv');
+	                getSelDatasources();
+	                //Ext.example.msg('Click','You clicked on "Action 1".');
+	                addDSFieldsRows();
+	            }else if(totalSelected >= 11){
+	            	showMessage('{!JSENCODE($Label.lessThanTenDataSources)}');
+	            }
+            }
+      }
+    
+    });
+    avlDatasourceGrid.render('availabledataSourceDiv');
+    
+      selDatasourceGrid = new Ext.grid.GridPanel({
+      store:selDatastore,
+      id:'selDSGrid',
+      cls:'selectedGridCls',
+        height:169,
+      width:146,
+      enableColumnResize: false,
+      enableColumnMove: false,
+      viewConfig: {
+        forceFit: true,
+         headersDisabled: true,
+          scrollOffset:0
+      },
+      columns:[
+                {header:'{!$Label.DataSource}',sortable:true,width:146,dataIndex:'label'},
+               {header:'Name',sortable:true,dataIndex:'apiName',hidden:true}
+              ],
+      stripeRows:true,
+      listeners:{
+	      	rowdblclick:function(){
+	            var selectedRows = selDatasourceGrid.getSelectionModel().getSelections();
+	            avlDatasourceGrid.store.add(selectedRows);
+	            avlDatasourceGrid.render('selecteddataSourceDiv');
+	            for(var j=selDatasourceGrid.store.data.length-1;j>=0;j--){ 
+	               if(selDatasourceGrid.getSelectionModel().isSelected(j)){
+	                   var objName = selDatasourceGrid.store.getAt(j).get('label');
+	                    selDatasourceGrid.store.removeAt(j);
+			    selDatasourceGrid.getView().refresh(); 
+	                    selFieldsGrid.store.removeAt(j);
+			    selFieldsGrid.getView().refresh(); 
+	                    if(grid.store.data.length>0){
+	                        for(var i=grid.store.data.length-1;i>=0; i--){
+	                          var objFieldName = grid.store.getAt(i).get('type');
+	                          if(objFieldName.indexOf(objName+'.')!=-1){
+	                            grid.store.removeAt(i);
+				    grid.getView().refresh(); 
+	                          }
+	                        }
+	                    }
+	               }
+	            }
+	            
+	            selDatasourceGrid.render('selecteddataSourceDiv');           
+	            selFieldsGrid.render('selectedFieldsDiv');
+	            if(selDatasourceGrid.store.data.length>0){
+	             getSelDatasources();
+	            }
+	            avlDatasourceGrid.store.sort('label','ASC');
+	            //Ext.example.msg('Click','You clicked on "Action 1".');
+	        }
+    	}
+    });
+    selDatasourceGrid.render('selecteddataSourceDiv');
+    // selDatasourceGrid.getView().el.select('.x-grid3-header').setStyle('display','none');
+            
+     var fromToAction = function() {
+            var selectedRows = avlDatasourceGrid.getSelectionModel().getSelections();
+            var totalSelected =  selectedRows.length + selDatasourceGrid.store.data.length; 
+            // alert(totalSelected);
+            if(selectedRows!= null && selectedRows.length>0 && totalSelected < 11){
+                selDatasourceGrid.store.add(selectedRows);
+                selDatasourceGrid.render('selecteddataSourceDiv');
+                for(var i=0;i<selectedRows.length;i++){
+                   avlDatasourceGrid.store.remove(selectedRows[i]);
+                  
+                }
+                avlDatasourceGrid.render('availabledataSourceDiv');
+                getSelDatasources();
+                //Ext.example.msg('Click','You clicked on "Action 1".');
+                addDSFieldsRows();
+            }else if(totalSelected >= 11){
+               showMessage('{!JSENCODE($Label.lessThanTenDataSources)}');
+            }
+    };
+    var toFromAction = function(){
+        var selectedRows = selDatasourceGrid.getSelectionModel().getSelections();
+        avlDatasourceGrid.store.add(selectedRows);
+        avlDatasourceGrid.render('selecteddataSourceDiv');
+        for(var j=selDatasourceGrid.store.data.length-1;j>=0;j--){ 
+           if(selDatasourceGrid.getSelectionModel().isSelected(j)){
+               var objName = selDatasourceGrid.store.getAt(j).get('label');
+                selDatasourceGrid.store.removeAt(j);
+                selFieldsGrid.store.removeAt(j);
+                if(grid.store.data.length>0){
+                    for(var i=grid.store.data.length-1;i>=0; i--){
+                      var objFieldName = grid.store.getAt(i).get('type');
+                      if(objFieldName.indexOf(objName+'.')!=-1){
+                        grid.store.removeAt(i);
+                      }
+                    }
+                }
+           }
+        }
+        
+        selDatasourceGrid.render('selecteddataSourceDiv');           
+        selFieldsGrid.render('selectedFieldsDiv');
+        if(selDatasourceGrid.store.data.length>0){
+         getSelDatasources();
+        } 
+        avlDatasourceGrid.store.sort('label','ASC');
+        //Ext.example.msg('Click','You clicked on "Action 1".');
+   };
+     
+    var panel = new Ext.Panel({ 
+        border:false,
+        width:46,
+        height:100,
+        layout:'vbox',
+        items: [
+        	{              
+                xtype: 'spacer',
+				height:20,
+				width:17
+            },
+        	{
+               
+                xtype : 'box',
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_R.gif',
+                          title:'{!JSENCODE($Label.addColumn)}' },
+                cls:'blistnext',
+				width:17,
+				height:17,
+                id: 'addDS',
+                listeners : { render: function(f){f.el.on('click', fromToAction)}}
+            },
+            {              
+            	xtype: 'spacer',
+				height:10,
+				width:17
+            
+            },
+            {              
+               
+                xtype : 'box',
+                autoEl:  {tag: 'img', 
+                          src:('{!$Resource.SDEFStyles}/SDEFbuttons/b_darrow_L.gif'),   
+                         title:'{!JSENCODE($Label.removeColumn)}'
+                         },
+                cls:'blistback',
+				width:17,
+				height:17,
+                id: 'removeDS',
+                listeners : { render: function(f){f.el.on('click', toFromAction);}}
+                             
+            }           
+        ],
+
+        renderTo: 'buttonspanelDiv'
+    });
+    
+    /*SELECTED DATA FIELDS DATA GRID STARTS HERE */
+	  
+    if(fldsArr!=null && fldsArr.length>0){
+       fieldsDynamicStore.loadData(fldsArr);
+    }
+  
+  	
+   var columnSelected;
+   var removeColumn = function() {
+   	var grid = Ext.getCmp('selfieldsgridpanel');
+   	
+   	var colModel = grid.getColumnModel();
+   	var colCount = colModel.getColumnCount();
+   	
+   	if(colCount>1) {
+    	
+		var columnIndex = columnSelected;
+		var columnArray = new Array(); 
+	    columnArray = selFieldsColModel.columns; 
+						                      
+	    columnArray.splice(columnIndex, 1);
+	    //Removing from the array of display labels also
+	    if(columnHeaders[columnIndex]!=null) {
+	    	columnHeaders.splice(columnIndex, 1);
+	    	for(var k=columnIndex;k < columnHeaders.length;k++){
+	    	 colModel.setColumnHeader(k,'{!$Label.DataField} '+(k+1));
+	    	 colModel.setDataIndex(k,'dataField'+(k+1));
+	    	} 
+	    }
+	    
+	    // Remove a field from fldsArr and dynamic store fields list as well
+	    var dsFields = fieldsDynamicStore.fields;
+	    dsFields.removeKey('dataField'+colCount);
+	    
+	    // Update gridInfoMap: Remove the map entry for deleted column and adjust keys for all the subsequent columns
+	    var rowCount = fieldsDynamicStore.data.length;
+	    var displayPosition = columnIndex + 1;
+		for(var i = 0; i < rowCount; i++){
+			var dsName = selDatasourceGrid.getStore().getAt(i).get('apiName');			
+			var key = dsName + displayPosition;
+			delete gridInfoMap[key];
+			//Remove column in each record from grid store
+			var record = fieldsDynamicStore.getAt(i);
+			delete record.data['dataField'+displayPosition];
+			for (var k=displayPosition;k < colCount; k++){
+				var oldDisplayPosition = k + 1;
+				var oldKey = dsName + oldDisplayPosition;
+				var oldValue = gridInfoMap[oldKey];
+				var newKey = dsName + k;
+				delete gridInfoMap[oldKey];
+				gridInfoMap[newKey] = oldValue;
+				//Adjust subsequent columns in grid store
+				var oldColumnKey = 'dataField' + oldDisplayPosition;
+				var oldColumnValue = record.data[oldColumnKey];
+				delete record.data[oldColumnKey];
+				record.data['dataField'+k] = oldColumnValue;
+			}			
+		}
+	    
+        selFieldsColModel.columns = columnArray;
+        selFieldsGrid.getView().refresh(true);
+        colCount = colModel.getColumnCount();
+        if(colCount==1) {
+        	Ext.getCmp('removeCol').disabled = true;
+        	Ext.getCmp('removeCol').setIconClass('disabledDeleteCls');
+			//Ext.getCmp('removeCol').el.dom.src = '{!$Resource.SDEFStyles}/SDEFbuttons/b_remove_disabled.png';
+        }
+	}
+	else {
+		showMessage('{!JSENCODE($Label.minOneColumnPerQV)}');
+	}
+	
+   }
+  
+   selFieldsGrid = new Ext.grid.EditorGridPanel({
+        id:'selfieldsgridpanel',
+        ds: fieldsDynamicStore,
+        clicksToEdit: 1,
+        cm: selFieldsColModel,
+        columnLines: true,
+        enableHdMenu:false,
+        enableColumnResize: false,
+        enableColumnMove: false,
+        cls:'rowSelectionCls',
+        clicksToEdit: 1,
+        height:169,
+        width:286, 
+        stripeRows:true,
+        autoEncode:true,
+      
+        listeners:{           
+            cellclick:function(selFieldsGrid, rowIndex, columnIndex, e){
+	        	  selFieldsGrid.stopEditing();
+	              var dsName = selDatasourceGrid.getStore().getAt(rowIndex).get('apiName');
+	              var dsComboStoreData = new Array();
+	              var j=0;
+				  var selectedColumnIndex = 0;
+	              var flag = false;
+	              var colCount = selFieldsGrid.getColumnModel().getColumnCount();
+	              for(var i=0;i<outputFieldsList.length;i++){
+	                 if(outputFieldsList[i][2].indexOf(dsName)==0){
+	                    flag = false;
+		                 for(var k = 0; k < colCount; k++){	
+						   if(columnIndex != k){ 	
+							   selectedColumnIndex = k+1;
+							   var cellVal =gridInfoMap[dsName+ selectedColumnIndex];
+							   if(cellVal){
+								   cellVal = cellVal.split('¬')[1];
+								   if(cellVal && outputFieldsList[i][2].split('.')[1] == cellVal){
+										flag = true;
+									}
+								}
+							}
+		                 }
+		                 if(flag == false){
+			                 dsComboStoreData[j] = outputFieldsList[i];
+			                 j= j+1;
+		                 }
+	                 }                 
+	              }
+	              fieldsComboStore.loadData(dsComboStoreData);
+	              columnSelected = columnIndex;
+            },afteredit: function(e){
+               var displayposition=e.column+1;
+               var key=selectedData.datasource+displayposition;	
+			   if(selectedData && selectedData.datatype){
+				gridInfoMap[key]=selectedData.datatype+'¬'+selectedData.apiname;
+			   }
+			   selectedData={};
+               validateDataTypeInColumn(e.row,e.column);
+               setDisplayLabels(e.row,e.column);
+               fieldsComboRefresh();
+            }
+        }       
+        
+    });
+  
+     function setDisplayLabels(rowIndex,columnIndex){
+    
+
+       var rowCount = fieldsDynamicStore.data.length;
+          var currRecord;
+          var currCellData;
+          var currDsName;
+          var fieldName = selFieldsGrid.getColumnModel().getDataIndex(columnIndex);
+          for(var i = 0; i < rowCount; i++){
+            if(i == rowIndex){
+                  currRecord = selFieldsGrid.getStore().getAt(i);
+                  currCellData = currRecord.get(fieldName);
+                  currDsName = selDatasourceGrid.getStore().getAt(i).get('apiName');  
+                }
+          }          
+          if(currCellData != null && currCellData!=''){
+                for(var j=0;j < outputFieldsList.length;j++){
+                  if(outputFieldsList[j][2].indexOf(currDsName)== 0 && outputFieldsList[j][2].indexOf(currCellData)==(currDsName.length + 1)){
+                  if(outputFieldsList[j][1] != ''){
+                        columnHeaders[columnIndex] = outputFieldsList[j][1];
+                       } 
+                  }
+                    }
+               }
+    
+
+
+     }
+
+    
+    selFieldsGrid.render('selectedFieldsDiv');
+    /* this function is used to add the rows to  fields grid as per the selected datasources*/
+    function addDSFieldsRows(){
+             var dsLength =selDatastore.data.length;
+             if(dsLength>0){
+                 var fieldsLength = fieldsDynamicStore.data.length;
+                  var diff = dsLength - fieldsLength;
+                if(diff!=0){  
+                 var fieldsRec= selFieldsGrid.getStore().recordType;              
+               
+                    var fldsRec;//= new fieldsRec();                 
+                   
+                 /*Based on the fields colmodel lenght add the datafields value */
+                 var colCount = selFieldsGrid.getColumnModel().getColumnCount();
+                 var fieldsArray = new Array();
+                 for(var j=0;j<colCount;j++){
+                   fieldsArray[j] = selFieldsGrid.getColumnModel().getDataIndex(j);
+                 } 
+                  // var newFRecord = new NewFieldsRecord({});
+                   var fldsRecs = new Array(diff);
+                   for(var k=0;k<diff;k++){
+	                   fldsRec= new fieldsRec();
+	                   for(var i=0;i<fieldsArray.length;i++){
+	                      fldsRec.set(fieldsArray[i],'');
+	                                   
+	                   }
+	                    fldsRecs[k] =  fldsRec;
+                   }
+                    fieldsDynamicStore.insert(fieldsLength,fldsRecs);
+                    selFieldsGrid.getView().refresh(); 
+               }     
+             }   
+    }
+     
+  /*Used to retain the name field as it is on the screen when the como option is selected*/
+    function fieldsComboRefresh(){
+        var i=0;
+        while(fieldsDynamicStore.data.length>i){
+           var record = selFieldsGrid.getStore().getAt(i);
+           for(var k=0;k<selFieldsGrid.getColumnModel().getColumnCount();k++){
+           var fieldName = selFieldsGrid.getColumnModel().getDataIndex(k);
+           var data = record.get(fieldName);
+           var j=0;
+           while(fieldsEditor.store.data.length>j){
+	           var rec = fieldsEditor.store.getAt(j).get('value');
+	            if(rec==data){
+	                var rec1=fieldsEditor.store.getAt(j).get('name');
+	                record.set(fieldName ,rec1);                 
+	            }
+	            j++;
+           } //end of inner while loop           
+           }//end of for loop
+           i++;           
+        }//end of first while loop
+       
+    }    
+          
+    var NextBtnHandler = function (button,event) {
+    
+    	if(Ext.getCmp('removeCol').disabled) {
+    		Ext.getCmp('removeCol').disabled = false;
+    		Ext.getCmp('removeCol').setIconClass('deleteCls');
+    		//Ext.getCmp('removeCol').el.dom.src = '{!$Resource.SDEFStyles}/SDEFbuttons/b_remove.png';
+		} 
+	   if(!isLastColumnEmpty()){    
+	       var columnArray = new Array(); 
+	       columnArray = selFieldsColModel.columns; 
+	       //var nxtIndex = columnArray.length+1;
+	       var lastCol = selFieldsColModel.getColumnHeader(columnArray.length-1);
+	       var outpt=lastCol.split(' ');
+           var nxtIndex =outpt[2];
+	       nxtIndex = nxtIndex - 0;
+	       nxtIndex = nxtIndex + 1;
+	       var fld = 'dataField'+ nxtIndex;        
+           var nextCol = '{!$Label.DataField} '+ nxtIndex;
+           var dsFields = fieldsDynamicStore.fields;          
+           dsFields.add(fld);
+           fieldsDynamicStore.fields = dsFields;
+	       var newColumn = new Ext.grid.Column({
+						              dataIndex: fld,
+						              id:fld,
+						              width:142,
+						              sortable: false,
+						              editor:fieldsEditor,
+						              header:nextCol,
+						              hidden:false,
+									  renderer: function(value, metaData, record, rowIndex, colIndex, store) { 
+                                         
+                                         var rem=rowIndex%2;    
+                                          if (rem==0) {
+                                             metaData.css = 'gridcell-class-even';
+                                          }else{
+                                             metaData.css = 'gridcell-class-odd';
+                                          }
+                                          return value;
+                                       }
+						            });   
+						                      
+	             columnArray.push(newColumn); 
+	             //Empty the newly added column
+        		 var recCount = selFieldsGrid.store.data.length;
+				 var iCount=0;
+				 while(recCount > iCount) {
+				 	var rec = selFieldsGrid.store.getAt(iCount);
+				 	if(rec.get(fld)!='') {
+				 		rec.set(fld, '');
+				 	}
+				 	iCount++;
+				 }
+	             selFieldsColModel.columns = columnArray;
+	             selFieldsGrid.getView().refresh(true);
+	    }else{
+	      showMessage('{!JSENCODE($Label.reqMinOneValueInLastColumn)}');
+	    }         
+	    
+    }
+            
+     var SamplePanel = new Ext.Toolbar({ 
+        border:false,
+        width:70,
+        cls: 'addRemoveColCls',
+        items: [{
+               
+                tooltip:'{!JSENCODE($Label.addColumn)}',
+                iconCls:'addCls',
+                id: 'addCol',
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+            },{              
+               
+                tooltip:'{!JSENCODE($Label.removeColumn)}',
+                iconCls:'deleteCls',
+                id: 'removeCol',
+                listeners : { render: function(f){f.el.on('click', removeColumn);}}
+                             
+            }          
+        ],
+
+        renderTo: 'btnToolbar'
+    });       
+    
+  
+   /* End of Functionality for adding new columns to teh datafields grid */
+    
+    /* QUERY CONDITION  GRID STARTS HERE */
+    
+     var selectedRowIndex;
+     var isEditable=true;
+     var checkColumn = new Ext.grid.CheckColumn({
+						       dataIndex: 'chkBox',
+						       id: 'check',
+						       width: 50,
+						       header:"{!JSENCODE($Label.Prompt)}",
+						  	   renderer: renderTooltipcheckColumn
+						    });
+	function renderTooltipcheckColumn(v, p, record) { 
+         
+
+        p.css += ' x-grid3-check-col-td'; 
+        return '<div title= "{!JSENCODE($Label.TooltipQuickViewsWizardQuerypagePromptatRunTime)}" class="x-grid3-check-col'+(v?'-on':'')+' x-grid3-cc-'+this.id+'">&#160;</div>';
+ 
+  
+     }  
+    
+    
+    store = new Ext.data.SimpleStore({
+        data: [ ],
+        fields: ['chkBox','dName','or','type','comOpeValue','value','logOpeValue','fieldAPIName']
+    });
+    if(condList.length>0){
+     store.loadData(condList);
+    }
+    
+    comboStore = new Ext.data.ArrayStore({
+					        id: 'comboId',
+					        data: fieldList,
+					        fields: ['value', 'name', 'type','mapKey','toolTipData'],
+					        sortInfo: {
+					                    field: 'name',
+					                    direction: 'ASC'
+					                }
+					  });
+    var selected = false;
+    var sameField = false;
+    typeEditor = new Ext.form.ComboBox({
+					        id: 'Expression1List',
+					        store: comboStore,
+					        mode: 'local',
+					        triggerAction: 'all',
+					        valueField: 'mapKey',
+					        displayField: 'name',
+					        selectOnFocus: true,
+					        //triggerClass : 'gridCmbTriggerCls',
+					        triggerClass : Ext.isIE7 ? 'gridCmbTriggerClsIE' : 'gridCmbTriggerCls',
+					        editable: false,
+							tpl: '<tpl for="." >' + '<div class="x-combo-list-item" ext:qtip="{toolTipData}">{name:htmlEncode}</div>' +'</tpl>',
+							listeners:{
+						         select:function(combo, comboRecord, index){
+							        selected = true;
+							        if(oldField== comboRecord.get('mapKey')){
+							          sameField = true;
+							        }else if(oldField!= '' && typeof(oldField)!='undefined'){
+						                  var i=0;
+									           var record = grid.getStore().getAt(selectedRowIndex);
+									           var fieldName = grid.getColumnModel().getDataIndex(3);
+									           var data = record.get(fieldName);
+									           	var rec= comboRecord.get('value');//typeEditor.store.getAt(j).get('value');        
+										            if(oldField!='' && oldField != comboRecord.get('mapKey')){
+										              Ext.MessageBox.confirm('{!JSENCODE($Label.confirmFieldChange)}','{!JSENCODE($Label.conditionFieldChangeWarning)}',function(btn){		                
+										                if(btn=='yes'){
+										                  record.set('value','');
+											              record.set(fieldName ,comboRecord.get('name'));
+										                }else{
+										                	record.set(fieldName ,oldField);
+										                } 
+										                });
+										             }  
+									           
+							       }
+						         	//Set field API Name based on selected value.
+						         	var record = grid.getStore().getAt(selectedRowIndex);
+						         	record.set('fieldAPIName', this.value);
+						         }
+						        }
+					 
+					    });
+    var typeRenderer = function(value) {
+        //var rec = comboStore.getById(value);
+        //return rec ? rec.get('name') : '';
+        
+        var index=typeEditor.selectedIndex;
+        if(index==-1)
+            index=0;
+        var rec;
+        
+        if(typeEditor.store.data.length>0)
+             rec= typeEditor.store.getAt(index).get('name');
+        return rec;
+    }
+   
+   var comOpeStore = new Ext.data.SimpleStore({
+						    data: [
+						        ['=', '='],
+						        ['!=', '!='],
+						        ['>', '>'], 
+						        ['<', '<'],
+						        ['<=', '<='],
+						        ['>=', '>='],
+						        ['LIKE', 'LIKE'],
+						        ['NOT LIKE', 'NOT LIKE']
+						    ],
+						    fields: ['comOpeValue', 'comOpeName']
+						 });
+    var comparisonOperator= new Ext.form.ComboBox({
+							        store: comOpeStore,
+							        mode: 'local',
+							        triggerAction: 'all',
+							        valueField: 'comOpeValue',
+							        displayField: 'comOpeName',
+							        selectOnFocus: true,
+							        //triggerClass : 'gridCmbTriggerCls',
+							        triggerClass : Ext.isIE7 ? 'gridCmbTriggerClsIE' : 'gridCmbTriggerCls',
+							        editable: false 
+							    });
+    var logOpeStore = new Ext.data.SimpleStore({
+							    data: [
+							        ['AND', 'AND'],
+							        ['OR', 'OR'],
+							        ['NONE','NONE']     
+							    ],
+							    fields: ['logOpeValue', 'logOpeName']
+						    });
+    var logicalOperator= new Ext.form.ComboBox({
+						        store: logOpeStore,
+						        mode: 'local',
+						        triggerAction: 'all',
+						        valueField: 'logOpeValue',
+						        displayField: 'logOpeName',
+						        selectOnFocus: true,
+						        //triggerClass : 'gridCmbTriggerCls',
+						        triggerClass : Ext.isIE7 ? 'gridCmbTriggerClsIE' : 'gridCmbTriggerCls',
+						        editable: false 
+						    });
+    var booleanStore = new Ext.data.SimpleStore({
+							    data: [
+							        ['True', 'True'],
+							        ['False', 'False']
+							    ],
+							    fields: ['booleanValue', 'booleanName']
+						    });
+    var booleanField= new Ext.form.ComboBox({
+						        store: booleanStore,
+						        mode: 'local',
+						        triggerAction: 'all',
+						        valueField: 'booleanValue',
+						        displayField: 'booleanName',
+						        selectOnFocus: true,
+						        // triggerClass : 'gridCmbTriggerCls',
+						        triggerClass : Ext.isIE7 ? 'gridCmbTriggerClsIE' : 'gridCmbTriggerCls',
+						        editable: false 
+						    });
+	
+	var assignToFldStore = new Ext.data.SimpleStore({
+	    data: [
+	        ['Me', '{!JSENCODE($Label.Me)}'],
+	        ['My Queues', '{!JSENCODE($Label.MyQueues)}'],
+	        ['Select Staff...', '{!JSENCODE($Label.SelectStaff)}'],
+	        ['Select Queue...', '{!JSENCODE($Label.SelectQueue)}'],
+	        ['NONE', '{!JSENCODE($Label.NONE)}']
+	    ],
+	    fields: ['fldValue', 'fldName']
+    });
+    var assignToFldStore1 = new Ext.data.SimpleStore({
+	    data: [
+	        ['Me', '{!JSENCODE($Label.Me)}'],
+	        ['Select Staff...', '{!JSENCODE($Label.SelectStaff)}'],
+	        ['NONE', '{!JSENCODE($Label.NONE)}']        
+	    ],
+	    fields: ['fldValue', 'fldName']
+    });
+    
+    var assignedToField= new Ext.form.ComboBox({
+        id: 'assignedToField',
+        store: assignToFldStore,
+        mode: 'local',
+        triggerAction: 'all',
+        valueField: 'fldValue',
+        enableKeyEvents:true,
+        displayField: 'fldName',
+        selectOnFocus: true,
+        // triggerClass : 'gridCmbTriggerCls',
+        triggerClass : Ext.isIE7 ? 'gridCmbTriggerClsIE' : 'gridCmbTriggerCls',
+        editable: false,
+        listeners:{
+            'select': function(combo, record, index) {
+	             var text = record.get(combo.displayField);
+	             var value = record.get(combo.valueField);
+	             if(value == 'Select Staff...' || value == 'Select Queue...'){
+	             	var record1 = store.getAt(selectedRowIndex);
+            		var expName=record1.get('fieldAPIName');
+            		combo.clearValue();
+			               
+	             	popupIndex=selectedRowIndex;
+                 	lookUpRowIndex = rowIndex;
+                  	var apiName  = getApiName(expName);
+       				document.getElementById('{!$Component.frm.apiName}').value = apiName;
+                  	//record.set('value', '');
+                 	//openLookup(expName);
+                 	if(apiName.toLowerCase()=='{!JSENCODE($Label.ownerid)}'){
+                 		var parts = expName.split('.');
+				        var v = parts[0];
+				        var objNS = findObjWithNameSpace(v);
+				    	if(value=='Select Staff...'){
+				    		openPopup('SearchPage?popupId=Client&isQueurorUser=true&isLookup=true&queueFor='+v+'&filterClause='+escape("IsStaffUser__c=true"), findNameField);
+				    		if(popUpWindow != null)
+				    			popUpWindow.addClass('ownerLookupCls');
+				    	}
+				    	else if(value=='Select Queue...') {
+				    		openPopup('SearchPage?popupId=Queue&isQueurorUser=true&isLookup=true&queueFor='+objNS+'&filterClause='+escape("sobjectType=\'"+objNS+ "\'"), findNameField);
+				    		if(popUpWindow != null)
+				    			popUpWindow.addClass('ownerLookupCls');
+				    	}
+				    }
+	             }
+             }
+        } 
+    });
+    
+    var assignedToField1= new Ext.form.ComboBox({
+    	id: 'assignedToField1',
+        store: assignToFldStore1,
+        mode: 'local',
+        triggerAction: 'all',
+        valueField: 'fldValue',
+        enableKeyEvents:true,
+        displayField: 'fldName',
+        selectOnFocus: true,
+        editable: false,
+        // triggerClass : 'gridCmbTriggerCls',
+        triggerClass : Ext.isIE7 ? 'gridCmbTriggerClsIE' : 'gridCmbTriggerCls',
+        listeners:{
+            'select': function(combo, record, index) {
+	             var text = record.get(combo.displayField);
+	             var value = record.get(combo.valueField);
+	             if(value == 'Select Staff...'){
+	             	var record1 = store.getAt(selectedRowIndex);
+            		var expName=record1.get('fieldAPIName');
+            		combo.clearValue();
+			               
+	             	popupIndex=selectedRowIndex;
+                  	lookUpRowIndex = rowIndex;
+                  	var apiName  = getApiName(expName);
+       				document.getElementById('{!$Component.frm.apiName}').value = apiName;
+        			var parts = displaylabel.split('.');
+				    var v = parts[0] + '__c';
+				    var objNS = findObjWithNameSpace(v);
+				    if(value=='Select Staff...')
+				    	openPopup('SearchPage?popupId=Client&isQueurorUser=true&isLookup=true&queueFor='+v+'&filterClause='+escape("IsStaffUser__c=true"), findNameField);				    	
+	                    if(popUpWindow != null)
+							popUpWindow.addClass('ownerLookupCls');
+	             }
+             }
+        }
+    });
+	
+	pickListComboStore =new Ext.data.ArrayStore({
+							        id: 'pickListComboId',
+							        data: pickListArray,
+							        fields: ['value','label','mapKey','fieldLabel'],
+							        sortInfo: {
+							                    field: 'value',
+							                    direction: 'ASC'
+							                }
+							  });
+						  
+    var pickListComboBx = new Ext.form.ComboBox({
+							        store: pickListComboStore,
+							        mode: 'local',
+							        triggerAction: 'all',
+							        valueField: 'value',
+							        displayField: 'label',
+							        selectOnFocus: true,
+							        //triggerClass : 'gridCmbTriggerCls',
+							        triggerClass : Ext.isIE7 ? 'gridCmbTriggerClsIE' : 'gridCmbTriggerCls',
+							        editable: false,
+									tpl: '<tpl for="." >' + '<div class="x-combo-list-item" style="height:15px !important;">{label}</div>' +'</tpl>',
+							    });
+    var colModel = new Ext.grid.ColumnModel({
+    header: true,
+    columns: [
+        checkColumn,
+        {dataIndex: 'dName', header: "{!JSENCODE($Label.RuntimeLabel)}",tooltip:"{!JSENCODE($Label.TooltipQuickViewsWizardQuerypageRuntimeLabel)}", renderer: renderTooltip, sortable: false,width: 87, editor: new Ext.form.TextField()},
+        {dataIndex: 'or', header: "{!JSENCODE($Label.OR)}",tooltip:"", renderer: renderTooltip, sortable: false, width: 27, align:'center'},
+        {dataIndex: 'type', header: "{!JSENCODE($Label.FieldName)}", tooltip:"{!JSENCODE($Label.TooltipQuickViewsWizardQuerypageSelectField)}",renderer: renderTooltip, sortable: false ,width: 102, editor: typeEditor},
+        {dataIndex: 'comOpeValue', header: "{!JSENCODE($Label.Operator)}",tooltip:"{!JSENCODE($Label.TooltipQuickViewsWizardQuerypageComparisonOperator)}", renderer: renderTooltip, sortable: false, width: 80, editor: comparisonOperator},
+        {dataIndex: 'value', header: "{!JSENCODE($Label.Value)}",tooltip:"{!JSENCODE($Label.TooltipQuickViewsWizardQuerypageFieldValue)}", renderer: setCls, sortable: false, width: 110, editable: true},
+        {dataIndex: 'logOpeValue', header: "{!JSENCODE($Label.LogicalOperator)}", tooltip:"{!JSENCODE($Label.TooltipQuickViewsWizardQuerypageLogicalOperator)}",renderer: renderTooltip, sortable: false, editor:logicalOperator},
+        {dataIndex: 'fieldAPIName', hidden:true}
+    ],
+    editors: {
+        'text': new Ext.grid.GridEditor(new Ext.form.TextField({})),
+        'textArea': new Ext.grid.GridEditor(new Ext.form.TextField({})),
+        'number': new Ext.grid.GridEditor(new Ext.form.NumberField({})),
+        'date': new Ext.grid.GridEditor(new Ext.form.DateField({ 
+                                            triggerClass : 'gridCmbTriggerCls',
+                                            format:dateFormat
+                                            //timeFieldFormat: 'g:i a',
+                                           // dateFieldFormat: 'Y-m-d'
+                                            })),
+        'combo': new Ext.grid.GridEditor(booleanField),
+        'lookUp':new Ext.grid.GridEditor(new Ext.form.TextField({disabled : false})),
+        'ASSIGNEDTO_FIELD': new Ext.grid.GridEditor(assignedToField),
+        'ASSIGNEDTO_FIELD1': new Ext.grid.GridEditor(assignedToField1),
+        'EMAIL' :new Ext.grid.GridEditor(new Ext.form.TextField({})),
+        'picklist': new Ext.grid.GridEditor(pickListComboBx)
+    },
+    getCellEditor: function(colIndex, rowIndex) {
+        //idFromPopup = null;
+        flag = 0;
+        var field = this.getDataIndex(colIndex);
+        var expName;
+        
+        if (field == 'value') {
+            var record = store.getAt(selectedRowIndex);
+            expName=record.get('fieldAPIName');
+            //alert('expName  '+expName);
+            var resType;
+             var operatorData;
+            var j=0;
+            while(typeEditor.store.data.length>j){
+                 var rec1= typeEditor.store.getAt(j).get('mapKey');
+                 if(expName.toLowerCase()==rec1.toLowerCase()) {
+                 	resType=typeEditor.store.getAt(j).get('type');
+                 }
+                 j++; 
+            }
+            if(resType==undefined)
+              showMessage('{!JSENCODE($Label.ShowMessageQV3)}');
+   
+            if(resType=='lookUp'){
+                 popupIndex=selectedRowIndex;
+                 lookUpRowIndex = rowIndex;
+                 openLookup(expName);            
+           }
+           if(resType=='picklist'){
+                populatePickList(expName);
+           }
+              
+           if(resType=='CURRENCY' || resType=='PERCENT' || resType=='PHONE'){
+            	return this.editors['number'];  
+           }  
+           
+           if(resType=='URL') {
+           		return this.editors['text'];  
+           } 
+           if(resType=='ASSIGNEDTO_FIELD') {
+           		var objName;
+           		//if(Ext.getCmp('dataSourceCombo')!=null && Ext.getCmp('dataSourceCombo')!=undefined && Ext.getCmp('dataSourceCombo')!='undefined')
+           		//{
+           			//objName=Ext.getCmp('dataSourceCombo').getValue()+'__c';
+           		//}
+           		var fieldNameList = expName.split('.');
+           		if(fieldNameList.length>1)
+           		{
+           			expName = fieldNameList[1];
+           			objName = fieldNameList[0];
+           		}
+           		//alert(objName+'.'+expName);
+           		var typeFlag = 0;
+					if( expName.toLowerCase()=='fkstaff__c' &&
+						(objName.toLowerCase()=='problem__c' ||
+						objName.toLowerCase()=='release__c' ||
+						objName.toLowerCase()=='change_request__c' ||
+						objName.toLowerCase()=='broadcasts__c')
+					
+					){
+						typeFlag =1;
+					}else if(
+						expName.toLowerCase()=='fkopenby__c' &&
+						(objName.toLowerCase()=='incident__c' ||
+						objName.toLowerCase()=='task__c')
+					)
+					{
+						typeFlag =1;
+					}
+					
+					if(typeFlag ==1)
+					{
+						resType = 'ASSIGNEDTO_FIELD1';
+					}
+           } 
+              return this.editors[resType];  
+              
+           }
+         if(field=='comOpeValue'){
+			var record = store.getAt(selectedRowIndex);
+            expName=record.get('fieldAPIName');
+            var resType;
+            var j=0;
+            while(typeEditor.store.data.length>j){
+                 var rec1= typeEditor.store.getAt(j).get('mapKey');
+                 if(expName.toLowerCase()==rec1.toLowerCase())
+                    resType=typeEditor.store.getAt(j).get('type');
+                 j++;
+           
+            }
+           
+           if(resType=='text' || resType=='URL'){
+            operatorData =[['=','='],['!=','!=']];
+            comOpeStore.loadData(operatorData);
+           }else if(resType=='lookUp'){
+			operatorData =[['=','='],['!=','!=']];
+			comOpeStore.loadData(operatorData);
+           }else if(resType=='picklist' || resType=='combo'){
+   			operatorData =[['=','='],['!=','!=']];
+			comOpeStore.loadData(operatorData);
+           }else if(resType=='ASSIGNEDTO_FIELD'){
+            operatorData =[['=','='],['!=','!=']];
+            comOpeStore.loadData(operatorData);
+           } else if(resType=='EMAIL' || resType=='PHONE'){
+            operatorData =[['=','='],['!=','!=']];
+            comOpeStore.loadData(operatorData);
+           }else if(resType=='textArea'){
+            operatorData =[['LIKE','LIKE'],['NOT LIKE','NOT LIKE']];
+            comOpeStore.loadData(operatorData);
+           }else if(resType=='number' || resType=='date' || resType=='CURRENCY' || resType=='PERCENT'){
+            operatorData =[
+						        ['=', '='],
+						        ['>', '>'], 
+						        ['<', '<'],
+						        ['<=', '<='],
+						        ['>=', '>='],
+						        ['!=', '!=']
+						    ];
+            comOpeStore.loadData(operatorData);
+           }
+       }
+            
+        
+        //
+        if (field == 'dName'){
+           var record = grid.getStore().getAt(rowIndex);
+           var fieldName = grid.getColumnModel().getDataIndex(0);
+           var data = record.get(fieldName);
+           
+           if(data ){
+              return this.editors['text'];
+           }else{
+            return this.editors['noEditor'];
+           }
+        
+        }
+        //
+
+        return Ext.grid.ColumnModel.prototype.getCellEditor.call(this, colIndex, rowIndex);
+    }
+   
+
+}); 
+
+
+    function getGMTFormat(value) {
+        if(value=='')
+            return '';        
+       return Ext.util.Format.date(value,dateFormat);
+     }
+	
+	 function setCls(value, metaData, record, rowIndex, colIndex, store) { 
+           var header = grid.getColumnModel().getColumnTooltip(colIndex);
+           metaData.attr = 'title="'+header+'"';
+           
+           var record = store.getAt(rowIndex);
+           expName=record.get('fieldAPIName');
+           var resType;
+           var j=0;
+           while(typeEditor.store.data.length>j){
+                var rec1= typeEditor.store.getAt(j).get('mapKey');
+                if(expName.toLowerCase()==rec1.toLowerCase())
+                   resType=typeEditor.store.getAt(j).get('type');
+                j++;
+          
+           }
+           if(value!=null && resType!=undefined && resType=='date') {
+                value = getGMTFormat(value);
+              //  record.set('value', value);
+           } 
+           
+           return value;     
+     }
+        
+    function renderTooltip(value, metaData, record, rowIndex, colIndex, store) { 
+           var header = grid.getColumnModel().getColumnTooltip(colIndex);
+           metaData.attr = 'title="'+header+'"';
+           return Ext.util.Format.htmlEncode(value);     
+     }  
+    
+    var oldField ='';
+     grid = new Ext.grid.EditorGridPanel({
+        id:'gridpanel',
+        ds: store,
+        clicksToEdit: 1,
+        enableColumnResize: true,
+        enableColumnMove: false,
+        enableHdMenu: false,
+		stripeRows: true,
+        cm: colModel,
+        columnLines: true,
+        height:398,
+        autoEncode:true,
+        cls: 'fontCls',
+        sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
+        viewConfig: {
+                headersDisabled: true ,// disable grid headers
+                forceFit:true,
+                scrollOffset: 0
+        },
+        plugins: checkColumn,        
+         tbar: [ {
+            iconCls: 'addCls',
+            id: 'addBtn',
+            scale:'medium',
+            tooltip:'{!JSENCODE($Label.AddRowQVWizQueryPage)}',
+            handler : function(){
+               var rowCount=store.data.length;
+               // access the Record constructor through the grid's store
+              if(Ext.getCmp('selDSGrid').store.data.length<=0) {
+                showMessage('{!JSENCODE($Label.validationOnDataSource)}');
+              }
+              else if(rowCount==0 || isValidate(rowCount-1) ){
+                var NewQuery= grid.getStore().recordType;
+                var newQuery= new NewQuery({
+                    chkBox:false,
+                    dName: '',
+                    or:' or ',
+                    type: '',
+                    comOpeValue: '',
+                    value: '',
+                    logOpeValue:'NONE',
+                    fieldAPIName: ''
+    
+                });
+                
+                grid.stopEditing();
+                store.insert(rowCount,newQuery);
+                grid.startEditing(0, 0);
+                grid.getView().refresh();
+                if(store.data.length>1){
+                	grid.getTopToolbar().getComponent('downBtn').setDisabled(false);
+                	document.images['linkDown'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down.png';
+                }
+                grid.getTopToolbar().getComponent('deleteBtn').setDisabled(false) ;
+                grid.getTopToolbar().getComponent('deleteBtn').setIconClass('deleteCls');
+                            
+            }
+            else{
+               
+                   //alert('Please Complete the query expression for Row '+rowCount);
+                    var errorMessage;
+                    if(isForSelectedOpertaor){
+						errorMessage = '{!JSENCODE($Label.ValidationOnQueryExprForOperator)}';
+						showMessage(errorMessage.replace("{0}", rowCount));
+					}else{
+						errorMessage = '{!JSENCODE($Label.ValidationOnQueryExpr)}';
+						showMessage(errorMessage.replace("{0}", rowCount));
+					}
+               
+             }
+ 
+            }
+        },
+        {
+            iconCls: 'disabledDeleteCls',
+            id: 'deleteBtn',
+            scale:'medium',
+            disabledClass : 'disabledBtnClass',
+            tooltip:'{!JSENCODE($Label.RemoveRowQVWizQueryPage)}',
+            
+            listeners:{
+            render: function(c) {
+                    if (store.data.length > 0)
+                        c.enable();
+            }},
+            
+            disabled: function(){
+                
+                if(store.data.length > 0) {
+                    return false;
+                }
+                else { 
+                    return true;
+                } 
+            },
+            handler : function(){
+                var index=selectedRowIndex + 1;
+                if (!index) {
+                    return false;
+                }
+                var rec = grid.store.getAt(selectedRowIndex);          
+                grid.store.remove(rec);
+                
+                if(store.data.length > 0) {
+                	this.setIconClass('deleteCls');
+                    this.setDisabled(false);
+                }
+                else {
+                	this.setIconClass('disabledDeleteCls'); 
+                    this.setDisabled(true);
+                } 
+                if(store.data.length<2){
+                	grid.getTopToolbar().getComponent('downBtn').setDisabled(true);
+                	document.images['linkDown'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down_disable.png';
+                	grid.getTopToolbar().getComponent('upBtn').setDisabled(true);
+                	document.images['linkUp'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up_disable.png';
+                }      
+            }
+
+        },' ',' ',
+/*        
+        {
+             xtype: 'box',
+             id: 'groupBtn',
+          
+             autoEl: {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_control_group_disable.png',title:'Group',name:'linkGroup'},
+             style : 'cursor:pointer;'
+
+            
+
+        },
+        {
+            xtype: 'box',
+            id: 'unGroupBtn',
+            autoEl: {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_control_ungroup_disable.png', title:'UnGroup',name:'linkUnGroup'},
+            style : 'cursor:pointer;'
+
+        }
+         ,' ',' ',
+*/
+         {
+             xtype: 'box',
+             id: 'upBtn',
+             disabled: true,
+             autoEl: {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up_disable.png',title:'{!JSENCODE($Label.IconUp)}',name:'linkUp'},
+             disabledClass : 'disabledBtnClass',
+             style : 'cursor:pointer;',
+             listeners:{
+              render: function(c) {
+                   c.getEl().on('click', function(){
+                  
+                     UpBtnHandler();
+                   });
+              }
+             }
+            
+
+        },
+        {
+            xtype: 'box',
+            id: 'downBtn',
+            disabled: true,
+            autoEl: {tag: 'img', src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down_disable.png', title:'{!JSENCODE($Label.IconDown)}',name:'linkDown'},
+            style : 'cursor:pointer;',
+            disabledClass : 'disabledBtnClass',
+            listeners:{
+              render: function(c) {
+                   c.getEl().on('click', function(){
+                      DownBtnHandler();
+                   });
+              }
+             }
+        }],
+         listeners: {
+            rowclick:function(grid, r, e) {
+            var rec = grid.getStore().getAt(r);
+              oldField = rec.get('fieldAPIName'); 
+              selectedRowIndex=r;
+              rowIndex=r;
+              // Enable/disable up down buttons
+              var numOfrecord = store.data.length;
+              grid.getTopToolbar().getComponent('deleteBtn').setIconClass('deleteCls');
+              if(selectedRowIndex == 0 || numOfrecord == 1){
+                grid.getTopToolbar().getComponent('upBtn').setDisabled(true);
+                document.images['linkUp'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up_disable.png';
+              }
+              else{      
+                grid.getTopToolbar().getComponent('upBtn').setDisabled(false);
+                document.images['linkUp'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up.png';
+              }
+              if((selectedRowIndex == (numOfrecord - 1)) || (numOfrecord == 1)){
+                grid.getTopToolbar().getComponent('downBtn').setDisabled(true);
+                document.images['linkDown'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down_disable.png';
+              }
+              else{      
+                grid.getTopToolbar().getComponent('downBtn').setDisabled(false);
+                document.images['linkDown'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down.png';
+              } 
+              
+            },
+            afteredit: function(e){
+            	var record = grid.getStore().getAt(e.row);
+              var gridColmodel = colModel.getCellEditor(e.column, e.row);
+              if(gridColmodel.field.getXType() == 'datefield' && (e.value == '' || e.value == null )){
+                 record.set('value', e.originalValue);
+              }
+              refresh();
+            }
+
+         }
+        
+    });
+     function UpBtnHandler(){
+              var index=selectedRowIndex;   
+              var totalRecord = store.data.length;
+			  if(totalRecord>1){
+			  	grid.getTopToolbar().getComponent('downBtn').setDisabled(false);
+			  	document.images['linkDown'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down.png';
+			  	if((index-1)==0){
+					grid.getTopToolbar().getComponent('upBtn').setDisabled(true);
+					document.images['linkUp'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up_disable.png';
+			  	}
+			  }	
+              var rec1 = grid.store.getAt(index); 
+              var rec2 = grid.store.getAt(index-1); 
+              grid.stopEditing();
+              store.insert(index-1,rec1);
+              store.insert(index,rec2);
+              grid.startEditing(index-1, 0);
+              grid.getView().refresh(); 
+              selectedRowIndex--;
+                   
+      }
+     function DownBtnHandler(){
+              var index=selectedRowIndex;  
+              var totalRecord = store.data.length;
+			  if(totalRecord>1){
+			  	grid.getTopToolbar().getComponent('upBtn').setDisabled(false);
+			  	document.images['linkUp'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_up.png';
+			  	if((index+1)==(totalRecord-1)){
+					grid.getTopToolbar().getComponent('downBtn').setDisabled(true);
+                	document.images['linkDown'].src='{!$Resource.SDEFStyles}/SDEFbuttons/b_control_down_disable.png';
+			  	}	
+			  } 
+              var rec1 = grid.store.getAt(index); 
+              var rec2 = grid.store.getAt(index+1); 
+              grid.stopEditing();
+              store.insert(index,rec2);
+              store.insert(index+1,rec1);
+              grid.startEditing(index, 0);
+              grid.getView().refresh();  
+              selectedRowIndex++;
+              refresh();
+             
+     }
+   function refresh(){
+    if(typeof(oldField)=='undefined' || oldField=='' || sameField == true ||selected == false){
+        var i=0;
+        while(store.data.length>i){
+           var record = grid.getStore().getAt(i);
+           var fieldName = grid.getColumnModel().getDataIndex(3);
+           var data = record.get('fieldAPIName');
+           var j=0;
+           while(typeEditor.store.data.length>j){
+           var rec= typeEditor.store.getAt(j).get('mapKey');
+            if(rec==data){
+                var rec1=typeEditor.store.getAt(j).get('name');
+                record.set(fieldName ,rec1);
+                 
+            }
+            j++;
+           }
+           i++;
+       }
+       sameField = false;
+    }
+    selected = false;   
+   }
+     
+     
+    
+    
+    function selectedRows(){
+      var rowCount=store.data.length;
+      var i=0;
+      var selectedRowList=[];
+      while(rowCount>i){
+           var record = grid.getStore().getAt(i);
+           var fieldName = grid.getColumnModel().getDataIndex(0);
+           var data = record.get(fieldName);
+           if(data==true){
+               selectedRowList.push(i);
+           }     
+       i++;
+      }
+    return selectedRowList;
+    
+    }
+        
+        queryConditionPanel= new Ext.Panel({
+            layout: 'fit',
+           // cls: 'availableGridClsNoHeader',
+            items: [grid],
+            height:148,
+            renderTo: 'queryConditionDiv'
+        });
+        
+     });
+     
+     function validateDataTypeInColumn(rowIndex,columnIndex){
+          var rowCount = fieldsDynamicStore.data.length;
+          var currRecord;
+          var fieldName = selFieldsGrid.getColumnModel().getDataIndex(columnIndex);
+          var currentFieldType = '';
+          var existingFieldType ='';
+          var fldFlag =0;
+          for(var i = 0; i < rowCount; i++){
+            var record = selFieldsGrid.getStore().getAt(i);
+		      if(i != rowIndex && record.get(fieldName)!= '' && fldFlag == 0){	
+		           existingRecord = selFieldsGrid.getStore().getAt(i);
+				   var oldDsName = selDatasourceGrid.getStore().getAt(i).get('apiName');
+                   var displayPosition=columnIndex+1;
+                   var key=oldDsName+displayPosition;
+				   if(gridInfoMap[key] && gridInfoMap[key]!=''){
+				    var tempDataType=gridInfoMap[key].split('¬');
+					if(tempDataType.length == 2){
+						existingFieldType=tempDataType[0];
+					}
+				   }
+		           fldFlag = 1;       
+		      }else if(i == rowIndex){
+		           currRecord = selFieldsGrid.getStore().getAt(i);
+				   var currDsName = selDatasourceGrid.getStore().getAt(i).get('apiName');
+                   var displayPosition=columnIndex+1;
+                   var key=currDsName+displayPosition;
+				   if(gridInfoMap[key] && gridInfoMap[key]!=''){
+				    var tempDataType=gridInfoMap[key].split('¬');
+					if(tempDataType.length == 2){
+						currentFieldType=tempDataType[0];
+					}
+				   }
+                   
+		      }
+          } 	  
+	       if(existingFieldType && currentFieldType && currentFieldType != existingFieldType){
+			  var DataTypeLbl=existingFieldType;
+			  if(DataTypeLblMap[existingFieldType] && DataTypeLblMap[existingFieldType]!=''){
+				DataTypeLbl=DataTypeLblMap[existingFieldType];
+			  }
+	          showMessage('{!JSENCODE($Label.ShowMessageQV4)} '+ DataTypeLbl);
+	          currRecord.set(fieldName,'');
+	       }
+     
+     }
+     function isColumnEmpty(){
+        var isEmpty = true; 
+        var colCount = selFieldsGrid.getColumnModel().getColumnCount();
+        var recCount = selFieldsGrid.getStore().data.length;
+          for(var j=0; j < colCount; j++){
+            var fName = selFieldsGrid.getColumnModel().getDataIndex(j);
+            for(var i=0;i < recCount; i++){
+                var record = selFieldsGrid.getStore().getAt(i);
+                if(record.get(fName)!=null && record.get(fName)!=''){
+                  isEmpty = false;
+                  break;
+                }else{
+                  isEmpty = true;
+                }
+            }
+             if(isEmpty==true){
+               break;
+             }
+          }        
+        return isEmpty;
+     }     
+     function isRowEmpty(){
+	      var isEmpty = true;
+	      var colCount = selFieldsGrid.getColumnModel().getColumnCount();
+	      var recCount = selFieldsGrid.getStore().data.length;
+	      for(var i=0;i < recCount; i++){
+		        var record = selFieldsGrid.getStore().getAt(i);
+		        for(var j=0;j < colCount; j++){
+			          var fName = selFieldsGrid.getColumnModel().getDataIndex(j);
+			          if(record.get(fName)!=null && record.get(fName)!=''){
+				           isEmpty = false;
+				           break;
+			         }else{
+			  				isEmpty = true;
+			         }
+		        }
+		        if(isEmpty==true){
+		               break;
+		        }
+	      }
+	      return isEmpty;
+     }
+     function isLastColumnEmpty(){
+        var isEmpty = true; 
+        var colCount = selFieldsGrid.getColumnModel().getColumnCount();
+        var recCount = selFieldsGrid.getStore().data.length;
+        var fName = selFieldsGrid.getColumnModel().getDataIndex(colCount-1);
+        for(var i=0;i < recCount; i++){
+            var record = selFieldsGrid.getStore().getAt(i);
+            if(record.get(fName)!=null && record.get(fName)!=''){
+              isEmpty = false;
+              break;
+            }else{
+              isEmpty = true;
+            }
+        }    
+        return isEmpty;
+     }
+     /* This is used to validate whether to add one more column */
+    /* function isLastColumnEmpty(){
+     
+     }*/
+     /* To send the grid config to controller to persist the viewState */
+       function getGridConfig(){
+       
+       }
+      /* To build a String of selected fields in the grid */
+       function getFieldsString(){
+           var  outputString='';
+             //'Impact¬Impact__c¬Description¬description__c¬text¬Inactive¬inactive__c¬combo¬Sequence Id¬Sequence__c¬text¬ПPriority¬Priority__c¬Description¬description__c¬text¬ПIncident¬Incident__c¬Close Date & Time¬closeDateTime__c¬date¬';// need to be populate the data from datagrid
+           var fieldsGridRowCount = fieldsDynamicStore.data.length;
+           var dsGridRowCount = selDatastore.data.length;  
+           for(var i=0;i < fieldsDynamicStore.data.length;i++){
+             var record = selFieldsGrid.getStore().getAt(i);
+             var dsRec = selDatasourceGrid.getStore().getAt(i);
+             var dsApiName = dsRec.get('apiName');
+             var dsLabel = dsRec.get('label');
+             outputString = outputString+dsLabel+'¬'+dsApiName+'¬';
+             for(var j=0;j < selFieldsGrid.getColumnModel().getColumnCount();j++){
+                var fieldName = selFieldsGrid.getColumnModel().getDataIndex(j);
+                var data = record.get(fieldName);
+                  if(data==''||data==null){
+                     outputString = outputString + 'None' + '¬' + 'None' +'¬'+ 'None'+'¬';
+                  }else{
+				   var displayPosition=j+1;
+                   var key=dsApiName+displayPosition;
+				   var cellApiName;
+				   if(gridInfoMap[key] && gridInfoMap[key]!=''){
+				    var tempDataType=gridInfoMap[key].split('¬');
+					if(tempDataType.length == 2){
+						cellApiName=tempDataType[1];
+					}
+				   }
+	                for(var k=0;k < outputFieldsList.length;k++){
+	                   if(outputFieldsList[k][2].indexOf(dsApiName)==0){
+		                   if(cellApiName && cellApiName == outputFieldsList[k][0]){
+		                       outputString = outputString + outputFieldsList[k][1] + '¬' + outputFieldsList[k][0] +'¬'+ outputFieldsList[k][3]+'¬';
+		                    }
+	                   }
+	                }   
+				}
+                       
+             }
+             if(i<(fieldsDynamicStore.data.length-1)){  
+               outputString = outputString + 'П';
+             }
+           }
+        return outputString;     
+      }
+      
+      function containsValidEmailField() {
+        var i=0;
+        var storeSize = grid.store.data.length;
+        
+        while(storeSize > i) {
+            //Return true if any field is of type,Schema.DisplayType.EMAIL  
+            var recordLabel = grid.store.getAt(i).get('type');
+                        
+            var j=0;
+            while(typeEditor.store.data.length>j){
+                 var rec1= typeEditor.store.getAt(j).get('name');
+                 if(recordLabel == rec1) {
+                    if(typeEditor.store.getAt(j).get('type') == 'Schema.DisplayType.EMAIL') {
+                        //Pass email value for validation
+                        emailValue = grid.store.getAt(i).get('value')
+                        if(!validEmailField(emailValue)) {
+                            return false;
+                        }
+                    }
+                 }
+                 j++;
+            } 
+            
+            i++;
+        }
+        
+        return true;
+      }
+      
+       function validEmailField(str) {
+            var emailRegEx = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+            if(!str.match(emailRegEx)){
+                return false;
+            }
+            return true;
+       }
+       
+       function validLogicalOperators() {
+            var i=0;
+            var dataFieldVal1,dataFieldVal2;
+            var gridStore= Ext.getCmp('gridpanel').store;
+            		  
+          		while(gridStore.data.length > i) {
+                if(i==gridStore.data.length -1 && gridStore.getAt(i).get('logOpeValue')!='NONE') {
+                    return false;
+                }
+                if(gridStore.data.length > (i+1)){
+	            	dataFieldVal1 = grid.getStore().data.items[i].data.type;
+	            	dataFieldVal2 = grid.getStore().data.items[i+1].data.type;
+	            	var objName1=dataFieldVal1.substring(0,dataFieldVal1.lastIndexOf("."));
+	            	var objName2=dataFieldVal2.substring(0,dataFieldVal2.lastIndexOf("."));
+           		 		 if(gridStore.getAt(i).get('logOpeValue')=='NONE' && objName1 == objName2 ) 
+                    		return false;
+                    	 else if(gridStore.getAt(i).get('logOpeValue')!='NONE' && objName1 != objName2 )
+                    	 	return false;
+                
+             }
+                  
+                i++;
+          }
+            return true;
+     }
+      var nextState;
+      function validateBeforeNext(state) {   
+           
+            var seldslength =   Ext.getCmp('selDSGrid').store.data.length;
+            var selfldsLength = Ext.getCmp('selfieldsgridpanel').store.data.length; 
+            var isQueryCondValid=true;
+            if(seldslength==0) {
+            	isQueryCondValid=false;
+                showMessage('{!JSENCODE($Label.reqMinOneDataSource)}');
+            }else if(selfldsLength == 0) {
+                isQueryCondValid=false;
+                showMessage('{!JSENCODE($Label.validationOnDataFields)}');
+            }else if(isRowEmpty()){
+                isQueryCondValid=false;
+                showMessage('{!JSENCODE($Label.reqMinOneFieldPerDataSource)}');
+            }else if(isColumnEmpty()){
+                isQueryCondValid=false;
+                showMessage('{!JSENCODE($Label.reqMinOneFieldPerColumn)}');
+            }       
+            else if(grid.store.data.length>0 && !containsValidEmailField()) {
+                isQueryCondValid=false;
+                showMessage('{!JSENCODE($Label.validationOnEmail)}');
+            }
+            else if(grid.store.data.length>0 && !validLogicalOperators()) {
+        	isQueryCondValid = false;
+        	showMessage('{!JSENCODE($Label.invalidQryExpr)}');
+        	}
+            else if(grid.store.data.length>0) {
+                var i=0;
+         		while(grid.store.data.length-1>=i) {
+	         		if(!isValidate(i)) {
+	         			isQueryCondValid = false;
+	         			var errorMessage;
+						if(isForSelectedOpertaor){
+							errorMessage = '{!JSENCODE($Label.ValidationOnQueryExprForOperator)}';
+							showMessage(errorMessage.replace("{0}", (i+1)));
+						}else{
+							errorMessage = '{!JSENCODE($Label.ValidationOnQueryExpr)}';
+							showMessage(errorMessage.replace("{0}", (i+1)));
+						}
+	         			break;		
+	         		}
+	         		if(!validationOnValueFld(i)) {
+	         			isQueryCondValid = false;
+	         			showMessage('{!JSENCODE($Label.validateValFldLength)}');
+	         			break;
+         			}
+         			i++;
+         		}
+            }        
+           /* else if(grid.store.data.length>0 && !validLogicalOperators()) {
+                showMessage('Invalid Query Expression');
+            }*/
+            if(isQueryCondValid) {
+            	if({!isEncryptionEnable} && state == 'Next'){
+		        	if(isEncryptedFieldFoundInQueryCondition()){
+			   			errorMessage = '{!JSENCODE($Label.QVEncryptionError)}';
+						showMessage(errorMessage);
+			   		}else{
+						saveData(state);
+					}
+		        }else{
+		        	saveData(state);
+		        }                 
+            }  
+    /*        else if(selfldsLength==seldslength){
+                var flag = 0;
+                for(var i=0;i < selfldsLength;i++ ){
+                   if(Ext.getCmp('selfieldsgridpanel').store.getAt(i).get('dataField1')==''){
+                      flag = -1;
+                   }
+                }   
+                if(flag==-1){
+                  showMessage('Please Select atleast one field for selected datasources');
+                }        
+            }        
+        */   
+      }
+    
+    
+    function isDateField(tempStore, fieldAPIName) {
+    	var l=0;
+        while(tempStore.data.length > l) {
+            if(fieldAPIName == tempStore.getAt(l).get('mapKey')) {
+            	if(tempStore.getAt(l).get('type') == 'date') {
+            		return true;
+            	}
+            }
+            l++;
+        }
+        return false;
+     }
+    
+     /* delimiters used  ф(EF) for ; џ(DZHE) for :: ¬(nonprint) for # and П(PE) for ,  */
+     function saveData(state) {
+        var conditionString = '';
+        var outParamsString = '';
+        var tempconditionStr='';
+        var iter = 0;
+        var fkFieldLabel ='';
+        var displayName ='';
+        var sfIdValue ='';
+        var idNameString ='';
+        var gridRecord= Ext.getCmp('gridpanel').store;
+        var j = 0;
+        //var j = gridRecord.data.length - 1; 
+        while( j < gridRecord.data.length){
+            if(gridRecord.getAt(j).get('dName')==null||gridRecord.getAt(j).get('dName')==''){
+               tempconditionStr = tempconditionStr +'NONE'+'¬';
+            }else{
+            tempconditionStr = tempconditionStr + gridRecord.getAt(j).get('dName') + '¬';
+            }
+            if(gridRecord.getAt(j).get('type')!=null&&gridRecord.getAt(j).get('type')!=''){
+            var apiName = getApiName(gridRecord.getAt(j).get('fieldAPIName'));
+            
+            tempconditionStr = tempconditionStr + apiName + '¬';
+            var mapKey = getMapKey(gridRecord.getAt(j).get('fieldAPIName'));//fieldAPIName;
+            tempconditionStr = tempconditionStr + mapKey+'¬';
+            tempconditionStr = tempconditionStr + gridRecord.getAt(j).get('type')+'¬';
+            tempconditionStr = tempconditionStr + gridRecord.getAt(j).get('comOpeValue') + '¬';
+            
+            var valuefld = gridRecord.getAt(j).get('value');
+            if(valuefld!=null && valuefld!='' && isDateField(typeEditor.store, gridRecord.getAt(j).get('fieldAPIName'))) {
+            	if(typeof(valuefld)=='object') {
+            		valuefld = ConvertUTCtoGMT(valuefld.toUTCString());
+            	}else {
+            		valuefld = ConvertUTCtoGMT(valuefld);
+            	}
+            }
+            if(valuefld!=null && valuefld!=''){
+            	tempconditionStr = tempconditionStr + valuefld + '¬';
+			}else{
+			    tempconditionStr = tempconditionStr + 'NONE' + '¬';
+			}
+            
+            var logop = gridRecord.getAt(j).get('logOpeValue');
+            if(logop!='AND'&&logop!='OR'){
+              tempconditionStr = tempconditionStr +'None'+'¬';
+            }else
+            tempconditionStr = tempconditionStr + logop+'¬';
+            
+            //Adding checkbox
+            tempconditionStr = tempconditionStr + gridRecord.getAt(j).get('chkBox') + '¬';
+            var l=0;
+            var tempStore = typeEditor.store;
+            var flag=0;
+            while(tempStore.data.length > l) {
+                if(gridRecord.getAt(j).get('fieldAPIName') == tempStore.getAt(l).get('mapKey')) {
+                    if(tempStore.getAt(l).get('type') == 'lookUp' || ((apiName.toLowerCase()=='ownerid'||apiName.toLowerCase()=='fkopenby__c'||apiName.toLowerCase()=='fkstaff__c') && (tempStore.getAt(l).get('type') == 'ASSIGNEDTO_FIELD' || tempStore.getAt(l).get('type') == 'ASSIGNEDTO_FIELD1') && (valuefld!='Me' && valuefld!='My Queues'))) {
+                        fkFieldLabel = gridRecord.getAt(j).get('type');
+                        displayName = valuefld;
+                        flag=1;
+                        break;
+                    }             
+                }
+                l++;
+            }
+            
+             if(flag == 1 && displayName!=null && displayName!='') {
+             for(var m = 0; m < idNameArray.length; m++){
+                var nameText = idNameArray[m].getSfName();
+                var fkName = idNameArray[m].getFKLabel();
+                if((displayName == nameText) && (fkFieldLabel == fkName)){
+                    sfIdValue = idNameArray[m].getSfId();
+                    idNameString = idNameString + idNameArray[m].getFKLabel() +'¬'+ idNameArray[m].getSfName()+'¬'+idNameArray[m].getSfId()+'¬' + 'П';
+                    break;
+                }
+             }
+                if(sfIdValue!= null && sfIdValue !=''){
+                  tempconditionStr = tempconditionStr + sfIdValue + '¬';
+                }else{
+                  tempconditionStr = tempconditionStr + 'None' + '¬';
+                }
+                flag=0;
+            }else{
+                tempconditionStr = tempconditionStr + 'None' + '¬';
+            }
+            
+        
+            tempconditionStr = tempconditionStr+'П';
+            }else{
+              tempconditionStr ='';
+            }
+            j++;
+        }
+        conditionString = tempconditionStr;
+       // outParamsString = outParamsString+'Impact¬Impact__c¬Description¬description__c¬text¬Inactive¬inactive__c¬combo¬Sequence Id¬Sequence__c¬text¬ПPriority¬Priority__c¬Description¬description__c¬text¬ПIncident¬Incident__c¬Close Date & Time¬closeDateTime__c¬date¬';// need to be populate the data from datagrid
+          outParamsString = getFieldsString();
+		  outParamsString=outParamsString+'џ'+JSON.stringify(gridInfoMap);
+           /*outputparamStrign and conditionString are seperated by џ*/
+           var QVString ='';
+           if(conditionString!=null&&conditionString!=''){
+              QVString =  outParamsString + 'џ'+conditionString;
+           }else{
+             QVString = outParamsString;
+           }  
+        document.getElementById('{!$Component.frm.QVString}').value = QVString;
+        var displayLabelsString='';
+        for(var i=0;i < columnHeaders.length;i++){
+           displayLabelsString = displayLabelsString + columnHeaders[i]  + 'џ';        
+        }
+        document.getElementById('{!$Component.frm.dispLblString}').value = displayLabelsString;
+        document.getElementById('{!$Component.frm.queryFKData}').value = idNameString;
+         nextState = state;
+        populateQVData();
+        
+    }
+    function steptoNextView(){
+      if(nextState!=null && nextState!=''){
+         if(nextState=='Next'){
+            stepTblview();
+         }else if(nextState=='Previous'){
+            stepToGeneralPage();
+         }
+         
+      }
+    
+    }
+    function validationOnValueFld(index) {
+    	var rec = grid.store.getAt(index);
+    	if(rec.get('value').length>100) {
+    		return false;
+    	}
+    	return true; 
+    }
+    //create a DOM element programmatically,
+	//retrieve the nodeValue from the text node created on the html insertion.
+	function htmlDecode(input){
+      var e = document.createElement('div');
+      Ext.fly(e).update(input);
+      return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
+    }
+	function  isValidate(index){
+          var isComplete=true;
+          var rec = grid.store.getAt(index); 
+          var chk=rec.get('chkBox');
+          var label=rec.get('dName');
+          var exp1=rec.get('type');
+          var comOp=rec.get('comOpeValue');
+          var exp2=rec.get('value');
+          var logOp=rec.get('logOpeValue');
+           var fieldName = rec.get('fieldAPIName');	
+		   comOp = htmlDecode(comOp);
+		   var resType=typeEditor.store.getAt(index).get('type');// get the datatype of field
+			   var j=0;
+			   while(typeEditor.store.data.length>j){
+				   var rec1= typeEditor.store.getAt(j).get('mapKey');
+			   if(fieldName.toLowerCase()==rec1.toLowerCase()){
+						resType=typeEditor.store.getAt(j).get('type');
+					break;
+				   }j++;           
+        }
+          //alert('chk = '+chk+ '\nlabel = '+label+ '\nexp1 = '+exp1+ '\ncomOp = '+comOp+ '\nexp2 = '+exp2+ '\nlogOp = '+logOp);
+         
+          /* if(chk==true){
+              if(label!=null && label!='' && exp1!=null && exp1!='' && comOp!=null && comOp!='' && exp2!=null && exp2!='' && logOp!=null && logOp!=''){
+                  isComplete=true;
+              }
+          }else if(chk==false || chk==undefined){*/
+          if(chk==true && (exp1==null || exp1=='' || comOp==null || comOp=='' || logOp==null && logOp=='')) {
+         	isComplete = false;
+         }
+         // to allow null in exp2 changed the if Condition
+		 if(chk==false && (exp1==null || exp1=='' || comOp==null || comOp=='' || logOp==null && logOp=='')) {
+         		isComplete = false;
+         }
+		 if(chk==false && ((comOp=='>' || comOp=='<' || comOp=='>=' || comOp=='<=') && (exp2==null || exp2==''))){
+            isForSelectedOpertaor = true;
+			isComplete = false;
+		 }
+		 if(chk==false && resType=='combo' && (exp2==null || exp2=='')){
+			isForSelectedOpertaor = true;
+			isComplete = false;
+		 }
+		 // to allow null in exp2 commented the if Condition for Owner ID and fkstaff__c
+         /*if(chk==false && exp1.split('.')[1]=='Owner ID' && exp2=='NONE') {
+       		isComplete = false;
+       	 }
+       	 if(chk==false && (fieldName.toLowerCase()=='fkstaff__c' || fieldName.toLowerCase()=='fkopenby__c') && exp2=='NONE') {
+       		isComplete = false;
+       	 }*/       	 
+         return isComplete;
+    
+    }
+    
+    function getMapKey(fieldAPIName){
+       var j=0;
+       var mapKey;
+       while(typeEditor.store.data.length>j){
+        var rec1= typeEditor.store.getAt(j).get('mapKey');
+          if(fieldAPIName.toLowerCase()==rec1.toLowerCase()) {
+            mapKey=rec1;
+            
+          }
+          j++;
+          }
+      return mapKey;
+    }
+    
+   function findObjWithNameSpace(Obj) {
+    	<apex:repeat value="{!nsList}" var="nsTemp">
+			<apex:repeat value="{!nsTemp}" var="ns">
+				if('{!ns.objLocalName}'==Obj.toLowerCase()) {
+					Obj='{!ns.objName}';
+				}
+			</apex:repeat>	
+		</apex:repeat>
+		return Obj		    	
+    }
+     
+   function getApiName(fieldAPIName) {
+        var j=0;
+        var apiName;
+        while(typeEditor.store.data.length>j){
+                 var rec1= typeEditor.store.getAt(j).get('mapKey');
+                 if(fieldAPIName.toLowerCase()==rec1.toLowerCase()) {
+                    apiName=typeEditor.store.getAt(j).get('value');
+                    displaylabel=typeEditor.store.getAt(j).get('name');
+                    break;
+                 }
+                 j++;
+ 
+        }
+        return apiName;
+    }
+    
+    function openLookup(fieldAPIName){
+        apiName = getApiName(fieldAPIName);
+        //Call action function for popup ID.
+        getModulePopUpId(apiName);
+    }
+    
+     function setData(){ 
+    
+        comboStore.loadData(fieldList);  
+        fieldsComboStore.loadData(outputFieldsList); 
+        selFieldsGrid.render('selectedFieldsDiv');       
+     }
+    
+    function setIdFromPopup(id) {
+        idFromPopup = id;
+    }
+    function getSelectedObjectApiname(objLabel){
+    for(var j=0;j<=selDatasourceGrid.store.data.length;j++){ 
+             if(selDatasourceGrid.getStore().getAt(j).get('label')==objLabel){
+             	return selDatasourceGrid.getStore().getAt(j).get('apiName');        	    
+        	 }
+        }
+    
+    }
+    function showPopup() {
+        var parts = displaylabel.split('.');
+        var v = parts[0] + '__c';
+        var objectApiName=getSelectedObjectApiname(parts[0]);
+        var filterclause = popupQVDataFilter(v);
+	    
+	    if(apiName!=null && apiName!='') {
+	    	document.getElementById('{!$Component.frm.apiName}').value = apiName;
+	    }
+        if(popupId=='{!JSENCODE($Label.clientWindowHeaderSearchPage)}' && apiName.toLowerCase()=='{!JSENCODE($Label.ownerid)}'){
+            openPopup('SearchPage?popupId=Client&isQueurorUser=true&isLookup=true&queueFor='+v+'&filterClause='+escape("IsStaffUser__c=true"), findNameField);
+        }else if(filterclause!=''){
+	        openPopup('SearchPage?popupId='+popupId+'&isLookup=true&filterClause='+filterclause, findNameField);
+	   	}else if ((popupId==null || popupId =='')&& (objectApiName!=null)) {
+	   		openPopup('SearchPage?moduleId='+apiName+'&isLookup=true&moduleName='+objectApiName,findNameField);
+	   	}
+	   	else{
+          openPopup('SearchPage?popupId='+popupId+'&isLookup=true', findNameField);
+        }
+     //     openPopup('SearchPage?popupId='+popupId+'&isLookup=true', findNameField);
+             flag = 1;             
+    }
+    
+    function useNameField() {
+         var record = grid.store.getAt(popupIndex);
+         if(idFromPopup!=null && idFromPopup!= '' && nameField!=null && nameField!=''){
+             var lookupData = new LookupMap();
+             lookupData.sfId = idFromPopup;
+             lookupData.sfName = nameField;
+             lookupData.fkLabel = grid.store.getAt(lookUpRowIndex).get('type');
+             idNameArray[iterator] = lookupData;
+             iterator = iterator +1; 
+         }         
+         record.set('value', nameField);
+         Ext.getCmp('gridpanel').stopEditing(true);  
+         
+    }
+    /*pass the selected datasources to the controller as a string*/
+    /* delimiters used  ф(EF) for ; џ(DZHE) for :: ¬(nonprint) for # and П(PE) for ,  */
+    function getSelDatasources(){       
+       var j=0;
+       var selectedDSString='';
+        for(j=0;j<selDatasourceGrid.store.data.length;j++){
+             selectedDSString = selectedDSString+selDatasourceGrid.store.getAt(j).get('label')+'П';
+             selectedDSString = selectedDSString+selDatasourceGrid.store.getAt(j).get('apiName')+'ф';
+        }         
+        document.getElementById('{!$Component.frm.selectedDatasource}').value = selectedDSString;        
+        waitMsg.show();     
+        getSelectedDatasources();
+       
+    }
+    function renderqvEditor(){
+       grid.render('queryConditionDiv');
+       waitMsg.hide();
+    }
+    function replaceQuotes(val){
+	  //alert(val);
+      val =  val.replace('"','&#34;');
+      return val;
+    }
+    </script>  
+   <apex:outputpanel id="ModuleFieldsPanel">
+    <script>      
+        
+        var outputFieldsList = new Array();
+        var j=0;
+    </script> 
+    <apex:repeat value="{!qConditionFields}"  var="qConditionField">
+         <script>
+           outputFieldsList[j] = new Array(4);
+           outputFieldsList[j][0] ='{!JSENCODE(qConditionField.fieldName)}';
+           outputFieldsList[j][1] = '{!JSENCODE(qConditionField.fieldLabel)}';
+           outputFieldsList[j][2] ='{!JSENCODE(qConditionField.conditionFieldName)}';
+           outputFieldsList[j][3] ='{!JSENCODE(qConditionField.expressionType)}';
+           j=j+1;      
+         </script>
+    </apex:repeat>
+    <script>
+    fieldList = new Array();
+      var condIter = 0;
+    </script>
+    <apex:repeat value="{!conditionComboFlds}" var="qCondComboField">
+     <script>
+       fieldList[condIter] = new Array(5);
+           fieldList[condIter][0] = '{!JSENCODE(qCondComboField.fieldName)}';
+           fieldList[condIter][1] = '{!JSENCODE(qCondComboField.conditionFieldLabel)}';
+           fieldList[condIter][2] = '{!JSENCODE(qCondComboField.expressionType)}';
+           fieldList[condIter][3] = '{!JSENCODE(qCondComboField.conditionFieldName)}';
+           fieldList[condIter][4] = replaceQuotes('{!JSENCODE(qCondComboField.conditionFieldLabel)}');
+           condIter = condIter +1;
+     </script>
+    </apex:repeat>
+   </apex:outputpanel> 
+   <apex:outputpanel id="restoredvalues"> 
+    <script>  
+      var condList = new Array();
+      var l=0;
+    </script>
+    <apex:repeat value="{!selectedQVConditions}" var="selQVCond">
+      <script>
+        condList[l] = new Array(7);
+        var isChkd = "{!selQVCond.checkCol}";
+        if(isChkd=='false'){
+          condList[l][0] = 0;
+        }else if(isChkd=='true'){
+          condList[l][0] = 1;
+        }
+        condList[l][1] ='{!selQVCond.dName}';
+        condList[l][2] ="or";
+        condList[l][3] = "{!selQVCond.operand1}";
+        condList[l][4] = "{!JSENCODE(selQVCond.compareoper)}";
+        if(condList[l][3].split('.')[1]=='Owner ID' && "{!JSENCODE(selQVCond.conditionValue)}"=='') {
+        	condList[l][5] = 'NONE';
+        }else {
+        	condList[l][5] = "{!selQVCond.conditionValue}";
+        }
+        condList[l][6] = "{!selQVCond.groupingoperator}";
+        condList[l][7] = "{!selQVCond.conditionFieldName}";
+        
+        if((condList[l][7].toLowerCase()=='incident__c.fkopenby__c'
+        || condList[l][7].toLowerCase()=='task__c.fkopenby__c'
+        || condList[l][7].toLowerCase()=='problem__c.fkstaff__c'
+        || condList[l][7].toLowerCase()=='release__c.fkstaff__c'
+        || condList[l][7].toLowerCase()=='change_request__c.fkstaff__c'
+        || condList[l][7].toLowerCase()=='broadcasts__c.fkstaff__c')
+        && 	condList[l][5] ==''
+        )
+        {
+        	condList[l][5] = 'NONE';
+        }
+        
+        l= l+1;
+      </script>
+    </apex:repeat>
+        
+     <script>
+       var selectedDs = new Array();
+       var k=0;
+     </script>
+    <apex:repeat value="{!selDatasourceList}" var="selDs">
+      <script>
+        selectedDs[k] = new Array(2); 
+        selectedDs[k][0]= '{!JSENCODE(selDs.datasourceLabel)}';
+        selectedDs[k][1]= '{!JSENCODE(selDs.datasourceAPIName)}';
+        k= k+1;
+      </script>
+    </apex:repeat>
+    <script>
+      var arrIter = 0;
+      idNameArray = new Array();
+    </script>
+    <apex:repeat value="{!multiQueryConditionFksList}" var="queryFKData">
+      <script>
+          var lkData = new LookupMap(); 
+         lkData.sfId = "{!queryFKData.sfId}";
+         lkData.sfName = '{!JSENCODE(queryFKData.sfNameValue)}';
+         lkData.fkLabel = '{!JSENCODE(queryFKData.conditionLabel)}';
+         idNameArray[arrIter] = lkData;
+         arrIter = arrIter+1;
+      </script>
+    </apex:repeat>
+    <script>
+       iterator = arrIter;
+      var colCount = '{!maxColNumber}';
+      if(colCount == 0){
+        colCount = 2;
+      }
+      var gridStoreFields = new Array(colCount);
+      var fieldsGridCol = new Array(colCount);
+      fieldsComboStore = new Ext.data.ArrayStore({
+						        id: 'comboId',
+						        data: outputFieldsList,
+						        fields: ['value', 'name','mapKey','type'],
+						        sortInfo: {
+						                    field: 'name',
+						                    direction: 'ASC'
+						                  }
+						    });
+       var selectedData= {};
+	    fieldsEditor = new Ext.form.ComboBox({
+						        id: 'fieldsComboList',
+						        store: fieldsComboStore,
+						        mode: 'local',
+						        triggerAction: 'all',
+						        valueField: 'value',
+						        displayField: 'name',
+						        selectOnFocus: true,
+						        //triggerClass : 'gridCmbTriggerCls',
+						        triggerClass : Ext.isIE7 ? 'gridCmbTriggerClsIE' : 'gridCmbTriggerCls',
+						        editable: true,
+						        tpl: '<tpl for=".">'+'<div class="x-combo-list-item">'+'{name:htmlEncode}'+'</div>'+'</tpl>',						     
+            					listeners:{
+									'select': function(combo, record, index) {	
+                                        selectedData.datatype=record.get('type');
+										selectedData.apiname=record.get('value');
+										var mapKey=record.get('mapKey');
+										if(mapKey){
+											var datasource=mapKey.split('.');
+											datasource =datasource[0];
+											selectedData.datasource=datasource;
+										}
+									}
+								}
+						    });
+      for(var i=0;i < colCount;i++){
+           var dIndex = i+1;
+           var hdr = '{!$Label.DataField} '+ dIndex;
+           var fld = 'dataField'+ dIndex;
+           gridStoreFields[i] = fld;
+           var newColumn;  
+	        
+	              newColumn = new Ext.grid.Column({
+	                   header:hdr,
+	                   dataIndex:fld,
+	                   width:142,
+	                   sortable:false,
+	                   hidden:false,
+	                   editor:fieldsEditor,
+	                   renderer:'htmlEncode'                        
+	              });
+	         
+	          
+           
+           fieldsGridCol[i] = newColumn;
+      }
+       fieldsDynamicStore = new Ext.data.SimpleStore({
+						         fields: gridStoreFields 
+						    });
+	    var selFieldsColModel = new Ext.grid.ColumnModel({
+								        columns: fieldsGridCol								
+								    }); 						    
+      
+    </script>
+     
+    <script>     
+      var fldsArr = new Array();
+      var m=0;     
+    </script>   
+    <apex:repeat value="{!gridFieldsList}" var="rowData">
+          <script>
+            fldsArr[m] = new Array('{!rowData.lstSize}');
+            var n=0;
+          </script>
+      <apex:repeat value="{!rowData.dsFieldList}" var="cellData">
+          <script>
+             fldsArr[m][n] = '{!JSENCODE(cellData)}';
+             n= n+1;
+          </script>   
+      </apex:repeat>
+          <script>
+            m = m+1;
+          </script>
+    </apex:repeat>
+        <script>
+           var labels = new Array();
+           var i=0;
+        </script>
+        <apex:repeat value="{!labelList}" var="label">
+         <script>
+           labels[i] = '{!JSENCODE(label)}';  
+           i=i+1;        
+         </script>
+        </apex:repeat>
+        <script>
+          columnHeaders = labels;
+        </script>
+        
+   </apex:outputpanel>
+   <apex:outputpanel id="pickListPanel">
+   <script>
+	   var jsonString = JSON.parse('{!JSONstring}');
+        morePicklist = '{!morePicklist}';
+        if(morePicklist == 'true'){
+            getRemainingpicklistValues();
+			
+        }
+           var pickListIter = 0;        
+			for(i=0;i<jsonString.length;i++){
+				for(j=0;j<jsonString[i].length;j++){
+			
+				pickListData[pickListIter] = new Array(3);
+				pickListData[pickListIter][2] = jsonString[i][j].conditionFieldName;
+				pickListData[pickListIter][0] = jsonString[i][j].conditionValue;
+				pickListData[pickListIter][1] = jsonString[i][j].conditionValue;
+				pickListData[pickListIter][3] = jsonString[i][j].conditionFieldLabel;
+				pickListIter = pickListIter +1;
+			}
+		}
+           
+    </script>
+   </apex:outputpanel>
+   
+   
+    <apex:outputPanel id="nameFieldPanel">
+        <script>
+         var nameField = '{!JSENCODE(nameField)}'; 
+        </script>
+    </apex:outputPanel>     
+    
+    <apex:outputpanel id="popupPanel">
+     <script>
+            var popupId = '{!JSENCODE(popupId)}';            
+     </script>
+    </apex:outputpanel>
+  
+   <div id="qGrid" class="demo-ct"></div>  
+
+<div id="capsule" class="CapsuleDiv1" style="height:100%">
+  <apex:outputPanel id="abc" > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form id="frm" >                      
+     
+            <apex:actionFunction Name="setconditionFields" action="{!getFieldItemsForMultiModuleQueryPage}" reRender="ModuleFieldsPanel,pickListPanel" onComplete="setData();renderqvEditor();">
+              
+            </apex:actionFunction>
+           <apex:actionFunction Name="getRemainingpicklistValues" action="{!getRemainingpicklistValues}" reRender="pickListPanel" onComplete=""/>
+            <apex:actionFunction Name="populateQVData" action="{!getSelectedFields}"  reRender="dummyPanel"  oncomplete="steptoNextView();">                
+            </apex:actionFunction>
+            <apex:actionFunction Name="getModulePopUpId" action="{!getModulePopUpId}" onComplete="showPopup();" reRender="popupPanel" >
+                <apex:param name="apiName" assignTo="{!apiName}" value="" />
+            </apex:actionFunction>
+            
+            <apex:actionFunction Name="findNameField" action="{!findNameField}" onComplete="useNameField();" reRender="nameFieldPanel" >
+                <apex:param name="idField" assignTo="{!idField}" value="" />
+            </apex:actionFunction>
+            
+            <apex:inputHidden id="apiName" value="{!apiName}" immediate="true" />
+            <apex:inputHidden id="QVString" value="{!QVMultiModuleString}" immediate="true" />
+            <apex:inputHidden id="selectedDatasource" value="{!selDatasource}" immediate="true"/>
+            <!-- <apex:inputHidden id="selectedFields" value="{!selDSFields}" immediate="true"/> -->
+            <apex:inputHidden id="fieldsConfig" value="{!fieldsConfig}" immediate="true"/>
+            <apex:inputHidden id="columnsConfig" value="{!columnsConfig}" immediate="true"/>
+            <apex:inputHidden id="dispLblString" value="{!displayLabelsString}" immediate="true"/>
+            <apex:inputHidden id="queryFKData" value="{!queryFksString}" immediate="true"/>
+            <apex:actionFunction Name="getSelectedDatasources" action="{!getSelectedDatasources}"  reRender="dummyPanel" onComplete="setconditionFields();"/>
+          
+            <apex:actionFunction Name="stepTblview" action="{!stepTableview}"/>
+            <apex:actionFunction name="stepToGeneralPage" action="{!stepGeneral}"/>
+            
+              
+                  <table cellpadding="0" cellspacing="0" class="clsMainTableQV" style="height:630px">
+                  <tBody>
+                    <tr align="center" >
+                       <td align="center" style="background-color:#eff3f5;" colspan="3">
+                        <!-- Progress bar image -->
+                          <table class="clsBrProgressBar" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td height="15px" colspan="21"></td>
+                                </tr>
+                                <tr>
+                                    <td class="qvStyle15perWidth"></td>
+                                    <td class="qvStyle45Width"></td>
+                                    <apex:repeat value="{!lstIntro}" var="string">
+                                        <td class="QVStage1">
+                                            <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                        </td>
+                                        <td class="QVStage2"></td>
+                                        <td class="QVStage2"></td>
+                                    </apex:repeat>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Current.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage2"></td>
+                                    <td class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                     <td id="QVimg2" class="QVStage2"></td>
+                                     <td id="QVimg3" class="QVStage2"></td>
+                                     <td id ="Calview" class="QVStage1">
+                                        <img src="{!$Resource.SDEFStyles}/SDEFimages/Stage_Pending.gif"/>
+                                    </td>
+                                    <td style="width:5%"></td>
+                                    <td style="width:10%"></td>
+									<td style="width:5% ;text-align: center;">
+									  <a onclick="OpenNewHelpPage();return false;" href="#" style="{!IF(isFromConsole ,'display:block','display:none')}">
+									   <img src="{!$Resource.SDEFStyles}/SDEFbuttons/b_console_help.png"/>
+									   </a>
+									</td>
+                                </tr>
+                                <tr>
+                                    <td height="10px" colspan="21"></td>
+                                </tr>
+                                <tr>
+                                    <td class="qvStyle15perWidth"></td>
+                                    <apex:repeat value="{!lstIntro}" var="string">
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarIntro}</td>
+                                    </apex:repeat>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.General}</td>
+                                    <td colspan="3" class="currentStatusTxt" align="center">{!$Label.QVWizPrgBarQuery}</td>
+                                    <td colspan="3" class="statusTxt" align="center" >{!$Label.QVWizPrgBarTable}</td>
+                                    <td colspan="3" class="statusTxt" align="center">{!$Label.QVWizPrgBarChart}</td>
+                                    <td colspan="3" id="calLabel" class="statusTxt" align="center">{!$Label.QVWizPrgBarCalendar}</td>
+                                     <td colspan="2" class="qvStyle15perWidth"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                       <td colspan="3">
+                           <div class="div15pxVspacing" />
+                       </td>
+                   </tr> 
+                    <tr style="vertical-align: bottom;">
+                      <td width="15px"></td>
+                      <td class="qvTopAlignTD">   
+                        <table class="clsBrTable" cellpadding="0" cellspacing="0" width="100%">
+                          <tbody>   
+                            <tr>
+                              <td class="QVInfoTitle" colspan="3">
+                                  <apex:outputLabel value="{!$Label.bmcservicedesk__editquery}" />                                                     
+
+                              </td>
+                            </tr>
+                            
+                            <!-- Put the page contents inside the following TR -->
+                            
+                            <tr>
+                                <td colspan="3">
+                                    <div class="div15pxVspacing" />
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="qvwidth15px" ></td>
+                                <td>
+                                    <div class="qvinformationBar" style="height:30px">
+                                        <apex:outputLabel value="{!$Label.bmcservicedesk__qvwizardmultidsinfo}" />
+                                    </div>       
+                                </td>
+                                <td class="qvwidth15px" ></td>
+                            </tr>
+                            
+                            
+                             <tr>
+                                <td colspan="3">
+                                    <div class="div15pxVspacing" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="qvwidth15px" ></td>
+                                <td>
+                                    <table cellspacing="0" cellpadding="0">
+                                        <tr>
+                                             <td class="clsCmdLink" colspan="4">
+                                                <apex:commandlink action="{!stepSingleModuleQuery}" styleClass="clsCmdLink">
+                                                    {!$Label.bmcservicedesk__multidatasourcelink}
+
+                                                    <apex:param name="isSwitched" value="true" />
+                                                </apex:commandlink>
+                                              </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4">
+                                                <div class="div15pxVspacing" />
+                                            </td>
+                                        </tr> 
+                                        <tr>
+                                            <td class="clsBoldInputLabelTDNoPadding">
+                                                <apex:outputLabel value="{!$Label.bmcservicedesk__availabledatasources}"/>
+                                            </td>
+                                            <td></td>
+                                            <td class="clsBoldInputLabelTDNoPadding" colspan="2">
+                                                <table cellspacing="0" cellpadding="0" width="100%">
+                                                   <tr>
+                                                       <td align="left">
+                                                        <apex:outputLabel value="{!$Label.bmcservicedesk__selecteddsandfields}"/>
+
+                                                       </td>
+                                                       <td align="right" style="background-color:White;">
+                                                         <div id="btnToolbar" align="right" style="background-color:White;"></div>
+                                                       </td>
+                                                     </tr>
+                                                </table>            
+                                            </td>
+                                            
+                                        </tr>
+                                        <tr>
+                                            <td valign="top" width="24%"><div id="availabledataSourceDiv"  title="{!$Label.TooltipQuickViewsWizardQuerypageAvailableDataSources}" style="margin-right:0"></div></td>
+                                            <td valign="middle" align="center" width="6%">
+                                               <div id="buttonspanelDiv" ></div> 
+                                            </td>
+                                            <td valign="top" width="24%"><div id="selecteddataSourceDiv" title="{!$Label.TooltipQuickViewsWizardQuerypageDataSourceMultiple}"></div></td>
+                                            <td valign="top" width="46%">
+                                                <div id="selectedFieldsDiv"  title="{!$Label.TooltipQuickViewsWizardQuerypageDataField1}" align="left"></div>
+                                            </td>
+                                        </tr>
+                                     </table>
+                                </td>
+                                <td class="qvwidth15px" ></td>
+                            </tr>
+                            <!--  <tr>
+                                <td colspan="3">
+                                    <div class="div15pxVspacing"/>
+                                </td>
+                            </tr>-->
+                            
+                            <tr>
+                                <td colspan="3">
+                                    <div class="div15pxVspacing"/>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="qvwidth15px" ></td>
+                                <td class="clsBoldInputLabelTD">
+                                    <apex:outputLabel value="{!$Label.bmcservicedesk__queryconditions}"/>
+                                </td>
+                                <td class="qvwidth15px" ></td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="qvwidth15px" ></td> 
+                                <td> 
+                                    <div id="queryConditionDiv"/>
+                                </td>
+                                <td class="qvwidth15px" ></td>
+                            </tr>
+                            <tr>
+                                   <td height="15px" colspan="3"></td>
+                            </tr>
+                            <!--End  -->                         
+                            
+                            <!-- Page contents end here -->
+                            
+                            
+                            <tr style="background-color:#dee0e0;height:35px; width:100%;" >
+                              <td align="right" colspan="3">
+                                <table>
+                                    <tr>
+                                        <td><apex:commandButton value="{!$Label.bmcservicedesk__previous}" onclick="validateBeforeNext('Previous');" rerender="dummyPanel" styleclass="QvBtnGrey" /></td>
+                                        <td><apex:commandButton id="btnNext" value="{!$Label.bmcservicedesk__next}" onclick="validateBeforeNext('Next');" rerender="dummyPanel" styleclass="QvBtnGrey"/>
+                                        </td>
+                                        <td width="5px"></td>
+                                    </tr>
+                                </table>
+                               </td>
+                            </tr>
+                          </tbody>  
+                        </table>
+                      </td>
+                      <td width="15px"></td>
+                 </tr>
+                 <tr>
+                        <td height="15px" colspan="3"></td>
+                 </tr>
+               </tBody>
+              </table>  
+               <c:ValidationComponent errorMsgList="" id="vComponent"></c:ValidationComponent>
+           </apex:form>
+       </apex:outputPanel>
+</div> 
+<body onload="hideCalendarView();"></body> 
+</apex:page>

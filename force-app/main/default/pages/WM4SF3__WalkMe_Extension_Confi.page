@@ -1,0 +1,161 @@
+<apex:page standardController="WM4SF3__WalkMeExtension__c" extensions="WM4SF3.vf_LicenseController" sidebar="false">
+<!--apex:includeScript value="https://s3.amazonaws.com/s3.walkmedev.com/Felix/wm4sf/v20170425.3/auto-configure-metadata.js"/>
+<apex:includeScript value="https://s3.amazonaws.com/s3.walkmedev.com/Felix/wm4sf/v20170425.3/jsforce.min.js"/-->
+<script id="custom-js" type="text/javascript" src=""></script>
+
+<script>
+    // commandButton .... onclick="onBeforeSave()" oncomplete="onAfterSave()" 
+    function onBeforeSave() {
+        /*
+        enableButtons(false);
+        */
+    }
+    function onAfterSave() {
+        /*
+        var formId = '{!$Component.theForm}';
+        var userInputId = '{!$Component.theForm.Customer_Name__c}';
+        var profileInputId = '{!$Component.theForm.Extension_Profile__c}';
+        var guidInputId = '{!$Component.theForm.Extension_Guid__c}';
+        var sessionId_controller = '{!sessionId}';
+        var sessionId = '{!$Api.Session_ID}';
+        var serverUrl_controller = '{!serverUrl}';
+        var serverUrl = '{!$Api.Enterprise_Server_URL_390}';
+    
+        wm4sfBeginConfiguration({ 
+            serverUrl: serverUrl,
+            sessionId: sessionId,
+            extensionGuid: document.getElementById(guidInputId).value, 
+            user: document.getElementById(userInputId).value, 
+            profile: document.getElementById(profileInputId).value, 
+            statusViewElementId: formId,
+            onFinished: function() {
+                enableButtons(true);
+            }  
+        });
+        */
+    }
+    function enableButtons(enable) {
+        /*
+        var buttonElementId = '{!$Component.theForm.btnSubmit}';
+        document.getElementById(buttonElementId).disabled = !enable;
+        */
+    }
+</script>    
+   
+<script>
+              
+    function loadFile(id, fileName, env, attrType){
+
+        var elem = document.getElementById(id);
+        var path;
+        
+        if (env == 'local'){
+        
+            path = 'https://localhost/Plugins/salesforce/WM4SF_v2/pages/';
+        }
+        else if (env == 'qa'){
+                
+            path = 'https://d3fqyenyxfs83e.cloudfront.net/wm4sf/v2/';
+        }
+        
+        else{
+        
+            path = 'https://d3b3ehuo35wzeh.cloudfront.net/wm4sf/v2/';
+        }
+        
+        fileName = path + fileName;
+                
+        if (attrType=='src'){
+            
+            elem.src = fileName;
+        }
+        else if (attrType=='href'){
+        
+            elem.href = fileName;
+        }
+    }
+    
+    var env = "{!JSENCODE(WalkMeLicense.mode__c)}";
+    if ("{!WalkMeLicense.QA_Mode__c}" == 'true'){
+        
+        env = 'qa';
+    }
+    
+    loadFile('custom-js', 'Advanced.js', env, 'src');
+
+</script>
+<style>
+a {text-decoration: none; color: #1797c0}
+
+tr {height: 25px}
+
+.walkme-inner input[type="text"], .walkme-inner textarea {
+    border: 1px solid #c7ccce;
+    border-radius: 3px;
+    background: white;
+    -webkit-box-shadow: inset 0px 2px 5px 0px rgba(50, 50, 50, 0.1);
+    -moz-box-shadow:    inset 0px 2px 5px 0px rgba(50, 50, 50, 0.1);
+    box-shadow:         inset 0px 2px 5px 0px rgba(50, 50, 50, 0.1);        
+}
+
+.walkme-inner input[type="text"] {width: 255px; padding: 5px}
+
+.noSidebarCell {padding:0}
+.walkme-inner {
+    padding: 0 20px;
+    background: url('https://na15.salesforce.com/resource/WM4SF3__WalkMeLogo') no-repeat 724px 5px;    
+}
+
+.bold-head {font-size:14px;font-weight:bold;}
+
+</style>
+
+
+<apex:form id="theForm">
+<apex:pageMessages />
+   <b><apex:outputText value="WalkMe For Salesforce - Extension Configuration" style="font-size:18px; background: #f8efdf; display:block; padding: 12px 20px"/></b><br/>
+
+<div class="walkme-inner">
+<div class="bold-head"> Customer Name: </div>
+<div>
+    <div class="ExtCustomerName" style="font-size:13px;margin-left:170px;margin-top:-21px">
+            <apex:inputField value="{!WalkMeExtension.WM4SF3__Customer_Name__c}" required="true" id="Customer_Name__c" />
+    </div>
+
+       
+<div style="margin-top:20px;float:none;"> </div>
+
+<div class="bold-head"> Extension GUID: </div>
+
+
+
+    <div class="ExtGUID" style="font-size:13px;margin-left:170px;margin-top:-21px">
+            <apex:inputField value="{!WalkMeExtension.WM4SF3__Extension_Guid__c}" required="true" id="Extension_Guid__c" />
+    </div>
+
+       
+<div style="margin-top:20px;float:none;"> </div>
+
+<div class="bold-head"> Extension Profile: </div>
+
+
+    <div class="ExtProfile" style="font-size:13px;margin-left:170px;margin-top:-21px">
+            <apex:inputField value="{!WalkMeExtension.WM4SF3__Extension_Profile__c}" required="true" id="Extension_Profile__c"/>
+    </div>
+</div>
+       
+
+        <div style="margin-top:25px">
+        <apex:commandButton image="{!URLFOR($Resource.WM4SF3__Save_button)}" action="{!UpdateExtensionDetails}" style="text-align:right:22px; border-color:white; background:transparent; width:71px; height:29px;" id="btnSubmit" />
+       </div>
+        <!-- div style="margin-top:25px">
+            <strong><apex:outputLink value="{!$Page.WalkMe_Extension_Confi_New}">Go to New Configurator</apex:outputLink></strong>
+        </div -->       
+</div>
+</apex:form>
+
+<script>
+ var t = document.getElementsByTagName("textarea");
+t[0].value = t[0].value.replace(/\ /g,'\n');
+ </script>
+</apex:page>

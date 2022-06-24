@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Fill_in_PONumber_field_to_Activate_Order</fullName>
+    <active>true</active>
+    <description>If the associated Account requires PO for Orders, PONumber field should be filled in before activating orders.</description>
+    <errorConditionFormula>AND( 
+ ISCHANGED(StatusCode), 
+ TEXT(PRIORVALUE(StatusCode)) != &apos;Activated&apos;, 
+ TEXT(StatusCode) = &apos;Activated&apos;, 
+ OR ( 
+  /* PO required on header and isn&apos;t populated, throw error */ 
+  AND ( 
+   ISPICKVAL(Account.PO_Required_for_Orders__c, &apos;PO Required Before&apos;), 
+   NOT(Account.PO_Required_on_Line_Item__c), 
+   ISBLANK(PoNumber) 
+  ), 
+  /* if NOT &quot;Pest Control&quot;, PO required on the header, regardless of &quot;Account.PO_Required_on_Line_Item__c&quot;. throw error */ 
+  AND ( 
+   ISPICKVAL(Account.PO_Required_for_Orders__c, &apos;PO Required Before&apos;), 
+   Account.PO_Required_on_Line_Item__c, 
+   ISBLANK(PoNumber), 
+   NOT(INCLUDES(Line_of_Businesses__c, &apos;Pest Control&apos;)) 
+  ), 
+  /* if Pest Control LoB and PO required on line items - not all provided. throw error */ 
+  AND ( 
+   ISPICKVAL(Account.PO_Required_for_Orders__c, &apos;PO Required Before&apos;), 
+   Account.PO_Required_on_Line_Item__c, 
+   INCLUDES(Line_of_Businesses__c, &apos;Pest Control&apos;), 
+   Number_of_Order_Products_without_PO__c &gt; 0 
+  ) 
+ ) 
+)</errorConditionFormula>
+    <errorMessage>Parent Account requires Purchase Order Number, please fill in the PONumber field before Activating the Order.</errorMessage>
+</ValidationRule>

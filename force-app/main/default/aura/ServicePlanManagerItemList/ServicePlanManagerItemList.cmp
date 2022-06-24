@@ -1,0 +1,213 @@
+<!--
+- @FileName: ServicePlanItemList
+- @Description: Displays a list of Order Products associated to a particular account and other filter criteria
+- @Author: Graeme Ward
+- @ModificationLog:
+*************************************************************
+- Author            Date            Modification
+- Graeme Ward       10/22/2019      Created
+*************************************************************  
+-->
+
+<aura:component description="ServicePlanItemList"
+                controller="ServicePlanCtrl">
+
+    <ltng:require scripts="{!$Resource.LightningUtils}" />
+
+    <aura:attribute name="spinner" type="Boolean" default="false" />
+    <aura:attribute name="permissionLevel" type="String" />
+    <aura:attribute name="accountId" type="String" />
+    <aura:attribute name="dataWrapper" type="Map" />
+    <aura:attribute name="variety" type="String" />
+    <aura:attribute name="servicePlan" type="Map" />
+    <aura:attribute name="assetMap" type="Map" />
+    <aura:attribute name="assets" type="List" />
+    <aura:attribute name="message" type="String" />
+
+    <aura:method name="getItems" action="{!c.getItems}" />
+    <aura:method name="setMessage" action="{!c.setMessage}">
+        <aura:attribute name="message" type="String" />
+    </aura:method>
+
+    <aura:registerEvent name="ServicePlanManagerRefresh" type="c:ServicePlanManagerRefreshEvt" />
+
+    <aura:handler name="ServicePlanManagerItemDetailConfirm" event="c:ServicePlanManagerItemDetailConfirmEvt" action="{!c.confirmItemDetailSelections}" />
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+
+    <aura:if isTrue="{!v.spinner}">
+        <c:Util_LoadingSpinner />
+    </aura:if>
+
+    <div class="{!v.spinner ? 'slds-hide' : 'slds-show'}">
+        <div class="{!or(v.variety == 'Auto Assign', v.variety == 'Unassigned') ? 'slds-card slds-p-around_medium' : 'slds-card'}" >
+            <aura:if isTrue="{!and(v.variety == 'Auto Assign', v.permissionLevel == 'Read/Write')}">
+                <div class="slds-grid slds-grid_align-end slds-m-bottom_medium">
+                    <lightning:button variant="brand"
+                                      label="{!$Label.c.Assign_Items}"
+                                      onclick="{!c.assignItems}"
+                                      disabled="{!empty(v.assets)}" />
+                </div>
+            </aura:if>
+
+            <aura:if isTrue="{!not(v.variety == 'Unassigned')}">
+                <p class="slds-text-heading_large slds-m-bottom_medium">{!$Label.c.SPM_Available_Order_Items}</p>
+
+                <aura:set attribute="else">
+                    <p class="slds-text-heading_large slds-m-bottom_medium">{!$Label.c.SPM_Unassigned_Order_Items}</p>
+                </aura:set>
+            </aura:if>
+
+
+            <aura:if isTrue="{!not(empty(v.assets))}" >
+                <table class="slds-table slds-table_cell-buffer">
+                    <thead>
+                        <tr class="slds-text-title_caps">
+                            <aura:if isTrue="{!not(v.variety == 'Unassigned')}">
+                                <th scope="col">
+                                    <div class="slds-truncate" title="">
+                                        <lightning:input aura:id="checkboxAll"
+                                                         type="checkbox"
+                                                         label=""
+                                                         onchange="{!c.selectAll}"
+                                                         disabled="{!v.permissionLevel == 'Read Only'}" />
+                                    </div>
+                                </th>
+                            </aura:if>
+
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.Product_Name}">{!$Label.c.Product_Name}</div>
+                            </th>
+
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.Frequency}">{!$Label.c.Frequency}</div>
+                            </th>
+
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.OrderNumber}">{!$Label.c.OrderNumber}</div>
+                            </th>
+
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.Product_Quantity}">{!$Label.c.Product_Quantity}</div>
+                            </th>
+
+                            <aura:if isTrue="{!or(v.variety == 'Create', v.variety == 'Manage')}">
+                                <th scope="col">
+                                    <div class="slds-truncate" title="{!$Label.c.Selected_Quantity}">{!$Label.c.Selected_Quantity}</div>
+                                </th>
+                            </aura:if>
+
+                            <aura:if isTrue="{!v.variety == 'Auto Assign'}">
+                                <th scope="col">
+                                    <div class="slds-truncate" title="{!$Label.c.Service_Plan}">{!$Label.c.Service_Plan}</div>
+                                </th>
+                            </aura:if>
+
+                            <aura:if isTrue="{!or(v.variety == 'Auto Assign', v.variety == 'Unassigned')}">
+                            <th scope="col">
+                                <div class="slds-truncate" title="{!$Label.c.Last_Service_Plan}">{!$Label.c.Last_Service_Plan}</div>
+                            </th>
+                            </aura:if>
+                             <!--FXR 517-->   
+                            <aura:if isTrue="{!or(v.variety == 'Create', v.variety == 'Manage')}">
+                                <th scope="col"></th>
+                            </aura:if>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <aura:iteration items="{!v.assets}" var="asset" >
+                            <tr>
+                                <aura:if isTrue="{!not(v.variety == 'Unassigned')}">
+                                    <td>
+                                        <div class="slds-truncate" title="">
+                                            <lightning:input aura:id="checkbox"
+                                                             type="checkbox"
+                                                             label=""
+                                                             checked="{!asset.selected}"
+                                                             onchange="{!c.selectOne}"
+                                                             value="{!asset.assetId}"
+                                                             disabled="{!or(
+                                                                and(
+                                                                    asset.selectedQuantity > 0,
+                                                                    asset.selectedQuantity != asset.item.Quantity
+                                                                ),
+                                                                v.permissionLevel == 'Read Only'
+                                                             )}" />
+                                        </div>
+                                    </td>
+                                </aura:if>
+
+                                <td>
+                                    <div class="slds-truncate" title="{!asset.item.Product_Name__c}">
+                                        {!asset.item.Product_Name__c}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="slds-truncate" title="{!asset.item.Frequency__c}">
+                                        {!asset.item.Frequency__c}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="slds-truncate" title="{!asset.item.Order_Number__c}">
+                                        {!asset.item.Order_Number__c}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="slds-truncate" title="{!asset.item.Quantity}">
+                                        {!asset.item.Quantity}
+                                    </div>
+                                </td>
+
+                                <aura:if isTrue="{!or(v.variety == 'Create', v.variety == 'Manage')}">
+                                    <td>
+                                        <div class="slds-truncate" title="{!asset.selectedQuantity}">
+                                            {!asset.selectedQuantity}
+                                        </div>
+                                    </td>
+                                </aura:if>
+
+                                <aura:if isTrue="{!v.variety == 'Auto Assign'}">
+                                    <td>
+                                        <div class="slds-truncate" title="{!asset.suggestedServicePlanName}">
+                                            {!asset.suggestedServicePlanName}
+                                        </div>
+                                    </td>
+                                </aura:if>
+                                <aura:if isTrue="{!or(v.variety == 'Auto Assign', v.variety == 'Unassigned')}">
+                                 <!--FXR 517-->
+                                <td>
+                                    <div class="slds-truncate" title="{!asset.item.Last_Service_Plan_Name__c}">
+                                        {!asset.item.Last_Service_Plan_Name__c}
+                                    </div>
+                                </td>
+                                </aura:if>
+
+                                <aura:if isTrue="{!and(v.servicePlan.Job_Type__c == 'Recurring Service',
+                                                       or(v.variety == 'Create',
+                                                          v.variety == 'Manage'))}">
+                                    <td>
+                                        <div class="slds-truncate" title="Item Detail">
+                                            <lightning:button variant="brand"
+                                                              label="{!$Label.c.Item_Detail}"
+                                                              value="{!asset}"
+                                                              onclick="{!c.showItemDetail}" />
+                                        </div>
+                                    </td>
+                                </aura:if>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+
+                {!v.body}
+
+                <aura:set attribute="else">
+                    <p class="slds-m-top_small">{!v.message}</p>
+                </aura:set>
+            </aura:if>
+        </div>
+    </div>
+</aura:component>

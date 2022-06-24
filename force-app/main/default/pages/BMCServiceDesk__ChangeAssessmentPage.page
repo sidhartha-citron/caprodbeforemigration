@@ -1,0 +1,390 @@
+<apex:page showHeader="false" controller="BMCServiceDesk.ChangeAssessmentController" standardStylesheets="false">
+    <c:CommonIncludes />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/ChangeStyleSheet.css"/>
+<script>
+    windowloaddate = new Date();
+    networklatencystart = windowloaddate.getTime();
+</script>    
+
+    <apex:includeScript value="{!$Resource.BMCServiceDesk__SDEFCommonJS}/ChangeAssessment.js" />
+    
+    <script>
+    Ext.ns("ChangeAssessmentPage");
+		ChangeAssessmentPage.Labels = {
+        	AssessorIDError:'{!JSENCODE($Label.AssessorIDError)}',
+            TextCommentsOverflow:'{!JSENCODE($Label.TextCommentsOverflow)}',
+            TextBenefitsOfChangeOverflow:'{!JSENCODE($Label.TextBenefitsOfChangeOverflow)}',
+            Save:'{!JSENCODE($Label.Save)}',
+            Copy:'{!JSENCODE($Label.Copy)}',
+            Delete:'{!JSENCODE($Label.Delete)}',
+            Reset:'{!JSENCODE($Label.Reset)}',
+            LaunchCIExplorer:'{!JSENCODE($Label.LaunchCIExplorer)}',
+            Inactive:'{!JSENCODE($ObjectType.Change_Assessment__c.fields.inactive__c.label)}',
+            InactiveTooltip:'{!JSENCODE($ObjectType.Change_Assessment__c.fields.inactive__c.label)}',
+            PreviousRecord:'{!JSENCODE($Label.PreviousRecord)}',
+            NextRecord:'{!JSENCODE($Label.NextRecord)}',
+            ChangeInformation:'{!JSENCODE($Label.ChangeInformation)}',
+            ChangeAssessment:'{!JSENCODE($ObjectType.Change_Assessment__c.label)}',
+            Delete:'{!JSENCODE($Label.Delete)}',
+            DeleteIncidentPage:'{!JSENCODE($Label.DeleteConfirmMessage)}',
+            DeletedRecord: '{!JSENCODE($Label.DeletedRecord)}',
+            Information: '{!JSENCODE($Label.Information)}',
+            MsgNoAccessPerm: '{!JSENCODE($Label.MsgNoAccessPerm)}',
+			PM_netwokLatency: '{!JSENCODE($Label.PM_netwokLatency)}',
+            PM_PageLoad: '{!JSENCODE($Label.PM_PageLoad)}'        
+	}
+            
+    Ext.ns("ChangeAssessmentPageComp");     
+    	ChangeAssessmentPageComp.ComponentVars = {
+    		UserPhone: '{!$Component.changeAssessmentForm.User_id_phone}',
+	    	UserExtension: '{!$Component.changeAssessmentForm.User_id_extension}',
+	    	AssessmentCompletionDate: '{!$Component.changeAssessmentForm.Assessment_Completion_Date}',
+	    	Username: '{!$Component.changeAssessmentForm.User_id_username}',
+	    	BenefitsOfChange: '{!$Component.changeAssessmentForm.BenefitsOfChange__c}',
+	    	Comments: '{!$Component.changeAssessmentForm.Comments__c}',
+	    	FirstName: '{!$Component.changeAssessmentForm.User_id_firstname}',
+	    	LastName: '{!$Component.changeAssessmentForm.User_id_lastname}'
+    	}
+    	
+    var errormsg = '', idset;
+    var data = '';
+  	data += '{!JSENCODE($Label.PM_servertime)}';
+    
+    var ChangeRequestid = '{!JSENCODE(ChangeRequestid)}';
+    wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+	function afterResetSI(){
+        var modName = '{!JSENCODE($CurrentPage.parameters.moduleName)}';
+        var parentWid = '{!JSENCODE($CurrentPage.parameters.parentWid)}';
+        if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && 
+            parentWid != '' && typeof(parentWid) != 'undefined'){
+            window.parent.parent.refreshSupportingInformation(parentWid,modName);
+        }
+    }
+	function getChangeAssessmentID(){
+    	return '{!ChangeAssesment.Id}';
+    }    
+    
+    function getInactiveChkBox(){
+    	return {!chkBoxValue}
+    }
+    
+    function getWID(){
+    	return '{!JSENCODE($CurrentPage.parameters.wid)}';
+    }
+    function getID(){
+            return '{!JSENCODE($CurrentPage.parameters.id)}';
+    }
+    function getIsDirect(){
+		return '{!JSENCODE($CurrentPage.parameters.isDirect)}';
+	}
+    
+    function getSDFStylesResPath(){
+        return '{!$Resource.SDEFStyles}';
+    }
+    
+    function isRecordDeleted(){
+        return {!isRecDeleted};
+    }    
+    
+    function getNoRightsToViewEdit(){
+        return {!NoRightsToViewEdit};
+    }
+      
+    function ShowCIExplorer() {   
+           ShowCIExplorerJS('{!JSENCODE($Label.CIExpCIExplorer)}', '{!JSENCODE($Label.ConfigurationItemsExplorer)}');            
+        }
+    </script>    
+    <apex:outputPanel id="titlePanel">
+        <script>     
+            AssessmentId = '{!ChangeAssesment.Id}'; 
+		    function getEnableCILinkBtn(){
+		    	return {!enableCILinkBtn};
+		    }
+		
+		    function getEnableSaveBtn(){
+		    	return {!enableSaveBtn};
+		    }  
+		
+		    function getEnableDeleteCopyBtn(){
+		    	return {!enableDeleteCopyBtn};
+		    }
+		    function getEnableCopyBtn(){
+		    	return {!enableCopyBtn};
+		    }  
+
+            function updateInactive(){
+                Ext.getCmp('change_assessment_inactive').setValue({!chkBoxValue});
+            }
+        
+            function updateList(){
+	            window.parent.needsRefresh = true;
+            }
+            function completeDelete(){
+                if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}'){
+                    showError();
+                }else{
+                    var modName = "{!JSENCODE($CurrentPage.parameters.moduleName)}";  
+                    var parentWid = "{!JSENCODE($CurrentPage.parameters.parentWid)}";
+                    if(modName != null && modName != '' && typeof(modName) != 'undefined' && parentWid != null && parentWid != '' && typeof(parentWid) != 'undefined'){
+                        window.parent.parent.refreshSupportingInformation(parentWid,modName);                       
+                    }
+                    closeWindow();
+                }
+     		}
+
+            function updateTitle(){
+            	var copyBtnFlag = '{!copyBtnClicked}';
+           
+                newTitle = '#'+'{!JSENCODE(ChangeAssesment.name)}';
+           	 	if(copyBtnFlag == 'true' || newTitle == '#'){
+           	 		if(AssessmentId == ''){
+            			newTitle = '{!JSENCODE($ObjectType.Change_Assessment__c.label)}';
+            		}
+            	}   
+               	if(newTitle != '' && newTitle != null)
+                	window.parent.changeTitle(wid,newTitle,newTitle);               	
+            }
+                        
+            function handleSave(){
+            	window.parent.handleSave(wid, AssessmentId);
+            }
+           
+            updateTitle();
+           
+        </script>
+    </apex:outputPanel>    
+    
+    <apex:outputPanel id="errorId">
+        <script>        
+            errormsg = '{!JSENCODE(messageString)}';               
+        </script>
+        </apex:outputPanel>    
+    <apex:form id="changeAssessmentForm">
+        <div id="capsule" class="CapsuleDiv1">
+        <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+        
+        <apex:actionFunction action="{!fetchassessordetails}" name="assessordetails" rerender="User_id_username,User_id_firstname,User_id_lastname,User_id_phone,User_id_id,User_id_extension" oncomplete="">
+            <apex:param assignTo="{!selectedUserId}" name="selectedUserId" value=""/>
+        </apex:actionFunction> 
+
+        <apex:actionFunction action="{!save}" name="saveAssessment" rerender="validationComponent,errorId,titlePanel,Assessment_Completion_Date" oncomplete="waitMsg.hide();showError();updateList();enableSaveButton();afterResetSI();updateTitle();buttonValidator();handleResetChange();handleElemEvent();handleSave();">
+            <apex:param assignTo="{!chkBoxValue}" name="inactiveChkBox" value=""/>
+        </apex:actionFunction> 
+
+        <apex:actionFunction action="{!reset}" name="resetAssessment" rerender="User_id_username,User_id_firstname,User_id_lastname,User_id_phone,User_id_id,User_id_extension,Technical_Risks__c,Financial_Risks__c,Business_Risks__c,BenefitsOfChange__c,Comments__c,titlePanel,Assessment_Completion_Date,Assessment_Completed__c" oncomplete="updateInactive();handleResetChange();handleElemEvent();"/>
+
+        <apex:actionFunction action="{!deleteChangeAssesment}" name="deleteChangeAssesmentRecord" rerender="validationComponent,titlePanel,errorId" oncomplete="updateList();completeDelete();closeWindow();">            
+        </apex:actionFunction>    
+
+        <apex:actionFunction action="{!nextBtnHandler}" name="nextAssessmentBtnHandler" rerender="User_id_username,User_id_firstname,User_id_lastname,User_id_phone,User_id_id,User_id_extension,Technical_Risks__c,Financial_Risks__c,Business_Risks__c,BenefitsOfChange__c,Comments__c,titlePanel,Assessment_Completion_Date,Assessment_Completed__c,changeRequestComponent" oncomplete="updateTitle();buttonValidator();updateInactive();handleResetChange();handleElemEvent();handleSave();">
+            <apex:param assignTo="{!assessmentIdsString}" name="idSetString" value=""/>            
+        </apex:actionFunction>    
+                              
+        <apex:actionFunction action="{!previousBtnHandler}" name="previousAssessmentBtnHandler" rerender="User_id_username,User_id_firstname,User_id_lastname,User_id_phone,User_id_id,User_id_extension,Technical_Risks__c,Financial_Risks__c,Business_Risks__c,BenefitsOfChange__c,Comments__c,titlePanel,Assessment_Completion_Date,Assessment_Completed__c,changeRequestComponent" oncomplete="updateTitle();buttonValidator();updateInactive();handleResetChange();handleElemEvent();handleSave();">
+            <apex:param assignTo="{!assessmentIdsString}" name="idSetString" value=""/>            
+        </apex:actionFunction>    
+
+        <table class="clsMainTable" cellspacing="0" cellpadding="0">
+            <tr class="clsRowGreyBg">
+                <td>
+                   <div id="btnToolbar"></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table  class="clsTable" cellspacing="0" cellpadding="0">  
+                        <tr>
+                            <td class="clsTopAlignment75">
+                                <apex:outputPanel id="tablePanel">
+                                <div class="x-panel-header"><apex:outputLabel value="{!$Label.bmcservicedesk__assessorinformation}"/></div>
+                                <table class="clsTable" cellspacing="0" cellpadding="0">
+                                    <tr>
+                                        <td colspan="3">
+                                            <div class="div15pxVspacing"></div>
+                                        </td>
+                                    </tr>   
+                                    <tr>
+                                        <td class="clsInputLabelTDAssessmentI">
+                                            <apex:outputLabel value="{!$ObjectType.User.fields.LastName.label}" />
+                                        </td>
+                                        <td class="clsInputTextBoxTD"> 
+                                            <apex:inputText title="{!$Label.bmcservicedesk__tooltipchangeassessmentlastname}" value="{!assessorlastname}"  styleClass="clsInputTextBox"  id="User_id_lastname"  tabindex="500" onblur="showData(event,userInfoComplete,escape('IsStaffUser__c=true'));" />
+                                        </td>
+                                        <td class="lookupIconTDAssess">
+                                            <div class="lookUpIconDiv">
+                                                <input type="button" class="lookupIconOn" id="AssessorLastNameLookup_Id" onclick="if(!inProgress){openPopup('SearchPage?popupId=Client&isLookup=true&filterClause=IsStaffUser__c=true',assessordetails);}" tabindex="501" />
+                                            </div>
+                                        </td>
+                                        <td class="clsInputLabelTDAssessmentII">
+                                            <apex:outputLabel value="{!$ObjectType.User.fields.Phone.label}" />
+                                        </td>
+                                        <td>
+                                            <apex:inputText title="{!$Label.bmcservicedesk__tooltipchangeassessmentphone}" value="{!assessorphone}" styleClass="clsIdInputTextBoxReadOnly"  id="User_id_phone"  tabindex="502" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTDAssessmentI">
+                                            <apex:outputLabel value="{!$ObjectType.User.fields.FirstName.label}" />
+                                        </td>
+                                        <td class="clsInputTextBoxTD">
+                                            <apex:inputText title="{!$Label.bmcservicedesk__tooltipchangeassessmentfirstname}" value="{!assessorfirstname}" styleClass="clsInputTextBox"  id="User_id_firstname"  tabindex="503" onblur="showData(event,userInfoComplete,escape('IsStaffUser__c=true'));" />
+                                        </td>
+                                        <td class="lookupIconTDAssess">
+                                            <div class="lookUpIconDiv">
+                                                <input type="button" class="lookupIconOn" id="AssessorFirstNameLookup_Id" onclick="if(!inProgress){openPopup('SearchPage?popupId=Client&isLookup=true&filterClause=IsStaffUser__c=true',assessordetails);}" tabindex="504" />
+                                            </div>
+                                        </td>
+                                        <td class="clsInputLabelTDAssessmentII">
+                                            <apex:outputLabel value="{!$ObjectType.User.fields.Extension.label}" />
+                                        </td>
+                                        <td>
+                                            <apex:inputText title="{!$Label.bmcservicedesk__tooltipchangeassessmentextension}" value="{!assessorextension}" styleClass="clsIdInputTextBoxReadOnly"  id="User_id_extension"  tabindex="505" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTDAssessmentI">
+                                            <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__FKAssessor__c.label} " /><span class="clsRequiredBlack">*</span>
+                                        </td>
+                                        <td class="clsInputTextBoxTD">
+                                            <apex:inputText title="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__FKAssessor__c.InlineHelpText}" value="{!assessorusername}" styleClass="clsInputTextBox"  id="User_id_username"  tabindex="506" onblur="showData(event,userInfoComplete,escape('IsStaffUser__c=true'));" title="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__FKAssessor__c.InlineHelpText}" />
+                                            <apex:inputhidden id="User_id_id" value="{!ChangeAssesment.BMCServiceDesk__FKAssessor__c}" />                                       
+                                        </td>
+                                        <td class="lookupIconTDAssess">
+                                            <div class="lookUpIconDiv">
+                                                <input type="button" class="lookupIconOn" id="AssessorIDLookup_Id" onclick="if(!inProgress){openPopup('SearchPage?popupId=Client&isLookup=true&filterClause=IsStaffUser__c=true',assessordetails);}" tabindex="507" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table> 
+                                </apex:outputPanel>                                
+                            </td>  
+                        </tr>
+                    </table>    
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="div15pxVspacing"></div>
+                </td>
+            </tr> 
+            <tr>
+                <td colspan="3">
+                    <div id="changeAssessmentInfoDiv"></div>
+                </td>            
+            </tr>  
+        </table>
+        <c:TabOutComponent ></c:TabOutComponent>
+        </div>
+        <div id="changeAssessmentComponent">
+            <div class="div15pxVspacing"></div>
+            <c:ChangeAssesment changeNum="{!ChangeRequestid}" id="changeRequestComponent" ></c:ChangeAssesment>         
+        </div>
+        <div id="assessmentInfo">
+        <table class="clsTable" cellspacing="0" cellpadding="0">
+            <tr>
+                <td colspan="3">
+                    <div class="div15pxVspacing"></div>
+                </td>
+            </tr>   
+            <tr>
+                <td class="clsInputLabelTDAssessmentRisk">
+                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__Technical_Risks__c.label}"/>                                                                          
+                </td>
+                <td class="clsInputTextBoxTD" title="{!$ObjectType.Change_Assessment__c.fields.Technical_Risks__c.inlineHelpText}">
+                    <apex:inputField id="Technical_Risks__c" value="{!ChangeAssesment.BMCServiceDesk__Technical_Risks__c}" styleClass="clsSelectList" />
+                </td>
+                <td class="clsInputLabelTD">
+                	<apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__Assessment_Completed__c.label}"/>
+                </td>
+                <td>
+                    <apex:inputCheckbox value="{!ChangeAssesment.BMCServiceDesk__Assessment_Completed__c}" id="Assessment_Completed__c" title="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__Assessment_Completed__c.InlineHelpText}" tabindex="508"/>                 
+                </td>
+            </tr>
+            <tr>
+                <td class="clsInputLabelTDAssessmentRisk">
+                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__Financial_Risks__c.label}"/>                                                                          
+                </td>
+                <td class="clsInputTextBoxTD" title="{!$ObjectType.Change_Assessment__c.fields.Financial_Risks__c.inlineHelpText}">
+                    <apex:inputField id="Financial_Risks__c" value="{!ChangeAssesment.BMCServiceDesk__Financial_Risks__c}" styleClass="clsSelectList" />
+                </td>   
+                <td class="clsInputLabelTD">
+                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__Assessment_Completion_Date__c.label}"/>
+                </td>   
+                <td>
+                    <apex:inputText title="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__Assessment_Completion_Date__c.InlineHelpText}" value="{!strAssessmentCompletionDate}" styleClass="clsInputTextBoxDate"  id="Assessment_Completion_Date" />
+                </td>                          
+            </tr>                                                                    
+            <tr>
+                <td class="clsInputLabelTDAssessmentRisk">
+                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__Business_Risks__c.label}"/>                                                                          
+                </td>
+                <td class="clsInputTextBoxTD" title="{!$ObjectType.Change_Assessment__c.fields.Business_Risks__c.inlineHelpText}">
+                    <apex:inputField id="Business_Risks__c" value="{!ChangeAssesment.BMCServiceDesk__Business_Risks__c}" styleClass="clsSelectList" />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <div class="div15pxVspacing"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div id="assessmentBtn">
+                        <input type="button" class="clickedButton" title = "{!$ObjectType.Change_Assessment__c.fields.Benefits_of_Change__c.label}" value="{!$ObjectType.Change_Assessment__c.fields.Benefits_of_Change__c.label}" id="BenefitsOfChange" tabindex="509" onclick="assignBenefitsOrCommentsValue('BenefitsOfChange');" />
+                        <input type="button" class="AddButton" title = "{!$ObjectType.Change_Assessment__c.fields.Comments__c.label}" value="{!$ObjectType.Change_Assessment__c.fields.Comments__c.label}" id="Comment" tabindex="510" onclick="assignBenefitsOrCommentsValue('Comment');" />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <div>
+                        <apex:inputTextArea title="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__Benefits_of_Change__c.InlineHelpText}"  id="BenefitsOfChange__c" value="{!ChangeAssesment.BMCServiceDesk__Benefits_of_Change__c}"styleClass="clsInputTextAreaAssess" />                     
+                        <apex:inputTextArea title="{!$ObjectType.BMCServiceDesk__Change_Assessment__c.fields.BMCServiceDesk__Comments__c.InlineHelpText}"  id="Comments__c" value="{!ChangeAssesment.BMCServiceDesk__Comments__c}"styleClass="clsInputTextAreaAssess" />                     
+                    </div>
+                </td>
+            </tr>
+        </table>                                
+        </div>
+    </apex:form>
+    <script>
+    	var stime = '{!serverstarttime}';
+    	var etime = '{!currenttime}';
+    	var servertime = etime - stime;
+    	//var networkstart = '{!constructorendtime}';
+    	var networkstart = etime;
+    	data +=servertime;
+    	data += '<br>';
+    </script>      
+    <script>
+ 
+    document.getElementById('{!$Component.changeAssessmentForm.changeRequestComponent.chanhe.ChangeDescriptionId}').title = "{!JSENCODE($Label.tooltipChangeAssessmentDescription)}";
+    document.getElementById('linkdiv').title = "{!JSENCODE($Label.tooltipChangeAssessmentChangeId)}";
+   	var buttonclickd = '';
+    function setToolTip(buttonclickd){
+    	 if(buttonclickd == 'ChangeReasonBtnId'){
+	    	 document.getElementById('{!$Component.changeAssessmentForm.changeRequestComponent.chanhe.ChangeDescriptionId}').title = "{!JSENCODE($Label.tooltipChangeAssessmentReason)}";
+    	 }
+    	 if(buttonclickd == 'ChangeDescriptionBtnId'){  
+    	 	document.getElementById('{!$Component.changeAssessmentForm.changeRequestComponent.chanhe.ChangeDescriptionId}').title = "{!JSENCODE($Label.tooltipChangeAssessmentDescription)}";
+    	 }
+    	 if(buttonclickd == 'RollOutPlanBtnId'){
+    	 	document.getElementById('{!$Component.changeAssessmentForm.changeRequestComponent.chanhe.ChangeDescriptionId}').title = "{!JSENCODE($Label.tooltipChangeAssessmentRollOut)}";
+    	 }
+    	 if(buttonclickd == 'BackOutPlanBtnId'){
+    	 	document.getElementById('{!$Component.changeAssessmentForm.changeRequestComponent.chanhe.ChangeDescriptionId}').title = "{!JSENCODE($Label.tooltipChangeAssessmentBackOut)}";
+    	 }
+    }
+    var btnBenefits_of_ChangeValue = '{!$ObjectType.Change_Assessment__c.fields.Benefits_of_Change__c.label}';
+	if(btnBenefits_of_ChangeValue.length > 15 && document.getElementById('BenefitsOfChange') != 'undefined'){
+		btnBenefits_of_ChangeValue = Ext.util.Format.ellipsis(btnBenefits_of_ChangeValue,18);  
+		document.getElementById('BenefitsOfChange').value = btnBenefits_of_ChangeValue;
+	}
+	
+	var btnCommentsValue = '{!$ObjectType.Change_Assessment__c.fields.Comments__c.label}';
+	if(btnCommentsValue.length > 7 && document.getElementById('Comment') != 'undefined'){
+		btnCommentsValue = Ext.util.Format.ellipsis(btnCommentsValue,10);  
+		document.getElementById('Comment').value = btnCommentsValue;
+	}
+    
+    </script>  
+</apex:page>

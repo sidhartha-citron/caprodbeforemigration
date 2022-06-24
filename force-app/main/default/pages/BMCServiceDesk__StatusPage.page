@@ -1,0 +1,852 @@
+<apex:page showHeader="false"  controller="BMCServiceDesk.StatusController" standardStylesheets="false">
+   <c:CommonIncludes />
+<!-- <script type="text/javascript" src="{!$Resource.ExtJS}/ext-all-debug.js"></script> -->
+
+     <apex:outputPanel id="statusPanelId">
+      <script>
+         var statusId='{!JSENCODE($CurrentPage.parameters.id)}';
+      </script>   
+    </apex:outputPanel>
+ <style>
+ .clsRight40px{padding-right: 36px;}
+ 
+.checkLabelSTD{
+    color:#000000;
+    font-family:Tahoma,MS Sans Serif;
+    font-size:11px;
+ }
+ 
+.checkLabelStatus label{
+    font-family:Tahoma,MS Sans Serif; 
+}
+ 
+.checkLabelStatus input {
+    vertical-align: top !important;
+    float: left; 
+}
+
+.clsPanelInputCheckboxTDSA input {
+    float:left;
+}
+ 
+.clsIdInputTextBox{
+    *height:13px;
+} 
+.clsInputCheckBox{
+	padding-left /*\**/:10px\9 ;
+	*padding-left :6px ;
+}
+ </style>
+    <script>
+     var statusName;               
+     var errormsg;
+     var checkDefaultStatus;
+     var checkDefaultMergeStatus;
+     var chkBoxValue;
+     var incAssign;
+     var prbAssign;
+     var taskAssign;
+     var changeAssign;
+     var BrdAssign;
+     var relAssign;
+     var statusLabel = '{!$ObjectType.Status__c.Label}';
+     var wid = '{!JSENCODE($CurrentPage.parameters.wid)}';
+     var enableSaveBtn={!hasPermissions};
+     var enableCopyButton = {!canCopy};
+     var enableDeleteButton = {!canDelete};
+     document.onclick = activateWindow; 
+     function getWID(){
+            return '{!JSENCODE($CurrentPage.parameters.wid)}';
+     }
+
+     /*
+            Code for handling Data change on Page
+            - START
+        */
+        var wid2 = '{!JSENCODE($CurrentPage.parameters.wid)}';
+        var clickedOnce = false;  
+        function handleChange(){
+            if(!clickedOnce){
+                clickedOnce = true;
+                window.parent.registerChange(wid2);
+            }
+        }
+            
+        function handleResetChange(){
+            if(clickedOnce){
+               clickedOnce = false;
+               window.parent.registerSave(wid2);
+           }
+           }
+           
+      
+         
+         /*
+            END
+        */
+    function enableMergeStatus(chk) {
+        var defaultMergeStatus = document.getElementById('{!$Component.formId.defaultMergeStatus}');
+        if (chk.checked) 
+            defaultMergeStatus.disabled = false;
+        else
+        {
+            defaultMergeStatus.checked = false;
+            defaultMergeStatus.disabled = true;
+        }
+    }
+    
+	function disableMergeStatus() {
+        document.getElementById('{!$Component.formId.defaultMergeStatus}').disabled = ( 'true' == incAssign ) ? false : true; 
+    }	
+
+    function callCopyPage(){ 
+        window.parent.addTab("StatusPage?copyId=" + statusId, statusLabel, statusLabel);
+    }
+    
+    function completeDelete(){
+        if(errormsg == '{!JSENCODE($Label.InsufficentDeletePrivilege)}'){
+            showError();
+        }else{
+            closeWindow();
+        }
+     }
+    
+        function closeWindow(){
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+        }
+        
+        Ext.onReady(function(){
+
+        Ext.QuickTips.init();
+        if({!isRecDeleted}){
+            Ext.Msg.alert('{!JSENCODE($Label.Information)}', '{!JSENCODE($Label.DeletedRecord)}', function(){
+                if ((typeof(window.parent) != 'undefined') && (typeof(window.parent.popUpWindow) != 'undefined'))
+                    window.parent.popUpWindow.close();
+                    closeWindow();
+            });
+        }   
+        disableDefaultStatus1();
+        disableWorkstatus();
+        // This function renders a block of buttons
+        var SaveBtnHandler = function(button,event) { 
+        chkBoxValue=Ext.getCmp('idInactive').getValue();
+        var defaultSt=document.getElementById('{!$Component.formId.defaultStatus}').checked;
+        var disable=document.getElementById('{!$Component.formId.defaultStatus}').disabled;
+	        if((statusId != null && statusId != '') &&  defaultSt === true ){ 
+             Ext.MessageBox.confirm('', '{!JSENCODE($Label.DefaultStatusChanged)}', function(btn){
+                                                           if(btn === 'yes'){
+	                         waitbox(0);
+                                                                  save(chkBoxValue); 
+                 	}
+                 });
+            
+            }else{
+            Ext.getCmp('saveId').setDisabled(true);
+            waitbox(0);
+	            save(chkBoxValue);
+	        }
+        };
+        var NewbtnController= function(button,event) {activeAllWindowFlag=false; openPage("StatusPage",statusLabel,statusLabel);};
+        var DeleteBtnHandler = function(button,event) { 
+                                                        
+                                                        Ext.MessageBox.confirm('{!JSENCODE($Label.delete)}', '{!JSENCODE($Label.DeleteConfirmMessage)}', function(btn){
+                                                           if(btn === 'yes'){
+                                                                  deleteStatus();
+                                                           }});
+                                                                 };
+        var CopyBtnHandler = function(button,event) { activeAllWindowFlag=false; callCopyPage();};
+        var ResetBtnHandler = function(button,event) {  resetStatus(); };
+        var NextBtnHandler = function (button,event) { if(document.getElementById('nextId').disabled!=true) nextStatusBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { if(document.getElementById('prevId').disabled!=true) previousStatusBtnHandler1();};
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+       new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+                scale: 'medium',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.new)}',
+                iconCls: 'bmcNew',
+                id:'newId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },                
+                handler:NewbtnController
+            } ,' ', {
+                scale: 'medium',
+                tooltipType: 'title',
+                 tooltip: '{!JSENCODE($Label.save)}',
+                iconCls: 'bmcSave',
+                id:'saveId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },                
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.copy)}',
+                id:'copyId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },                
+                handler:CopyBtnHandler 
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType: 'title',
+                tooltip: '{!JSENCODE($Label.delete)}',
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },                
+                handler:DeleteBtnHandler 
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcRefreshDasboard',
+                tooltipType: 'title',
+               tooltip: '{!JSENCODE($Label.Refresh)}',
+                id:'resetId',
+                         
+                handler:ResetBtnHandler
+            },
+              new Ext.Toolbar.Fill(), 
+            {
+                  id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               align:'top',
+               checked: false,
+               disabled:{!status.BMCServiceDesk__defaultStatus__c},
+               boxLabel:'{!$ObjectType.Status__c.fields.inactive__c.label}',
+               cls:'chkStyle',
+               boxLabel:'<span class="checkboxLabelCls">{!$ObjectType.Status__c.fields.inactive__c.label}</span>',
+               listeners:{
+                    render:function(){
+                        Ext.QuickTips.register({
+                            target:this,
+                            text:'{!JSENCODE($ObjectType.Status__c.fields.inactive__c.label)}',
+                            dismissDelay: 20000
+                        });
+                    }               
+               }
+            }, {
+               
+               
+                  xtype : 'box',
+                  id    : 'prevId',
+                 autoEl:  {tag: 'img', 
+                          src:('{!$Resource.SDEFStyles}/SDEFbuttons/b_previous.gif'),   
+                         title:'{!JSENCODE($Label.previousRecord)}'
+                         },
+                          
+                cls:'cursorCls',
+               listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                             
+            },{
+               
+                xtype : 'box',
+                id    : 'nextId',
+                autoEl:  {tag: 'img', 
+                          src:'{!$Resource.SDEFStyles}/SDEFbuttons/b_next.gif',
+                          title:'{!JSENCODE($Label.nextRecord)}' },
+                cls:'cursorSpaceCls',
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}}
+               
+                
+            }
+            ] 
+        });
+        checkSequenceId();
+        disabledAppiesTo(); 
+        Ext.getCmp('idInactive').setValue('{!status.inactive__c}');
+
+        statusId = '{!JSENCODE(status.Id)}';    
+        if(statusId == null ||statusId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+        Ext.getCmp('copyId').setDisabled(true);
+        Ext.getCmp('resetId').setDisabled(true);
+        Ext.getCmp('prevId').setDisabled(true);
+        Ext.getCmp('nextId').setDisabled(true);  
+        document.getElementById('{!$Component.formId.Status_ID}').focus();
+         
+        }
+        else if('{!status.BMCServiceDesk__defaultStatus__c}' == 'true') {
+            Ext.getCmp('deleteId').setDisabled(true);
+            Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+            disableDefaultStatus();
+
+        }
+       disableMergeStatus();
+       handleElemEvent();
+       resetbuttonstatus();
+    });
+     function resetbuttonstatus()
+    {
+        if(!enableSaveBtn)
+        {
+           Ext.getCmp('saveId').setDisabled(true);
+             
+        }
+        if(!enableCopyButton)
+        {
+            Ext.getCmp('newId').setDisabled(true);
+            Ext.getCmp('copyId').setDisabled(true);
+        }
+        if(!enableDeleteButton)
+        {
+             Ext.getCmp('deleteId').setDisabled(true);
+             Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+        }   
+    }
+    var statusIdSet;
+    if(statusIdSet == null || statusIdSet == ''){
+        if('{!JSENCODE($CurrentPage.parameters.isDirect)}' == ''){
+        if(typeof(window.parent.returnListOfId)=='function')
+            statusIdSet=window.parent.returnListOfId();
+    }else{
+        if(typeof(window.parent.parent.getIdArray)=='function')
+            statusIdSet=window.parent.parent.getIdArray();
+            window.parent.handleSave('{!JSENCODE($CurrentPage.parameters.wid)}','{!JSENCODE($CurrentPage.parameters.id)}');
+        }
+    }
+
+	function disabledAppiesTo(){
+		var defaultSt=document.getElementById('{!$Component.formId.defaultStatus}').checked;
+        var disable=document.getElementById('{!$Component.formId.defaultStatus}').disabled;
+		if(statusId != null && statusId != '' && defaultSt == true ){
+			if(incAssign == 'true')
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR2}').disabled= true;
+			if(BrdAssign == 'true')
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR8}').disabled= true;
+			if(taskAssign == 'true')
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR4}').disabled= true;
+			if(changeAssign == 'true')
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR5}').disabled= true;
+			if(prbAssign == 'true')
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR6}').disabled= true;
+			if(relAssign == 'true')
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR7}').disabled= true;
+            enableMergeStatus(document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR2}'));
+		}
+	}
+	function appiesToAfterSave(){
+		var defaultSt=document.getElementById('{!$Component.formId.defaultStatus}').checked;
+        var disable=document.getElementById('{!$Component.formId.defaultStatus}').disabled;
+		if(statusId != null && statusId != '' && defaultSt == true ){
+			if(document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR2}').checked == true)
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR2}').disabled= true;
+				
+			if(document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR8}').checked== true)
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR8}').disabled= true;
+				
+			if(document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR4}').checked == true)
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR4}').disabled= true;
+				
+			if(document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR5}').checked == true)
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR5}').disabled= true;
+				
+			if(document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR6}').checked == true)
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR6}').disabled= true;
+				
+			if(document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR7}').checked == true)
+				document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR7}').disabled= true;
+		}
+	}
+
+        function previousStatusBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(statusIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=statusIdSet[i];
+                }else{
+                    idSetString=idSetString+','+statusIdSet[i];
+                }
+                i++;
+            }
+            previousStatusBtnHandler(idSetString);
+        }
+
+       function nextStatusBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(statusIdSet.length > i){
+                if(idSetString==''){
+                    idSetString=statusIdSet[i];
+                }else{
+                    idSetString=idSetString+','+statusIdSet[i];
+                }
+                i++;
+            }
+            nextStatusBtnHandler(idSetString);
+        
+        } 
+    
+    function buttonValidator() {
+       if((statusName != null && statusName != '')&&(errormsg == null||errormsg ==''||errormsg=='{!JSENCODE($Label.savedSuccessfully)}')){ 
+        if(enableCopyButton)
+        {
+            Ext.getCmp('copyId').setDisabled(false);
+        }
+        if(checkDefaultStatus == 'true') {
+            Ext.getCmp('deleteId').setDisabled(true);
+            Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+            Ext.getCmp('resetId').setDisabled(false);
+            disableDefaultStatus();
+
+        }
+        else
+        {
+            if(enableDeleteButton)
+            {
+                Ext.getCmp('deleteId').setDisabled(false);
+                Ext.getCmp('deleteId').setIconClass('bmcDelete');
+            }
+            Ext.getCmp('resetId').setDisabled(false);
+        }
+       }
+       /*
+       if(checkDefaultStatus == 'true') {
+            Ext.getCmp('deleteId').setDisabled(true);
+            disableDefaultStatus();
+       }*/
+       
+    }
+    
+     
+    function disableDefaultStatus(){
+        //document.getElementById('{!$Component.defaultStatus}').disabled = true;
+        disableDefaultStatus1();
+    }
+    
+   
+    </script>
+   
+    <apex:outputPanel id="afterSavePanel">
+      <script>
+         function handleSave(){
+             var id = "{!JSENCODE(status.Id)}";
+          window.parent.handleSave(wid, id);
+      }
+     enableSaveBtn={!hasPermissions};
+     enableCopyButton = {!canCopy};
+     enableDeleteButton = {!canDelete};
+  
+      </script>
+   </apex:outputPanel>
+  <apex:outputPanel id="titlePanel">
+            <script>
+                function updateList(){
+                    window.parent.refreshList();
+                }
+                function updateTitle(){
+                    var newTitle = "{!JSENCODE(status.name)}";
+                    
+                     if(newTitle != null && newTitle !=''){
+                        window.parent.changeTitle(wid, newTitle, statusLabel);
+                    }
+                }
+        </script>
+    </apex:outputPanel>  
+  <apex:outputPanel id="panelId">
+        <script>
+        
+           statusName = '{!JSENCODE(status.name)}';               
+           statusId = '{!JSENCODE(status.id)}';
+           checkDefaultStatus = '{!status.BMCServiceDesk__defaultStatus__c}';
+           checkDefaultMergeStatus = '{!status.BMCServiceDesk__defaultMergeStatus__c}';
+        </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!JSENCODE(messageString)}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+        
+         <apex:outputPanel id="inactivePanel">
+        <script>
+           function updateInactive(){
+            Ext.getCmp('idInactive').setValue('{!status.inactive__c}');
+            Ext.getCmp('idInactive').setDisabled({!status.BMCServiceDesk__defaultStatus__c});
+        }
+        
+         function disableInactive(obj){
+          Ext.getCmp('idInactive').setValue(false);
+          Ext.getCmp('idInactive').setDisabled(obj.checked);
+        }  
+        
+        function enableSaveButton()
+        {
+           
+            if(enableSaveBtn)
+            Ext.getCmp('saveId').setDisabled(false);
+        }
+         
+        function checkSequenceId(){
+            //sridhar:1490-Removed the save button references
+             if('{!JSENCODE(sequenceId)}' != '' && Ext.getCmp('deleteId') != null){
+                Ext.getCmp('deleteId').setDisabled(true);
+                Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+            } else if('{!JSENCODE(sequenceId)}' == '' && Ext.getCmp('deleteId') != null){
+                 if(checkDefaultStatus == 'true') {
+                    Ext.getCmp('deleteId').setDisabled(true);
+                    Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+                }
+                else{
+						if(enableDeleteButton && statusId)
+						{
+							Ext.getCmp('deleteId').setDisabled(false);
+							Ext.getCmp('deleteId').setIconClass('bmcDelete');
+						}
+                }
+            }           
+        }          
+        </script>
+    </apex:outputPanel>
+      
+ <apex:outputPanel id="panel1">
+      <script>
+          var checkDefaultStatus1 ='{!status.BMCServiceDesk__defaultStatus__c}';  
+                           if(checkDefaultStatus1 == 'true' && document.getElementById('{!$Component.defaultStatus}') !=null) {
+                                    document.getElementById('{!$Component.defaultStatus}').disabled = true;
+                          }
+      </script>
+  </apex:outputPanel>  
+  <apex:outputPanel id="assignToPanel">
+      <script>
+         incAssign = '{!status.BMCServiceDesk__appliesToIncident__c}';
+	     prbAssign = '{!status.BMCServiceDesk__appliesToProblem__c}';
+	     taskAssign = '{!status.BMCServiceDesk__appliesToTask__c}';
+	     changeAssign = '{!status.BMCServiceDesk__appliesToChange__c}';
+	     BrdAssign = '{!status.BMCServiceDesk__appliesToBroadcasts__c}';   
+	     relAssign = '{!status.BMCServiceDesk__appliesToRelease__c}';            
+      </script>
+  </apex:outputPanel>  
+  
+  <apex:outputPanel > <!-- Page body in this panel -->
+            <apex:form id="formId">
+             <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+             <apex:actionFunction action="{!save}" name="save" reRender="titlePanel,statusPanelId,assignToPanel,panel1,afterSavePanel,validationComponent,panelId,errorId,stateID,stageProgressionList" oncomplete="appiesToAfterSave(); waitMsg.hide(); showError();resetbuttonstatus();updateTitle();showError();buttonValidator();  updateList();handleElemEvent();handleSave();checkSequenceId();enableSaveButton();">
+             <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+                              </apex:actionFunction>
+             <apex:actionFunction action="{!newStatus}" name="newStatus"/>
+             <apex:actionFunction action="{!reset}" name="resetStatus"  rerender="tablePanel, statuspanelBar,assignToPanel,inactivePanel,afterSavePanel,panelId,stateID" onComplete=" disabledAppiesTo(); updateInactive();handleResetChange();handleElemEvent();disableDefaultStatus1();checkSequenceId();disableWorkstatus();disableMergeStatus();"/>
+             <apex:actionFunction action="{!deleteStatus}" name="deleteStatus" onComplete="completeDelete();" rerender="errorId,validationComponent"/>
+     <!-- apex:actionFunction action="{!copyStatus}" name="copyStatus"/ -->
+    
+    <apex:actionFunction action="{!nextBtnHandler}" name="nextStatusBtnHandler" 
+                                    rerender="titlePanel,tablePanel, statuspanelBar,assignToPanel,inactivePanel,afterSavePanel,panelId" onComplete="disabledAppiesTo();updateTitle();updateInactive();buttonValidator();handleResetChange();handleElemEvent();checkSequenceId();disableWorkstatus();disableMergeStatus();">
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>  
+             </apex:actionFunction>
+             <apex:actionFunction action="{!previousBtnHandler}" name="previousStatusBtnHandler" 
+                                        rerender="titlePanel, tablePanel, statuspanelBar,assignToPanel,inactivePanel,afterSavePanel,panelId" onComplete=" disabledAppiesTo(); updateTitle();updateInactive();buttonValidator();handleResetChange();handleElemEvent();checkSequenceId();disableWorkstatus();disableMergeStatus();">
+                                        <apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+             </apex:actionFunction>
+            <apex:actionFunction action="{!setSelectedStageNext}" name="setNewStage" rerender="stageProgressionList">
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/> 
+            </apex:actionFunction>
+            <apex:actionFunction action="{!CheckAndSetStageVal}" name="CheckAndSetStageVal" rerender="stageProgressionList">
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/> 
+                <apex:param assignTo="{!savedID1}" name="savedID1" value=""/> 
+            </apex:actionFunction>
+            <apex:outputPanel id="dummy"></apex:outputPanel> 
+             
+                <div id="capsule" class="CapsuleDiv1">
+                    <table cellpadding="0" cellspacing="0" class="clsMainTable">
+                     
+                      <!--Following code for display Tool box -->
+                        
+                        <tr class="clsRowGreyBg">
+                            <td>
+                                <div id="btnToolbar"></div>                                
+                            </td>
+                        </tr>
+                       
+                     <!--End of Tool Box---->    
+                     
+                        <tr>
+                          <td>
+                             <table class="clsTable" cellspacing="0" cellpadding="0">
+                              
+                                <tr>
+                                     <td class="clsTopAlignment75">
+                                    <apex:outputPanel id="tablePanel">
+                                       <table class="clsTable" cellspacing="0" cellpadding="0">
+                                         
+                                            <tr>
+                                                <td colspan="2"><div class="div15pxVspacing"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD">
+                                                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Status__c.fields.Name.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                                </td>
+                                                <td class="clsInputTextBoxTD">
+                                                    <apex:inputText title="{!$Label.bmcservicedesk__tooltipstatusstatusid}" id="Status_ID" value="{!status.name}" styleClass="clsIdInputTextBox"/>
+                                                </td>
+                                            </tr>
+                                            
+                                            
+                                            <tr>
+                                                <td colspan="2"><div class="div15pxVspacing"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD">
+                                                    <apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__FKSYSStage__c.label}"/>                                                                          
+                                                </td>
+                                                <td class="clsInputTextBoxTD">
+                                                    <apex:selectList title="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__FKSYSStage__c.inlineHelpText}" value="{!string}" size="1" id="stageProgressionList" styleClass="clsSelectList" onchange="setNewStage">
+                                                        <apex:selectOptions value="{!stages}"/>
+                                                    </apex:selectList>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                              <td class="clsPanelInputCheckboxTDSA">
+                                              </td> 
+                                            </tr>
+                                            <tr> <td colspan="2"><div class="div9pxVspacing"/></td></tr>
+                                         </table>
+                                         <table  class="clsTable" cellspacing="0" cellpadding="0">   
+                                            <tr>
+                                                <td class="checkLabelSTD"><apex:outputLabel value="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__state__c.label}"/><span class="clsRequiredBlack">&nbsp;*</span>
+                                                   </td></tr>
+                                                   <tr><td class="checkLabelStatus"> <apex:selectRadio value="{!state}" id="stateID" layout="pageDirection" disabled="{!disableRadio}" styleClass="checkLabelStatus" onclick="javascript:CheckStageVal();disableWorkstatus();">
+                                                    
+                                                        <apex:selectOptions value="{!stateValue}"  />
+                                                    </apex:selectRadio>  
+                                                </td>
+                                            </tr>
+                                             <tr>
+                                      <td>
+                                        <div class="div13pxVspacing"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputCheckBox"><apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__defaultStatus__c.inlineHelpText}" value="{!status.BMCServiceDesk__defaultStatus__c}"
+                                         id="defaultStatus"  onclick="javascript:CheckStageVal();disableInactive(this);"/> <label
+                                                                for="defaultStatus" class="clsInputCheckBoxLabel">{!$ObjectType.Status__c.fields.defaultStatus__c.label}</label>
+                                                                
+                                                                
+                                           <script>   
+                                                   function CheckStageVal(){
+                                                       var defaultStatusSelected = document.getElementById('{!$Component.defaultStatus}').checked;
+                                              		   var formStateValue = document.getElementById('{!$Component.stateID}').checked;;
+                                                       CheckAndSetStageVal(defaultStatusSelected, formStateValue);
+                                                       /*var defaultStatusSelected = document.getElementById('{!$Component.defaultStatus}').checked;
+                                                       if(defaultStatusSelected == true){
+                                                           alert('This is default Status with State: ' + document.getElementById('{!$Component.stateID}').checked);
+                                                       }
+                                                       else if(defaultStatusSelected == false){
+                                                           alert('This is not default Status with State: ' + document.getElementById('{!$Component.stateID}').checked);
+                                                       }*/                                                       
+                                                   }   
+                                                    function disableDefaultStatus1(){
+                                                           
+                                                            if(checkDefaultStatus == 'true' && (statusId != null && statusId != '')) {
+                                                                document.getElementById('{!$Component.defaultStatus}').disabled = true;
+                                                            }
+                                                     }
+                                                                          
+                                                    function disableDefaultStatus2(){
+                                                    document.getElementById('{!$Component.defaultStatus}').disabled = true;
+                                                
+                                             }  
+                                               function disableWorkstatus(){
+                                                      
+                                                       var formStateRadio = document.getElementById('{!$Component.stateID}:1');
+                                                       var isIncidentChecked=document.getElementById('{!$Component.formId.statuspanelBar.statuspanelBarItem.radFCR2}');
+                                                      
+                                                       if (formStateRadio || isIncidentChecked ) {
+                                                       	if (formStateRadio.checked || (!isIncidentChecked.checked)) {
+                                                       		document.getElementById('{!$Component.formId.WorkStatus}').disabled = true;
+                                                       		document.getElementById('{!$Component.formId.WorkStatus}').checked = false;
+                                                       		}
+                                                       	else
+                                                       	document.getElementById('{!$Component.formId.WorkStatus}').disabled = false;
+                                                           		
+                                                       	}
+                                                                               
+		  										}
+                                           
+                                            </script>                   
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputCheckBox"><apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__defaultMergeStatus__c.inlineHelpText}" value="{!status.BMCServiceDesk__defaultMergeStatus__c}"
+                                         id="defaultMergeStatus"/> <label
+                                                                for="defaultMergeStatus" class="clsInputCheckBoxLabel">{!$ObjectType.Status__c.fields.defaultMergeStatus__c.label}</label>                                     
+                                    </td>
+                                </tr>   
+                               <tr>
+                                    <td class="clsInputCheckBox"><apex:inputCheckbox value="{!status.BMCServiceDesk__workStatus__c}"
+                                         id="WorkStatus"/> <label
+                                                                for="Work Status" class="clsInputCheckBoxLabel">{!$ObjectType.Status__c.fields.workStatus__c.label}</label>                  
+                                    </td>
+                                </tr>        
+                                         </table>
+                                            </apex:outputPanel> 
+                                    </td>
+                                    <td><div class="div17pxHspacing"/></td>
+                                    <td class="clsTopAlignment25">
+                                        <div class="panelCapsule">
+                                                     <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" id="statuspanelBar">
+                                                        <apex:panelBarItem label="{!$Label.bmcservicedesk__appliesto}" expanded="true" id="statuspanelBarItem" headerClass="panelHeader" contentClass="panelContent">
+                                                            <table class="clsTable" cellspacing="0" cellpadding="0">
+                                                                   <tr>
+                                                                        <td><div class="div15pxVspacing"/></td>
+                                                                   </tr>
+                                                                   
+                                                                    <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__appliesToBroadcasts__c.inlineHelpText}" value="{!status.BMCServiceDesk__appliesToBroadcasts__c}" id="radFCR8"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Broadcasts__c.LabelPlural}"/>
+                                                                      </td>
+                                                                  </tr>
+                                                                  <!-- new  
+                                                                   <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputfield value="{!status.appliesToChangeApprovals__c}" id="radFCR1"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.changeApprovals}"/>
+                                                                      </td>
+                                                                  </tr>
+                                                                   <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputfield value="{!status.appliesToChangeAssessment__c}" id="radFCR9"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.changeAssessment}"/>
+                                                                      </td>
+                                                                  </tr>
+                                                                   
+                                                                <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputfield value="{!status.BMCServiceDesk__appliesToChange__c}" id="radFCR5"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.changes}"/>
+                                                                      </td>
+                                                                  </tr>  -->
+                                                              <!--      <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputCheckbox title="{!$Label.TooltipStatusAppliesToConfigurationItems}" value="{!status.appliesToConfigurationItems__c}" id="radFCR3"/>
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.configurationItems}"/> 
+                                                                      </td>
+                                                                   </tr>  -->
+                                                                     <tr> 
+                                                                         <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__appliesToIncident__c.inlineHelpText}" value="{!status.BMCServiceDesk__appliesToIncident__c}" id="radFCR2" onclick="enableMergeStatus(this);disableWorkstatus(this);" /> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Incident__c.LabelPlural}"/>
+                                                                      </td>
+                                                                   </tr>
+                                                                 <!--  <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputfield value="{!status.appliesToServices__c}"  id="radFCR6"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.services}"/>
+                                                                      </td>
+                                                                  </tr>
+                                                                    <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputfield value="{!status.appliesToSLA__c}" id="radFCR7"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.SLAs}"/>
+                                                                      </td>
+                                                                  </tr>  -->
+                                                                    <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__appliesToTask__c.inlineHelpText}" value="{!status.BMCServiceDesk__appliesToTask__c}" id="radFCR4"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Task__c.LabelPlural}"/>
+                                                                      </td>
+                                                                   </tr>
+                                                                    <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__appliesToChange__c.inlineHelpText}" value="{!status.BMCServiceDesk__appliesToChange__c}" id="radFCR5"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Change_Request__c.LabelPlural}"/>
+                                                                      </td>
+                                                                   </tr>                                                                   
+                                                                    <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__appliesToProblem__c.inlineHelpText}" value="{!status.BMCServiceDesk__appliesToProblem__c}" id="radFCR6"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Problem__c.LabelPlural}"/>
+                                                                      </td>
+                                                                   </tr>                                                                    
+                                                                   <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputCheckbox title="{!$ObjectType.BMCServiceDesk__Status__c.fields.BMCServiceDesk__appliesToRelease__c.inlineHelpText}" value="{!status.BMCServiceDesk__appliesToRelease__c}" id="radFCR7"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$ObjectType.BMCServiceDesk__Release__c.LabelPlural}"/>
+                                                                      </td>
+                                                                   </tr>           
+                                                                                                                    
+                                                                   
+                                                            </table>
+                                                        </apex:panelBarItem>
+                                                        <!--  <apex:panelBarItem label="{!$Label.Details}" headerClass="panelHeader">
+                                                            <table class="clsTable" border="0" cellpadding="0" cellspacing="0" >
+                                                                  <tr>
+                                                                        <td><div class="div15pxVspacing"/></td>
+                                                                   </tr>
+                                                                  <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                            <apex:outputLabel value="{!$Label.StageValue}" styleClass="clsRight20px"/>                                                                          
+                                                                            <apex:selectList title="{!$Label.TooltipStatusStage}" value="{!string}" size="1" id="stageProgressionList" styleClass="clsSelectList" onchange="setNewStage">
+                                                                                <apex:selectOptions value="{!stages}"/>
+                                                                            </apex:selectList>
+                                                                      </td> 
+                                                                  </tr> 
+                                                                  <tr>
+                                                                        <td class="div8pxVspacing"></td>
+                                                                   </tr>
+                                                                  <tr>
+                                                                      <td class="clsPanelInputCheckboxTDSA">
+                                                                          <apex:inputfield value="{!status.system__c}" id="radFCR9"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.system}"/>
+                                                                      </td>
+                                                                  </tr>
+                                                                 
+                                                              </table>
+                                                        </apex:panelBarItem>  --> 
+                                                    </apex:panelBar>
+                                         </div>
+                                    </td>
+                                </tr>
+                              
+                            </table>
+                          </td>
+                        </tr>
+                        <tr class="clsRowGreyBg" valign="middle">
+                            <td valign="top">
+                                
+                            </td>
+                        </tr>
+                    </table>
+                </div>    
+            </apex:form>
+    </apex:outputPanel>  
+ </apex:page>

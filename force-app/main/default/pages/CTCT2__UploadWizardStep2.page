@@ -1,0 +1,210 @@
+<apex:page sidebar="false" controller="CTCT2.UploadWizardController" action="{!initStep2Page}" tabstyle="Uploads__tab">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script>
+    jQuery(document).ready(function() {
+    	// Fix Next button that Salesforce is removing the space between "Next" and ">".
+		jQuery(':submit').each(function() {
+			if (jQuery(this).val().indexOf('Next') === 0) {
+				jQuery(this).val('Next >');
+			}
+		});
+
+        jQuery('.checklist ul li input:checkbox').live('click', function() {
+            jQuery(this).parent().toggleClass('checked');
+            updateSelectedCount();
+            updateContactListIds();
+        });
+        
+        updateContactListSelections();
+    });
+    
+    function updateSelectedCount() {
+        var count = jQuery('.checklist ul li input:checked').length;
+        jQuery('#selectedCount').text(count);
+    }
+    
+    function updateContactListIds() {
+        var newIds = [];
+        
+        jQuery('.checklist ul li input:checked').each(function() {
+            newIds.push(jQuery(this).val());
+        });
+        
+        contactListIdsField.value = newIds.join(',');
+    }
+    
+    function updateContactListSelections() {
+        var value = contactListIdsField.value;
+        if (value && trim(value).length > 0) {
+            var ids = value.split(',');
+            jQuery('.checklist ul li input').each(function() {
+                for (var i = 0; i < ids.length; i++) {
+                    if (ids[i] == jQuery(this).val()) {
+                        jQuery(this).attr('checked', true);
+                        jQuery(this).parent().addClass('checked');
+                        break;
+                    }
+                }
+            });
+        }
+        
+        updateSelectedCount();
+    }
+    
+    function selectNewContactList() {
+        var value = contactListIdsField.value;
+        if (value && trim(value).length > 0) {
+            contactListIdsField.value = contactListIdsField.value + ',' + jQuery('.checklist ul li input:first').val();
+        } else {
+            contactListIdsField.value = jQuery('.checklist ul li input:first').val();
+        }
+
+        updateContactListSelections();
+    }
+    
+    function validateListName() {
+        var value = newListNameTextfield.value;
+        if (!value || trim(value).length < 1) {
+            alert('Please specify a name for the new list.');
+            return false;
+		} else {
+			var listNames = [];
+			
+			// Create list of list names.
+			jQuery('.checklist ul li label').each(function() {
+				var listName = jQuery(this).text();
+				listNames.push(listName);
+            });
+            
+            // Validate that there is not already a list with the same name.
+            var comparisonValue = trim(value).toUpperCase();
+			for (var i in listNames) {
+				if (comparisonValue === trim(listNames[i]).toUpperCase()) {
+					alert('A list with the specified name already exists.');
+            		return false;
+				}
+			}
+		}
+
+        return true;
+    }
+    
+    function validateContactListSelected() {
+        var value = contactListIdsField.value;
+        if (!value || trim(value).length < 1) {
+            alert('Please select at least one Contact List.');
+            return false;
+        }
+
+        return true;
+    }
+    
+    function trim(str) {
+        return str.replace(/^\s+|\s+$/g, '');
+    }
+</script>
+<style>
+.checklist {
+    overflow-x: hidden;
+    overflow-y: scroll;
+    border: 1px solid gray;
+}
+
+.checklist ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.checklist ul li {
+    margin: 0;
+    padding: 2px;
+}
+
+.checklist ul li.checked {
+    background-color: #CCC;
+}
+</style>
+
+<apex:sectionHeader title="Constant Contact for Salesforce"  subtitle="Upload {!uploadType}s" />
+
+<apex:form >
+<apex:inputHidden id="contactListIds" value="{!contactListIds}"/>
+<script>var contactListIdsField = document.getElementById('{!$Component.contactListIds}');</script>
+    <apex:pageBlock title="Step 2 of 3">
+        <p>
+            <b>List Selection for {!uploadType}s</b><br/>
+            Select the Constant Contact list(s) to which you would like to upload your {!uploadType}(s). 
+            To create a new list, select "Create New List" below.
+        </p>
+
+        <br/>
+
+        <apex:outputPanel id="createListPanel" layout="block">
+            <apex:outputPanel layout="block" rendered="{!NOT(showNewListName)}">
+                <apex:commandButton action="{!showNewList}" rerender="createListPanel" value="Create New List"/>
+            </apex:outputPanel>
+            
+            <apex:outputPanel layout="block" rendered="{!showNewListName}">
+                New List Name: <apex:inputText id="newListName" value="{!newListName}" style="margin-left: 5px;"/>
+                <script>var newListNameTextfield = document.getElementById('{!$Component.newListName}');</script>
+                <apex:commandButton action="{!createNewList}" rerender="createListPanel, contactListsPanel" onclick="if(!validateListName()) return false;" value="Create" style="margin-left: 5px;"/>
+                <apex:commandButton action="{!cancelNewList}" rerender="createListPanel" value="Cancel" style="margin-left: 5px;"/>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+        <br/><br/>
+
+        <apex:outputPanel id="contactListsPanel">
+            <apex:outputPanel layout="none" rendered="{!newListCreated}">
+                <script>selectNewContactList();</script>
+            </apex:outputPanel>
+            <table>
+                <tr>
+                    <td><b>Constant Contact Lists</b></td>
+                    <td align="right"><span id="selectedCount">0</span> selected</td>
+                    <td></td>
+                </tr>
+                <tr valign="top">
+                    <td colspan="2">
+                        <div class="checklist" style="height: 200px; width: 300px;">
+                            <ul>
+                                <apex:variable var="currentList" value="{!1}"/>
+                                <apex:repeat value="{!contactLists}" var="contactList">
+                                    <li>
+                                        <input type="checkbox" id="list{!currentList}" value="{!contactList.shortId}"/>
+                                        <label for="list{!currentList}">{!contactList.name}</label>
+                                    </li>
+                                    <apex:variable var="currentList" value="{!currentList + 1}"/>
+                                </apex:repeat>
+                            </ul>
+                        </div>
+                    </td>
+                    <td style="padding-left: 1em;">
+                    	<p>Select the list(s) to which the {!uploadType}(s) <br/>will be added.
+                    	Uploading will not remove <br/>{!uploadType}(s) from existing lists.</p>
+                        <p>Information associated with existing<br/>{!uploadType}(s), such as name and address,<br/>will be updated.</p>
+                    </td>
+                </tr>
+            </table>
+        </apex:outputPanel>
+        
+        <apex:facet name="footer">
+			<apex:panelGroup >
+				<table width="100%">
+					<tr>
+						<td width="25%"><apex:commandButton action="{!cancel}" value="Cancel"/></td>
+						<td width="50%" align="center" class="pbButtonb">
+							<apex:commandButton action="{!step2Back}" value="< Back"/>
+							<apex:commandButton action="{!step2Next}" onclick="return validateContactListSelected();" value="Next >"/>
+						</td>
+						<td width="25%">&nbsp;</td>
+					</tr>
+				</table>
+			</apex:panelGroup>
+		</apex:facet>
+        
+    </apex:pageBlock>
+</apex:form>
+
+</apex:page>

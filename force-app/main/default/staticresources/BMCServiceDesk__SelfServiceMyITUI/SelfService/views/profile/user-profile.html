@@ -1,0 +1,78 @@
+<!--  while "User Profile" data is loading  -->
+<div class="profile-inner" loading-spinner if="userProfileModel.userDataIsLoading" centered="true"></div>
+
+<!--  breadcrumbs  -->
+<div class="page-toolbar" ng-if="!userProfileModel.userDataIsLoading">
+	<div class="layout-width">
+		<span ng-if="pageBreadcrumbsModel.items">
+			<page-breadcrumbs />
+		</span>
+	</div>
+</div>
+
+
+<!--  "User Profile" container  -->
+<div ng-if="!userProfileModel.userDataIsLoading" class="profile">
+	<div class="layout-width profile-container">
+		<!--  "User Profile" info column  -->
+		<div class="profile-info">
+
+			<!--  "User Profile" main info (photo and name)  -->
+			<div class="profile-inner profile-info__card-layout">
+				<div class="profile-info-card">
+					<div class="profile-info-card__picture">
+						<loading-spinner if="profileImageIsLoading" overlay="true"></loading-spinner>
+						<div ng-if="!profileImageIsLoading">
+							<img ng-if="profileImage" ng-src="{{profileImage}}" width="100%">
+							<div ng-if="!profileImage" class="profile-picture-placeholder profile-picture-placeholder_user"></div>
+						</div>
+					</div>
+					<div class="profile-info-card__name" ng-bind-html="userData.displayName">
+					</div>
+				</div>
+			</div>
+
+			
+
+			<!--  "User Profile" info panel (address, phones, email)  -->
+			<div class="profile-info__details" ng-if="userData.jobTitle || userData.emails.length || userData.phones.length">
+				<div class="profile-info__divider"></div>
+
+				<!--  "User Profile" position and experience  -->
+				<div class="profile-info__section_position" ng-if="userData.jobTitle">
+					<div class="profile-info__section-text">{{userData.jobTitle.value}}</div>
+					<!--<div class="profile-info__additional_time">{{userData.experience.value}}</div>-->
+				</div>
+
+				<!--  "User Profile" emails  -->
+				<div class="profile-info__section" ng-repeat="email in userData.emails">
+					<div class="profile-info__section-text">
+						{{email.value}}
+					</div>
+					<div class="activity-icon">
+						<a href="mailto:{{email.value}}">
+							<span class="i-mail_42"></span>
+						</a>
+					</div>
+				</div>				
+			</div>
+		</div>
+
+		<!-- User activity stream -->
+		<div class="profile-activity-stream">
+			<div class="profile-inner">
+
+				<div class="profile-activity-stream__loading-spinner-container">
+					<div class="profile-activity-stream__loading-spinner" loading-spinner if="activityStreamModel.cache['user' + $stateParams.userId].isLoading" inline="true"></div>
+				</div>
+
+				<div ng-repeat="activityItem in userProfileCtrlState.timelineItems" activity-stream-item timeline-style="true"></div>
+
+				<div class="activity-stream__loading-more" ng-if="userProfileCtrlState.timelineItems && userProfileCtrlState.allowMorePastItems"
+					 past-items-loader
+					 load-past-activity-items="refreshActivityStream(true)">
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Only_Master_Data_Can_Accept_Ticket</fullName>
+    <active>true</active>
+    <description>Only Master Data is allowed to accept Core list price change tickets</description>
+    <errorConditionFormula>AND($RecordType.Name = &apos;Core List Pricing Change Request&apos;, 
+    OR(ISPICKVAL(Status,&apos;Accepted&apos;),ISPICKVAL(Status,&apos;Rejected&apos;)),
+    NOT(OR(CONTAINS($Profile.Name,&apos;Master&apos;),CONTAINS($Profile.Name,&apos;System&apos;)))
+   )</errorConditionFormula>
+    <errorMessage>Only Mater Data team is allowed to accept or reject the ticket</errorMessage>
+</ValidationRule>
